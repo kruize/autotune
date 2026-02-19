@@ -4,6 +4,8 @@ import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -26,6 +28,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -33,10 +36,7 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
+import com.autotune.utils.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -73,7 +73,9 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
-
+    private static final Set<String> JVM_INFO_METRICS = Set.of(
+            AnalyzerConstants.MetricName.jvmInfo.toString(),
+            AnalyzerConstants.MetricName.jvmInfoTotal.toString());
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
@@ -699,7 +701,7 @@ public class RecommendationEngine {
                             model,
                             containerData,
                             monitoringEndTime,
-                            kruizeObject.getRecommendation_settings(),
+                            kruizeObject,
                             currentConfig,
                             termsEntry);
 
@@ -753,7 +755,7 @@ public class RecommendationEngine {
                         String status = KruizeConstants.APIMessages.SUCCESS;   // TODO avoid this constant at multiple place
                         try {
                             timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
-                            mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                            mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots(AnalyzerConstants.ExperimentType.CONTAINER));
                         } catch (Exception e) {
                             status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
                         } finally {
@@ -776,7 +778,7 @@ public class RecommendationEngine {
 
     private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime,
-                                                                            RecommendationSettings recommendationSettings,
+                                                                            KruizeObject kruizeObject,
                                                                             HashMap<AnalyzerConstants.ResourceSetting,
                                                                                     HashMap<AnalyzerConstants.RecommendationItem,
                                                                                             RecommendationConfigItem>> currentConfigMap,
@@ -787,6 +789,7 @@ public class RecommendationEngine {
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
         // Set Memory threshold to default
         double memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
         if (null != recommendationSettings) {
             Double threshold = recommendationSettings.getThreshold();
             if (null == threshold) {
@@ -867,6 +870,7 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
+            List<RecommendationConfigEnv> runtimeRecommList = handleRuntimeRecommendations(kruizeObject);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -877,7 +881,8 @@ public class RecommendationEngine {
                     numPods,
                     cpuThreshold,
                     memoryThreshold,
-                    recommendationAcceleratorRequestMap
+                    recommendationAcceleratorRequestMap,
+                    runtimeRecommList
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -886,6 +891,29 @@ public class RecommendationEngine {
         }
         return mappedRecommendationForModel;
     }
+
+    /**
+     * Method to handle the runtimes recommendations logic
+     * @param kruizeObject to get the datasource
+     * @return
+     */
+    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject) {
+        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
+        String datasourceName = kruizeObject.getDataSource();
+        if (datasourceName == null) {
+            LOGGER.warn("Datasource missing, skipping runtime recommendations");
+            return null;
+        }
+        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
+        if (dataSourceInfo == null ||
+                !KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES
+                        .contains(dataSourceInfo.getServiceName())) {
+            return null;
+        }
+        // TODO: add runtime env logic
+        return runtimeRecommList;
+    }
+
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         try {
@@ -1096,6 +1124,27 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+                // generate plots when minimum data is available for the term
+                if (KruizeDeploymentInfo.plots) {
+                    if (null != monitoringStartTime) {
+                        Timer.Sample timerBoxPlots = null;
+                        String status = KruizeConstants.APIMessages.SUCCESS;
+                        try {
+                            timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
+                            LOGGER.debug("terms: {}",terms);
+                            mappedRecommendationForTerm.setPlots(new PlotManager(namespaceData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots(AnalyzerConstants.ExperimentType.NAMESPACE));
+                        } catch (Exception e) {
+                            status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
+                            LOGGER.debug(status);
+                        } finally {
+                            if (timerBoxPlots != null) {
+                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag(KruizeConstants.DataSourceConstants
+                                        .DataSourceQueryJSONKeys.STATUS, status).register(MetricsConfig.meterRegistry());
+                                timerBoxPlots.stop(MetricsConfig.timerBoxPlots);
+                            }
+                        }
+                    }
+                }
 
             }
             Terms.setDurationBasedOnTermNamespace(namespaceData, mappedRecommendationForTerm, recommendationTerm);
@@ -1204,7 +1253,8 @@ public class RecommendationEngine {
                     numPodsInNamespace,
                     namespaceCpuThreshold,
                     namespaceMemoryThreshold,
-                    null
+                    null,
+                    null //TODO: temporarily passing this null, will be updated
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1228,6 +1278,7 @@ public class RecommendationEngine {
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
+     * @param runtimeListToPopulate                The Object to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1237,7 +1288,8 @@ public class RecommendationEngine {
                                            int numPods,
                                            double cpuThreshold,
                                            double memoryThreshold,
-                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
+                                           List<RecommendationConfigEnv> runtimeListToPopulate) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1374,7 +1426,7 @@ public class RecommendationEngine {
             currentMemLimit = internalMapToPopulate.get(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT);
 
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+        Config config = new Config();
         // Create Request Map
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
         // Recommendation Item checks
@@ -1811,6 +1863,12 @@ public class RecommendationEngine {
             recommendationModel.addNotification(recommendationNotification);
         }
 
+        // Set env list
+        if (runtimeListToPopulate != null && !runtimeListToPopulate.isEmpty()) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE);
+            engineNotifications.add(recommendationNotification);
+            config.setEnv(runtimeListToPopulate);
+        }
         // set the engine level notifications here
         for (RecommendationNotification recommendationNotification : engineNotifications) {
             recommendationModel.addNotification(recommendationNotification);
@@ -1818,7 +1876,7 @@ public class RecommendationEngine {
 
         // Set Request Map
         if (!requestsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+            config.setRequests(requestsMap);
         }
 
         // Check if accelerator map is not empty and add to limits map
@@ -1828,13 +1886,11 @@ public class RecommendationEngine {
 
         // Set Limits Map
         if (!limitsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+            config.setLimits(limitsMap);
         }
 
         // Set Config
-        if (!config.isEmpty()) {
-            recommendationModel.setConfig(config);
-        }
+        recommendationModel.setConfig(config);
 
         // Check if map is not empty and set requests map to current config
         if (!currentRequestsMap.isEmpty()) {
@@ -1956,6 +2012,7 @@ public class RecommendationEngine {
                         maxDateQuery,
                         acceleratorDetectionQuery,
                         acceleratorMigDetectionQuery);
+
             } else if (kruizeObject.isNamespaceExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
                 fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
@@ -2102,7 +2159,7 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(namespaceDataResults, namespaceIntervalResults, namespaceResMap, namespaceMetricResults,
-                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, null, false); // for namespace, runtimeLayerDetection is being passed as false for now
                                     }
                                 }
                             } catch (Exception e) {
@@ -2186,6 +2243,7 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
+                    boolean runtimeLayerDetected = isRuntimeLayerPresent(LayerUtils.detectLayers(containerData.getContainer_name(), workload, namespace));
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
                     if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
@@ -2378,10 +2436,27 @@ public class RecommendationEngine {
                                 JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                 JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                 JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                                JsonObject metric = null;
+                                if (!resultArray.isEmpty()) {
+                                    metric = resultArray.get(0).getAsJsonObject().getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+                                }
+                                // Log Prometheus response for JVM info metrics to debug metadata extraction
+                                if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                                    if (metric != null) {
+                                        LOGGER.debug("JVM info metric labels: runtime={}, vendor={}, version={}",
+                                                metric.has(AnalyzerConstants.RUNTIME) ? metric.get(AnalyzerConstants.RUNTIME) : "absent",
+                                                metric.has(AnalyzerConstants.VENDOR) ? metric.get(AnalyzerConstants.VENDOR) : "absent",
+                                                metric.has(AnalyzerConstants.VERSION) ? metric.get(AnalyzerConstants.VERSION) : "absent");
+                                    }
+                                }
 
                                 // Skipping if Result array is null or empty
-                                if (null == resultArray || resultArray.isEmpty())
+                                if (null == resultArray || resultArray.isEmpty()) {
+                                    if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                                        LOGGER.warn("JVM info metric: Prometheus returned empty result - JVM metrics may not be exposed or query may not match (namespace={}, container={})", namespace, containerName);
+                                    }
                                     continue;
+                                }
 
                                 // Process fetched metrics
                                 if (isAcceleratorMetric || isAcceleratorPartitionMetric){
@@ -2519,7 +2594,8 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, metric,
+                                                runtimeLayerDetected);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2538,6 +2614,15 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    private static boolean isRuntimeLayerPresent(Map<String, KruizeLayer> detectedLayers) {
+        if (detectedLayers == null || detectedLayers.isEmpty()) {
+            return false;
+        }
+
+        return detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT)
+                || detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU);
     }
 
     /**
@@ -2562,7 +2647,7 @@ public class RecommendationEngine {
     private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
                                         HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
                                         MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
-                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
+                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format, JsonObject metricObject, boolean runtimeLayerDetected) throws Exception {
         try {
             if (dataResultsMap.containsKey(eTime)) {
                 intervalResults = dataResultsMap.get(eTime);
@@ -2580,12 +2665,22 @@ public class RecommendationEngine {
                 metricAggregationInfoResults = new MetricAggregationInfoResults();
             }
 
-            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-            method.invoke(metricAggregationInfoResults, value);
-            metricAggregationInfoResults.setFormat(format);
-            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-            metricResults.setName(metricEntry.getName());
-            metricResults.setFormat(format);
+            if (runtimeLayerDetected && metricObject != null && JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                MetricMetadataResults meta = new MetricMetadataResults();
+                meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
+                meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
+                meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
+                metricResults.setMetricMetadataResults(meta);
+            } else if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                LOGGER.warn("Skipped JVM info metric metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
+            } else {
+                Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                method.invoke(metricAggregationInfoResults, value);
+                metricAggregationInfoResults.setFormat(format);
+                metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                metricResults.setName(metricEntry.getName());
+                metricResults.setFormat(format);
+            }
             resMap.put(metricName, metricResults);
             intervalResults.setMetricResultsMap(resMap);
             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
@@ -2600,6 +2695,19 @@ public class RecommendationEngine {
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
     }
+
+    private String getAsStringOrDefault(JsonObject metricObject, String key, String defaultVal) {
+        if (metricObject == null || !metricObject.has(key) || metricObject.get(key).isJsonNull()) {
+            return defaultVal;
+        }
+        try {
+            return metricObject.get(key).getAsString();
+        } catch (Exception e) {
+            return defaultVal;
+        }
+    }
+
+
 
     /**
      * Filters out maxDateQuery and includes metrics based on the experiment type and kubernetes_object
@@ -2623,6 +2731,12 @@ public class RecommendationEngine {
                     );
                 })
                 .toList();
+    }
+
+    private void addIfNotEmpty(List<RecommendationConfigEnv> list, String name, StringBuilder valueBuilder) {
+        if (valueBuilder != null && !valueBuilder.toString().isEmpty()) {
+            list.add(new RecommendationConfigEnv(name, valueBuilder.toString()));
+        }
     }
 }
 

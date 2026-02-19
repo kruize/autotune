@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
@@ -24,6 +25,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ContainerData {
     private String container_image_name;
@@ -34,6 +36,7 @@ public class ContainerData {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
+    private Map<String, KruizeLayer> layerMap;
 
     public ContainerData(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.container_name = container_name;
@@ -42,6 +45,20 @@ public class ContainerData {
         this.containerRecommendations = containerRecommendations;
         this.container_image_name = container_image_name;
         this.metrics = metrics;
+    }
+
+    public ContainerData(String container_name,
+                         String container_image_name,
+                         ContainerRecommendations containerRecommendations,
+                         HashMap<AnalyzerConstants.MetricName, Metric> metrics,
+                         Map<String, KruizeLayer> layerMap) {
+        this.container_name = container_name;
+        if (null == containerRecommendations)
+            containerRecommendations = new ContainerRecommendations();
+        this.containerRecommendations = containerRecommendations;
+        this.container_image_name = container_image_name;
+        this.metrics = metrics;
+        this.layerMap = layerMap;
     }
 
     public ContainerData() {
@@ -95,6 +112,16 @@ public class ContainerData {
     public void setContainerDeviceList(ContainerDeviceList containerDeviceList) {
         this.containerDeviceList = containerDeviceList;
     }
+
+    public Map<String, KruizeLayer> getLayerMap() {
+        return layerMap;
+    }
+
+    public void setLayerMap(Map<String, KruizeLayer> layerMap) {
+        if (null != layerMap && !layerMap.isEmpty())
+            this.layerMap = layerMap;
+    }
+
     @Override
     public String toString() {
         return "ContainerData{" +

@@ -16,12 +16,8 @@
 package com.autotune.operator;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
-import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -84,7 +80,6 @@ public class KruizeOperator {
      * Value: AutotuneObject instance matching the name
      */
     public static Map<String, KruizeObject> autotuneObjectMap = new ConcurrentHashMap<>();
-    public static Map<String, KruizeLayer> autotuneConfigMap = new HashMap<>();
     /**
      * Outer map:
      * Key: Name of autotune Object
@@ -128,44 +123,8 @@ public class KruizeOperator {
             }
         };
 
-        Watcher<String> autotuneConfigWatcher = new Watcher<>() {
-            @Override
-            public void eventReceived(Action action, String resource) {
-                KruizeLayer kruizeLayer = null;
-
-                switch (action.toString().toUpperCase()) {
-                    case "ADDED":
-                        kruizeLayer = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
-                        if (kruizeLayer != null) {
-                            autotuneConfigMap.put(kruizeLayer.getName(), kruizeLayer);
-                            LOGGER.info("Added autotuneconfig " + kruizeLayer.getName());
-                            addLayerInfo(kruizeLayer, null);
-                        }
-                        break;
-                    case "MODIFIED":
-                        kruizeLayer = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
-                        if (kruizeLayer != null) {
-                            deleteExistingConfig(resource);
-                            autotuneConfigMap.put(kruizeLayer.getName(), kruizeLayer);
-                            LOGGER.info("Added modified autotuneconfig " + kruizeLayer.getName());
-                            addLayerInfo(kruizeLayer, null);
-                        }
-                        break;
-                    case "DELETED":
-                        deleteExistingConfig(resource);
-                    default:
-                        break;
-                }
-            }
-
-            @Override
-            public void onClose(WatcherException e) {
-            }
-        };
-
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
         kubernetesServices.addWatcher(KubernetesContexts.getAutotuneCrdContext(), autotuneObjectWatcher);
-        kubernetesServices.addWatcher(KubernetesContexts.getAutotuneConfigContext(), autotuneConfigWatcher);
     }
 
     public static void processKruizeObject(KruizeObject kruizeObject) {
@@ -190,22 +149,6 @@ public class KruizeOperator {
     }
 
     /**
-     * Add autotuneobject to monitoring map and match pods and autotuneconfigs
-     *
-     * @param kruizeObject
-     */
-    private static void addAutotuneObject(KruizeObject kruizeObject) {
-        autotuneObjectMap.put(kruizeObject.getExperimentName(), kruizeObject);
-        System.out.println("Autotune Object: " + kruizeObject.getExperimentName() + ": Finding Layers");
-
-        matchPodsToAutotuneObject(kruizeObject);
-
-        for (String autotuneConfig : autotuneConfigMap.keySet()) {
-            addLayerInfo(autotuneConfigMap.get(autotuneConfig), kruizeObject);
-        }
-    }
-
-    /**
      * Delete autotuneobject that's currently monitored
      *
      * @param autotuneObject
@@ -219,31 +162,6 @@ public class KruizeOperator {
         deploymentMap.remove(name);
         // TODO: Stop all the experiments
         LOGGER.info("Deleted autotune object {}", name);
-    }
-
-    /**
-     * Delete existing autotuneconfig in applications monitored by autotune
-     *
-     * @param resource JSON string of the autotuneconfig object
-     */
-    private static void deleteExistingConfig(String resource) {
-        JSONObject autotuneConfigJson = new JSONObject(resource);
-        String configName = autotuneConfigJson.optString(AutotuneConfigConstants.LAYER_NAME);
-
-        LOGGER.info("KruizeLayer " + configName + " removed from autotune monitoring");
-        // Remove from collection of autotuneconfigs in map
-        autotuneConfigMap.remove(configName);
-
-        // Remove autotuneconfig for all applications monitored
-        for (String autotuneObjectKey : deploymentMap.keySet()) {
-            Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
-            for (String deploymentName : depMap.keySet()) {
-                for (String applicationServiceStackName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
-                    ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(applicationServiceStackName);
-                    applicationServiceStack.getApplicationServiceStackLayers().remove(configName);
-                }
-            }
-        }
     }
 
     /**
@@ -266,8 +184,7 @@ public class KruizeOperator {
                 return;
             }
 
-            // We now have a list of pods. Get the stack (ie docker image) for each pod.
-            // Add the unique set of stacks and create an ApplicationServiceStack object for each.
+            // We now have a list of pods. Match them to deployments.
             for (Pod pod : podList) {
                 ObjectMeta podMetadata = pod.getMetadata();
                 String podTemplateHash = podMetadata.getLabels().get(POD_TEMPLATE_HASH);
@@ -305,18 +222,6 @@ public class KruizeOperator {
                             deploymentMap.put(experimentName, depMap);
                         } else {
                             applicationDeployment = deploymentMap.get(experimentName).get(deploymentName);
-                        }
-                        // Check docker image id for each container in the pod
-                        for (Container container : pod.getSpec().getContainers()) {
-                            String containerImageName = container.getImage();
-                            String containerName = container.getName();
-                            ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
-                                    containerName);
-                            assert (applicationDeployment == null);
-                            // Add the container image if it has not already been added to the deployment
-                            if (!applicationDeployment.getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                applicationDeployment.getApplicationServiceStackMap().put(containerImageName, applicationServiceStack);
-                            }
                         }
                         break;
                     }
@@ -505,422 +410,5 @@ public class KruizeOperator {
             return null;
         }
         return metricProfile.getName();
-    }
-
-    /**
-     * Parse KruizeLayer JSON and create matching KruizeLayer object
-     *
-     * @param autotuneConfigResource  The JSON file for the autotuneconfig resource in the cluster.
-     * @param autotuneVariableContext
-     */
-    @SuppressWarnings("unchecked")
-    private static KruizeLayer getAutotuneConfig(String autotuneConfigResource, CustomResourceDefinitionContext autotuneVariableContext) {
-        KubernetesServices kubernetesServices = null;
-        try {
-            kubernetesServices = new KubernetesServicesImpl();
-            JSONObject autotuneConfigJson = new JSONObject(autotuneConfigResource);
-            JSONObject metadataJson = autotuneConfigJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-            JSONObject presenceJson = autotuneConfigJson.optJSONObject(AutotuneConfigConstants.LAYER_PRESENCE);
-
-            String presence = null;
-            JSONArray layerPresenceQueryJson = null;
-            JSONArray layerPresenceLabelJson = null;
-            if (presenceJson != null) {
-                presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
-                layerPresenceQueryJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-                layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
-            }
-
-            String name = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAME);
-            String namespace = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAMESPACE);
-
-            // Get the autotunequeryvariables for the current kubernetes environment
-            ArrayList<Map<String, String>> queryVarList = null;
-            try {
-                Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.k8s_type);
-                queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
-            } catch (Exception e) {
-                LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
-                return null;
-            }
-
-            String layerPresenceQueryStr = null;
-            String layerPresenceKey = null;
-
-            ArrayList<LayerPresenceQuery> layerPresenceQueries = new ArrayList<>();
-            if (layerPresenceQueryJson != null) {
-                for (Object query : layerPresenceQueryJson) {
-                    JSONObject queryJson = (JSONObject) query;
-                    String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.monitoring_agent)) {
-                        layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-                        layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
-                        // Replace the queryvariables in the query
-                        try {
-                            layerPresenceQueryStr = Variables.updateQueryWithVariables(null, null,
-                                    layerPresenceQueryStr, queryVarList);
-                            LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, layerPresenceQueryStr, layerPresenceKey);
-                            layerPresenceQueries.add(layerPresenceQuery);
-                        } catch (IOException | MonitoringAgentNotSupportedException e) {
-                            LOGGER.error("autotuneconfig {}: Unsupported Datasource: {}", name, datasource);
-                            return null;
-                        }
-                    }
-                }
-            }
-
-            String layerPresenceLabel = null;
-            String layerPresenceLabelValue = null;
-            if (layerPresenceLabelJson != null) {
-                for (Object label : layerPresenceLabelJson) {
-                    JSONObject labelJson = (JSONObject) label;
-                    layerPresenceLabel = labelJson.optString(AutotuneConfigConstants.NAME);
-                    layerPresenceLabelValue = labelJson.optString(AutotuneConfigConstants.VALUE);
-                }
-            }
-
-            String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-            String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
-            int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-            JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
-            ArrayList<Tunable> tunableArrayList = new ArrayList<>();
-
-            for (Object tunablesObject : tunablesJsonArray) {
-                JSONObject tunableJson = (JSONObject) tunablesObject;
-                JSONArray tunableQueriesArray = tunableJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-
-                // Store the datasource and query from the JSON in a map
-                Map<String, String> queriesMap = new HashMap<>();
-                if (tunableQueriesArray != null) {
-                    for (Object tunableQuery : tunableQueriesArray) {
-                        JSONObject tunableQueryObj = (JSONObject) tunableQuery;
-                        String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                        String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-                        queriesMap.put(datasource, datasourceQuery);
-                    }
-                }
-
-                String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-                String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
-
-                ArrayList<String> sloClassList = new ArrayList<>();
-                JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
-
-                for (Object sloClassObject : sloClassJson) {
-                    String sloClass = (String) sloClassObject;
-                    sloClassList.add(sloClass);
-                }
-                String upperBound = "";
-                String lowerBound = "";
-                double step = 1;
-                List<String> choices = new ArrayList<>();
-                Tunable tunable;
-                try {
-                    /**
-                     * check the tunable type, if it's categorical then we need to add the choices
-                     * and then invoke the corresponding constructor
-                     */
-                    if (tunableValueType.equalsIgnoreCase("categorical")) {
-                        JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
-                        for (Object categoricalChoiceObject : categoricalChoicesJson) {
-                            String categoricalChoice = (String) categoricalChoiceObject;
-                            choices.add(categoricalChoice);
-                        }
-                        tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, choices);
-                    } else {
-                        upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-                        lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
-                        // Read in step from the tunable, set it to '1' if not specified.
-                        step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
-                        tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
-                    }
-                    tunableArrayList.add(tunable);
-                } catch (InvalidBoundsException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
-            String uid = metadataJson.optString(AnalyzerConstants.UID);
-            String apiVersion = autotuneConfigJson.optString(AnalyzerConstants.API_VERSION);
-            String kind = autotuneConfigJson.optString(AnalyzerConstants.KIND);
-
-            ObjectReference objectReference = new ObjectReference(apiVersion,
-                    null,
-                    kind,
-                    name,
-                    namespace,
-                    resourceVersion,
-                    uid);
-
-            return new KruizeLayer(name,
-                    layerName,
-                    level,
-                    details,
-                    presence,
-                    layerPresenceQueries,
-                    layerPresenceLabel,
-                    layerPresenceLabelValue,
-                    tunableArrayList,
-                    objectReference);
-        } catch (JSONException | InvalidValueException | NullPointerException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * This method adds the default (container) layer to all the monitored applications in the cluster
-     * If the autotuneObject is not null, then it adds the default layer only to stacks associated with that object.
-     *
-     * @param layer
-     * @param kruizeObject
-     */
-    private static void addDefaultLayer(KruizeLayer layer, KruizeObject kruizeObject) {
-        String presence = layer.getPresence();
-        // Add to all monitored applications in the cluster
-        if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
-            if (kruizeObject == null) {
-                for (String autotuneObjectKey : deploymentMap.keySet()) {
-                    Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
-                    for (String deploymentName : depMap.keySet()) {
-                        for (String containerImageName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
-                            ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName);
-                            addLayerInfoToApplication(applicationServiceStack, layer);
-                        }
-                    }
-                }
-            } else {
-                Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
-                for (String deploymentName : depMap.keySet()) {
-                    for (String containerImageName : depMap.get(deploymentName).getApplicationServiceStackMap().keySet()) {
-                        ApplicationServiceStack applicationServiceStack = depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName);
-                        addLayerInfoToApplication(applicationServiceStack, layer);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Check if a layer has a datasource query that validates its presence
-     *
-     * @param layer
-     * @param kruizeObject
-     */
-    private static void addQueryLayer(KruizeLayer layer, KruizeObject kruizeObject) {
-        KubernetesServices kubernetesServices = null;
-        try {
-            // TODO: This query needs to be optimized to only check for pods in the right namespace
-            kubernetesServices = new KubernetesServicesImpl();
-            List<Pod> podList = null;
-            if (kruizeObject != null) {
-                podList = kubernetesServices.getPodsBy(kruizeObject.getNamespace());
-            } else {
-                podList = kubernetesServices.getPodsBy(null);
-            }
-            if (podList == null) {
-                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-                return;
-            }
-            DataSourceInfo autotuneDataSource = null;
-            try {
-                autotuneDataSource = DataSourceOperatorImpl.getMonitoringAgent(KruizeDeploymentInfo.monitoring_agent);
-            } catch (MonitoringAgentNotFoundException e) {
-                e.printStackTrace();
-            }
-            ArrayList<String> appsForAllQueries = new ArrayList<>();
-            ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();
-            // Check if a layer has a datasource query that validates its presence
-            if (layerPresenceQueries != null && !layerPresenceQueries.isEmpty()) {
-                for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
-                    try {
-                        // TODO: Check the datasource in the query is the same as the Autotune one
-                        ArrayList<String> apps = (ArrayList<String>) DataSourceOperatorImpl.getInstance().getAppsForLayer(autotuneDataSource, layerPresenceQuery.getLayerPresenceQuery(),
-                                layerPresenceQuery.getLayerPresenceKey());
-                        appsForAllQueries.addAll(apps);
-                    } catch (MalformedURLException | NullPointerException e) {
-                        LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-                    }
-                }
-                // We now have a list of apps that have the label and the key specified by the user.
-                // We now have to find the kubernetes objects corresponding to these apps
-                if (!appsForAllQueries.isEmpty()) {
-                    for (String application : appsForAllQueries) {
-                        List<Container> containers = null;
-                        for (Pod pod : podList) {
-                            if (pod.getMetadata().getName().contains(application)) {
-                                // We found a POD that matches the app name, now get its containers
-                                containers = pod.getSpec().getContainers();
-                                break;
-                            }
-                        }
-                        // No containers were found that matched the applications, this is weird, log a warning
-                        if (containers == null) {
-                            LOGGER.warn("Could not find any PODs related to Application name: " + application);
-                            continue;
-                        }
-                        for (Container container : containers) {
-                            String containerImageName = container.getImage();
-                            // Check if the container image is already present in the applicationServiceStackMap, if not, add it
-                            if (kruizeObject != null) {
-                                Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
-                                for (String deploymentName : depMap.keySet()) {
-                                    if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                        addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
-                                    }
-                                }
-                            } else {
-                                for (String autotuneObjectKey : deploymentMap.keySet()) {
-                                    Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
-                                    for (String deploymentName : depMap.keySet()) {
-                                        if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                            addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-                }
-            } else {
-                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (kubernetesServices != null) {
-                kubernetesServices.shutdownClient();
-            }
-        }
-    }
-
-    /**
-     * Attach a newly added to the relevant stacks
-     * If the autotuneObject is null, try to find all the relevant stacks
-     * under observation currently and add the new layer.
-     *
-     * @param layer
-     * @param kruizeObject
-     */
-    public static void addLayerInfo(KruizeLayer layer, KruizeObject kruizeObject) {
-        // Add the default layer for all monitored pods
-        addDefaultLayer(layer, kruizeObject);
-
-        // Match layer presence queries if any
-        addQueryLayer(layer, kruizeObject);
-        KubernetesServices kubernetesServices = null;
-        try {
-            kubernetesServices = new KubernetesServicesImpl();
-            String layerPresenceLabel = layer.getLayerPresenceLabel();
-            String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
-            if (layerPresenceLabel != null) {
-                List<Pod> podList = null;
-                if (kruizeObject != null) {
-                    podList = kubernetesServices.getPodsBy(kruizeObject.getNamespace(), layerPresenceLabel, layerPresenceLabelValue);
-                } else {
-                    podList = kubernetesServices.getPodsBy(null, layerPresenceLabel, layerPresenceLabelValue);
-                }
-
-                if (podList.isEmpty()) {
-                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
-                    return;
-                }
-                for (Pod pod : podList) {
-                    for (Container container : pod.getSpec().getContainers()) {
-                        String containerImageName = container.getImage();
-                        if (kruizeObject != null) {
-                            Map<String, ApplicationDeployment> depMap = deploymentMap.get(kruizeObject.getExperimentName());
-                            for (String deploymentName : depMap.keySet()) {
-                                if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                    addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
-                                }
-                            }
-                        } else {
-                            for (String autotuneObjectKey : deploymentMap.keySet()) {
-                                Map<String, ApplicationDeployment> depMap = deploymentMap.get(autotuneObjectKey);
-                                for (String deploymentName : depMap.keySet()) {
-                                    if (depMap.get(deploymentName).getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                        addLayerInfoToApplication(depMap.get(deploymentName).getApplicationServiceStackMap().get(containerImageName), layer);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (kubernetesServices != null) {
-                kubernetesServices.shutdownClient();
-            }
-        }
-    }
-
-    /**
-     * Add layer, queries and tunables info to the autotuneObject
-     *
-     * @param applicationServiceStack ApplicationServiceStack instance that contains the layer
-     * @param kruizeLayer             KruizeLayer object for the layer
-     */
-    private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, KruizeLayer kruizeLayer) {
-        // Check if layer already exists
-        if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty() &&
-                applicationServiceStack.getApplicationServiceStackLayers().containsKey(kruizeLayer.getName())) {
-            return;
-        }
-
-        ArrayList<Tunable> tunables = new ArrayList<>();
-        for (Tunable tunable : kruizeLayer.getTunables()) {
-            try {
-                Map<String, String> queries = new HashMap<>(tunable.getQueries());
-
-                Tunable tunableCopy;
-                if (tunable.getValueType().equalsIgnoreCase("categorical")) {
-                    tunableCopy = new Tunable(tunable.getName(),
-                            tunable.getValueType(),
-                            queries,
-                            tunable.getSloClassList(),
-                            tunable.getLayerName(),
-                            tunable.getChoices()
-                    );
-                } else {
-                    tunableCopy = new Tunable(tunable.getName(),
-                            tunable.getValueType(),
-                            queries,
-                            tunable.getSloClassList(),
-                            tunable.getLayerName(),
-                            tunable.getStep(),
-                            tunable.getUpperBound(),
-                            tunable.getLowerBound()
-                    );
-                }
-                tunables.add(tunableCopy);
-            } catch (InvalidBoundsException ignored) {
-            }
-        }
-
-        // Create autotuneconfigcopy with updated tunables arraylist
-        KruizeLayer kruizeLayerCopy = null;
-        try {
-            kruizeLayerCopy = new KruizeLayer(
-                    kruizeLayer.getName(),
-                    kruizeLayer.getLayerName(),
-                    kruizeLayer.getLevel(),
-                    kruizeLayer.getDetails(),
-                    kruizeLayer.getPresence(),
-                    kruizeLayer.getLayerPresenceQueries(),
-                    kruizeLayer.getLayerPresenceLabel(),
-                    kruizeLayer.getLayerPresenceLabelValue(),
-                    tunables,
-                    kruizeLayer.getObjectReference());
-        } catch (InvalidValueException ignored) {
-        }
-
-        LOGGER.info("Added layer " + kruizeLayer.getName() + " to stack " + applicationServiceStack.getStackName());
-        applicationServiceStack.getApplicationServiceStackLayers().put(kruizeLayer.getName(), kruizeLayerCopy);
     }
 }

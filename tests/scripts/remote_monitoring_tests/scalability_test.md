@@ -21,7 +21,7 @@ Use the below command to test :
 
 ```
 cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/scale_test
-./remote_monitoring_scale_test_bulk.sh [-i Kruize image] [-r results directory path] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-c Experiment type [container|namespace|container_ns] (default - container)]
+./remote_monitoring_scale_test_bulk.sh [-i Kruize image] [-r results directory path] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)]
 ```
 
 Where values for remote_monitoring_scale_test_bulk.sh are:
@@ -38,7 +38,7 @@ usage: remote_monitoring_fault_tolerant_tests.sh
 	[-t interval hours (default - 6)]
 	[-s Initial start date (default - 2023-01-10T00:00:00.000Z)]
 	[-q query db interval in mins, (default - 10)]
-    [-c Experiment type [container|namespace|container_ns] (default - container)]
+    [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)]
     [-a Test case (default - scale_5k) Valid values - [scale_5k/migration] migration - Used by db_migration test]"
 ```
 

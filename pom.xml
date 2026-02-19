@@ -6,13 +6,13 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.7.1</version>
+    <version>0.8.1</version>
     <properties>
-        <fabric8-version>7.3.1</fabric8-version>
+        <fabric8-version>7.5.2</fabric8-version>
         <org-json-version>20240303</org-json-version>
         <jetty-version>12.0.12</jetty-version>
-        <slf4j-version>2.17.1</slf4j-version>
-        <java-version>17</java-version>
+        <slf4j-version>2.25.3</slf4j-version>
+        <java-version>25</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
         <gson-version>2.9.0</gson-version>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
@@ -25,13 +25,13 @@
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
-        <awssdk-version>2.33.0</awssdk-version>
+        <awssdk-version>2.41.25</awssdk-version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>com.pubnub</groupId>
             <artifactId>pubnub-gson</artifactId>
-            <version>5.2.1</version>
+            <version>6.4.4</version>
         </dependency>
 
         <dependency>
@@ -214,7 +214,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>3.9.1</version>
+            <version>4.1.1</version>
         </dependency>
 
     </dependencies>

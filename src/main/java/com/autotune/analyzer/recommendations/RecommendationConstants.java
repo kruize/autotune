@@ -133,9 +133,19 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.MODEL_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
+        INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.ACCELERATOR_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
         ERROR_AMOUNT_MISSING_IN_CPU_SECTION(
@@ -243,6 +253,11 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_LIMITS_OPTIMISED,
                 RecommendationConstants.RecommendationNotificationTypes.NOTICE
         ),
+        NOTICE_ACCELERATOR_NOT_SUPPORTED(
+                NotificationCodes.NOTICE_ACCELERATOR_NOT_SUPPORTED,
+                RecommendationConstants.RecommendationNotificationMsgConstant.ACCELERATOR_NOT_SUPPORTED,
+                RecommendationConstants.RecommendationNotificationTypes.NOTICE
+        ),
         CRITICAL_CPU_REQUEST_NOT_SET(
                 RecommendationConstants.NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
                 RecommendationConstants.RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
@@ -330,6 +345,7 @@ public class RecommendationConstants {
         //          SubSystem - Network     125000 - 125999 (10% of availability)
         //          SubSystem - Disk        126000 - 126999 (10% of availability)
         //          SubSystem - Power       127000 - 127999 (10% of availability)
+        //          SubSystem - Accelerator 128000 - 128999 (10% of availability)
         public static final int SECTION_INFO_END = 199999;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_START = 110000;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_END = 119999;
@@ -348,6 +364,7 @@ public class RecommendationConstants {
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
+        public static final int INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE = 112104;
 
         public static final int COST_ENGINE_END = 112199;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
@@ -370,6 +387,9 @@ public class RecommendationConstants {
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 126999;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 127000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 127999;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_START = 128000;
+        public static final int INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE = 128001;
+        public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_END = 128999;
         public static final int SECTION_ERROR_START = 200000;
 
         // Section - Error:                 200000 - 299999
@@ -459,6 +479,9 @@ public class RecommendationConstants {
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 326999;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 327000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 327999;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_START = 328000;
+        public static final int NOTICE_ACCELERATOR_NOT_SUPPORTED = 328001;
+        public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_END = 328999;
         public static final int SECTION_WARNING_START = 400000;
 
         // Section - Warning:               400000 - 499999
@@ -648,6 +671,16 @@ public class RecommendationConstants {
                     CRITICAL_MEMORY_LIMIT_NOT_SET,
                     Arrays.asList(CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET)
             );
+
+            // Contradicting Codes for ACCELERATOR_NOT_SUPPORTED
+            Integer[] CODES_CONTRADICT_ACCELERATOR_NOT_SUPPORTED = {
+                    INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE
+            };
+
+            CONTRADICTING_MAP.put(
+                    NOTICE_ACCELERATOR_NOT_SUPPORTED,
+                    Arrays.asList(CODES_CONTRADICT_ACCELERATOR_NOT_SUPPORTED)
+            );
         }
 
         private NotificationCodes() {
@@ -678,6 +711,7 @@ public class RecommendationConstants {
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
         public static final String MODEL_RECOMMENDATIONS_AVAILABLE = "Model Recommendations Available";
+        public static final String RUNTIMES_RECOMMENDATIONS_AVAILABLE = "Runtimes Recommendations Available";
         public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
@@ -713,6 +747,8 @@ public class RecommendationConstants {
         public static final String MEMORY_REQUESTS_OPTIMISED = "Workload is optimised wrt MEMORY REQUESTS, no changes needed";
         public static final String MEMORY_LIMITS_OPTIMISED = "Workload is optimised wrt MEMORY LIMITS, no changes needed";
         public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
+        public static final String ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "Accelerator Recommendations are available";
+        public static final String ACCELERATOR_NOT_SUPPORTED = "Accelerator is not supported by kruize";
 
         private RecommendationNotificationMsgConstant() {
 

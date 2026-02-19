@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -495,6 +496,11 @@ public class GenericRecommendationModel implements RecommendationModel{
     @Override
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
+            setNotification = false;
+        }
 
         List<Double> acceleratorCoreMaxValues = new ArrayList<>();
         List<Double> acceleratorMemoryMaxValues = new ArrayList<>();
@@ -614,6 +620,12 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         if (!isGpuWorkload) {
+            if (!acceleratorCoreMaxValues.isEmpty() || !acceleratorMemoryMaxValues.isEmpty()) {
+                if (setNotification) {
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.NOTICE_ACCELERATOR_NOT_SUPPORTED));
+                }
+            }
             return null;
         }
 
@@ -656,7 +668,29 @@ public class GenericRecommendationModel implements RecommendationModel{
             memoryFraction = 1;
         }
 
-        return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> returnMap = RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+
+        if (null != returnMap && !returnMap.isEmpty()) {
+            // Add notification based on isGpuWorkload and accelerator model name
+            if (setNotification) {
+                if (RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorModel))
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE));
+            }
+        }
+
+        return returnMap;
+    }
+
+    /**
+     * @param filteredResultsMap
+     * @param notifications
+     * @return
+     */
+    @Override
+    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        //TODO: Need to update this
+        return null;
     }
 
     @Override

@@ -152,6 +152,11 @@ Here are the test scenarios:
   - Sample JSON Payload: Verifies the API correctly processes a structured payload and generates a job_id.
 - Verify the response of the GET job status API for the generated job_id.
   - Tests both verbose=false and verbose=true GET requests for comprehensive verification.
+- Validate bulk API response by passing a valid and multiple invalid time range values.
+  - Job_id will be generated in case of the valid scenario
+  - Corresponding error message will be sent back in case of invalid scenario with Response code 400.
+- Validate bulk API response by passing an invalid datasource name in the input JSON.
+  - Error message will be sent back with the response code 400
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
@@ -257,3 +262,48 @@ It can be run as shown in the example below:
 **_invalid_**: an invalid path to the token
 
 **_empty_**: a blank input in place of the token file path
+
+### Datasource Availability/Serviceability Test:
+
+Kruize supports multiple datasources such as Prometheus and Thanos Querier. During startup, Kruize validates the reachability of all configured datasources before proceeding.
+
+The datasource availability/serviceability test is part of the functional test bucket and is implemented as a standalone shell script, similar to the authentication tests.
+It validates Kruize behavior when one or more datasources are reachable or unreachable.
+
+Kruize startup behavior follows these rules:
+
+* Kruize continues startup if at least one datasource is reachable.
+* Kruize logs an error for each unreachable datasource.
+* Kruize fails startup only when all configured datasources are unreachable.
+
+The test can be run using the command below:
+
+```
+./test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=datasource_tests
+```
+
+#### Scenarios
+
+**both-valid**
+
+Both Prometheus and Thanos Querier datasources are reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**prom-valid-thanos-invalid**
+
+Prometheus is reachable and Thanos Querier is unreachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Thanos.
+
+**prom-invalid-thanos-valid**
+
+Prometheus is unreachable and Thanos Querier is reachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Prometheus.
+
+**both-invalid**
+
+Both Prometheus and Thanos Querier datasources are unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.

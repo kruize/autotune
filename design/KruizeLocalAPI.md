@@ -65,6 +65,16 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Create Layer API](#create-layer-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+- [List Layers API](#list-layers-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -2811,6 +2821,333 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
 </details>
 
 <br>
+
+<a name="create-layer-api"></a>
+
+### Create Layer API
+
+Creates a new layer configuration that defines tunable parameters and layer presence detection for application optimization.
+Kruize currently supports hotspot, semeur and quarkus layers.
+
+**Request**
+
+`POST /createLayer`
+
+`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createLayer`
+
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "hotspot"
+  },
+  "layer_name": "hotspot",
+  "details": "hotspot tunables",
+  "layer_presence": {
+    "queries": [
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+        "key": "pod"
+      }
+    ]
+  },
+  "tunables": [
+    {
+      "name": "GCPolicy",
+      "description": "Garbage collection policy",
+      "value_type": "categorical",
+      "choices": [
+        "G1GC",
+        "ParallelGC",
+        "SerialGC",
+        "ShenandoahGC",
+        "ZGC"
+      ]
+    },
+    {
+      "name": "MaxRAMPercentage",
+      "description": "Maximum RAM percentage to allocate",
+      "value_type": "integer",
+      "lower_bound": "25",
+      "upper_bound": "90",
+      "step": 1
+    }
+  ]
+}
+```
+
+</details>
+
+**Layer Presence Configuration**
+
+The `layer_presence` object can have one of the following configurations:
+
+- **Always present**: `{"presence": "always"}`
+- **Query-based**: `{"queries": [{"datasource": "prometheus", "query": "..."}]}`
+
+**Note:** Label-based presence detection is not yet supported and will be added in a future release.
+
+**Tunables Configuration**
+
+Each tunable can be either:
+
+- **Bounded (numeric)**: Requires `value_type`, `upper_bound`, `lower_bound`, and `step`
+- **Categorical**: Requires `value_type: "categorical"` and `choices` array
+
+**Response**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+
+```json
+{
+  "message": "Layer : <layer_name> created successfully. View Layers at /listLayers",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                                      |
+|------------------|------------------------------------------------------------------|
+| 400              | Invalid request body: missing required fields                    |
+| 400              | Layer with name 'container-layer' already exists                 |
+| 400              | Invalid bounds: `upper_bound` must be greater than `lower_bound` |
+| 400              | Invalid step: step must be > 0                                   |
+| 400              | Invalid categorical tunable: choices cannot be empty             |
+| 400              | Tunable with value_type 'categorical' cannot have bounds/step    |
+| 400              | Numeric tunable must have bounds and step                        |
+| 500              | Internal Server Error                                            |
+
+---
+
+<a name="list-layers-api"></a>
+
+### List Layers API
+
+Retrieves a list of all configured layers or a specific layer by name.
+
+**Request with layer_name parameter**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers?layer_name=<layer_name>`
+
+Returns the layer details of the specified layer
+<br><br>
+
+**Request for all layers**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers`
+
+Returns all configured layers
+
+**Response for all layers**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
+    "metadata": {
+      "name": "hotspot"
+    },
+    "layer_name": "hotspot",
+    "details": "hotspot tunables",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
+        "value_type": "categorical",
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
+      },
+      {
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
+        "value_type": "integer",
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Response for layer_name - `hotspot`**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
+    "metadata": {
+      "name": "hotspot"
+    },
+    "layer_name": "hotspot",
+    "details": "hotspot tunables",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
+        "value_type": "categorical",
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
+      },
+      {
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
+        "value_type": "integer",
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                    |
+|------------------|------------------------------------------------|
+| 404              | Layer with name 'xyz' not found                |
+| 500              | Internal Server Error                          |
 
 <a name="create-experiment-api"></a>
 

@@ -45,6 +45,18 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
 
+    elif cluster_type == "kind":
+            port = subprocess.run(
+                ['kubectl get svc kruize -n monitoring -o jsonpath="{.spec.ports[0].nodePort}"'],
+                shell=True, stdout=subprocess.PIPE)
+
+            AUTOTUNE_PORT = port.stdout.decode('utf-8').strip('\n')
+
+            ip = subprocess.run(['docker inspect kind-control-plane --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"'],
+                                shell=True, stdout=subprocess.PIPE)
+            SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
+            URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
+
     elif (cluster_type == "openshift"):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
@@ -253,8 +265,11 @@ def delete_performance_profile(input_json_file, invalid_header=False):
     print("\nDeleting the performance profile...")
     url = URL + "/deletePerformanceProfile"
 
-    performance_profile_name = input_json['name']
-    query_string = f"name={performance_profile_name}"
+    try:
+        performance_profile_name = input_json['name']
+        query_string = f"name={performance_profile_name}"
+    except KeyError:
+        query_string = ""
 
     if query_string:
         url += "?" + query_string

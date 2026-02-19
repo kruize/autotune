@@ -66,6 +66,7 @@ CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data fo
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
+CREATE_EXP_INVALID_DATASOURCE = "Given datasource name - %s either does not exist or is not valid"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -112,11 +113,18 @@ COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain a
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+CREATE_PERF_PROFILE_DUPLICATE_RECORD_MSG = "Validation failed: Performance Profile already exists: %s"
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
 UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the provided SLO data"
 UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be a superset of existing data"
+DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. View Performance Profiles at /listPerformanceProfiles"
+DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
+DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
+DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
+DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable."
+RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 
 
 # Kruize Recommendations Notification codes
@@ -218,6 +226,25 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
+PERF_PROFILE_NAME = "resource-optimization-openshift"
+
+# Only NVIDIA-A100-SXM4-40GB is tested on real machine,
+# Rest of them are best guess and assumptions
+# TODO: Need to be updated after comparing with real time data
+SUPPORTED_GPUS = [
+"NVIDIA-A100-SXM4-40GB",
+"NVIDIA-A100-SXM4-80GB",
+"NVIDIA-A100-PCIE-40GB",
+"NVIDIA-A100-PCIE-80GB",
+"NVIDIA-H100-SXM5-80GB",
+"NVIDIA-H100-SXM5-94GB",
+"NVIDIA-H100-SXM5-96GB",
+"NVIDIA-H100-PCIE-80GB",
+"NVIDIA-H100-PCIE-94GB",
+"NVIDIA-H100-PCIE-96GB",
+"NVIDIA-H200-PCIE-141GB"
+]
+PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -932,8 +959,8 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-                        # TODO: validate Plots data for namespace experiment_type
-                        # validate_plots(terms_obj, duration_terms, term)
+                        # validate Plots data for namespace experiment_type
+                        validate_plots(terms_obj, duration_terms, term)
                     # verify that plots isn't generated in case of no recommendations
                     else:
                         assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
@@ -1108,6 +1135,11 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                             validate_config_local_monitoring(engine_obj["config"])
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
+                # validate Plots data
+                validate_plots(terms_obj, duration_terms, term)
+            # verify that plots isn't generated in case of no recommendations
+            else:
+                assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
     else:
         notifications = list_reco_namespace["recommendations"]["notifications"]
         if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
@@ -1260,6 +1292,32 @@ def get_kruize_pod(namespace):
     pod_name = output.decode('utf-8')
     print(f"pod name = {pod_name}")
     return pod_name.rstrip()
+
+def get_kruize_logs(cluster_type):
+    """
+    Fetches logs (stdout) from the Kruize pod.
+    Tail defaults to last 500 lines for speed.
+    """
+    tail = 500
+    # get the namespace based on cluster
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    else:
+        namespace = "openshift-tuning"
+
+    pod = get_kruize_pod(namespace)
+
+    try:
+        cmd = [
+            "kubectl", "logs",
+            pod,
+            "-n", namespace,
+            f"--tail={tail}"
+        ]
+        logs = subprocess.check_output(cmd, text=True)
+        return logs
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch logs from pod {pod}: {e}")
 
 
 def delete_kruize_pod(namespace):
@@ -1892,7 +1950,7 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
 def validate_job_status(job_id, base_url, caplog):
     # Common keys expected in both responses
     common_keys = {
-        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
+        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time"
     }
 
     # Extra keys expected when verbose=true

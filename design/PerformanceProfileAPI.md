@@ -311,15 +311,14 @@ List performance profiles output JSON as follows.
 ]
 ```
 
-
 ## UpdatePerformanceProfile
 
 This is quick guide instructions to update performance profile using input JSON as follows.
 
 **Request**
-`POST /updatePerformanceProfile`
+`PUT /updatePerformanceProfile`
 
-`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updatePerformanceProfile`
+`curl -H 'Accept: application/json' -X PUT --data 'copy paste below JSON' http://<URL>:<PORT>/updatePerformanceProfile`
 
 ```
 {
@@ -761,3 +760,40 @@ This is quick guide instructions to update performance profile using input JSON 
 }
 ```
 #### Note: One of query or aggregation_functions is mandatory. Both can be present together.
+
+
+## DeletePerformanceProfile
+
+This is quick guide instructions to delete performance profile using input param as follows.
+
+**Request Parameters**
+
+| Parameter | Type   | Required | Description                         |
+|-----------|--------|----------|-------------------------------------|
+| name      | string | required | The name of the performance profile |
+
+
+**Request with name query parameter**
+
+`DELETE /deletePerformanceProfile`
+
+`curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/deletePerformanceProfile?name=resource-optimization-openshift`
+
+Deletes the specified performance profile, provided it is already created
+
+<details>
+<summary><b>Response</b></summary>
+
+
+```json
+{
+  "message": "Performance profile resource-optimization-openshift deleted successfully. View Performance Profiles at /listPerformanceProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+<br>

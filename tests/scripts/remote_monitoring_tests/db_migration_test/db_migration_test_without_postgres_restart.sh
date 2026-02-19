@@ -25,7 +25,7 @@
 # Invokes updateRecommendations for all the 50 exps
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
 
 # Source the common functions scripts

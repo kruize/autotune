@@ -62,8 +62,6 @@ public class InitializeDeployment {
         }
         KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);
 
-        KruizeDeploymentInfo.setLayerTable();
-
         KruizeDeploymentInfo.initiateEventLogging();
 
         KruizeDeploymentInfo.logDeploymentInfo();

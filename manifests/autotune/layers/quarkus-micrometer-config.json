@@ -1,0 +1,28 @@
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "quarkus"
+  },
+  "layer_name": "quarkus",
+  "details": "quarkus tunables",
+  "layer_presence": {
+    "label": [
+      {
+        "name": "app.kubernetes.io/layer",
+        "value": "quarkus"
+      }
+    ]
+  },
+  "tunables": [
+    {
+      "name": "quarkus.thread-pool.core-threads",
+      "description": "The core thread pool size. This number of threads will always be kept alive.",
+      "value_type": "integer",
+      "lower_bound": "1",
+      "upper_bound": "10",
+      "step": 1
+    }
+  ]
+}
+

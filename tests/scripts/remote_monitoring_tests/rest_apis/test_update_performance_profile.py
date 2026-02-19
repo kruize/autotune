@@ -18,7 +18,7 @@ import tempfile
 import pytest
 import sys
 
-
+from helpers.list_metric_profiles_validate import *
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -89,6 +89,11 @@ def test_update_performance_profile(cluster_type):
     response = list_performance_profiles()
     perf_profile_version = response.json()[0]["profile_version"]
     assert perf_profile_version == perf_profile_version_v2
+
+    perf_profile_json = response.json()
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(perf_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
 
     response = delete_performance_profile(perf_profile_json_file)
     print("delete performance profile = ", response.status_code)

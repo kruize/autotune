@@ -18,7 +18,7 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 
 
 # Source the common functions scripts
@@ -53,7 +53,7 @@ total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)] [-a Test case (default - scale_5k)]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)]"
 	exit -1
 }
 
@@ -91,14 +91,19 @@ function kruize_scale_test_remote_patch() {
 	CRC_DIR="./manifests/crc/default-db-included-installation"
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 
-	sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	if [ ${testcase} == "migration" ]; then
-	        sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	        sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	else
-	        sed -i 's/memory: "768Mi"/memory: "4Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	        sed -i 's/memory: "100Mi"/memory: "10Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	        sed -i 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		# Replace memory requests and limits for Kruize to 4Gi and 8Gi respectively for scale test
+		sed -i '/- name: kruize$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"4Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"8Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+
+		# Replace memory requests and limits for Kruize DB to 10Gi and 30 Gi respectively for scale test
+		sed -i '/- name: kruize-db$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"10Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"30Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+
+                sed -i 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+                cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
 	fi
 
 }
@@ -178,7 +183,7 @@ if [ ${kruize_setup} == true ]; then
 	echo "Setting up kruize..." | tee -a ${LOG}
 	echo "Removing isROSEnabled=false and local=true"
 	cluster_type=${CLUSTER_TYPE}
-	pushd ${KRUIZE_REPO} > /dev/null
+	pushd ${KRUIZE_REPO_PATH} > /dev/null
 		kruize_scale_test_remote_patch
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
 		./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
