@@ -1624,7 +1624,6 @@ public class DBHelpers {
                     kruizeLayer.setApiVersion(entry.getApi_version());
                     kruizeLayer.setKind(entry.getKind());
                     kruizeLayer.setLayerName(entry.getLayer_name());
-                    kruizeLayer.setLayerLevel(entry.getLayer_level());
                     kruizeLayer.setDetails(entry.getDetails());
                 } catch (Exception e) {
                     throw new LayerConversionException(

@@ -318,7 +318,6 @@ kind: "KruizeLayer"
 metadata:
   name: "hotspot"
 layer_name: hotspot
-layer_level: 1
 details: hotspot tunables
 layer_presence:
   queries:
@@ -373,7 +372,6 @@ tunables:
   "kind": "KruizeLayer",
   "metadata": { "name": "hotspot" },
   "layer_name": "hotspot",
-  "layer_level": 1,
   "details": "hotspot tunables",
   "layer_presence": { ... },
   "tunables": [ ... ]
@@ -396,7 +394,6 @@ public final class KruizeLayer {
     private String kind;
     private LayerMetadata metadata;
     private String layerName;
-    private int layerLevel;
     private String details;
     private LayerPresence layerPresence;
     private ArrayList<Tunable> tunables;
