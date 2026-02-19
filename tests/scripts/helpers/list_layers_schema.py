@@ -37,9 +37,6 @@ list_layers_schema = {
             "layer_name": {
                 "type": "string"
             },
-            "layer_level": {
-                "type": "integer"
-            },
             "details": {
                 "type": "string"
             },
@@ -123,6 +120,6 @@ list_layers_schema = {
                 }
             }
         },
-        "required": ["apiVersion", "kind", "metadata", "layer_name", "layer_level", "layer_presence", "tunables"]
+        "required": ["apiVersion", "kind", "metadata", "layer_name", "layer_presence", "tunables"]
     }
 }

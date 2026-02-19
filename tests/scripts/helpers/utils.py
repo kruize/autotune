@@ -137,7 +137,6 @@ LAYER_NAME_EMPTY_MSG = "Validation failed: layer_name cannot be null or empty"
 LAYER_PRESENCE_NULL_JSON_MSG = "Validation failed: layer_presence cannot be null"
 LAYER_TUNABLES_NULL_JSON_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
 LAYER_TUNABLES_EMPTY_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
-LAYER_LEVEL_NEGATIVE_MSG = "Validation failed: Layer level must be a non-negative integer"
 LAYER_PRESENCE_MISSING_MSG = "Validation failed: layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
 LAYER_PRESENCE_MULTIPLE_TYPES_MSG = "Validation failed: layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label"
 LAYER_DUPLICATE_TUNABLE_NAMES_MSG = "Validation failed: Layer contains duplicate tunable names: %s"
@@ -1920,7 +1919,7 @@ def validate_layer_data(returned_layer, input_json, verbose=True):
     """
     Validates that a returned layer JSON matches the input JSON.
     Performs comprehensive validation of all layer fields including:
-    - Top-level fields (apiVersion, kind, metadata, layer_name, layer_level, details)
+    - Top-level fields (apiVersion, kind, metadata, layer_name, details)
     - Layer presence configuration (presence/queries/label)
     - All tunable fields and their values
 
@@ -1961,14 +1960,8 @@ def validate_layer_data(returned_layer, input_json, verbose=True):
     if verbose:
         print(f"  ✓ layer_name: {returned_layer['layer_name']}")
 
-    # 5. layer_level
-    assert 'layer_level' in returned_layer, "layer_level field missing"
-    assert returned_layer['layer_level'] == input_json['layer_level'], \
-        f"layer_level mismatch: expected {input_json['layer_level']}, got {returned_layer['layer_level']}"
-    if verbose:
-        print(f"  ✓ layer_level: {returned_layer['layer_level']}")
 
-    # 6. details (optional field)
+    # 5. details (optional field)
     if 'details' in input_json:
         assert 'details' in returned_layer, "details field missing"
         assert returned_layer['details'] == input_json['details'], \

@@ -160,16 +160,16 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
 
 @pytest.mark.layers
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("null_metadata_name", LAYER_METADATA_NAME_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", None, "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("empty_metadata_name", LAYER_METADATA_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("null_layer_name", LAYER_NAME_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", None, 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("empty_layer_name", LAYER_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("null_layer_presence", LAYER_PRESENCE_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", 'null', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', 'null'),
-    ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[]'),
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("null_metadata_name", LAYER_METADATA_NAME_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", None, "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("empty_metadata_name", LAYER_METADATA_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_layer_name", LAYER_NAME_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", None, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("empty_layer_name", LAYER_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_layer_presence", LAYER_PRESENCE_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", 'null', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', 'null'),
+    ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[]'),
 ])
-def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects requests with missing/null/empty mandatory fields
     """
@@ -184,7 +184,6 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
         kind=kind,
         metadata_name=metadata_name,
         layer_name=layer_name,
-        layer_level=layer_level,
         details=details,
         layer_presence=layer_presence,
         tunables=tunables
@@ -227,10 +226,10 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
 
 @pytest.mark.layers
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("duplicate_tunable_names", LAYER_DUPLICATE_TUNABLE_NAMES_MSG % 'duplicate', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "duplicate", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}, {"name": "duplicate", "value_type": "double", "upper_bound": "50", "lower_bound": "5", "step": 1}]'),
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("duplicate_tunable_names", LAYER_DUPLICATE_TUNABLE_NAMES_MSG % 'duplicate', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "duplicate", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}, {"name": "duplicate", "value_type": "double", "upper_bound": "50", "lower_bound": "5", "step": 1}]'),
 ])
-def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects requests with invalid/negative/duplicate values
     """
@@ -245,7 +244,6 @@ def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, 
         kind=kind,
         metadata_name=metadata_name,
         layer_name=layer_name,
-        layer_level=layer_level,
         details=details,
         layer_presence=layer_presence,
         tunables=tunables
@@ -324,14 +322,14 @@ def test_create_layer_duplicate_layer_name(cluster_type):
 
 @pytest.mark.layers
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("empty_layer_presence", LAYER_PRESENCE_MISSING_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("presence_and_queries", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("presence_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always", "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("queries_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("all_three_types", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("empty_layer_presence", LAYER_PRESENCE_MISSING_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("presence_and_queries", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("presence_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always", "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("queries_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("all_three_types", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects invalid layer_presence combinations
     """
@@ -346,7 +344,6 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
         kind=kind,
         metadata_name=metadata_name,
         layer_name=layer_name,
-        layer_level=layer_level,
         details=details,
         layer_presence=layer_presence,
         tunables=tunables
@@ -393,20 +390,20 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
 
 @pytest.mark.layers
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("tunable_null_upper_bound", TUNABLE_NULL_BOUNDS_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": null, "lower_bound": "10", "step": 1}]'),
-    ("tunable_null_lower_bound", TUNABLE_NULL_BOUNDS_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": null, "step": 1}]'),
-    ("tunable_non_numeric_upper_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has non-numeric bounds: upper=abc, lower=10", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "abc", "lower_bound": "10", "step": 1}]'),
-    ("tunable_non_numeric_lower_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has non-numeric bounds: upper=100, lower=xyz", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "xyz", "step": 1}]'),
-    ("tunable_null_step", TUNABLE_NULL_STEP_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": null}]'),
-    ("tunable_zero_step", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step must be > 0, got: 0.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 0}]'),
-    ("tunable_negative_step", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step must be > 0, got: -5.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": -5}]'),
-    ("tunable_negative_upper_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has negative bounds; upperBound: -100.0 lowerBound: 10.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "-100", "lower_bound": "10", "step": 1}]'),
-    ("tunable_negative_lower_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has negative bounds; upperBound: 100.0 lowerBound: -50.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "-50", "step": 1}]'),
-    ("tunable_lower_gte_upper", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid bounds; lowerBound (100.0) must be less than upperBound (50.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
-    ("tunable_step_greater_than_range", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step (100.0) must be <= (upperBound - lowerBound) (90.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 100}]'),
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("tunable_null_upper_bound", TUNABLE_NULL_BOUNDS_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": null, "lower_bound": "10", "step": 1}]'),
+    ("tunable_null_lower_bound", TUNABLE_NULL_BOUNDS_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": null, "step": 1}]'),
+    ("tunable_non_numeric_upper_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has non-numeric bounds: upper=abc, lower=10", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "abc", "lower_bound": "10", "step": 1}]'),
+    ("tunable_non_numeric_lower_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has non-numeric bounds: upper=100, lower=xyz", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "xyz", "step": 1}]'),
+    ("tunable_null_step", TUNABLE_NULL_STEP_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": null}]'),
+    ("tunable_zero_step", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step must be > 0, got: 0.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 0}]'),
+    ("tunable_negative_step", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step must be > 0, got: -5.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer","test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": -5}]'),
+    ("tunable_negative_upper_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has negative bounds; upperBound: -100.0 lowerBound: 10.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "-100", "lower_bound": "10", "step": 1}]'),
+    ("tunable_negative_lower_bound", "Validation failed: ERROR: Tunable: Tunable 't1' has negative bounds; upperBound: 100.0 lowerBound: -50.0", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "-50", "step": 1}]'),
+    ("tunable_lower_gte_upper", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid bounds; lowerBound (100.0) must be less than upperBound (50.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
+    ("tunable_step_greater_than_range", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step (100.0) must be <= (upperBound - lowerBound) (90.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 100}]'),
 ])
-def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects invalid tunable bounds/step configurations
     """
@@ -421,7 +418,6 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
         kind=kind,
         metadata_name=metadata_name,
         layer_name=layer_name,
-        layer_level=layer_level,
         details=details,
         layer_presence=layer_presence,
         tunables=tunables
@@ -466,12 +462,12 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
 
 @pytest.mark.layers
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("categorical_null_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": null}]'),
-    ("categorical_empty_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": []}]'),
-    ("categorical_with_bounds", TUNABLE_MIXED_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": ["opt1", "opt2"], "upper_bound": "100", "lower_bound": "10", "step": 5}]'),
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("categorical_null_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": null}]'),
+    ("categorical_empty_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": []}]'),
+    ("categorical_with_bounds", TUNABLE_MIXED_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": ["opt1", "opt2"], "upper_bound": "100", "lower_bound": "10", "step": 5}]'),
 ])
-def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects invalid categorical tunable configurations
     """
@@ -486,7 +482,6 @@ def test_create_layer_categorical_tunable_validation(test_name, expected_error_m
         kind=kind,
         metadata_name=metadata_name,
         layer_name=layer_name,
-        layer_level=layer_level,
         details=details,
         layer_presence=layer_presence,
         tunables=tunables

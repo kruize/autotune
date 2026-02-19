@@ -228,7 +228,7 @@ def test_list_layer_validates_all_fields_and_values(cluster_type, layer_file):
     """
     Test Description: This test validates that listLayers API returns all fields with correct values.
     It performs comprehensive validation of all layer parameters including:
-    - Top-level fields (apiVersion, kind, metadata, layer_name, layer_level, details, layer_presence, tunables)
+    - Top-level fields (apiVersion, kind, metadata, layer_name, details, layer_presence, tunables)
     - Nested metadata fields
     - Layer presence configuration (presence/queries/label)
     - All tunable fields and their values
