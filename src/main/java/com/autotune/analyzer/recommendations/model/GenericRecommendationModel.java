@@ -738,7 +738,6 @@ public class GenericRecommendationModel implements RecommendationModel{
     /**
      * Maps JVM runtime name from metric metadata to the effective Kruize layer.
      * - OpenJDK or Hotspot → hotspot
-     * - Semeru or OpenJ9 → semeru
      * - null or empty → hotspot (default)
      */
     public static String getEffectiveLayerFromRuntime(String runtime) {

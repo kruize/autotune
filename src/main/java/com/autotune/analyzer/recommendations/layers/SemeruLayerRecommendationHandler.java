@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
- * Recommendation handler for the Semeru/OpenJ9 JVM layer.
+ * Recommendation handler for the Semeru JVM layer.
  * Produces GC policy (-Xgcpolicy) and MaxRAMPercentage recommendations.
  */
 public class SemeruLayerRecommendationHandler implements LayerRecommendationHandler {

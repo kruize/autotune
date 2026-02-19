@@ -860,6 +860,18 @@ public class RecommendationEngine {
             RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
             RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
 
+            // Pre-populate context with CPU/memory recommendations for use by handleRuntimeRecommendations
+            Map<TunableSpec, Object> context = new HashMap<>();
+            String containerLayer = AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER;
+            context.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST),
+                    recommendationMemRequest != null ? recommendationMemRequest.getAmount() : null);
+            context.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT),
+                    recommendationMemLimits != null ? recommendationMemLimits.getAmount() : null);
+            context.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.CPU_REQUEST),
+                    recommendationCpuRequest != null ? recommendationCpuRequest.getAmount() : null);
+            context.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.CPU_LIMIT),
+                    recommendationCpuLimits != null ? recommendationCpuLimits.getAmount() : null);
+
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
@@ -876,7 +888,7 @@ public class RecommendationEngine {
 
             try {
                 if (isRuntimeLayerPresent(containerData.getLayerMap())) {
-                    runtimeRecommList = handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications);
+                    runtimeRecommList = handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications, context);
                 }
             } catch (Exception e) {
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
@@ -910,9 +922,10 @@ public class RecommendationEngine {
      * @param model
      * @param filteredResultsMap
      * @param notifications
+     * @param context            pre-populated with CPU/memory recommendations; reused to avoid redundant model calls
      * @return
      */
-    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject, ContainerData containerData, RecommendationModel model, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject, ContainerData containerData, RecommendationModel model, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications, Map<TunableSpec, Object> context) {
         List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
         String datasourceName = kruizeObject.getDataSource();
         if (datasourceName == null) {
@@ -927,14 +940,7 @@ public class RecommendationEngine {
         List<KruizeLayer> kruizeLayers = layerMap.values().stream()
                 .filter(layer -> layer.getTunables() != null)
                 .collect(Collectors.toList());
-        Map<Tunable, TunableSpec> tunableToSpec = new HashMap<>();
-        for (KruizeLayer layer : kruizeLayers) {
-            for (Tunable tunable : layer.getTunables()) {
-                tunableToSpec.put(tunable, new TunableSpec(layer.getLayerName(), tunable.getName()));
-            }
-        }
         List<TunableSpec> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
-        Map<TunableSpec, Object> context = new HashMap<>();
         RecommendationConfigItem recommendationCpuRequest;
         RecommendationConfigItem recommendationCpuLimits;
         RecommendationConfigItem recommendationMemRequest;
@@ -948,34 +954,38 @@ public class RecommendationEngine {
             Double amount;
             switch (metricName) {
                 case AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST:
-                    recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-                    amount = null;
-                    if (recommendationMemRequest != null) {
-                        amount = recommendationMemRequest.getAmount();
+                    if (context.containsKey(spec)) {
+                        amount = (Double) context.get(spec);
+                    } else {
+                        recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+                        amount = recommendationMemRequest != null ? recommendationMemRequest.getAmount() : null;
                     }
                     context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT:
-                    recommendationMemLimits = model.getMemoryLimitRecommendation(filteredResultsMap, notifications);
-                    amount = null;
-                    if (recommendationMemLimits != null) {
-                        amount = recommendationMemLimits.getAmount();
+                    if (context.containsKey(spec)) {
+                        amount = (Double) context.get(spec);
+                    } else {
+                        recommendationMemLimits = model.getMemoryLimitRecommendation(filteredResultsMap, notifications);
+                        amount = recommendationMemLimits != null ? recommendationMemLimits.getAmount() : null;
                     }
                     context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.CPU_REQUEST:
-                    recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-                    amount = null;
-                    if (recommendationCpuRequest != null) {
-                        amount = recommendationCpuRequest.getAmount();
+                    if (context.containsKey(spec)) {
+                        amount = (Double) context.get(spec);
+                    } else {
+                        recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
+                        amount = recommendationCpuRequest != null ? recommendationCpuRequest.getAmount() : null;
                     }
                     context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.CPU_LIMIT:
-                    recommendationCpuLimits = model.getCPULimitRecommendation(filteredResultsMap, notifications);
-                    amount = null;
-                    if (recommendationCpuLimits != null) {
-                        amount = recommendationCpuLimits.getAmount();
+                    if (context.containsKey(spec)) {
+                        amount = (Double) context.get(spec);
+                    } else {
+                        recommendationCpuLimits = model.getCPULimitRecommendation(filteredResultsMap, notifications);
+                        amount = recommendationCpuLimits != null ? recommendationCpuLimits.getAmount() : null;
                     }
                     context.put(spec, amount);
                     break;
@@ -2725,13 +2735,18 @@ public class RecommendationEngine {
         }
     }
 
+    /**
+     * Checks for the presence of runtime, quarkus or any other non-container layers
+     * @param detectedLayers
+     * @return for now, it returns true if any other layer except container is detected.
+     */
     private static boolean isRuntimeLayerPresent(Map<String, KruizeLayer> detectedLayers) {
         if (detectedLayers == null || detectedLayers.isEmpty()) {
             return false;
         }
-
-        return detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT)
-                || detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU);
+        String containerLayer = AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER;
+        return detectedLayers.keySet().stream()
+                .anyMatch(layer -> layer != null && !layer.equalsIgnoreCase(containerLayer));
     }
 
     /**
