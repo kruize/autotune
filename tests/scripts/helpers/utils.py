@@ -125,6 +125,7 @@ DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile do
 DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
 DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable."
 RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
+RUNTIMES_RECOMMENDATIONS_AVAILABLE = "Runtimes Recommendations Available"
 
 # Layer API Messages
 CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully. View Layers at /listLayers"
@@ -2380,6 +2381,17 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                 terms = interval_obj.get("recommendation_terms", {})
                 for _term_name, term_obj in terms.items():
                     engines = term_obj.get("recommendation_engines", {})
+                    # Check cost engine has runtime notification
+                    if "cost" in engines:
+                        cost_notifications = engines["cost"].get("notifications", {})
+                        assert RUNTIMES_RECOMMENDATIONS_AVAILABLE in cost_notifications, \
+                            f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in cost engine notifications"
+
+                    # Check performance engine has runtime notification
+                    if "performance" in engines:
+                        perf_notifications = engines["performance"].get("notifications", {})
+                        assert RUNTIMES_RECOMMENDATIONS_AVAILABLE in perf_notifications, \
+                            f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in performance engine notifications"
                     for _engine_name, engine_obj in engines.items():
                         config = engine_obj.get("config", {})
                         env_list = config.get("env")
@@ -2389,11 +2401,12 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                         for env_item in env_list:
                             name = env_item.get("name")
                             value = env_item.get("value")
-                            if name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS) and _has_runtime_env_value(value):
-                                assert value, f"Runtime env {name} has empty value"
-                                assert _has_runtime_env_value(value), (
-                                    f"Runtime env {name} should contain GC flags, got: {value}"
+                            assert name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS), (
+                                    f"Runtime env {name} should be among {JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}"
                                 )
-                                return  # Found valid runtime recommendation
-                            else:
-                                print("No runtime recommendations present (workload may not expose jvm_info or layers not configured)")
+                            assert _has_runtime_env_value(value), f"Runtime values are incorrect"
+                            assert value, f"Runtime env {name} has empty value"
+                            assert _has_runtime_env_value(value), (
+                                    f"Runtime env {name} should contain GC flags, got: {value}"
+                            )
+                            return  # Found valid runtime recommendation
