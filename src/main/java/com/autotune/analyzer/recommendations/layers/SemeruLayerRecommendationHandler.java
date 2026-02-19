@@ -18,6 +18,7 @@ package com.autotune.analyzer.recommendations.layers;
 
 import com.autotune.analyzer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +68,7 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
 
     @Override
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
-        RuntimeLayerRecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
+        RecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 
     private String decideGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores) {

@@ -933,7 +933,7 @@ public class RecommendationEngine {
                 tunableToSpec.put(tunable, new TunableSpec(layer.getLayerName(), tunable.getName()));
             }
         }
-        List<Tunable> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
+        List<TunableSpec> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
         Map<TunableSpec, Object> context = new HashMap<>();
         RecommendationConfigItem recommendationCpuRequest;
         RecommendationConfigItem recommendationCpuLimits;
@@ -942,8 +942,7 @@ public class RecommendationEngine {
         Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = null;
 
         // Process the tunables (ordered by dependency resolution)
-        for (Tunable tunable : orderedTunables) {
-            TunableSpec spec = tunableToSpec.get(tunable);
+        for (TunableSpec spec : orderedTunables) {
             String layerName = spec.layerName();
             String metricName = spec.tunableName();
             Double amount;
