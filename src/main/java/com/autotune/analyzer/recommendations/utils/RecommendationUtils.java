@@ -1,10 +1,12 @@
 package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -659,5 +661,37 @@ public class RecommendationUtils {
             target.append(value).append(" ");
         }
     }
-}
 
+    /**
+     * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
+     * Looks for jvmRuntimeInfo metric in IntervalResults and returns its MetricMetadataResults.
+     *
+     * @param filteredResultsMap map of timestamp to IntervalResults
+     * @return MetricMetadataResults containing JVM info, or null if not found
+     */
+    public static MetricMetadataResults getJvmMetricMetadataFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        if (filteredResultsMap == null) {
+            return null;
+        }
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            if (intervalResults.getMetricResultsMap() == null) {
+                continue;
+            }
+            // Try jvmInfo first, then jvmInfoTotal (both provide runtime, vendor, version)
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfo);
+            if (metricResults == null) {
+                metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfoTotal);
+            }
+            if (metricResults == null || metricResults.getMetricMetadataResults() == null) {
+                continue;
+            }
+            return metricResults.getMetricMetadataResults();
+        }
+        return null;
+    }
+
+    public static Object getTunableValue(Map<TunableSpec, Object> tunableSpecObjectMap, String layerName, String tunableName) {
+        return tunableSpecObjectMap.get(new TunableSpec(layerName, tunableName));
+    }
+
+}

@@ -691,6 +691,15 @@ public class AnalyzerConstants {
         public static final String QUARKUS_LAYER = "quarkus";
         public static final String SEMERU_LAYER = "semeru";
 
+        // GC Policy
+        public static final String GC_BALANCED = "-Xgcpolicy:balanced";
+        public static final String GC_GENCON = "-Xgcpolicy:gencon";
+        public static final String GC_SERIAL = "-XX:+UseSerialGC";
+        public static final String GC_PARALLEL = "-XX:+UseParallelGC";
+        public static final String GC_ZGC = "-XX:+UseZGC";
+        public static final String GC_SHENANDOAH = "-XX:+UseShenandoahGC";
+        public static final String GC_G1GC = "-XX:+UseG1GC";
+
         public static final List<String> SUPPORTED_LAYERS = Arrays.asList(
                 CONTAINER_LAYER,
                 HOTSPOT_LAYER,

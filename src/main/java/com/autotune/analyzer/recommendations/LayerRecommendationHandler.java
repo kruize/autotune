@@ -16,6 +16,10 @@
 
 package com.autotune.analyzer.recommendations;
 
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.common.data.result.IntervalResults;
+
+import java.sql.Timestamp;
 import java.util.Map;
 
 /**
@@ -32,17 +36,18 @@ public interface LayerRecommendationHandler {
     /**
      * Produces a recommendation value for the given tunable name.
      *
-     * @param tunableName name of the tunable (e.g., GCPolicy, MaxRAMPercentage, quarkus.thread-pool.core-threads)
-     * @param input       shared input: read other layers' values via getTunableValue, mem/cpu limits, JVM metadata
+     * @param tunableName        name of the tunable (e.g., GCPolicy, MaxRAMPercentage, quarkus.thread-pool.core-threads)
+     * @param tunableSpecObjectMap              shared input: read other layers' values via getTunableValue, mem/cpu limits, JVM metadata
+     * @param filteredResultsMap
      * @return recommended value, or null if no recommendation can be produced
      */
-    Object getRecommendation(String tunableName, LayerRecommendationInput input);
+    Object generateRecommendations(String tunableName, Map<TunableSpec, Object> tunableSpecObjectMap, Map<Timestamp, IntervalResults> filteredResultsMap);
 
     /**
      * Formats the tunable value for the given env var builder.
      *
      * @param tunableName    name of the tunable
-     * @param value         the recommended value (from getRecommendation)
+     * @param value         the recommended value (from generateRecommendations)
      * @param envBuilders   map of env var name -> StringBuilder to append to (e.g., JDK_JAVA_OPTIONS, JAVA_OPTIONS, quarkus.thread-pool.core-threads)
      */
     void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders);

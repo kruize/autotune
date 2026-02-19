@@ -2,8 +2,6 @@ package com.autotune.analyzer.recommendations.model;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.LayerRecommendationInput;
-import com.autotune.analyzer.recommendations.MapBackedLayerRecommendationInput;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
@@ -14,7 +12,6 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 
@@ -703,86 +700,18 @@ public class GenericRecommendationModel implements RecommendationModel{
      * @param metricName
      * @param layerName
      * @param filteredResultsMap
-     * @param context
+     * @param tunableSpecObjectMap
      * @param notifications
      * @return
      */
     @Override
-    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> context,
+    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> tunableSpecObjectMap,
                                             ArrayList<RecommendationNotification> notifications) {
-        Double memLimits = (Double) getTunableValue(context, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT);
-        Double cpuLimits = (Double) getTunableValue(context, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.CPU_LIMIT);
-
-        if (memLimits == null) {
-            RecommendationConfigItem memRec = getMemoryRequestRecommendation(filteredResultsMap, notifications);
-            memLimits = (memRec != null) ? memRec.getAmount() : null;
-        }
-        if (cpuLimits == null) {
-            RecommendationConfigItem cpuRec = getCPURequestRecommendation(filteredResultsMap, notifications);
-            cpuLimits = (cpuRec != null) ? cpuRec.getAmount() : null;
-        }
-        if (memLimits == null || cpuLimits == null) {
-            return null;
-        }
-
-        MetricMetadataResults metricMetadata = getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
-        String effectiveLayer = metricMetadata != null
-                ? getEffectiveLayerFromRuntime(metricMetadata.getRuntime())
-                : layerName;
-
-        LayerRecommendationInput input = new MapBackedLayerRecommendationInput(context, metricMetadata, effectiveLayer);
         LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
-        return handler != null ? handler.getRecommendation(metricName, input) : null;
-    }
-
-    /**
-     * Maps JVM runtime name from metric metadata to the effective Kruize layer.
-     * - OpenJDK or Hotspot → hotspot
-     * - null or empty → hotspot (default)
-     */
-    public static String getEffectiveLayerFromRuntime(String runtime) {
-        if (runtime == null || runtime.isBlank()) {
-            return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
-        }
-        String r = runtime.trim().toLowerCase();
-        if (r.equals(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU)) {
-            return AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU;
-        }
-        return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
+        return handler != null ? handler.generateRecommendations(metricName, tunableSpecObjectMap, filteredResultsMap) : null;
     }
 
 
-    /**
-     * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
-     * Looks for jvmRuntimeInfo metric in IntervalResults and returns its MetricMetadataResults.
-     *
-     * @param filteredResultsMap map of timestamp to IntervalResults
-     * @return MetricMetadataResults containing JVM info, or null if not found
-     */
-    public static MetricMetadataResults getJvmMetricMetadataFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        if (filteredResultsMap == null) {
-            return null;
-        }
-        for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            if (intervalResults.getMetricResultsMap() == null) {
-                continue;
-            }
-            // Try jvmInfo first, then jvmInfoTotal (both provide runtime, vendor, version)
-            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfo);
-            if (metricResults == null) {
-                metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfoTotal);
-            }
-            if (metricResults == null || metricResults.getMetricMetadataResults() == null) {
-                continue;
-            }
-            return metricResults.getMetricMetadataResults();
-        }
-        return null;
-    }
-
-    public static Object getTunableValue(Map<TunableSpec, Object> context, String layerName, String metricName) {
-        return context.get(new TunableSpec(layerName, metricName));
-    }
 
 
     @Override

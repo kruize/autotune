@@ -16,10 +16,13 @@
 
 package com.autotune.analyzer.recommendations.layers;
 
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.LayerRecommendationInput;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.IntervalResults;
 
+import java.sql.Timestamp;
 import java.util.Map;
 
 /**
@@ -43,9 +46,10 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
     }
 
     @Override
-    public Object getRecommendation(String tunableName, LayerRecommendationInput input) {
+    public Object generateRecommendations(String tunableName, Map<TunableSpec, Object> tunableSpecObjectMap, Map<Timestamp, IntervalResults> filteredResultsMap) {
         if (AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(tunableName)) {
-            return (int) Math.ceil(input.getCpuLimit());
+            Double coreThreads = (Double) RecommendationUtils.getTunableValue(tunableSpecObjectMap, AnalyzerConstants.CONTAINER,  AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+            return (int) Math.ceil(coreThreads);
         }
         return null;
     }
