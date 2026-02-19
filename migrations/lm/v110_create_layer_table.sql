@@ -1,1 +1,1 @@
-create table IF NOT EXISTS kruize_lm_layer (api_version varchar(255), kind varchar(255), metadata jsonb, layer_name varchar(255) not null, layer_level integer, details varchar(255), layer_presence jsonb, tunables jsonb, primary key (layer_name));
+create table IF NOT EXISTS kruize_lm_layer (api_version varchar(255), kind varchar(255), metadata jsonb, layer_name varchar(255) not null, details varchar(255), layer_presence jsonb, tunables jsonb, primary key (layer_name));

@@ -3,9 +3,6 @@ kind: "AutotuneConfig"
 metadata:
   name: "xyz"
 layer_name: xyz
-# layer_level 0 = container, 1 = runtime (eg: semeru, hotspot, nodejs)
-#             2 = framework (eg: quarkus, liberty, springboot), 3 = app
-layer_level: 2
 details: xyz tunables
 # layer_presence tells autotune how to detect this layer in a pod
 layer_presence:

@@ -2849,7 +2849,6 @@ Kruize currently supports hotspot, semeur and quarkus layers.
     "name": "hotspot"
   },
   "layer_name": "hotspot",
-  "layer_level": 1,
   "details": "hotspot tunables",
   "layer_presence": {
     "queries": [
@@ -3001,7 +3000,6 @@ Returns all configured layers
       "name": "hotspot"
     },
     "layer_name": "hotspot",
-    "layer_level": 1,
     "details": "hotspot tunables",
     "layer_presence": {
       "queries": [
@@ -3081,7 +3079,6 @@ Returns all configured layers
       "name": "hotspot"
     },
     "layer_name": "hotspot",
-    "layer_level": 1,
     "details": "hotspot tunables",
     "layer_presence": {
       "queries": [

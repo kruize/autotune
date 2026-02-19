@@ -51,7 +51,6 @@ It includes:
 | kind | Resource type |
 | metadata | Layer metadata |
 | layer_name | Name of the layer |
-| layer_level | Hierarchy level |
 | details | Description of the layer |
 | layer_presence | Logic to detect layer presence |
 | tunables | Tunable parameters for the layer |
@@ -319,7 +318,6 @@ kind: "KruizeLayer"
 metadata:
   name: "hotspot"
 layer_name: hotspot
-layer_level: 1
 details: hotspot tunables
 layer_presence:
   queries:
@@ -374,7 +372,6 @@ tunables:
   "kind": "KruizeLayer",
   "metadata": { "name": "hotspot" },
   "layer_name": "hotspot",
-  "layer_level": 1,
   "details": "hotspot tunables",
   "layer_presence": { ... },
   "tunables": [ ... ]
@@ -397,7 +394,6 @@ public final class KruizeLayer {
     private String kind;
     private LayerMetadata metadata;
     private String layerName;
-    private int layerLevel;
     private String details;
     private LayerPresence layerPresence;
     private ArrayList<Tunable> tunables;

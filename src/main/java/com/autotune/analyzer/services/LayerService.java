@@ -234,7 +234,6 @@ public class LayerService extends HttpServlet {
         }
 
         entry.setLayer_name(kruizeLayer.getLayerName());
-        entry.setLayer_level(kruizeLayer.getLayerLevel());
         entry.setDetails(kruizeLayer.getDetails());
 
         // Convert layer_presence to JsonNode

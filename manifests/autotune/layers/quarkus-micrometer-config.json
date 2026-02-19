@@ -5,7 +5,6 @@
     "name": "quarkus"
   },
   "layer_name": "quarkus",
-  "layer_level": 2,
   "details": "quarkus tunables",
   "layer_presence": {
     "label": [
