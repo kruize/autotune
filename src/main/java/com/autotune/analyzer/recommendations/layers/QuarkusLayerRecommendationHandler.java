@@ -16,8 +16,8 @@
 
 package com.autotune.analyzer.recommendations.layers;
 
-import com.autotune.analyzer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationInput;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.Map;
@@ -43,9 +43,9 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
     }
 
     @Override
-    public Object getRecommendation(String tunableName, LayerRecommendationContext context) {
+    public Object getRecommendation(String tunableName, LayerRecommendationInput input) {
         if (AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(tunableName)) {
-            return (int) Math.ceil(context.getCpuLimit());
+            return (int) Math.ceil(input.getCpuLimit());
         }
         return null;
     }

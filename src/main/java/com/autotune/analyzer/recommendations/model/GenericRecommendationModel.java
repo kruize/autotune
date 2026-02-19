@@ -1,8 +1,9 @@
 package com.autotune.analyzer.recommendations.model;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
-import com.autotune.analyzer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationInput;
+import com.autotune.analyzer.recommendations.MapBackedLayerRecommendationInput;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
@@ -729,10 +730,9 @@ public class GenericRecommendationModel implements RecommendationModel{
                 ? getEffectiveLayerFromRuntime(metricMetadata.getRuntime())
                 : layerName;
 
-        LayerRecommendationContext layerContext = new LayerRecommendationContext(
-                memLimits, cpuLimits, metricMetadata, effectiveLayer);
-        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(effectiveLayer);
-        return handler != null ? handler.getRecommendation(metricName, layerContext) : null;
+        LayerRecommendationInput input = new MapBackedLayerRecommendationInput(context, metricMetadata, effectiveLayer);
+        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+        return handler != null ? handler.getRecommendation(metricName, input) : null;
     }
 
     /**

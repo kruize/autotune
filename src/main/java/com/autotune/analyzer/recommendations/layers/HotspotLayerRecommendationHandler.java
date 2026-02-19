@@ -16,8 +16,8 @@
 
 package com.autotune.analyzer.recommendations.layers;
 
-import com.autotune.analyzer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationInput;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
@@ -47,9 +47,9 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
     }
 
     @Override
-    public Object getRecommendation(String tunableName, LayerRecommendationContext context) {
-        if (!AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT.equalsIgnoreCase(context.getEffectiveLayer())) {
-            LOGGER.debug("Hotspot handler: effectiveLayer '{}' does not match layerName 'hotspot'", context.getEffectiveLayer());
+    public Object getRecommendation(String tunableName, LayerRecommendationInput input) {
+        if (!AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT.equalsIgnoreCase(input.getEffectiveLayer())) {
+            LOGGER.debug("Hotspot handler: effectiveLayer '{}' does not match layerName 'hotspot'", input.getEffectiveLayer());
             return null;
         }
 
@@ -58,14 +58,14 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         }
 
         if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
-            String jdkVersion = context.getJdkVersion();
+            String jdkVersion = input.getJdkVersion();
             if (jdkVersion == null || jdkVersion.isEmpty()) {
                 LOGGER.warn("JVM version is null or empty (layerName=hotspot)");
                 return null;
             }
             Double jvmHeapSizeMB = null;
             double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-            return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, context.getMemLimit(), context.getCpuLimit(), jdkVersion);
+            return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, input.getMemLimit(), input.getCpuLimit(), jdkVersion);
         }
 
         return null;

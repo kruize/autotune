@@ -33,10 +33,10 @@ public interface LayerRecommendationHandler {
      * Produces a recommendation value for the given tunable name.
      *
      * @param tunableName name of the tunable (e.g., GCPolicy, MaxRAMPercentage, quarkus.thread-pool.core-threads)
-     * @param context     context with mem/cpu limits, JVM metadata, effective layer
+     * @param input       shared input: read other layers' values via getTunableValue, mem/cpu limits, JVM metadata
      * @return recommended value, or null if no recommendation can be produced
      */
-    Object getRecommendation(String tunableName, LayerRecommendationContext context);
+    Object getRecommendation(String tunableName, LayerRecommendationInput input);
 
     /**
      * Formats the tunable value for the given env var builder.

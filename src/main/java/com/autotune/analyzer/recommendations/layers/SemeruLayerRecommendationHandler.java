@@ -16,8 +16,8 @@
 
 package com.autotune.analyzer.recommendations.layers;
 
-import com.autotune.analyzer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationInput;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
@@ -47,9 +47,9 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
     }
 
     @Override
-    public Object getRecommendation(String tunableName, LayerRecommendationContext context) {
-        if (!AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU.equalsIgnoreCase(context.getEffectiveLayer())) {
-            LOGGER.debug("Semeru handler: effectiveLayer '{}' does not match layerName 'semeru'", context.getEffectiveLayer());
+    public Object getRecommendation(String tunableName, LayerRecommendationInput input) {
+        if (!AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU.equalsIgnoreCase(input.getEffectiveLayer())) {
+            LOGGER.debug("Semeru handler: effectiveLayer '{}' does not match layerName 'semeru'", input.getEffectiveLayer());
             return null;
         }
 
@@ -60,7 +60,7 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
         if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
             Double jvmHeapSizeMB = null;
             double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-            return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, context.getMemLimit(), context.getCpuLimit());
+            return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, input.getMemLimit(), input.getCpuLimit());
         }
 
         return null;
