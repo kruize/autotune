@@ -52,6 +52,7 @@ public class HotspotRecommendationGenerator implements TunableRecommendationGene
     private static final double MEMORY_THRESHOLD_G1GC = 4096.0;
     private static final double MEMORY_THRESHOLD_MODERN_GC = 8192.0;
     private static final double DEFAULT_THREAD_MEMORY_MB = 1.0;
+    private static final int CPU_CORES_THRESHOLD_SERIAL = 1;
     private static final int CPU_CORES_THRESHOLD_PARALLEL = 2;
     private static final int CPU_CORES_THRESHOLD_MODERN_GC = 4;
     private static final double RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE = 10.0;
@@ -331,14 +332,13 @@ public class HotspotRecommendationGenerator implements TunableRecommendationGene
     private double calculateStaticMaxRAMPercentage(double containerMemoryMB, double containerCpuCores) {
         double maxRamPercentage;
 
-        // Lower memory containers require a larger relative "Native Buffer" (lower %)
-        if (containerMemoryMB <= 256.0) {
+	if (containerMemoryMB <= 256.0) {
             maxRamPercentage = 50.0; // Tiny: JVM needs half for internal tasks
         } else if (containerMemoryMB <= 512.0) {
             maxRamPercentage = 60.0; // Small
-        } else if (containerMemoryMB <= 1024.0) {
+        } else if (containerMemoryMB <= 4096.0) {
             maxRamPercentage = 75.0; // Medium
-        } else if (containerMemoryMB <= 2048.0) {
+        } else if (containerMemoryMB <= 8192.0) {
             maxRamPercentage = 80.0;
         } else {
             maxRamPercentage = 85.0;
@@ -429,21 +429,19 @@ public class HotspotRecommendationGenerator implements TunableRecommendationGene
         int cores = (int) Math.ceil(cpuCores);
         int jdkMajorVersion = (jvmMetadata != null) ? RecommendationUtils.parseJdkMajorVersion(jvmMetadata.getVersion()) : 0;
         
-        // For single core or very small heap, use SerialGC
-        if (cores < CPU_CORES_THRESHOLD_PARALLEL || heapSizeMB < MEMORY_THRESHOLD_SERIAL_GC) {
+        // For single core, use SerialGC
+        if (cores <= CPU_CORES_THRESHOLD_SERIAL) {
             LOGGER.debug("Selected Hotspot SerialGC: cores={}, heapMB={}, jdk={}", cores, heapSizeMB, jdkMajorVersion);
             return "-XX:+UseSerialGC";
         }
-        
-        // For 2+ cores and heap between 1,792 MB and 4 GB, prefer G1GC for balanced performance
-        if (heapSizeMB < MEMORY_THRESHOLD_G1GC) {
-            LOGGER.debug("Selected Hotspot G1GC: cores={}, heapMB={}, jdk={} (ParallelGC also suitable)",
-                    cores, heapSizeMB, jdkMajorVersion);
-            return "-XX:+UseG1GC";
+        // For 2 cores and small heap, use ParallelGC
+        if (cores <= CPU_CORES_THRESHOLD_PARALLEL && heapSizeMB <= MEMORY_THRESHOLD_G1GC) {
+            LOGGER.debug("Selected Hotspot ParallelGC: cores={}, heapMB={}, jdk={}", cores, heapSizeMB, jdkMajorVersion);
+            return "-XX:+ParallelGC";
         }
         
-        // For very large heaps (>8GB) with sufficient cores, consider modern low-latency GCs
-        if (heapSizeMB >= MEMORY_THRESHOLD_MODERN_GC && cores >= CPU_CORES_THRESHOLD_MODERN_GC) {
+        // For very large heaps with sufficient cores, consider modern low-latency GCs
+        if (heapSizeMB >= MEMORY_THRESHOLD_G1GC && cores >= CPU_CORES_THRESHOLD_PARALLEL) {
             // JDK 17+: ZGC is production-ready and offers ultra-low latency
             if (jdkMajorVersion >= JDK_VERSION_ZGC) {
                 LOGGER.info("Selected Hotspot ZGC: cores={}, heapMB={}, jdk={} (ultra-low latency)",
