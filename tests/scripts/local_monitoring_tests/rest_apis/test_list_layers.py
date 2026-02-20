@@ -148,10 +148,6 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
     assert isinstance(layers, list)
     assert len(layers) == len(created_layers_data)
 
-    # Validate the json against the json schema
-    errorMsg = validate_list_layers_json(layers, list_layers_schema)
-    assert errorMsg == ""
-
     # Verify all created layers are present and validate their data
     returned_layer_names = [layer['layer_name'] for layer in layers]
 
@@ -161,6 +157,11 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
         # Find and validate the layer data
         returned_layer = next((layer for layer in layers if layer['layer_name'] == expected_name), None)
         assert returned_layer is not None
+
+        # Validate the json against the json schema
+        errorMsg = validate_list_layers_json([returned_layer], list_layers_schema)
+        assert errorMsg == ""
+
         validate_layer_data(returned_layer, created_layers_data[expected_name], verbose=False)
 
     print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layers_data)} created layers are present")
