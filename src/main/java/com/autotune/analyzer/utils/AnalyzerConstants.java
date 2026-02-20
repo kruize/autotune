@@ -768,6 +768,11 @@ public class AnalyzerConstants {
         public static final int CPU_CORES_THRESHOLD_PARALLEL = 2;
         public static final double RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE = 10.0;
         public static final double RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE = 5.0;
+	public static final double RAM_PERCENTAGE_THRESHOLD_256MB = 256.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_512MB = 512.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_4096MB = 4096.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_8192MB = 8192.0;
+
 
         public static final double MEMORY_THRESHOLD_BALANCED_GC = 4096.0;
         public static final int THREADS_PER_CORE = 1;

@@ -78,14 +78,15 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
      * @param filteredResultsMap Metrics data
      * @return Recommendation or null if dependencies missing
      */
-    private Double generateHotspotMaxRAMPercentageRecommendation(
+    public Double generateHotspotMaxRAMPercentageRecommendation(
             String tunableName,
             Map<TunableSpec, Object> tunableSpecObjectMap,
             Map<Timestamp, IntervalResults> filteredResultsMap) {
 
         double containerMemoryBytes = (Double) RecommendationUtils.getTunableValue(
-                tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+                    tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
+                    AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+
         double containerMemoryMB = containerMemoryBytes / (1024 * 1024);
         if (containerMemoryMB <= 0) {
             LOGGER.warn("Invalid memory limit for Hotspot: {}MB", containerMemoryMB);
@@ -97,21 +98,21 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
                 AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
 
         double maxRamPercentage;
-        if (containerMemoryMB <= 256.0) {
+        if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_256MB) {
             maxRamPercentage = 50.0; // Tiny: JVM needs half for internal tasks
-        } else if (containerMemoryMB <= 512.0) {
+        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_512MB) {
             maxRamPercentage = 60.0; // Small
-        } else if (containerMemoryMB <= 4096.0) {
+        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_4096MB) {
             maxRamPercentage = 75.0; // Medium
-        } else if (containerMemoryMB <= 8192.0) {
+        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_8192MB) {
             maxRamPercentage = 80.0;
         } else {
             maxRamPercentage = 85.0;
         }
 
-        if (containerCpuCores < 1.0) {
+        if (containerCpuCores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_SERIAL) {
             maxRamPercentage -= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE;
-        } else if (containerCpuCores < 2.0) {
+        } else if (containerCpuCores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL) {
             maxRamPercentage -= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE;
         }
         LOGGER.info("Generated MaxRAMPercentage: {}% for container memory: {}MB", maxRamPercentage, containerMemoryMB);
@@ -125,7 +126,6 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         MetricMetadataResults jvmMetadataMetrics = RecommendationUtils.getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
         int jdkMajorVersion = (jvmMetadataMetrics != null) ? RecommendationUtils.parseMajorVersion(jvmMetadataMetrics.getVersion()) : 0;
 
-
         double memLimit = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
                 AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
@@ -133,11 +133,12 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         double cpuCores = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
                 AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
-        int cores = (int) Math.round(cpuCores);
+        int cores = (int) Math.ceil(cpuCores);
         double maxRAMPercent = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.LayerConstants.HOTSPOT_LAYER,
                 AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC);
         double jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
+
         String gcPolicy;
 
         // For single core, use SerialGC

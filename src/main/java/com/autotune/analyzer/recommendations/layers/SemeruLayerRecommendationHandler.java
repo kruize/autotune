@@ -83,8 +83,7 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
             Map<Timestamp, IntervalResults> filteredResultsMap) {
 
         // Using HotSpot Layer recommendation function only
-        return new HotspotLayerRecommendationHandler().generateRecommendations(tunableName,tunableSpecObjectMap, filteredResultsMap);
-
+        return HotspotLayerRecommendationHandler.getInstance().generateHotspotMaxRAMPercentageRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
     }
 
     private Object generateSemeruGCPolicyRecommendation(String tunableName, Map<TunableSpec, Object> tunableSpecObjectMap, Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -101,6 +100,7 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
                 tunableSpecObjectMap,AnalyzerConstants.LayerConstants.SEMERU_LAYER,
                 AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC);
         double jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
+        
         String gcPolicy;
 
         // For single core or small heaps, use gencon (default, efficient)
@@ -121,3 +121,4 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
         RecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 }
+
