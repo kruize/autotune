@@ -4547,6 +4547,173 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 
 </details>
 
+**Response for Experiment with Runtime Recommendations**
+
+When the experiment includes JVM workloads (e.g., Hotspot, Semeru, Quarkus) with corresponding layers(See [Layers](./KruizeLayers.md) for more info) and `jvm_info` metrics available, the Generate Recommendations API returns **runtime recommendations** . It will be in addition to CPU and memory recommendations provided the container layer is present as well. 
+
+Runtime recommendations include:
+
+- **`config.env`**: A new `ENV` object along with requests and limits under the `config` object. It contains variables (`JDK_JAVA_OPTIONS`, `JAVA_OPTIONS`) with JVM flags such as GC policy (e.g., `-XX:+UseG1GC`, `-Xgcpolicy:gencon`) and `MaxRAMPercentage`
+
+The `config` object under each recommendation engine (`cost`, `performance`) will contain an `env` array when runtime recommendations are present.
+
+<details>
+<summary><b>Example Response Body (with Runtime Recommendations)</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "default",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2024-02-12T10:00:00.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    }
+                  },
+                  "monitoring_end_time": "2024-02-12T10:00:00.000Z",
+                  "current": {},
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2024-02-11T10:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              }
+                            ]
+                          },
+                          "variation": {
+                            "limits": {
+                              "cpu": { "amount": 0.006552455871066771, "format": "cores" },
+                              "memory": { "amount": 5.357027328E8, "format": "bytes" }
+                            },
+                            "requests": {
+                              "cpu": { "amount": 0.006552455871066771, "format": "cores" },
+                              "memory": { "amount": 5.357027328E8, "format": "bytes" }
+                            }
+                          },
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": { "amount": 0.006552455871066771, "format": "cores" },
+                              "memory": { "amount": 5.357027328E8, "format": "bytes" }
+                            },
+                            "limits": {
+                              "cpu": { "amount": 0.006552455871066771, "format": "cores" },
+                              "memory": { "amount": 5.357027328E8, "format": "bytes" }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              }
+                            ]
+                          },
+                          "variation": {},
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "monitor_tfb_benchmark"
+  }
+]
+```
+
+</details>
+
 **Request for `namespace` experiment**
 
 `POST /generateRecommendations?experiment_name=?`
