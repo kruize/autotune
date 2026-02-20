@@ -690,15 +690,6 @@ public class AnalyzerConstants {
         public static final String QUARKUS_LAYER = "quarkus";
         public static final String SEMERU_LAYER = "semeru";
 
-        // GC Policy
-        public static final String GC_BALANCED = "-Xgcpolicy:balanced";
-        public static final String GC_GENCON = "-Xgcpolicy:gencon";
-        public static final String GC_SERIAL = "-XX:+UseSerialGC";
-        public static final String GC_PARALLEL = "-XX:+UseParallelGC";
-        public static final String GC_ZGC = "-XX:+UseZGC";
-        public static final String GC_SHENANDOAH = "-XX:+UseShenandoahGC";
-        public static final String GC_G1GC = "-XX:+UseG1GC";
-
         public static final List<String> SUPPORTED_LAYERS = Arrays.asList(
                 CONTAINER_LAYER,
                 HOTSPOT_LAYER,
@@ -768,6 +759,38 @@ public class AnalyzerConstants {
 
         private LayerConstants() {
         }
+    }
+
+    public static final class RecommendationConstants {
+        public static final double MEMORY_THRESHOLD_G1GC = 4096.0;
+        public static final int CPU_CORES_THRESHOLD_SERIAL = 1;
+        public static final int CPU_CORES_THRESHOLD_PARALLEL = 2;
+        public static final double RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE = 10.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE = 5.0;
+	public static final double RAM_PERCENTAGE_THRESHOLD_256MB = 256.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_512MB = 512.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_4096MB = 4096.0;
+        public static final double RAM_PERCENTAGE_THRESHOLD_8192MB = 8192.0;
+
+
+        public static final double MEMORY_THRESHOLD_BALANCED_GC = 4096.0;
+        public static final int THREADS_PER_CORE = 1;
+        public static final int MIN_CORE_THREADS = 1;
+        public static final int MAX_CORE_THREADS = 100;
+
+        // GC Policy
+        public static final String GC_BALANCED = "-Xgcpolicy:balanced";
+        public static final String GC_GENCON = "-Xgcpolicy:gencon";
+        public static final String GC_SERIAL = "-XX:+UseSerialGC";
+        public static final String GC_PARALLEL = "-XX:+UseParallelGC";
+        public static final String GC_ZGC = "-XX:+UseZGC";
+        public static final String GC_SHENANDOAH = "-XX:+UseShenandoahGC";
+        public static final String GC_G1GC = "-XX:+UseG1GC";
+
+        // JDK version thresholds
+        public static final int JDK_VERSION_SHENANDOAH = 11;
+        public static final int JDK_VERSION_ZGC = 17;
+        public static final int JDK_VERSION_SERVER_FLAG_THRESHOLD = 8;
     }
 
     /**
