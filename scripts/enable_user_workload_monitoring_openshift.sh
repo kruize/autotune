@@ -19,7 +19,7 @@ fi
 
 echo -n "Fetching cluster monitoring config..."
 EXISTING=$(oc -n $NAMESPACE get configmap $CONFIGMAP \
-  -o jsonpath='{.data.config\.yaml}' 2>/dev/null)
+  -o jsonpath='{.data.config\.yaml}' 2>/dev/null || true)
 
 if [ -z "$EXISTING" ]; then
   echo "ConfigMap or config.yaml not found."
