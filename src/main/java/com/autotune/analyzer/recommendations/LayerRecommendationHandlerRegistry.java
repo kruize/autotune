@@ -41,7 +41,7 @@ public class LayerRecommendationHandlerRegistry {
         return INSTANCE;
     }
 
-    public void register(LayerRecommendationHandler handler) {
+    private void register(LayerRecommendationHandler handler) {
         if (handler != null && handler.getLayerName() != null) {
             handlers.put(handler.getLayerName().toLowerCase(), handler);
         }
