@@ -2381,17 +2381,21 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                 terms = interval_obj.get("recommendation_terms", {})
                 for _term_name, term_obj in terms.items():
                     engines = term_obj.get("recommendation_engines", {})
-                    # Check cost engine has runtime notification
+                    # Check cost engine has runtime notification (code and message)
                     if "cost" in engines:
                         cost_notifications = engines["cost"].get("notifications", {})
-                        assert RUNTIMES_RECOMMENDATIONS_AVAILABLE in cost_notifications, \
+                        assert NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in cost_notifications, \
                             f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in cost engine notifications"
+                        assert cost_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
+                            f"Runtime recommendations notification message mismatch in cost engine notifications"
 
-                    # Check performance engine has runtime notification
+                    # Check performance engine has runtime notification (code and message)
                     if "performance" in engines:
                         perf_notifications = engines["performance"].get("notifications", {})
-                        assert RUNTIMES_RECOMMENDATIONS_AVAILABLE in perf_notifications, \
+                        assert NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in perf_notifications, \
                             f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in performance engine notifications"
+                        assert perf_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
+                            f"Runtime recommendations notification message mismatch in performance engine notifications"
                     for _engine_name, engine_obj in engines.items():
                         config = engine_obj.get("config", {})
                         env_list = config.get("env")

@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import json
+import os
 import shutil
+import tempfile
 
 import pytest
 import sys
@@ -48,7 +50,17 @@ def test_runtime_recommendation(cluster_type):
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
 
-    input_json_file = str(Path(__file__).parent / "../json_files/create_tfb_exp.json")
+    input_json_path = str(Path(__file__).parent / "../json_files/create_tfb_exp.json")
+    with open(input_json_path) as f:
+        input_json = json.load(f)
+    # Update datasource from prometheus-1 to thanos-1 before using in the test
+    for exp in input_json:
+        if exp.get("datasource") == "prometheus-1":
+            exp["datasource"] = "thanos-1"
+            break
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+        json.dump(input_json, tf, indent=2)
+        input_json_file = tf.name
 
     form_kruize_url(cluster_type)
 
@@ -111,8 +123,7 @@ def test_runtime_recommendation(cluster_type):
     assert data["status"] == SUCCESS_STATUS
     assert data["message"] == CREATE_EXP_SUCCESS_MSG
 
-    with open(input_json_file) as f:
-        exp_name = json.load(f)[0]["experiment_name"]
+    exp_name = input_json[0]["experiment_name"]
 
     response = generate_recommendations(exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -139,3 +150,7 @@ def test_runtime_recommendation(cluster_type):
 
     # Remove benchmarks directory
     shutil.rmtree("benchmarks")
+
+    # Clean up temp experiment JSON file
+    if os.path.exists(input_json_file):
+        os.unlink(input_json_file)
