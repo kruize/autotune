@@ -1581,7 +1581,6 @@ public class DBHelpers {
                     kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
                     kruizeLayerEntry.setKind(kruizeLayer.getKind());
                     kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
-                    kruizeLayerEntry.setLayer_level(kruizeLayer.getLayerLevel());
                     kruizeLayerEntry.setDetails(kruizeLayer.getDetails());
 
                     ObjectMapper objectMapper = new ObjectMapper();
@@ -1625,7 +1624,6 @@ public class DBHelpers {
                     kruizeLayer.setApiVersion(entry.getApi_version());
                     kruizeLayer.setKind(entry.getKind());
                     kruizeLayer.setLayerName(entry.getLayer_name());
-                    kruizeLayer.setLayerLevel(entry.getLayer_level());
                     kruizeLayer.setDetails(entry.getDetails());
                 } catch (Exception e) {
                     throw new LayerConversionException(

@@ -40,7 +40,6 @@ import java.util.ArrayList;
  * kind: A string representing the kind/type of the layer.
  * metadata: A JSON object containing layer metadata (e.g., name).
  * layer_name: A unique identifier for the layer (primary key).
- * layer_level: An integer representing the hierarchy level of the layer.
  * details: A string containing additional details or description of the layer.
  * layer_presence: A JSON object defining how to detect the layer's presence (presence, queries, or label).
  * tunables: A JSON array containing the tunable parameters for this layer.
@@ -58,7 +57,6 @@ public class KruizeLMLayerEntry {
     private JsonNode metadata;
     @Id
     private String layer_name;
-    private Integer layer_level;
     private String details;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode layer_presence;
@@ -98,14 +96,6 @@ public class KruizeLMLayerEntry {
         this.layer_name = layer_name;
     }
 
-    public Integer getLayer_level() {
-        return layer_level;
-    }
-
-    public void setLayer_level(Integer layer_level) {
-        this.layer_level = layer_level;
-    }
-
     public String getDetails() {
         return details;
     }
@@ -137,7 +127,6 @@ public class KruizeLMLayerEntry {
                 ", kind='" + kind + '\'' +
                 ", metadata=" + metadata +
                 ", layer_name='" + layer_name + '\'' +
-                ", layer_level=" + layer_level +
                 ", details='" + details + '\'' +
                 ", layer_presence=" + layer_presence +
                 ", tunables=" + tunables +
@@ -155,7 +144,6 @@ public class KruizeLMLayerEntry {
         layer.setKind(this.kind);
         layer.setMetadata(convertJsonNodeToLayerMetadata(this.metadata));
         layer.setLayerName(this.layer_name);
-        layer.setLayerLevel(this.layer_level);
         layer.setDetails(this.details);
         layer.setLayerPresence(convertJsonNodeToLayerPresence(this.layer_presence));
         layer.setTunables(convertJsonNodeToTunables(this.tunables));

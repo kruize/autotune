@@ -5,7 +5,6 @@
     "name": "container"
   },
   "layer_name": "container",
-  "layer_level": 0,
   "details": "generic container tunables",
   "layer_presence": {
     "presence": "always"

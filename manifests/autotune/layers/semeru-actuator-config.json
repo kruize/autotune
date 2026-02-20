@@ -5,7 +5,6 @@
     "name": "semeru"
   },
   "layer_name": "semeru",
-  "layer_level": 1,
   "details": "semeru tunables",
   "layer_presence": {
     "queries": [

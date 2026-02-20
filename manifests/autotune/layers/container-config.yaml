@@ -3,7 +3,6 @@ kind: "KruizeLayer"
 metadata:
   name: "container"
 layer_name: container
-layer_level: 0
 details: generic container tunables
 layer_presence:
   # This layer is assumed to be available by default for all applications.
