@@ -7,10 +7,11 @@
   "layer_name": "quarkus",
   "details": "quarkus tunables",
   "layer_presence": {
-    "label": [
+    "queries": [
       {
-        "name": "app.kubernetes.io/layer",
-        "value": "quarkus"
+        "datasource": "prometheus",
+        "query": "container_cpu_usage_seconds_total{} * on(namespace, pod) group_left(com.redhat.component-name) kube_pod_labels{com.redhat.component-name: \"Quarkus\"}",
+        "key": "pod"
       }
     ]
   },
