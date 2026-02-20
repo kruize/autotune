@@ -5,9 +5,10 @@ metadata:
 layer_name: quarkus
 details: quarkus tunables
 layer_presence:
-  label:
-  - name: app.kubernetes.io/layer
-    value: quarkus
+  queries:
+  - datasource: 'prometheus'
+    query: 'container_cpu_usage_seconds_total{} * on(namespace, pod) group_left(com.redhat.component-name) kube_pod_labels{com.redhat.component-name: "Quarkus"}'
+    key: pod
 tunables:
 # upper_bound is set to 8 times of cpu.
 - name: quarkus.thread-pool.core-threads
