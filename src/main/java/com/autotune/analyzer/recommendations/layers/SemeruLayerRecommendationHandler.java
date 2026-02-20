@@ -18,8 +18,10 @@ package com.autotune.analyzer.recommendations.layers;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.result.IntervalResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,37 +54,70 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
 
     @Override
     public Object generateRecommendations(String tunableName, Map<TunableSpec, Object> tunableSpecObjectMap, Map<Timestamp, IntervalResults> filteredResultsMap) {
-        Double memLimit = (Double) getTunableValue(tunableSpecObjectMap, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT);
-        Double cpuLimit = (Double) getTunableValue(tunableSpecObjectMap, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.CPU_LIMIT);
 
-        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
-            return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
+        Object recommendation;
+        switch (tunableName) {
+            case AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC:
+                recommendation = generateSemeruMaxRAMPercentageRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
+                break;
+            case AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY:
+                recommendation = generateSemeruGCPolicyRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
+                break;
+            default:
+                LOGGER.warn("Unknown tunable for Hotspot layer: {}", tunableName);
+                return null;
         }
+        return recommendation;
+    }
 
-        if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
-            Double jvmHeapSizeMB = null;
-            double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-            //TODO: update the below call based on the new logic
-            return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimit, cpuLimit);
+    /**
+     * Generates MaxRAMPercentage recommendation
+     * @param tunableName The tunable
+     * @param tunableSpecObjectMap Map containing TunableSpec keys with dependency values
+     * @param filteredResultsMap Metrics data
+     * @return Recommendation or null if dependencies missing
+     */
+    private Object generateSemeruMaxRAMPercentageRecommendation(
+            String tunableName,
+            Map<TunableSpec, Object> tunableSpecObjectMap,
+            Map<Timestamp, IntervalResults> filteredResultsMap) {
+
+        // Using HotSpot Layer recommendation function only
+        return new HotspotLayerRecommendationHandler().generateRecommendations(tunableName,tunableSpecObjectMap, filteredResultsMap);
+
+    }
+
+    private Object generateSemeruGCPolicyRecommendation(String tunableName, Map<TunableSpec, Object> tunableSpecObjectMap, Map<Timestamp, IntervalResults> filteredResultsMap) {
+
+        double memLimit = (Double) RecommendationUtils.getTunableValue(
+                tunableSpecObjectMap,AnalyzerConstants.CONTAINER,
+                AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+        double memLimitMB = memLimit / (1024 * 1024);
+        double cpuCores = (Double) RecommendationUtils.getTunableValue(
+                tunableSpecObjectMap,AnalyzerConstants.CONTAINER,
+                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+        int cores = (int) Math.round(cpuCores);
+        double maxRAMPercent = (Double) RecommendationUtils.getTunableValue(
+                tunableSpecObjectMap,AnalyzerConstants.LayerConstants.SEMERU_LAYER,
+                AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC);
+        double jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
+        String gcPolicy;
+
+        // For single core or small heaps, use gencon (default, efficient)
+        if (cores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL ||
+                jvmHeapSizeMB < AnalyzerConstants.RecommendationConstants.MEMORY_THRESHOLD_BALANCED_GC) {
+            LOGGER.debug("Selected Semeru gencon GC: cores={}, heapMB={}", cores, jvmHeapSizeMB);
+            gcPolicy = AnalyzerConstants.RecommendationConstants.GC_GENCON;
+            return gcPolicy;
         }
-
-        return null;
+        // For larger heaps (>4GB) with multiple cores, use balanced GC
+        LOGGER.debug("Selected Semeru balanced GC: cores={}, heapMB={} ", cores, jvmHeapSizeMB);
+        gcPolicy = AnalyzerConstants.RecommendationConstants.GC_BALANCED;
+        return gcPolicy;
     }
 
     @Override
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
         RecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
-    }
-
-    private String decideGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores) {
-        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
-            double memLimitMB = memLimit / (1024 * 1024);
-            jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
-        }
-
-        if (jvmHeapSizeMB >= 4096 && cpuCores > 1) {
-            return AnalyzerConstants.LayerConstants.GC_BALANCED;
-        }
-        return AnalyzerConstants.LayerConstants.GC_GENCON;
     }
 }
