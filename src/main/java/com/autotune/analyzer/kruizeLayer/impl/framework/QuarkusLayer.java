@@ -17,6 +17,7 @@ package com.autotune.analyzer.kruizeLayer.impl.framework;
 
 import com.autotune.analyzer.kruizeLayer.impl.Layer;
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.List;
@@ -39,10 +40,10 @@ public class QuarkusLayer implements Layer {
 
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
-        return Map.of(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS,
+        return Map.of(RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS,
                 List.of(
                         new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
-                                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT)
+                                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT)
                 ));
     }
 }

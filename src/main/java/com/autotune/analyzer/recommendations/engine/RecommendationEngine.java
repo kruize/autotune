@@ -4,8 +4,6 @@ import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -28,7 +26,6 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
-import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -869,8 +866,15 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
+            List<RecommendationConfigEnv> runtimeRecommList = null;
 
-            List<RecommendationConfigEnv> runtimeRecommList = handleRuntimeRecommendations(kruizeObject);
+            try {
+                if (RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap())) {
+                    runtimeRecommList = RuntimeRecommendationProcessor.handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications, recommendationCpuRequest, recommendationMemRequest, recommendationCpuLimits, recommendationMemLimits);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
+             }
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -891,29 +895,6 @@ public class RecommendationEngine {
         }
         return mappedRecommendationForModel;
     }
-
-    /**
-     * Method to handle the runtimes recommendations logic
-     * @param kruizeObject to get the datasource
-     * @return
-     */
-    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject) {
-        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-        String datasourceName = kruizeObject.getDataSource();
-        if (datasourceName == null) {
-            LOGGER.warn("Datasource missing, skipping runtime recommendations");
-            return null;
-        }
-        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
-        if (dataSourceInfo == null ||
-                !KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES
-                        .contains(dataSourceInfo.getServiceName())) {
-            return null;
-        }
-        // TODO: add runtime env logic
-        return runtimeRecommList;
-    }
-
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         try {
@@ -2243,7 +2224,7 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
-                    boolean runtimeLayerDetected = isRuntimeLayerPresent(LayerUtils.detectLayers(containerData.getContainer_name(), workload, namespace));
+                    boolean runtimeLayerDetected = RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
                     if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
@@ -2616,15 +2597,6 @@ public class RecommendationEngine {
         }
     }
 
-    private static boolean isRuntimeLayerPresent(Map<String, KruizeLayer> detectedLayers) {
-        if (detectedLayers == null || detectedLayers.isEmpty()) {
-            return false;
-        }
-
-        return detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT)
-                || detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU);
-    }
-
     /**
      * Fetches max date query for namespace and containers from performance profile
      *
@@ -2666,13 +2638,18 @@ public class RecommendationEngine {
             }
 
             if (runtimeLayerDetected && metricObject != null && JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                // JVM info metrics are metadata-only: results contain jvm_metadata (version, runtime, vendor)
+                // with no aggregation_info, value, or format - structurally different from other metrics
                 MetricMetadataResults meta = new MetricMetadataResults();
                 meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
                 meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
                 meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
                 metricResults.setMetricMetadataResults(meta);
+                metricResults.setName(metricEntry.getName());
+                metricResults.setAggregationInfoResult(null);  // omit aggregation for metadata-only structure
             } else if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
                 LOGGER.warn("Skipped JVM info metric metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
+                // Do not add to resMap when metadata extraction skipped
             } else {
                 Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
                 method.invoke(metricAggregationInfoResults, value);
@@ -2681,7 +2658,9 @@ public class RecommendationEngine {
                 metricResults.setName(metricEntry.getName());
                 metricResults.setFormat(format);
             }
-            resMap.put(metricName, metricResults);
+            if (!JVM_INFO_METRICS.contains(metricEntry.getName()) || (runtimeLayerDetected && metricObject != null)) {
+                resMap.put(metricName, metricResults);
+            }
             intervalResults.setMetricResultsMap(resMap);
             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
             intervalResults.setIntervalEndTime(eTime);
@@ -2733,10 +2712,5 @@ public class RecommendationEngine {
                 .toList();
     }
 
-    private void addIfNotEmpty(List<RecommendationConfigEnv> list, String name, StringBuilder valueBuilder) {
-        if (valueBuilder != null && !valueBuilder.toString().isEmpty()) {
-            list.add(new RecommendationConfigEnv(name, valueBuilder.toString()));
-        }
-    }
 }
 

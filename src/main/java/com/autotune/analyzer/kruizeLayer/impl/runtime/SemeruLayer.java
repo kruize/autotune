@@ -17,6 +17,7 @@ package com.autotune.analyzer.kruizeLayer.impl.runtime;
 
 import com.autotune.analyzer.kruizeLayer.impl.Layer;
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.List;
@@ -40,19 +41,19 @@ public class SemeruLayer implements Layer {
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
         return Map.of(
-                AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC,
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC,
                 List.of(
                         new TunableSpec(
-                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, RecommendationConstants.RecommendationEngine.TunablesConstants.MEMORY_LIMIT
                         )
                 ),
-                AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY,
+                RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY,
                 List.of(
                         new TunableSpec(
-                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT
                         ),
                         new TunableSpec(
-                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, RecommendationConstants.RecommendationEngine.TunablesConstants.MEMORY_LIMIT
                         )
                 )
         );
