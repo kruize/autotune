@@ -4,11 +4,6 @@ import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.impl.TunableDependencyResolver;
-import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
-import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -859,18 +854,6 @@ public class RecommendationEngine {
             RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
             RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
 
-            // Pre-populate context with CPU/memory recommendations for use by handleRuntimeRecommendations
-            Map<TunableSpec, Object> tunableSpecObjectMap = new HashMap<>();
-            String containerLayer = AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER;
-            tunableSpecObjectMap.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST),
-                    recommendationMemRequest != null ? recommendationMemRequest.getAmount() : null);
-            tunableSpecObjectMap.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT),
-                    recommendationMemLimits != null ? recommendationMemLimits.getAmount() : null);
-            tunableSpecObjectMap.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.CPU_REQUEST),
-                    recommendationCpuRequest != null ? recommendationCpuRequest.getAmount() : null);
-            tunableSpecObjectMap.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.CPU_LIMIT),
-                    recommendationCpuLimits != null ? recommendationCpuLimits.getAmount() : null);
-
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
@@ -886,8 +869,8 @@ public class RecommendationEngine {
             List<RecommendationConfigEnv> runtimeRecommList = null;
 
             try {
-                if (isRuntimeLayerPresent(containerData.getLayerMap())) {
-                    runtimeRecommList = handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications, tunableSpecObjectMap);
+                if (RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap())) {
+                    runtimeRecommList = RuntimeRecommendationProcessor.handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications, recommendationCpuRequest, recommendationMemRequest, recommendationCpuLimits, recommendationMemLimits);
                 }
             } catch (Exception e) {
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
@@ -912,126 +895,6 @@ public class RecommendationEngine {
         }
         return mappedRecommendationForModel;
     }
-
-    /**
-     * Method to handle the runtimes recommendations logic
-     *
-     * @param kruizeObject       to get the datasource
-     * @param containerData
-     * @param model
-     * @param filteredResultsMap
-     * @param notifications
-     * @param tunableSpecObjectMap            pre-populated with CPU/memory recommendations; reused to avoid redundant model calls
-     * @return
-     */
-    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject, ContainerData containerData, RecommendationModel model, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications, Map<TunableSpec, Object> tunableSpecObjectMap) {
-        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-        String datasourceName = kruizeObject.getDataSource();
-        if (datasourceName == null) {
-            LOGGER.warn("Datasource missing, skipping runtime recommendations");
-            return null;
-        }
-        Map<String, KruizeLayer> layerMap = containerData.getLayerMap();
-        LOGGER.debug("layerMap: {}", new Gson().toJson(layerMap));
-        if (layerMap == null || layerMap.isEmpty()) {
-            return runtimeRecommList;
-        }
-        List<KruizeLayer> kruizeLayers = layerMap.values().stream()
-                .filter(layer -> layer.getTunables() != null)
-                .collect(Collectors.toList());
-        List<TunableSpec> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
-        RecommendationConfigItem recommendationCpuRequest;
-        RecommendationConfigItem recommendationCpuLimits;
-        RecommendationConfigItem recommendationMemRequest;
-        RecommendationConfigItem recommendationMemLimits;
-        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = null;
-
-        // Process the tunables (ordered by dependency resolution)
-        for (TunableSpec spec : orderedTunables) {
-            String layerName = spec.layerName();
-            String metricName = spec.tunableName();
-            Double amount;
-            switch (metricName) {
-                case AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST:
-                    if (tunableSpecObjectMap.containsKey(spec)) {
-                        amount = (Double) tunableSpecObjectMap.get(spec);
-                    } else {
-                        recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-                        amount = recommendationMemRequest != null ? recommendationMemRequest.getAmount() : null;
-                    }
-                    tunableSpecObjectMap.put(spec, amount);
-                    break;
-                case AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT:
-                    if (tunableSpecObjectMap.containsKey(spec)) {
-                        amount = (Double) tunableSpecObjectMap.get(spec);
-                    } else {
-                        recommendationMemLimits = model.getMemoryLimitRecommendation(filteredResultsMap, notifications);
-                        amount = recommendationMemLimits != null ? recommendationMemLimits.getAmount() : null;
-                    }
-                    tunableSpecObjectMap.put(spec, amount);
-                    break;
-                case AnalyzerConstants.MetricNameConstants.CPU_REQUEST:
-                    if (tunableSpecObjectMap.containsKey(spec)) {
-                        amount = (Double) tunableSpecObjectMap.get(spec);
-                    } else {
-                        recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-                        amount = recommendationCpuRequest != null ? recommendationCpuRequest.getAmount() : null;
-                    }
-                    tunableSpecObjectMap.put(spec, amount);
-                    break;
-                case AnalyzerConstants.MetricNameConstants.CPU_LIMIT:
-                    if (tunableSpecObjectMap.containsKey(spec)) {
-                        amount = (Double) tunableSpecObjectMap.get(spec);
-                    } else {
-                        recommendationCpuLimits = model.getCPULimitRecommendation(filteredResultsMap, notifications);
-                        amount = recommendationCpuLimits != null ? recommendationCpuLimits.getAmount() : null;
-                    }
-                    tunableSpecObjectMap.put(spec, amount);
-                    break;
-                case AnalyzerConstants.MetricNameConstants.GPU: //TODO: skip this call similar to cpu/mem
-                    recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
-                    tunableSpecObjectMap.put(spec, recommendationAcceleratorRequestMap);
-                    break;
-                case AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC:
-                case AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY:
-                case AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS:
-                    Object recommendationRuntimes = model.getRuntimeRecommendations(metricName, layerName, filteredResultsMap, tunableSpecObjectMap, notifications);
-                    tunableSpecObjectMap.put(spec, recommendationRuntimes);
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + metricName);
-            }
-        }
-
-        // Build env var strings via layer handlers
-        StringBuilder jvmOptsBuilder = new StringBuilder();
-        StringBuilder quarkusBuilder = new StringBuilder();
-        Map<String, StringBuilder> envBuilders = new HashMap<>();
-        envBuilders.put(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
-        envBuilders.put(KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        envBuilders.put(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS, quarkusBuilder);
-
-        for (Map.Entry<TunableSpec, Object> entry : tunableSpecObjectMap.entrySet()) {
-            Object value = entry.getValue();
-            if (value == null) continue;
-            TunableSpec spec = entry.getKey();
-            String layerName = spec.layerName();
-            String metricName = spec.tunableName();
-            if (isRuntimeTunable(metricName)) {
-                LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
-                if (handler != null) {
-                    handler.formatForEnv(metricName, value, envBuilders);
-                }
-            }
-        }
-
-        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
-        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        addIfNotEmpty(runtimeRecommList, AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS, quarkusBuilder);
-
-        return runtimeRecommList;
-    }
-
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         try {
@@ -2361,7 +2224,7 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
-                    boolean runtimeLayerDetected = isRuntimeLayerPresent(containerData.getLayerMap());
+                    boolean runtimeLayerDetected = RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
                     if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
@@ -2735,20 +2598,6 @@ public class RecommendationEngine {
     }
 
     /**
-     * Checks for the presence of runtime, quarkus or any other non-container layers
-     * @param detectedLayers
-     * @return for now, it returns true if any other layer except container is detected.
-     */
-    private static boolean isRuntimeLayerPresent(Map<String, KruizeLayer> detectedLayers) {
-        if (detectedLayers == null || detectedLayers.isEmpty()) {
-            return false;
-        }
-        String containerLayer = AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER;
-        return detectedLayers.keySet().stream()
-                .anyMatch(layer -> layer != null && !layer.equalsIgnoreCase(containerLayer));
-    }
-
-    /**
      * Fetches max date query for namespace and containers from performance profile
      *
      * @param metricProfile performance profile to be used
@@ -2861,18 +2710,6 @@ public class RecommendationEngine {
                     );
                 })
                 .toList();
-    }
-
-    private void addIfNotEmpty(List<RecommendationConfigEnv> list, String name, StringBuilder valueBuilder) {
-        if (valueBuilder != null && !valueBuilder.toString().isEmpty()) {
-            list.add(new RecommendationConfigEnv(name, valueBuilder.toString()));
-        }
-    }
-
-    private static boolean isRuntimeTunable(String metricName) {
-        return AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(metricName)
-                || AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(metricName)
-                || AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(metricName);
     }
 
 }

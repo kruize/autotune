@@ -18,7 +18,7 @@ package com.autotune.analyzer.recommendations.layers;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricMetadataResults;
@@ -28,9 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.Map;
-
-import static com.autotune.analyzer.recommendations.utils.RecommendationUtils.getJvmMetricMetadataFromFilteredResults;
-import static com.autotune.analyzer.recommendations.utils.RecommendationUtils.getTunableValue;
 
 /**
  * Recommendation handler for the Hotspot (OpenJDK) JVM layer.
@@ -58,10 +55,10 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
         Object recommendation;
         switch (tunableName) {
-            case AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC:
                 recommendation = generateHotspotMaxRAMPercentageRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
                 break;
-            case AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY:
                 recommendation = generateHotspotGCPolicyRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
                 break;
             default:
@@ -72,11 +69,20 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
     }
 
     /**
-     * Generates MaxRAMPercentage recommendation
-     * @param tunableName The tunable
-     * @param tunableSpecObjectMap Map containing TunableSpec keys with dependency values
-     * @param filteredResultsMap Metrics data
-     * @return Recommendation or null if dependencies missing
+     * Generates MaxRAMPercentage recommendation for Hotspot JVM (-XX:MaxRAMPercentage).
+     * <p>
+     * <b>Calculation:</b>
+     * <ul>
+     *   <li>Base: 50% if container memory ≤ 512MB, else 80%</li>
+     *   <li>If CPU cores &lt; 1: subtract 10%</li>
+     *   <li>If CPU cores &lt; 2 (and ≥ 1): subtract 5%</li>
+     * </ul>
+     * Example: 1GB memory, 2 cores → 80%; 256MB memory, 0.5 cores → 40%.
+     *
+     * @param tunableName         the tunable name (MAX_RAM_PERC)
+     * @param tunableSpecObjectMap map containing MEMORY_LIMIT and CPU_LIMIT from the container layer
+     * @param filteredResultsMap  interval results (unused for this tunable)
+     * @return recommended MaxRAMPercentage (0–100), or null if memory limit is invalid
      */
     public Double generateHotspotMaxRAMPercentageRecommendation(
             String tunableName,
@@ -85,7 +91,7 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
         double containerMemoryBytes = (Double) RecommendationUtils.getTunableValue(
                     tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                    AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MEMORY_LIMIT);
 
         double containerMemoryMB = containerMemoryBytes / (1024 * 1024);
         if (containerMemoryMB <= 0) {
@@ -95,27 +101,21 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
         double containerCpuCores = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT);
 
         double maxRamPercentage;
-        if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_256MB) {
-            maxRamPercentage = 50.0; // Tiny: JVM needs half for internal tasks
-        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_512MB) {
-            maxRamPercentage = 60.0; // Small
-        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_4096MB) {
-            maxRamPercentage = 75.0; // Medium
-        } else if (containerMemoryMB <= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_8192MB) {
-            maxRamPercentage = 80.0;
+        if (containerMemoryMB <= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_512MB) {
+            maxRamPercentage = 50.0;
         } else {
-            maxRamPercentage = 85.0;
+            maxRamPercentage = 80.0;
         }
 
-        if (containerCpuCores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_SERIAL) {
-            maxRamPercentage -= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE;
-        } else if (containerCpuCores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL) {
-            maxRamPercentage -= AnalyzerConstants.RecommendationConstants.RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE;
+        if (containerCpuCores < RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_SERIAL) {
+            maxRamPercentage -= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE;
+        } else if (containerCpuCores < RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_PARALLEL) {
+            maxRamPercentage -= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE;
         }
-        LOGGER.info("Generated MaxRAMPercentage: {}% for container memory: {}MB", maxRamPercentage, containerMemoryMB);
+        LOGGER.debug("Generated MaxRAMPercentage: {}% for container memory: {}MB", maxRamPercentage, containerMemoryMB);
 
         return maxRamPercentage;
 
@@ -128,48 +128,48 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
         double memLimit = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MEMORY_LIMIT);
         double memLimitMB = memLimit / (1024 * 1024);
         double cpuCores = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT);
         int cores = (int) Math.ceil(cpuCores);
         double maxRAMPercent = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap, AnalyzerConstants.LayerConstants.HOTSPOT_LAYER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC);
         double jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
 
         String gcPolicy;
 
         // For single core, use SerialGC
-        if (cores <= AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_SERIAL) {
+        if (cores <= RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_SERIAL) {
             LOGGER.debug("Selected Hotspot SerialGC: cores={}, heapMB={}, jdk={}", cores, jvmHeapSizeMB, jdkMajorVersion);
-            gcPolicy = AnalyzerConstants.RecommendationConstants.GC_SERIAL;
+            gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_SERIAL;
             return gcPolicy;
         }
         // For 2 cores and small heap, use ParallelGC
-        if (cores <= AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL &&
-                jvmHeapSizeMB <= AnalyzerConstants.RecommendationConstants.MEMORY_THRESHOLD_G1GC) {
+        if (cores <= RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_PARALLEL &&
+                jvmHeapSizeMB <= RecommendationConstants.RecommendationEngine.RuntimeConstants.MEMORY_THRESHOLD_G1GC) {
             LOGGER.debug("Selected Hotspot ParallelGC: cores={}, heapMB={}, jdk={}", cores, jvmHeapSizeMB, jdkMajorVersion);
-            gcPolicy = AnalyzerConstants.RecommendationConstants.GC_PARALLEL;
+            gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_PARALLEL;
             return gcPolicy;
         }
 
         // For very large heaps with sufficient cores, consider modern low-latency GCs
-        if (jvmHeapSizeMB >= AnalyzerConstants.RecommendationConstants.MEMORY_THRESHOLD_G1GC && cores >= AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL) {
+        if (jvmHeapSizeMB >= RecommendationConstants.RecommendationEngine.RuntimeConstants.MEMORY_THRESHOLD_G1GC) {
             // JDK 17+: ZGC is production-ready and offers ultra-low latency
-            if (jdkMajorVersion >= AnalyzerConstants.RecommendationConstants.JDK_VERSION_ZGC) {
-                LOGGER.info("Selected Hotspot ZGC: cores={}, heapMB={}, jdk={} (ultra-low latency)",
+            if (jdkMajorVersion >= RecommendationConstants.RecommendationEngine.RuntimeConstants.JDK_VERSION_ZGC) {
+                LOGGER.debug("Selected Hotspot ZGC: cores={}, heapMB={}, jdk={} (ultra-low latency)",
                         cores, jvmHeapSizeMB, jdkMajorVersion);
-                gcPolicy = AnalyzerConstants.RecommendationConstants.GC_ZGC;
+                gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_ZGC;
                 return gcPolicy;
             }
 
             // JDK 11-16: Shenandoah offers low latency
-            if (jdkMajorVersion >= AnalyzerConstants.RecommendationConstants.JDK_VERSION_SHENANDOAH) {
-                LOGGER.info("Selected Hotspot ShenandoahGC: cores={}, heapMB={}, jdk={} (low latency)",
+            if (jdkMajorVersion >= RecommendationConstants.RecommendationEngine.RuntimeConstants.JDK_VERSION_SHENANDOAH) {
+                LOGGER.debug("Selected Hotspot ShenandoahGC: cores={}, heapMB={}, jdk={} (low latency)",
                         cores, jvmHeapSizeMB, jdkMajorVersion);
-                gcPolicy = AnalyzerConstants.RecommendationConstants.GC_SHENANDOAH;
+                gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_SHENANDOAH;
                 return gcPolicy;
             }
         }
@@ -177,7 +177,7 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         // Default to G1GC for large heaps (>4GB) or when JDK version is unknown/old
         LOGGER.debug("Selected Hotspot G1GC: cores={}, heapMB={}, jdk={} (balanced performance)",
                 cores, jvmHeapSizeMB, jdkMajorVersion);
-        gcPolicy =  AnalyzerConstants.RecommendationConstants.GC_G1GC;
+        gcPolicy =  RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_G1GC;
         return gcPolicy;
     }
 

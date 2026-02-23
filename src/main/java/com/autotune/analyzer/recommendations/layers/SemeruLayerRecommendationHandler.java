@@ -18,18 +18,15 @@ package com.autotune.analyzer.recommendations.layers;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.result.IntervalResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.Map;
-
-import static com.autotune.analyzer.recommendations.utils.RecommendationUtils.getTunableValue;
 
 /**
  * Recommendation handler for the Semeru JVM layer.
@@ -57,10 +54,10 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
 
         Object recommendation;
         switch (tunableName) {
-            case AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC:
                 recommendation = generateSemeruMaxRAMPercentageRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
                 break;
-            case AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY:
                 recommendation = generateSemeruGCPolicyRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
                 break;
             default:
@@ -90,29 +87,29 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
 
         double memLimit = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap,AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MEMORY_LIMIT);
         double memLimitMB = memLimit / (1024 * 1024);
         double cpuCores = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap,AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT);
         int cores = (int) Math.round(cpuCores);
         double maxRAMPercent = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap,AnalyzerConstants.LayerConstants.SEMERU_LAYER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC);
         double jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
         
         String gcPolicy;
 
         // For single core or small heaps, use gencon (default, efficient)
-        if (cores < AnalyzerConstants.RecommendationConstants.CPU_CORES_THRESHOLD_PARALLEL ||
-                jvmHeapSizeMB < AnalyzerConstants.RecommendationConstants.MEMORY_THRESHOLD_BALANCED_GC) {
+        if (cores < RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_PARALLEL ||
+                jvmHeapSizeMB < RecommendationConstants.RecommendationEngine.RuntimeConstants.MEMORY_THRESHOLD_BALANCED_GC) {
             LOGGER.debug("Selected Semeru gencon GC: cores={}, heapMB={}", cores, jvmHeapSizeMB);
-            gcPolicy = AnalyzerConstants.RecommendationConstants.GC_GENCON;
+            gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_GENCON;
             return gcPolicy;
         }
         // For larger heaps (>4GB) with multiple cores, use balanced GC
         LOGGER.debug("Selected Semeru balanced GC: cores={}, heapMB={} ", cores, jvmHeapSizeMB);
-        gcPolicy = AnalyzerConstants.RecommendationConstants.GC_BALANCED;
+        gcPolicy = RecommendationConstants.RecommendationEngine.RuntimeConstants.GC_BALANCED;
         return gcPolicy;
     }
 
@@ -121,4 +118,3 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
         RecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 }
-

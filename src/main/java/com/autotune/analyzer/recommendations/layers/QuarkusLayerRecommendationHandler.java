@@ -18,7 +18,7 @@ package com.autotune.analyzer.recommendations.layers;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
@@ -57,7 +57,7 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
             Map<Timestamp, IntervalResults> filteredResultsMap) {
 
         switch (tunableName) {
-            case AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS:
                 return generateCoreThreadsRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
             default:
                 LOGGER.warn("Unknown tunable for Quarkus layer: {}", tunableName);
@@ -67,6 +67,17 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
 
     /**
      * Generates core threads recommendation for Quarkus worker thread pool.
+     * <p>
+     * <b>Calculation:</b>
+     * <ul>
+     *   <li>threads = ceil(cpu_cores × THREADS_PER_CORE), where cpu_cores is the container CPU limit</li>
+     *   <li>Result is clamped to [MIN_CORE_THREADS, MAX_CORE_THREADS] (default: 1–100)</li>
+     * </ul>
+     *
+     * @param tunableName         the tunable name (CORE_THREADS)
+     * @param tunableSpecObjectMap map containing CPU_LIMIT from the container layer
+     * @param filteredResultsMap  interval results (unused for this tunable)
+     * @return recommended number of core threads, or null if CPU limit is invalid
      */
     private Object generateCoreThreadsRecommendation(
             String tunableName,
@@ -75,24 +86,24 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
 
         double cpuCores = (Double) RecommendationUtils.getTunableValue(
                 tunableSpecObjectMap,AnalyzerConstants.CONTAINER,
-                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT);
         if (cpuCores <= 0) {
             LOGGER.warn("Invalid CPU limit for Quarkus: {} cores", cpuCores);
             return null;
         }
 
-        int recommendedThreads = (int) Math.ceil(cpuCores * AnalyzerConstants.RecommendationConstants.THREADS_PER_CORE);
+        int recommendedThreads = (int) Math.ceil(cpuCores * RecommendationConstants.RecommendationEngine.RuntimeConstants.THREADS_PER_CORE);
 
-        if (recommendedThreads < AnalyzerConstants.RecommendationConstants.MIN_CORE_THREADS) {
-            LOGGER.debug("Calculated threads ({}) below minimum, using {}", recommendedThreads, AnalyzerConstants.RecommendationConstants.MIN_CORE_THREADS);
-            recommendedThreads = AnalyzerConstants.RecommendationConstants.MIN_CORE_THREADS;
-        } else if (recommendedThreads > AnalyzerConstants.RecommendationConstants.MAX_CORE_THREADS) {
-            LOGGER.warn("Calculated threads ({}) exceeds maximum, capping at {}", recommendedThreads, AnalyzerConstants.RecommendationConstants.MAX_CORE_THREADS);
-            recommendedThreads = AnalyzerConstants.RecommendationConstants.MAX_CORE_THREADS;
+        if (recommendedThreads < RecommendationConstants.RecommendationEngine.RuntimeConstants.MIN_CORE_THREADS) {
+            LOGGER.debug("Calculated threads ({}) below minimum, using {}", recommendedThreads, RecommendationConstants.RecommendationEngine.RuntimeConstants.MIN_CORE_THREADS);
+            recommendedThreads = RecommendationConstants.RecommendationEngine.RuntimeConstants.MIN_CORE_THREADS;
+        } else if (recommendedThreads > RecommendationConstants.RecommendationEngine.RuntimeConstants.MAX_CORE_THREADS) {
+            LOGGER.warn("Calculated threads ({}) exceeds maximum, capping at {}", recommendedThreads, RecommendationConstants.RecommendationEngine.RuntimeConstants.MAX_CORE_THREADS);
+            recommendedThreads = RecommendationConstants.RecommendationEngine.RuntimeConstants.MAX_CORE_THREADS;
         }
 
         LOGGER.debug("Calculated Quarkus core threads: {} for {} CPU cores ({}x multiplier)",
-                recommendedThreads, cpuCores, AnalyzerConstants.RecommendationConstants.THREADS_PER_CORE);
+                recommendedThreads, cpuCores, RecommendationConstants.RecommendationEngine.RuntimeConstants.THREADS_PER_CORE);
 
 
         LOGGER.info("Generated Quarkus core threads: {} for CPU: {} cores",
@@ -105,8 +116,8 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
         if (value == null) return;
 
-        if (AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(tunableName)) {
-            StringBuilder quarkusBuilder = envBuilders.get(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS);
+        if (RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS.equals(tunableName)) {
+            StringBuilder quarkusBuilder = envBuilders.get(RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS);
             if (quarkusBuilder != null) {
                 quarkusBuilder.append(value);
             }

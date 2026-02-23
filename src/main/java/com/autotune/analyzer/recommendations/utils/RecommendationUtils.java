@@ -655,10 +655,12 @@ public class RecommendationUtils {
         StringBuilder target = (jdkOpts != null) ? jdkOpts : javaOpts;
         if (target == null) return;
 
-        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
-            target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
-        } else if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
-            target.append(value).append(" ");
+        switch (tunableName) {
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC ->
+                    target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY -> target.append(value).append(" ");
+            case null, default -> {
+            }
         }
     }
 
