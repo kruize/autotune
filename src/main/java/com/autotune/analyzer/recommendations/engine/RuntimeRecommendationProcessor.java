@@ -174,7 +174,7 @@ public final class RuntimeRecommendationProcessor {
                     break;
                 case RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC:
                 case RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY:
-                case RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS:
+                case RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS:
                     Object recommendationRuntimes = model.getRuntimeRecommendations(metricName, layerName, filteredResultsMap, tunableSpecObjectMap, notifications);
                     tunableSpecObjectMap.put(spec, recommendationRuntimes);
                     break;
@@ -188,7 +188,7 @@ public final class RuntimeRecommendationProcessor {
         Map<String, StringBuilder> envBuilders = new HashMap<>();
         envBuilders.put(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
         envBuilders.put(KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        envBuilders.put(RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS, quarkusBuilder);
+        envBuilders.put(RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS, quarkusBuilder);
 
         for (Map.Entry<TunableSpec, Object> entry : tunableSpecObjectMap.entrySet()) {
             Object value = entry.getValue();
@@ -206,7 +206,7 @@ public final class RuntimeRecommendationProcessor {
 
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        addIfNotEmpty(runtimeRecommList, RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS, quarkusBuilder);
+        addIfNotEmpty(runtimeRecommList, RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS, quarkusBuilder);
 
         return runtimeRecommList;
     }
@@ -220,6 +220,6 @@ public final class RuntimeRecommendationProcessor {
     private static boolean isRuntimeTunable(String metricName) {
         return RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC.equals(metricName)
                 || RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY.equals(metricName)
-                || RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS.equals(metricName);
+                || RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS.equals(metricName);
     }
 }

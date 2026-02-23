@@ -99,22 +99,13 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
             return null;
         }
 
-        double containerCpuCores = (Double) RecommendationUtils.getTunableValue(
-                tunableSpecObjectMap, AnalyzerConstants.CONTAINER,
-                RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT);
-
         double maxRamPercentage;
         if (containerMemoryMB <= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_512MB) {
-            maxRamPercentage = 50.0;
+            maxRamPercentage = RecommendationConstants.RecommendationEngine.RuntimeConstants.MAX_RAM_PERCENTAGE_50;
         } else {
-            maxRamPercentage = 80.0;
+            maxRamPercentage = RecommendationConstants.RecommendationEngine.RuntimeConstants.DEFAULT_MAX_RAM_PERCENTAGE_VALUE;
         }
 
-        if (containerCpuCores < RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_SERIAL) {
-            maxRamPercentage -= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE;
-        } else if (containerCpuCores < RecommendationConstants.RecommendationEngine.RuntimeConstants.CPU_CORES_THRESHOLD_PARALLEL) {
-            maxRamPercentage -= RecommendationConstants.RecommendationEngine.RuntimeConstants.RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE;
-        }
         LOGGER.debug("Generated MaxRAMPercentage: {}% for container memory: {}MB", maxRamPercentage, containerMemoryMB);
 
         return maxRamPercentage;

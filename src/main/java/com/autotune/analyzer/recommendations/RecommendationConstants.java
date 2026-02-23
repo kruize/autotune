@@ -787,8 +787,8 @@ public class RecommendationConstants {
         }
 
         public static class RuntimeConstants {
-            public static final Integer MAX_RAM_PERCENTAGE_VALUE = 80;
-            public static final String MAX_RAM_PERC = "80";
+            public static final Double DEFAULT_MAX_RAM_PERCENTAGE_VALUE = 80.0;
+            public static final Double MAX_RAM_PERCENTAGE_50 = 50.0;
             public static final String GPU = "gpu";
 
             public static final double MEMORY_THRESHOLD_G1GC = 4096.0;
@@ -832,7 +832,7 @@ public class RecommendationConstants {
             public static final String MAX_RAM_PERC = "MaxRAMPercentage";
             public static final String GC_POLICY = "GCPolicy";
             // Quarkus tunables
-            public static final String CORE_THREADS = "quarkus.thread-pool.core-threads";
+            public static final String QUARKUS_THREAD_POOL_CORE_THREADS = "quarkus.thread-pool.core-threads";
         }
     }
 }
