@@ -103,6 +103,69 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
+    private static Map<AnalyzerConstants.Aggregates, Integer> getPodStats(
+            Map<Timestamp, IntervalResults> filteredResultsMap) {
+
+        if (filteredResultsMap == null || filteredResultsMap.isEmpty()) {
+            return null;
+        }
+
+        double minPods = Double.MAX_VALUE;
+        double maxPods = Double.MIN_VALUE;
+        double totalPods = 0;
+        int count = 0;
+
+        for (IntervalResults interval : filteredResultsMap.values()) {
+            Map<AnalyzerConstants.MetricName, MetricResults> metrics = interval.getMetricResultsMap();
+            if (metrics == null || metrics.isEmpty())
+                continue;
+            Double pods = extractPods(metrics, AnalyzerConstants.MetricName.cpuUsage);
+            if (pods == null) {
+                pods = extractPods(metrics, AnalyzerConstants.MetricName.memoryUsage);
+            }
+            if (pods == null)
+                continue;
+            minPods = Math.min(minPods, pods);
+            maxPods = Math.max(maxPods, pods);
+            totalPods += pods;
+            count++;
+        }
+
+        if (count == 0) {
+            return null;
+        }
+
+        Map<AnalyzerConstants.Aggregates, Integer> result = new HashMap<>();
+
+        result.put(AnalyzerConstants.Aggregates.max, (int) maxPods);
+        result.put(AnalyzerConstants.Aggregates.min, (int) minPods);
+        result.put(AnalyzerConstants.Aggregates.avg, (int) Math.round(totalPods / count));
+
+        return result;
+    }
+
+    private static Double extractPods(
+            Map<AnalyzerConstants.MetricName, MetricResults> metrics,
+            AnalyzerConstants.MetricName metricName) {
+
+        MetricResults metric = metrics.get(metricName);
+        if (metric == null)
+            return null;
+
+        MetricAggregationInfoResults agg = metric.getAggregationInfoResult();
+        if (agg == null)
+            return null;
+
+        Double sum = agg.getSum();
+        Double avg = agg.getAvg();
+
+        if (sum == null || avg == null || avg <= 0 || sum <= 0)
+            return null;
+
+        return (double) Math.round(sum / avg);
+    }
+
+
     /**
      * Populates the given map with Prometheus Query Language (PromQL) queries for various metrics.
      *
@@ -693,13 +756,24 @@ public class RecommendationEngine {
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
+                // Filter the map here to extract the results
+                Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
+                        .filter((x -> (
+                                (x.getKey().compareTo(monitoringStartTime) >= 0)
+                                && (x.getKey().compareTo(monitoringEndTime) <= 0))
+                        )).collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+                Map<AnalyzerConstants.Aggregates, Integer> podStats = getPodStats(filteredResultsMap);
+                if (null != podStats) {
+                    mappedRecommendationForTerm.setTermReplicas(podStats);
+                }
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime,
                             model,
-                            containerData,
+                            filteredResultsMap,
                             monitoringEndTime,
                             kruizeObject,
                             currentConfig,
@@ -776,7 +850,9 @@ public class RecommendationEngine {
 
     }
 
-    private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
+    private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime,
+                                                                            RecommendationModel model,
+                                                                            Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                             Timestamp monitoringEndTime,
                                                                             KruizeObject kruizeObject,
                                                                             HashMap<AnalyzerConstants.ResourceSetting,
@@ -832,10 +908,6 @@ public class RecommendationEngine {
         }
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
-            Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
-                    .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
-                            && (x.getKey().compareTo(monitoringEndTime) <= 0))))
-                    .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
             // Set number of pods
             int numPods = getNumPods(filteredResultsMap);
