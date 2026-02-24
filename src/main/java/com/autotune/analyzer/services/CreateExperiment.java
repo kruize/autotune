@@ -144,26 +144,28 @@ public class CreateExperiment extends HttpServlet {
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    KruizeObject ko = kruizeExpList.get(0);
-                    CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
-                            .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
-                            .findAny()
-                            .orElse(null);
-                    validAPIObj.setValidationData(ko.getValidation_data());
-                    ValidationOutputData addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
-                    
-                    if (addedToDB.isSuccess()) {
-                        experimentCache.add(ko.getExperimentName());
-                        sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-                        statusValue = "success";
-                    } else {
-                        // Check if experiment already exists
-                        if (addedToDB.getMessage() != null && addedToDB.getMessage().contains("already exists")) {
-                            LOGGER.debug("Experiment {} already exists, returning 409", ko.getExperimentName());
+                    ValidationOutputData addedToDB = null;
+                    for (KruizeObject ko : kruizeExpList) {
+                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                                .findAny()
+                                .orElse(null);
+                        validAPIObj.setValidationData(ko.getValidation_data());
+                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        
+                        if (addedToDB.isSuccess()) {
                             experimentCache.add(ko.getExperimentName());
-                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                            statusValue = "success";
                         } else {
-                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                            // Check if experiment already exists
+                            if (addedToDB.getMessage() != null && addedToDB.getMessage().contains("already exists")) {
+                                LOGGER.debug("Experiment {} already exists, returning 409", ko.getExperimentName());
+                                experimentCache.add(ko.getExperimentName());
+                                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            } else {
+                                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                            }
                         }
                     }
                 } else {
