@@ -53,7 +53,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectE
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
 import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationConstants.PERFORMANCE_RECOMMENDATION_TUNABLES;
 
-public class RecommendationEngine {
+public class RecommendationEngine implements RecommendationEngineService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
     private final String intervalEndTimeStr;
     private final String intervalStartTimeStr; // TODO: to be used in future
@@ -470,7 +470,7 @@ public class RecommendationEngine {
      * @param runtimeListToPopulate                The Object to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
-    boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
+    public boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
                                    MappedRecommendationForModel recommendationModel,
                                    ArrayList<RecommendationNotification> notifications,
                                    HashMap<String, RecommendationConfigItem> internalMapToPopulate,

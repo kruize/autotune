@@ -48,14 +48,12 @@ import static com.autotune.analyzer.recommendations.RecommendationConstants.Reco
 /**
  * Processes container-level recommendations.
  */
-public final class ContainerRecommendationProcessor {
+public final class ContainerRecommendationProcessor extends BaseRecommendationProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRecommendationProcessor.class);
 
-    private final RecommendationEngine engine;
-
-    public ContainerRecommendationProcessor(RecommendationEngine engine) {
-        this.engine = engine;
+    public ContainerRecommendationProcessor(RecommendationEngineService engineService) {
+        super(engineService);
     }
 
     /**
@@ -119,61 +117,16 @@ public final class ContainerRecommendationProcessor {
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
 
-        String experimentName = engine.getExperimentName();
-        Timestamp intervalEndTime = engine.getInterval_end_time();
+        String experimentName = engineService.getExperimentName();
+        Timestamp intervalEndTime = engineService.getInterval_end_time();
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
                 RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(containerData.getResults(),
                         monitoringEndTime, resourceSetting, recommendationItem, notifications);
 
-                if (null == configItem) continue;
-                if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
-                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
+                // Use base class validation method
+                if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
                     continue;
                 }
 
@@ -221,7 +174,7 @@ public final class ContainerRecommendationProcessor {
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
-                for (RecommendationModel model : engine.getModels()) {
+                for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime, model, containerData, monitoringEndTime, kruizeObject, currentConfig, termsEntry);
 
@@ -290,46 +243,18 @@ public final class ContainerRecommendationProcessor {
                                                                             Map.Entry<String, Terms> termEntry) {
 
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
-        double cpuThreshold = DEFAULT_CPU_THRESHOLD;
-        double memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
-        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
-        if (null != recommendationSettings) {
-            Double threshold = recommendationSettings.getThreshold();
-            if (null == threshold) {
-                LOGGER.info(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.THRESHOLD_NOT_SET, DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
-            } else if (threshold <= 0.0) {
-                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_THRESHOLD, DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
-            } else {
-                cpuThreshold = threshold;
-                memoryThreshold = threshold;
-            }
-        } else {
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATION_SETTINGS, DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
-        }
+        
+        // Extract thresholds using base class helper
+        ThresholdValues thresholds = extractThresholds(kruizeObject.getRecommendation_settings());
+        double cpuThreshold = thresholds.cpuThreshold;
+        double memoryThreshold = thresholds.memoryThreshold;
 
-        RecommendationConfigItem currentCPURequest = null;
-        RecommendationConfigItem currentCPULimit = null;
-        RecommendationConfigItem currentMemRequest = null;
-        RecommendationConfigItem currentMemLimit = null;
-
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
-        }
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
-        }
+        // Extract current config using base class helper
+        CurrentConfigValues currentConfig = extractCurrentConfig(currentConfigMap);
+        RecommendationConfigItem currentCPURequest = currentConfig.cpuRequest;
+        RecommendationConfigItem currentCPULimit = currentConfig.cpuLimit;
+        RecommendationConfigItem currentMemRequest = currentConfig.memoryRequest;
+        RecommendationConfigItem currentMemLimit = currentConfig.memoryLimit;
 
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
@@ -367,7 +292,7 @@ public final class ContainerRecommendationProcessor {
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
             }
 
-            engine.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList);
+            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList);
         } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);

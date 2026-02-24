@@ -54,14 +54,12 @@ import static com.autotune.analyzer.recommendations.RecommendationConstants.Reco
 /**
  * Processes namespace-level recommendations for Kubernetes workloads.
  */
-public final class NamespaceRecommendationProcessor {
+public final class NamespaceRecommendationProcessor extends BaseRecommendationProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NamespaceRecommendationProcessor.class);
 
-    private final RecommendationEngine engine;
-
-    public NamespaceRecommendationProcessor(RecommendationEngine engine) {
-        this.engine = engine;
+    public NamespaceRecommendationProcessor(RecommendationEngineService engineService) {
+        super(engineService);
     }
 
     /**
@@ -129,53 +127,15 @@ public final class NamespaceRecommendationProcessor {
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceLimitsMap = new HashMap<>();
 
-        String experimentName = engine.getExperimentName();
-        Timestamp intervalEndTime = engine.getInterval_end_time();
+        String experimentName = engineService.getExperimentName();
+        Timestamp intervalEndTime = engineService.getInterval_end_time();
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
                 RecommendationConfigItem configItem = RecommendationUtils.getCurrentValueForNamespace(namespaceData.getResults(), monitoringEndTime, resourceSetting, recommendationItem, notifications);
 
-                if (null == configItem)
-                    continue;
-                if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
-                    continue;
-                }
-                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    } else if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
-                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, intervalEndTime)));
-                    }
+                // Use base class validation method
+                if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
                     continue;
                 }
 
@@ -221,7 +181,7 @@ public final class NamespaceRecommendationProcessor {
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
-                for (RecommendationModel model : engine.getModels()) {
+                for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
                             monitoringStartTime, model, namespaceData, monitoringEndTime, kruizeObject.getRecommendation_settings(), currentConfig, termsEntry);
 
@@ -294,46 +254,18 @@ public final class NamespaceRecommendationProcessor {
                                                                                             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
                                                                                     Map.Entry<String, Terms> termEntry) {
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
-        double namespaceCpuThreshold = DEFAULT_CPU_THRESHOLD;
-        double namespaceMemoryThreshold = DEFAULT_MEMORY_THRESHOLD;
+        
+        // Extract thresholds using base class helper
+        ThresholdValues thresholds = extractThresholds(recommendationSettings);
+        double namespaceCpuThreshold = thresholds.cpuThreshold;
+        double namespaceMemoryThreshold = thresholds.memoryThreshold;
 
-        if (null != recommendationSettings) {
-            Double threshold = recommendationSettings.getThreshold();
-            if (null == threshold) {
-                LOGGER.info("Threshold is not set, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
-            } else if (threshold <= 0.0) {
-                LOGGER.error("Given Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
-            } else {
-                namespaceCpuThreshold = threshold;
-                namespaceMemoryThreshold = threshold;
-            }
-        } else {
-            LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
-        }
-
-        RecommendationConfigItem currentNamespaceCPURequest = null;
-        RecommendationConfigItem currentNamespaceCPULimit = null;
-        RecommendationConfigItem currentNamespaceMemRequest = null;
-        RecommendationConfigItem currentNamespaceMemLimit = null;
-
-        if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentNamespaceCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentNamespaceMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
-        }
-        if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentNamespaceCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentNamespaceMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
-        }
+        // Extract current config using base class helper
+        CurrentConfigValues currentConfig = extractCurrentConfig(currentNamespaceConfigMap);
+        RecommendationConfigItem currentNamespaceCPURequest = currentConfig.cpuRequest;
+        RecommendationConfigItem currentNamespaceCPULimit = currentConfig.cpuLimit;
+        RecommendationConfigItem currentNamespaceMemRequest = currentConfig.memoryRequest;
+        RecommendationConfigItem currentNamespaceMemLimit = currentConfig.memoryLimit;
 
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
@@ -360,7 +292,7 @@ public final class NamespaceRecommendationProcessor {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, namespaceRecommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, namespaceRecommendationMemLimits);
 
-            engine.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPodsInNamespace, namespaceCpuThreshold, namespaceMemoryThreshold, null, null);
+            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPodsInNamespace, namespaceCpuThreshold, namespaceMemoryThreshold, null, null);
         } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
