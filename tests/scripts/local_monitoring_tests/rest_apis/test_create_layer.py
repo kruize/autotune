@@ -165,7 +165,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("empty_metadata_name", LAYER_METADATA_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("null_layer_name", LAYER_NAME_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", None, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("empty_layer_name", LAYER_NAME_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
-    ("null_layer_presence", LAYER_PRESENCE_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", 'null', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("missing_layer_presence_config", LAYER_PRESENCE_MISSING_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", 'null', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', 'null'),
     ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[]'),
 ])
