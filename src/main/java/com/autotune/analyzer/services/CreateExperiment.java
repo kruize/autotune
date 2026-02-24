@@ -16,34 +16,6 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.InvalidExperimentType;
-import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.experiment.ExperimentInitiator;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
-import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.ValidationOutputData;
-import com.autotune.database.dao.ExperimentDAO;
-import com.autotune.database.dao.ExperimentDAOImpl;
-import com.autotune.database.service.ExperimentDBService;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-import io.micrometer.core.instrument.Timer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -53,8 +25,38 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.autotune.analyzer.exceptions.InvalidExperimentType;
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentCache;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+
+import io.micrometer.core.instrument.Timer;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -63,6 +65,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+    
+    private static final ExperimentCache experimentCache = new ExperimentCache();
+    private static final Gson gson = new Gson();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -92,7 +97,8 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(gson.fromJson(inputData, CreateExperimentAPIObject[].class));
+            
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -100,6 +106,13 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    // Check if experiment already exists before processing
+                    String experimentName = createExperimentAPIObject.getExperimentName();
+                    if (experimentCache.isExists(experimentName)) {
+                        LOGGER.debug("Experiment {} already exists, returning 409", experimentName);
+                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                        return;
+                    }
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     // validating the kubernetes objects and experiment type
@@ -131,7 +144,7 @@ public class CreateExperiment extends HttpServlet {
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
+                    ValidationOutputData addedToDB = null;
                     for (KruizeObject ko : kruizeExpList) {
                         CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
                                 .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
@@ -139,12 +152,21 @@ public class CreateExperiment extends HttpServlet {
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
-                    }
-                    if (addedToDB.isSuccess()) {
-                        sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-                        statusValue = "success";
-                    } else {
-                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        
+                        if (addedToDB.isSuccess()) {
+                            experimentCache.add(ko.getExperimentName());
+                            sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                            statusValue = "success";
+                        } else {
+                            // Check if experiment already exists
+                            if (addedToDB.getMessage() != null && addedToDB.getMessage().contains("already exists")) {
+                                LOGGER.debug("Experiment {} already exists, returning 409", ko.getExperimentName());
+                                experimentCache.add(ko.getExperimentName());
+                                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            } else {
+                                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                            }
+                        }
                     }
                 } else {
                     sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
@@ -229,7 +251,7 @@ public class CreateExperiment extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
+                gson.toJson(
                         new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
