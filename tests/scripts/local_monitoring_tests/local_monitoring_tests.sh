@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros" "runtimes")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -108,6 +108,23 @@ function local_monitoring_tests() {
 		TEST_DIR="${TEST_SUITE_DIR}/${test}"
 		mkdir ${TEST_DIR}
 		LOG="${TEST_DIR}/${test}.log"
+
+		if [ "${test}" == "runtimes" ]; then
+			quarkus_label="com.redhat.component-name=Quarkus"
+			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
+				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)
+				kubectl label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling kube state metrics labels..."
+				bash "${KRUIZE_REPO}/scripts/enable_kube_state_metrics_labels.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			else
+				quarkus_pod_name=$(oc get pod | grep tfb-qrh | cut -d " " -f1)
+				oc label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling user workload monitoring..."
+				bash "${KRUIZE_REPO}/scripts/enable_user_workload_monitoring_openshift.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			fi
+		fi
 
 		echo ""
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
