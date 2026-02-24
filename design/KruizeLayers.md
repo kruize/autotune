@@ -162,8 +162,39 @@ Kruize currently supports the following layers.
   IBM Semeru JVM runtime tuning.
 
 ### Framework Layer
-- Quarkus Layer  
+- Quarkus Layer
   Framework-level optimization.
+
+##### Quarkus Layer - Label Detection Note
+
+The Quarkus layer uses label-based detection to identify Quarkus workloads in Kubernetes. According to [Red Hat Quarkus documentation](https://docs.redhat.com/en/documentation/red_hat_build_of_quarkus/1.11/html/release_notes_for_red_hat_build_of_quarkus_1.11/runtimes_metering_labels-quarkus-release-notes), Quarkus requires pods to be labeled with:
+
+```yaml
+com.redhat.component-name: "Quarkus"
+```
+
+**Important:** This label format must remain exactly as specified and cannot be changed, as it is a standard Quarkus requirement.
+
+However, when querying this label in Prometheus via kube-state-metrics, the label name is normalized:
+- Dots (`.`) and hyphens (`-`) are converted to underscores (`_`)
+- A `label_` prefix is added by kube-state-metrics
+
+Therefore, the Prometheus query must use `label_com_redhat_component_name` instead of the original `com.redhat.component-name`.
+
+**Why this transformation occurs:**
+- Prometheus label names can only contain `[a-zA-Z0-9_]` characters ([reference](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels))
+- kube-state-metrics normalizes Kubernetes labels to comply with Prometheus naming requirements
+
+**Example:**
+```promql
+# Kubernetes label on pod
+com.redhat.component-name: "Quarkus"
+
+# Prometheus query (normalized)
+kube_pod_labels{label_com_redhat_component_name="Quarkus"}
+```
+
+Using dots in PromQL fails validation because Prometheus does not allow `.` (dot) in label names, so the correct query must use `label_com_redhat_component_name` instead.
 
 These layers form a hierarchical tuning model:
 
