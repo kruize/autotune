@@ -69,14 +69,16 @@ public interface RecommendationEngineService {
                                    List<RecommendationConfigEnv> runtimeListToPopulate);
 
     /**
-     * Gets the experiment name for logging and error reporting.
+     * Returns the experiment name.
+     * Used for associating recommendations with the correct experiment.
      *
      * @return The experiment name
      */
     String getExperimentName();
 
     /**
-     * Gets the interval end time for logging and error reporting.
+     * Returns the end timestamp of the monitoring interval for which recommendations are generated.
+     * Used to identify the recommendation period.
      *
      * @return The interval end time
      */
