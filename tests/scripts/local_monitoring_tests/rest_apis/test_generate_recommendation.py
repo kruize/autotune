@@ -93,24 +93,21 @@ def test_runtime_recommendation(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data["status"] == SUCCESS_STATUS
 
-    # Use existing layer file from manifests
-    layer_file = "hotspot-micrometer-config.json"
-    layer_input_json_file = layer_dir / layer_file
+    # Create layers for all JSON files in layer_dir
+    layer_json_files = sorted(layer_dir.glob("*.json"))
+    for layer_input_json_file in layer_json_files:
+        with open(layer_input_json_file, "r") as json_file:
+            layer_json = json.load(json_file)
+            layer_name = layer_json['layer_name']
 
-    # Read the layer config to get the layer name
-    with open(layer_input_json_file, "r") as json_file:
-        input_json = json.load(json_file)
-        layer_name = input_json['layer_name']
+        response = create_layer(layer_input_json_file)
+        data = response.json()
 
-    # Create layer
-    response = create_layer(layer_input_json_file)
-    data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
 
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
-
-    print(f"✓ Layer '{layer_name}' created successfully")
+        print(f"✓ Layer '{layer_name}' created successfully")
 
     # Create experiment using TechEmpower Quarkus JVM workload
     response = delete_experiment(input_json_file, rm=False)

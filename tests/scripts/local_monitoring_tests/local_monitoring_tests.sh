@@ -58,21 +58,6 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-	# Run cluster-type-specific pre-requisite scripts before tests for runtime recommendations
-  	echo ""
-  	echo "Running runtime pre-requisite scripts for cluster type: ${cluster_type}" | tee -a "${KRUIZE_SETUP_LOG}"
-  	if [ "${cluster_type}" == "minikube" ] || [ "${cluster_type}" == "kind" ]; then
-  		echo "Running enable_kube_state_metrics_labels.sh..." | tee -a "${KRUIZE_SETUP_LOG}"
-  		bash "${KRUIZE_REPO}/scripts/enable_kube_state_metrics_labels.sh" >> "${KRUIZE_SETUP_LOG}" 2>&1
-  		err_exit "ERROR: enable_kube_state_metrics_labels.sh failed. Check ${KRUIZE_SETUP_LOG} for details."
-  	elif [ "${cluster_type}" == "openshift" ]; then
-  		echo "Running enable_user_workload_monitoring_openshift.sh..." | tee -a ${KRUIZE_SETUP_LOG}
-  		bash "${KRUIZE_REPO}/scripts/enable_user_workload_monitoring_openshift.sh" >> ${KRUIZE_SETUP_LOG} 2>&1
-  		err_exit "ERROR: enable_user_workload_monitoring_openshift.sh failed. Check ${KRUIZE_SETUP_LOG} for details."
-  	fi
-  	echo "Prerequisite scripts completed." | tee -a ${KRUIZE_SETUP_LOG}
-  	echo ""
-
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		pushd "${KRUIZE_REPO}" > /dev/null
@@ -123,6 +108,23 @@ function local_monitoring_tests() {
 		TEST_DIR="${TEST_SUITE_DIR}/${test}"
 		mkdir ${TEST_DIR}
 		LOG="${TEST_DIR}/${test}.log"
+
+		if [ "${test}" == "runtimes" ]; then
+			quarkus_label="com.redhat.component-name=Quarkus"
+			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
+				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)
+				kubectl label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling kube state metrics labels..."
+				bash "${KRUIZE_REPO}/scripts/enable_kube_state_metrics_labels.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			else
+				quarkus_pod_name=$(oc get pod | grep tfb-qrh | cut -d " " -f1)
+				oc label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling user workload monitoring..."
+				bash "${KRUIZE_REPO}/scripts/enable_user_workload_monitoring_openshift.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			fi
+		fi
 
 		echo ""
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
