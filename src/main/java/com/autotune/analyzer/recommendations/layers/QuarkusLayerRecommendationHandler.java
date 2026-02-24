@@ -57,7 +57,7 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
             Map<Timestamp, IntervalResults> filteredResultsMap) {
 
         switch (tunableName) {
-            case RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS:
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS:
                 return generateCoreThreadsRecommendation(tunableName, tunableSpecObjectMap, filteredResultsMap);
             default:
                 LOGGER.warn("Unknown tunable for Quarkus layer: {}", tunableName);
@@ -116,8 +116,8 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
         if (value == null) return;
 
-        if (RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS.equals(tunableName)) {
-            StringBuilder quarkusBuilder = envBuilders.get(RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS);
+        if (RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS.equals(tunableName)) {
+            StringBuilder quarkusBuilder = envBuilders.get(RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS);
             if (quarkusBuilder != null) {
                 quarkusBuilder.append(value);
             }

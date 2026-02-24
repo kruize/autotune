@@ -40,7 +40,7 @@ public class QuarkusLayer implements Layer {
 
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
-        return Map.of(RecommendationConstants.RecommendationEngine.TunablesConstants.CORE_THREADS,
+        return Map.of(RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS,
                 List.of(
                         new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
                                 RecommendationConstants.RecommendationEngine.TunablesConstants.CPU_LIMIT)
