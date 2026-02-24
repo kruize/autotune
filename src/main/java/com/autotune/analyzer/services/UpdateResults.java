@@ -172,21 +172,14 @@ public class UpdateResults extends HttpServlet {
                         )
                 ));
                 request.setAttribute("data", jsonObjectList);
-                String errorMessage = String.format("Out of a total of %s records, %s failed to save (excluding %s duplicates)", 
+                String errorMessage = String.format("Out of a total of %s records, %s failed to save, %s duplicates were skipped", 
                         bulkCount, actualFailures.size(), duplicateCount);
                 LOGGER.error("updateResults API requestID {} completed with partial failures: {}", requestId, errorMessage);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
-                String successMessage;
-                if (duplicateCount > 0) {
-                    successMessage = String.format("Results saved successfully. %d duplicate records were skipped.", duplicateCount);
-                    LOGGER.info("updateResults API requestID {} completed successfully - {} newly added, {} duplicates skipped, {} total records", 
-                            requestId, successfullyAdded, duplicateCount, bulkCount);
-                } else {
-                    successMessage = AnalyzerConstants.ServiceConstants.RESULT_SAVED;
-                    LOGGER.info("updateResults API requestID {} completed successfully - {} experiment results processed", 
-                            requestId, bulkCount);
-                }
+                String successMessage = AnalyzerConstants.ServiceConstants.RESULT_SAVED;
+                LOGGER.info("updateResults API requestID {} completed successfully - {} newly added, {} total records", 
+                        requestId, successfullyAdded, bulkCount);
                 
                 if (KruizeDeploymentInfo.log_http_req_resp && LOGGER.isDebugEnabled()) {
                     LOGGER.debug("updateResults API requestID {} success response payload: {}", 
@@ -200,8 +193,8 @@ public class UpdateResults extends HttpServlet {
                     requestId, e.getClass().getSimpleName(), e.getMessage(), e);
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            LOGGER.info("updateResults API requestID {} completed with status: {} (processed: {} items)", 
-                    requestId, statusValue, bulkCount);
+            LOGGER.info("updateResults API requestID {} completed with status: {} (processed: {} items, {} successfully added, {} duplicates)", 
+                    requestId, statusValue, bulkCount, successfullyAdded, duplicateCount);
             
             if (null != timerUpdateResults) {
                 MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
