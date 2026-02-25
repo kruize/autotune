@@ -206,7 +206,7 @@ public final class RuntimeRecommendationProcessor {
 
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        addIfNotEmpty(runtimeRecommList, RecommendationConstants.RecommendationEngine.TunablesConstants.QUARKUS_THREAD_POOL_CORE_THREADS, quarkusBuilder);
+        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.QUARKUS_THREAD_POOL_CORE_THREADS, quarkusBuilder);
 
         return runtimeRecommList;
     }

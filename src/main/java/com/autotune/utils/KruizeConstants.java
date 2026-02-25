@@ -214,6 +214,7 @@ public class KruizeConstants {
         public static final String TEMPLATE = "template";
         public static final String JAVA_OPTIONS = "JAVA_OPTIONS";
         public static final String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
+        public static final String QUARKUS_THREAD_POOL_CORE_THREADS = "QUARKUS_THREAD_POOL_CORE_THREADS";
         public static final String ENV = "ENV";
         public static final String TRIAL_RUNNING = "--Trial Running--";
         public static final String RESULT_VALUE = "result_value";
