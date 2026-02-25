@@ -50,18 +50,12 @@ def test_runtime_recommendation(cluster_type):
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
 
+    input_json_file = "../json_files/create_tfb_exp.json"
     input_json_path = str(Path(__file__).parent / "../json_files/create_tfb_exp.json")
     with open(input_json_path) as f:
         input_json = json.load(f)
-    # Update datasource from prometheus-1 to thanos-1 before using in the test
-    for exp in input_json:
-        if exp.get("datasource") == "prometheus-1":
-            exp["datasource"] = "thanos-1"
-            break
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
-        json.dump(input_json, tf, indent=2)
-        input_json_file = tf.name
 
+    temp_input_json_file = None
     form_kruize_url(cluster_type)
 
     # Install metric profile (use resource_optimization_local_monitoring with jvmRuntimeInfo/jvmMemoryMaxBytes)
@@ -69,6 +63,15 @@ def test_runtime_recommendation(cluster_type):
         metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring_norecordingrules.json"
     else:
         metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring.json"
+        # Update datasource from prometheus-1 to thanos-1 before using in the test
+        for exp in input_json:
+            if exp.get("datasource") == "prometheus-1":
+                exp["datasource"] = "thanos-1"
+                break
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            json.dump(input_json, tf, indent=2)
+            temp_input_json_file = tf.name
+            input_json_file = temp_input_json_file
 
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
@@ -149,5 +152,5 @@ def test_runtime_recommendation(cluster_type):
     shutil.rmtree("benchmarks")
 
     # Clean up temp experiment JSON file
-    if os.path.exists(input_json_file):
-        os.unlink(input_json_file)
+    if temp_input_json_file and os.path.exists(temp_input_json_file):
+        os.unlink(temp_input_json_file)

@@ -275,6 +275,7 @@ PERF_PROFILE_NAME = "resource-optimization-openshift"
 # Expected env names for JVM runtime recommendations
 JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS"
 JAVA_OPTIONS = "JAVA_OPTIONS"
+QUARKUS_CORE_THREADS = "quarkus.thread-pool.core-threads"
 
 # GC flag patterns (Hotspot)
 HOTSPOT_GC_PATTERNS = (
@@ -2405,8 +2406,8 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                         for env_item in env_list:
                             name = env_item.get("name")
                             value = env_item.get("value")
-                            assert name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS), (
-                                    f"Runtime env {name} should be among {JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}"
+                            assert name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS, QUARKUS_CORE_THREADS), (
+                                    f"Runtime env {name} should be among {JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}, {QUARKUS_CORE_THREADS}"
                                 )
                             assert _has_runtime_env_value(value), f"Runtime values are incorrect"
                             assert value, f"Runtime env {name} has empty value"
