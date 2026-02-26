@@ -46,8 +46,8 @@ Kruize currently supports tuning for the following layers:
 
 | Layer Type | Supported Stacks | Primary Tunables |
 | :--- | :--- | :--- |
-| **Runtime** | OpenJDK/Hotspot, IBM Semeru/OpenJ9 | GC Policy, MaxRAMPercentage |
-| **Framework** | Quarkus | Quarkus thread-pool cores |
+| **Runtime** | OpenJDK/Hotspot, IBM Semeru/OpenJ9 | GCPolicy, MaxRAMPercentage |
+| **Framework** | Quarkus | quarkus.thread-pool.core-threads |
 
 For a complete list of supported layers and their tunables, please refer to the [layer manifests](https://github.com/kruize/autotune/tree/mvp_demo/manifests/autotune/layers).
 
