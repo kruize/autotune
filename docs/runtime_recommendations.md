@@ -15,7 +15,7 @@ For a quick start without a complex setup, new users can utilize Kruize's demos 
 
 To enable Kruize to generate accurate runtime recommendations, the target application must meet the following requirements:
 
-* **Metric Source**: Metrics must be accessible to Kruize, typically collected via Prometheus or Thanos.
+* **Metric Source**: Application metrics must be accessible to Kruize, typically collected via Prometheus or Thanos.
 * **Metrics Exposure**: The application must expose the necessary metrics. Refer to the [metrics guide](application_metrics_exposure.md) for detailed information.
 * **Application Identification (Essential for Quarkus)**: To ensure Kruize detects the correct layers, especially for Quarkus applications, labels must be enabled.
 
@@ -31,10 +31,6 @@ Kruize integrates runtime-specific tuning logic automatically by identifying the
 
 ### Layer Detection during Experimentation
 During the `createExperiment` phase, Kruize examines the specified data source to detect application-specific layers (e.g., Hotspot, Semeru, Quarkus).
-
-### Requirements for Successful Layer Detection
-* **Metric Access:** Kruize requires access to a datasource that provides the necessary application-level metrics.
-* **Labels:** Alternatively, the presence of relevant labels can facilitate framework detection.
 
 ### Datasource Configuration for Runtime Recommendations
 * **Minikube / Kind:** The supported datasource is Prometheus (configured by default).
@@ -61,7 +57,7 @@ For a complete list of supported layers and their tunables, please refer to the 
 
 The JSON output from a call to the `/generateRecommendation` API includes a `runtime_recommendations` section. This section provides specific tunables or environment variables for optimization.
 
-For examples of response structures related to runtimes, please refer to Generate Recommendations API [Example Response](https://github.com/kruize/autotune/blob/mvp_demo/design/KruizeLocalAPI.md#generate-recommendations-api).
+For examples of response structures related to runtimes, please refer to the Generate Recommendations API [Example Response](https://github.com/kruize/autotune/blob/mvp_demo/design/KruizeLocalAPI.md#generate-recommendations-api).
 
 ---
 

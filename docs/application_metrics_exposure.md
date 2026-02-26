@@ -50,7 +50,7 @@ http://<host>:<port>/actuator/prometheus
 
 ### Quarkus Applications
 ---
-For Quarkus applications, micrometer support is available and can be activated.
+For Quarkus applications, Micrometer support is available and can be activated.
 
 #### Steps
 
@@ -153,7 +153,7 @@ data:
 ```
 Save and exit.
 
-Monitoring for user workloads will be enabled automatically. Verify
+Monitoring for user workloads will be enabled automatically. Verify:
 ```
 oc -n openshift-user-workload-monitoring get pods
 ```
