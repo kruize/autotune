@@ -19,8 +19,7 @@ To enable Kruize to generate accurate runtime recommendations, the target applic
 * **Metrics Exposure**: The application must expose the necessary metrics. Refer to the [metrics guide](application_metrics_exposure.md) for detailed information.
 * **Application Identification (Essential for Quarkus)**: To ensure Kruize detects the correct layers, especially for Quarkus applications, labels must be enabled.
 
-For Quarkus applications, the following label must be added to the Deployment or Pod
-`com.redhat.component-name: "Quarkus"`
+For Quarkus applications, the label `com.redhat.component-name: "Quarkus"` must be added to the Deployment or Pod
 
 ---
 
