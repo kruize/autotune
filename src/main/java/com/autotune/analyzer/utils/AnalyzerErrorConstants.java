@@ -35,7 +35,6 @@ public class AnalyzerErrorConstants {
         public static final String AUTOTUNE_CONFIG_NAME_NULL = "KruizeLayer object name cannot be null or empty\n";
         public static final String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
         public static final String BOTH_LAYER_QUERY_AND_LABEL_SET = "Both layerPresenceQuery and layerPresenceLabel cannot be set\n";
-        public static final String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
         public static final String NO_TUNABLES = "KruizeLayer has no tunables\n";
         public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
         public static final String INVALID_SLO_CLASS = "Invalid slo_class for tunable ";
@@ -96,15 +95,18 @@ public class AnalyzerErrorConstants {
         public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
         public static final String MISSING_METRICS = "Metric data is not present for container : %s for experiment: %s. ";
+        public static final String MISSING_METRICS_NAMESPACE = "Metric data is not present for namespace : %s for experiment: %s. ";
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
         public static final String CONTAINER_AND_EXPERIMENT = " for container : %s for experiment: %s.";
+        public static final String NAMESPACE_AND_EXPERIMENT = " for namespace : %s for experiment: %s.";
         public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
         public static final String AGGREGATION_INFO_INVALID_VALUE = "Invalid value type for aggregation_info objects. Expected a numeric value (Double).";
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
         public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
+        public static final String NULL_OR_BLANK_NAMESPACE_NAME = "namespace_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
         public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
@@ -112,6 +114,18 @@ public class AnalyzerErrorConstants {
         public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
         public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
+        public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
+        public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
+        public static final String MISSING_PERF_PROFILE_NAME = "Performance profile name is required.";
+        public static final String PERF_PROFILE_DELETION_EXCEPTION = "Exception occurred while deleting Performance Profile: %s, %s";
+        public static final String PERF_PROFILE_EXPERIMENTS_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment%s.";
+        public static final String MISSING_PERFORMANCE_PROFILE = "Performance Profile '%s' not found. Use POST to create a new profile.";
+        public static final String PERF_PROFILE_VERSION_MISMATCH = "Performance profile '%s' already exists with a different version. Use the /updatePerformanceProfile API to modify the existing profile.";
+        public static final String PERF_PROFILE_ALREADY_UPDATED = "Performance profile '%s' already updated with the version %.1f";
+        public static final String PERF_PROFILE_SLO_ALREADY_UPDATED = "Performance profile '%s' already updated with the provided SLO data";
+        public static final String PERF_PROFILE_SUPERSET_ERROR = "Updated profile must be a superset of existing data";
+
 
 
         private AutotuneObjectErrors() {
@@ -158,6 +172,10 @@ public class AnalyzerErrorConstants {
 
         public static final class generateRecommendationsAPI {
             public static final String ERROR_FETCHING_METRICS = "Error while fetching metrics.";
+            public static final String NULL_OR_EMPTY_MODEL_NAME = "Model name cannot be null or empty";
+            public static final String NULL_RECOMMENDATION_TUNABLES = "Recommendation Tunables cannot be null";
+            public static final String DATA_IRREGULARITY_DETECTED = "Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%";
 
             private generateRecommendationsAPI() {
 
@@ -187,12 +205,16 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
             public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
             public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
-            public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
+            public static final String INVALID_TERM_NAME = "Term name is not supported. Use short, medium or long term.";
             public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
             public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
-            public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
+            public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
-            public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
+            public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
+            public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
+            public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
+            public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+
             private CreateExperimentAPI() {
 
             }
@@ -210,7 +232,7 @@ public class AnalyzerErrorConstants {
             public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
             public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
             public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
-            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: {} and interval_end_time: {} : {} ";
             public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
             public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
             public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";
@@ -225,7 +247,8 @@ public class AnalyzerErrorConstants {
             public static final String THRESHOLD_NOT_SET = "Threshold is not set, setting Default CPU Threshold : %s and Memory Threshold : %s";
             public static final String BOX_PLOTS_FAILURE = "Box plots Failed due to : %s";
             public static final String LOAD_EXPERIMENT_FAILURE = "Failed to load experiment from DB: %s";
-            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : %s due to %s";
+            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : {} due to {}";
+            public static final String RESULTS_SAVE_FAILURE = "Failed to add results to local storage due to: {}";
 
 
             private UpdateRecommendationsAPI() {
@@ -314,6 +337,77 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
             public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Failed to delete metadata profile for metric profile {} due to {}";
         }
+
+        public static final class UpdateMetadataProfileAPI {
+            public UpdateMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String UPDATE_METADATA_PROFILE_ERROR = "Failed to update metadata profile data due to: {} ";
+            public static final String METADATA_PROFILE_NAMES_MISMATCH = "MetadataProfile name in URL: %s, does not match name in request body: %s";
+            public static final String MISSING_INPUT_PAYLOAD = "MetadataProfile JSON payload cannot be empty";
+            public static final String UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+            public static final String INVALID_METRIC_NAME = "Invalid metric name: ";
+            public static final String SUPPORTED_QUERY_NAME_PREFIXES = "Supported prefixes: namespace, workload, container.";
+            public static final String INVALID_SUM_BY_CLAUSE = "Invalid 'sum by ()' clause for metric: ";
+            public static final String EXPECTED_IDENTIFIERS = "Expected one of the following identifier sets";
+            public static final String INVALID_QUERY_NO_RESULT = "Invalid query, no result returned by the metric query: %s.";
+            public static final String QUERY_SYNTAX_ERROR_MESSAGE = ". Please review the metric query: %s for syntax errors.";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
+        }
+
+        public static final class CreateLayerAPI {
+            private CreateLayerAPI() {
+            }
+
+            // Layer validation errors
+            public static final String LAYER_NULL = "Layer object cannot be null";
+            public static final String LAYER_METADATA_NAME_NULL = "metadata.name cannot be null or empty";
+            public static final String LAYER_NAME_NULL = "layer_name cannot be null or empty";
+            public static final String LAYER_PRESENCE_NULL = "layer_presence cannot be null";
+            public static final String LAYER_TUNABLES_NULL_OR_EMPTY = "tunables cannot be null or empty - layer must have at least one tunable";
+            public static final String LAYER_PRESENCE_MISSING = "layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label";
+            public static final String LAYER_PRESENCE_MULTIPLE_TYPES = "layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label";
+            public static final String LAYER_DUPLICATE_TUNABLE_NAMES = "Layer contains duplicate tunable names: %s";
+
+            // General layer errors
+            public static final String INVALID_LAYER_JSON = "Invalid Layer JSON";
+            public static final String LAYER_ALREADY_EXISTS = "Layer already exists with name: %s";
+            public static final String ADD_LAYER_TO_DB_FAILURE = "Failed to add layer to database: %s";
+
+            // Tunable validation errors
+            public static final String TUNABLE_NULL_IN_LIST = "Tunables list contains null elements";
+            public static final String TUNABLE_MIXED_CONFIG = "Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables.";
+            public static final String TUNABLE_MISSING_CONFIG = "Tunable '%s' must have either categorical choices or numeric bounds/step configured.";
+
+            // Bounds validation errors
+            public static final String TUNABLE_NULL_BOUNDS = "Tunable '%s' has null bounds; both upper_bound and lower_bound must be set";
+            public static final String TUNABLE_NON_NUMERIC_BOUNDS = "Tunable '%s' has non-numeric bounds: upper=%s, lower=%s";
+            public static final String TUNABLE_NULL_STEP = "Tunable '%s' has null step; step must be set for bounded tunables";
+            public static final String TUNABLE_INVALID_STEP = "Tunable '%s' has invalid step; step must be > 0, got: %s";
+            public static final String TUNABLE_NEGATIVE_BOUNDS = "Tunable '%s' has negative bounds; upperBound: %s lowerBound: %s";
+            public static final String TUNABLE_INVALID_BOUND_RANGE = "Tunable '%s' has invalid bounds; lowerBound (%s) must be less than upperBound (%s)";
+            public static final String TUNABLE_STEP_TOO_LARGE = "Tunable '%s' has invalid step; step (%s) must be <= (upperBound - lowerBound) (%s)";
+
+            // Categorical validation errors
+            public static final String TUNABLE_EMPTY_CHOICES = "Tunable '%s' is categorical but has null or empty choices list";
+        }
+
+    public static final class ListLayerAPI {
+        public ListLayerAPI() {
+        }
+        public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+        public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
+        public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
+        public static final String NO_LAYERS_EXCPTN = "No layers";
+        public static final String NO_LAYERS = "No layers found!";
+        public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
+        public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
+    }
     }
 
     public static final class ConversionErrors {
@@ -332,6 +426,22 @@ public class AnalyzerErrorConstants {
 
             }
         }
+
+        public static final class LayerConversionError {
+            private LayerConversionError() {}
+
+            public static final String UNABLE_TO_LOAD_LAYERS = "Not able to load Layers due to {}";
+            public static final String ERROR_LAYER_LOAD_DB = "Error while loading existing Layers from database";
+            public static final String UNABLE_TO_LOAD_LAYER = "Not able to load Layer {} due to {}";
+            public static final String ERROR_LOADING_LAYER_DB = "Error while loading Layer from database";
+            public static final String FAIL_SETTING_BASIC_FIELDS = "Failed while setting basic layer fields";
+            public static final String FAIL_SETTING_LAYER_METADATA = "Failed while converting layer metadata";
+            public static final String FAIL_SETTING_LAYER_PRESENCE = "Failed while converting layer presence";
+            public static final String FAIL_SETTING_LAYER_TUNABLES = "Failed while converting layer tunables";
+            public static final String ERROR_LAYER_ENTRY_TO_LAYER_OBJ = "Error occurred while converting layer entry to layer object: {}";
+
+
+        }
     }
 
     public static final class AutoscalerErrors {
@@ -343,8 +453,9 @@ public class AnalyzerErrorConstants {
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
         public static final String GENERATE_RECOMMENDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
-        public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
+        public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment: {}";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+        public static final String MISSING_REQUIRED_VALUES = "Recommended resource values (CPU or Memory) are missing in resourceMap";
 
         public static final class AcceleratorAutoscaler {
             private AcceleratorAutoscaler() {

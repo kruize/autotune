@@ -42,7 +42,7 @@ public class PerformanceProfilesDeployment {
                 switch (action.toString().toUpperCase()) {
                     case "ADDED":
                         performanceProfile = getPerformanceProfile(resource);
-                        if ( validatePerformanceProfile(performanceProfile))
+                        if (validatePerformanceProfile(performanceProfile, AnalyzerConstants.OperationType.CREATE))
                             PerformanceProfileUtil.addPerformanceProfile(performanceProfilesMap, performanceProfile);
                         break;
                     case "MODIFIED":
@@ -51,7 +51,7 @@ public class PerformanceProfilesDeployment {
                             // Check if any of the values have changed from the existing object in the map
                             if (!performanceProfilesMap.get(performanceProfile.getName())
                                     .equals(performanceProfile)) {
-                                if (validatePerformanceProfile(performanceProfile)) {
+                                if (validatePerformanceProfile(performanceProfile, AnalyzerConstants.OperationType.UPDATE)) {
                                     deleteExistingPerformanceProfile(resource);
                                     PerformanceProfileUtil.addPerformanceProfile(performanceProfilesMap, performanceProfile);
                                 }
@@ -73,11 +73,11 @@ public class PerformanceProfilesDeployment {
         kubernetesServices.addWatcher(KubernetesContexts.getPerformanceProfileCrdContext(), performanceProfileObjectWatcher);
     }
 
-    private static boolean validatePerformanceProfile(PerformanceProfile performanceProfile) {
+    private static boolean validatePerformanceProfile(PerformanceProfile performanceProfile,  AnalyzerConstants.OperationType operationType) {
         boolean validationStatus = false;
         try {
             if (null != performanceProfile) {
-                ValidationOutputData validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile);
+                ValidationOutputData validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile, operationType);
                 if (validationOutputData.isSuccess())
                     validationStatus = true;
                 else

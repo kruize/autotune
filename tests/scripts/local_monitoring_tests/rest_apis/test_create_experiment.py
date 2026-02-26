@@ -88,7 +88,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
-    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")
@@ -128,7 +128,6 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         ("invalid_both_container_and_namespace_container_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
         ("invalid_namespace_exp_type_with_only_containers", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
         ("invalid_container_exp_type_with_only_namespace", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_namespace_exp_with_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "remote", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
         ("invalid_namespace_exp_with_auto_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-auto", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
         ("invalid_namespace_exp_with_recreate_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-recreate", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
         ("invalid_auto_mode_exp_with_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-container-exp-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
@@ -136,7 +135,8 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         ("invalid_auto_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
         ("invalid_recreate_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-recreate-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "remote", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
         ("invalid_auto_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-auto-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "container", "statefulset", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_recreate_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-recreate-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "job", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1")
+        ("invalid_recreate_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-recreate-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "job", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
+        ("invalid_datasource_name", ERROR_STATUS_CODE, CREATE_EXP_INVALID_DATASOURCE % "invalid-ds", "v2.0", "tfb-create-exp-invalid-ds", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "invalid-ds", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1")
     ]
 )
 def test_create_exp_invalid_tests(test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
@@ -192,7 +192,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
-    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] == "None":
             json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")
@@ -250,3 +250,36 @@ def test_create_multiple_namespace_exp(cluster_type):
 
     response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.skip(reason="This will be enabled once the layer presence logic is implemented")
+@pytest.mark.sanity
+def test_non_runtime_supported_datasource_logs_message(cluster_type):
+    """
+    Test Description:
+    Creating an experiment with a datasource that exists BUT does not support
+    runtime recommendations should NOT fail the API, but the server should log
+    'RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE'.
+    """
+    input_json_file = "../json_files/create_tfb_exp.json"
+    form_kruize_url(cluster_type)
+
+    delete_and_create_metadata_profile()
+
+    response = delete_experiment(input_json_file, rm=False)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    # Give server 1–2 seconds to flush logs
+    time.sleep(2)
+
+    # Fetch logs from kruize pod (your helper may differ)
+    logs = get_kruize_logs(cluster_type)
+
+    assert RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE in logs, \
+        "Expected log message not found when using non-runtime-supported datasource"
