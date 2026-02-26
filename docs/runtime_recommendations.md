@@ -11,16 +11,20 @@ For a quick start without a complex setup, new users can utilize Kruize's demos 
 
 ---
 
-## Prerequisites: Application Metrics Exposure
+## Prerequisites
 
-For Kruize to generate accurate runtime recommendations, the target application must expose necessary metrics that Kruize can access.
+To enable Kruize to generate accurate runtime recommendations, the target application must meet the following requirements:
 
-* **Metric Source:** Metrics are collected via Prometheus/Thanos.
-* **Metrics Exposure Guide:** Refer to the [metrics guide](application_metrics_exposure.md) for detailed information on how to expose metrics.
+* **Metric Source**: Metrics must be accessible to Kruize, typically collected via Prometheus or Thanos.
+* **Metrics Exposure**: The application must expose the necessary metrics. Refer to the [metrics guide](application_metrics_exposure.md) for detailed information.
+* **Application Identification (Essential for Quarkus)**: To ensure Kruize detects the correct layers, especially for Quarkus applications, labels must be enabled.
+
+For Quarkus applications, the following label must be added to the Deployment or Pod
+`com.redhat.component-name: "Quarkus"`
 
 ---
 
-## 2. Integration and Layer Detection 
+## Integration and Layer Detection
 
 To enable Kruize to generate runtime recommendations, including metric and metadata profiles, users must create **"layers"**. Runtime recommendations are then produced based on the identified layers and associated tunable parameters.
 
@@ -41,7 +45,7 @@ During the `createExperiment` phase, Kruize examines the specified data source t
 
 ---
 
-## 3. Supported Tuning Layers
+## Supported Tuning Layers
 
 Kruize currently supports tuning for the following layers:
 
@@ -62,7 +66,7 @@ For examples of response structures related to runtimes, please refer to Generat
 
 ---
 
-## 5. Contributing New Layer Support to Kruize
+## Contributing New Layer Support to Kruize
 
 To add a new layer to Kruize, developers must define the layer, identify metrics/parameters, and implement optimization logic.
 

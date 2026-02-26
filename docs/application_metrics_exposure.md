@@ -153,7 +153,7 @@ data:
 ```
 Save and exit.
 
-Monitoring for user workloads will be enabled automatically.Verify
+Monitoring for user workloads will be enabled automatically. Verify
 ```
 oc -n openshift-user-workload-monitoring get pods
 ```
@@ -197,7 +197,7 @@ spec:
       - name: kube-state-metrics  # <--- Target ONLY this container
         args:
           - --port=8081
-          - --metric-labels-allowlist=pods=[app,app.kubernetes.io/layer,version]
+          - --metric-labels-allowlist=pods=[app,com.redhat.component-name,version]
 ```
 
 > [!TIP]
