@@ -4549,7 +4549,7 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 
 **Response for Experiment with Runtime Recommendations**
 
-When the experiment includes JVM workloads (e.g., Hotspot, Semeru, Quarkus) with corresponding layers(See [Layers](./KruizeLayers.md) for more info) and `jvm_info` metrics available, the Generate Recommendations API returns **runtime recommendations** . It will be in addition to CPU and memory recommendations provided the container layer is present as well. 
+When the experiment includes runtime workloads (e.g., Hotspot, Semeru, Quarkus) with corresponding layers(See [Layers](./KruizeLayers.md) for more info), the Generate Recommendations API returns **runtime recommendations** . It will be in addition to CPU and memory recommendations provided the container layer is present as well. 
 
 Runtime recommendations include:
 
