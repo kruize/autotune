@@ -138,18 +138,21 @@ Short Scalability run configuration:
 | **0.8.1** (15 Jan) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
 | **0.9** (25 Feb) | 5K namespace / 72L / 3L | 2h 58m | 0.54 / 0.3 | 0.11 / 0.08 | 0.29 / 0.19 | 10774 | 5.2 | 23.45 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **0.8.1** (15 Jan) | 4.5k cont, 500 ns / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
-| **0.9** (25 Feb) | 4.5k cont, 500 ns / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
+| **0.8.1** (15 Jan) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
+| **0.9** (25 Feb) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
 | **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 43m | 1.58 / 0.86 | 0.21 / 0.19 | 0.69 / 0.52 | 31143 | 10.94 | 34.08 |
+
+Here exps - Experiments, L - Lakhs
 
 
 Scalability test result summary:
 
 Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release. However, in terms of resource usage, I see these observations:
 - Kruize memory usage has reduced from 35.96 GB to 27.83 GB in 5k container exps
-- Cpu usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
+- CPU usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
+
 
 
 ----
@@ -172,7 +175,7 @@ Scalability short run worked fine. No regressions seen in scale test latencies, 
 | 12 | Kruize vpa demo | Kind | PASSED | PASSED | |
 | 13 | Kruize runtimes demo | Openshift | PASSED | PASSED | |
 | 14 | Kruize runtimes demo | Minikube | PASSED | PASSED | |
-| 15 | Kruize runtimes | Kind | PASSED | PASSED | |
+| 15 | Kruize runtimes demo | Kind | PASSED | PASSED | |
 
 Kruize Demos result summary:
 
