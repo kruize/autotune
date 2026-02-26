@@ -37,7 +37,7 @@ During the `createExperiment` phase, Kruize examines the specified data source t
 * **Minikube / Kind:** The supported datasource is Prometheus (configured by default).
 * **OpenShift:** Two datasources are configured by default: Thanos Querier and Prometheus. To receive runtime recommendations, the datasource specified in `createExperiment` should be **“thanos-1”**, which utilizes Thanos Querier and allows access to application metrics.
 
-> **Note:** For details on the Kruize Layer API, architecture, and design, refer to the [Kruize Layer Support Documentation](../design/KruizeLayers.md#kruize-layer-support).
+> **Note:** For details on the Kruize Layer API, architecture, and design, refer to the [Kruize Layer Documentation](../design/KruizeLayers.md#kruize-layer-support).
 
 ---
 
@@ -50,7 +50,7 @@ Kruize currently supports tuning for the following layers:
 | **Runtime** | OpenJDK/Hotspot, IBM Semeru/OpenJ9 | GC Policy, MaxRAMPercentage |
 | **Framework** | Quarkus | Quarkus thread-pool cores |
 
-For a complete list of supported layers and their tunables, please refer to the [manifests directory](https://github.com/kruize/autotune/tree/mvp_demo/manifests/autotune/layers).
+For a complete list of supported layers and their tunables, please refer to the [layer manifests](https://github.com/kruize/autotune/tree/mvp_demo/manifests/autotune/layers).
 
 ---
 
@@ -58,7 +58,7 @@ For a complete list of supported layers and their tunables, please refer to the 
 
 The JSON output from a call to the `/generateRecommendation` API includes a `runtime_recommendations` section. This section provides specific tunables or environment variables for optimization.
 
-For examples of response structures related to runtimes, please refer to: [Kruize Layer Support Design](https://github.com/kruize/autotune/blob/mvp_demo/design/KruizeLayers.md#kruize-layer-support).
+For examples of response structures related to runtimes, please refer to Generate Recommendations API [Example Response](https://github.com/kruize/autotune/blob/mvp_demo/design/KruizeLocalAPI.md#generate-recommendations-api).
 
 ---
 
