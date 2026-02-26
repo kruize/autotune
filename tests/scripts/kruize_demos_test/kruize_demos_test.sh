@@ -418,8 +418,7 @@ repo_name="kruize-demos"
 
 if [ ! -d ${repo_name} ]; then
 	echo "Cloning ${repo_name} git repo..." | tee -a ${LOG}
-	#git clone -b ${KRUIZE_DEMOS_BRANCH} ${KRUIZE_DEMOS_REPO} > /dev/null 2> /dev/null
-	git clone -b runtimes_demo https://github.com/chandrams/kruize-demos.git > /dev/null 2> /dev/null
+	git clone -b ${KRUIZE_DEMOS_BRANCH} ${KRUIZE_DEMOS_REPO} > /dev/null 2> /dev/null
 	check_err "ERROR: git clone of kruize/${repo_name} failed." | tee -a ${LOG}
 fi
 
