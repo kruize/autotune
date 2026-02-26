@@ -33,6 +33,8 @@ This document describes the test plan for Kruize release 0.9
 * Create Layer configs for runtimes
 * Kruize Layers documentation update
 * Runtime recommendations Demo
+* Updated dependencies to fix vulnerabilities
+* Updated github workflows to update minikube github action
 * Documentation updates for runtime recommendations
 * Design doc updates for create & list layers APIs
 * Tests for create and list layers
@@ -98,15 +100,15 @@ All Release tests have been run against the Kruize release 0.9 image and all tes
 | 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
 | 2 | Fault tolerant test | PASSED | PASSED | |
 | 3 | Stress test | PASSED | PASSED | |
-| 4 | Scalability test (short run) |  | NA | |
+| 4 | Scalability test (short run) | PASSED | NA | |
 | 5 | DB Migration test | PASSED | NA | |
 | 6 | Recommendation and box plot values validations | PASSED | PASSED | |
 | 7 | Local Fault tolerant test | PASSED | PASSED | |
-| 8 | Kruize Local Functional tests | TOTAL - 228 , PASSED - 222 / FAILED - 4 / SKIPPED - 2 | TOTAL - 228, PASSED - 222 / FAILED - 4 / SKIPPED - 2 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1763](https://github.com/kruize/autotune/issues/1763) |
+| 8 | Kruize Local Functional tests | TOTAL - 228 , PASSED - 222 / FAILED - 4 / SKIPPED - 2 | TOTAL - 228, PASSED - 222 / FAILED - 4 / SKIPPED - 2 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1763](https://github.com/kruize/autotune/issues/1763), [Issue 1821](https://github.com/kruize/autotune/issues/1821) |
 
 Kruize test result summary:
 
-No new issues seen except one issue which is related to test case and not a bug [Issue 1763](https://github.com/kruize/autotune/issues/1763)
+No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
 
 ### SCALE TEST RESULTS
 
@@ -122,20 +124,21 @@ Short Scalability run configuration:
 - Kruize resources - requests - 4Gi / 2 cores, limits - 8Gi / 2 cores
 
 
-| Kruize Release | Exps / Results / Recos | Execution Time | Latency: UpdateRecos (Max/Avg) | Latency: UpdateResults (Max/Avg) | Latency: LoadResults (Max/Avg) | Postgres DB (MB) | Max CPU | Max Memory (GB) |
-|:---|:---|:---|:---|:---|:---|:---|:---|:---|
 
+| Kruize Release | Exps / Results / Recos | Execution Time | Latency: UpdateRecos (Max/Avg) | Latency: UpdateResults (Max/Avg) | Latency: LoadResults (Max/Avg) | Postgres DB (MB) | Max CPU | Max Memory (GB) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **0.8.1** (14 Jan) | 5K container / 72L / 3L | 4h 39m | 0.91 / 0.5 | 0.14 / 0.1 | 0.45 / 0.31 | 21754 | 6.86 | 35.96 |
 | **0.9** (24 Feb) | 5K container / 72L / 3L | 4h 31m | 0.86 / 0.47 | 0.12 / 0.09 | 0.38 / 0.26 | 21756 | 7.36 | 27.83 |
-
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
-| **0.9** (24 Feb) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
-
+| **0.9** (25 Feb) | 5K namespace / 72L / 3L | 2h 58m | 0.54 / 0.3 | 0.11 / 0.08 | 0.29 / 0.19 | 10774 | 5.2 | 23.45 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 4.5k cont, 500 ns / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
 | **0.9** (25 Feb) | 4.5k cont, 500 ns / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
-
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
-| **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
+| **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 43m | 1.58 / 0.86 | 0.21 / 0.19 | 0.69 / 0.52 | 31143 | 10.94 | 34.08 |
+
 
 Scalability test result summary:
 
@@ -149,24 +152,24 @@ Scalability short run worked fine. No regressions seen in scale test latencies, 
 |---|:---|:---|:---|:---|:---|
 | 1 | Kruize remote monitoring demo | Openshift | NA | PASSED | |
 | 2 | Kruize remote monitoring demo | Minikube | NA | PASSED | |
-| 3 | Kruize remote monitoring demo | Kind | NA |  | |
+| 3 | Kruize remote monitoring demo | Kind | NA | PASSED | |
 | 4 | Kruize local monitoring demo | Openshift | PASSED | PASSED | |
 | 5 | Kruize local monitoring demo | Minikube | PASSED | PASSED | |
-| 6 | Kruize local monitoring demo | Kind |  |  | |
+| 6 | Kruize local monitoring demo | Kind | PASSED | PASSED | |
 | 7 | Kruize bulk demo | Openshift | PASSED | PASSED |  |
-| 8 | Kruize bulk demo | Minikube | PASSED |  |   |
-| 9 | Kruize bulk demo | Kind |  |  |  |
+| 8 | Kruize bulk demo | Minikube | PASSED | PASSED | |
+| 9 | Kruize bulk demo | Kind | PASSED | PASSED | |
 | 10 | Kruize vpa demo | Openshift | PASSED | PASSED | |
 | 11 | Kruize vpa demo | Minikube | PASSED | PASSED |  |
-| 12 | Kruize vpa demo | Kind |  |  |  |
+| 12 | Kruize vpa demo | Kind | PASSED | PASSED | |
 | 13 | Kruize runtimes demo | Openshift | PASSED | PASSED | |
-| 14 | Kruize runtimes demo | Minikube | 422/503 | PASSED | |
+| 14 | Kruize runtimes demo | Minikube | PASSED | PASSED | |
 | 15 | Kruize runtimes | Kind | PASSED | PASSED | |
 
 Kruize Demos result summary:
 
 All Demos worked fine as expected, except the below:
-- When demos are run with operator & manifests one after the other this issue is seend - [Issue 1759](https://github.com/kruize/autotune/issues/1759) 
+- When demos are run with operator & manifests one after the other, this issue is seen - [Issue 1788](https://github.com/kruize/autotune/issues/1788) 
 
 ---
 
