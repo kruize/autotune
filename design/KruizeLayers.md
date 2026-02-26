@@ -218,7 +218,6 @@ Follow the steps below.
 Create a `KruizeLayer` definition through the API including:
 
 - Layer name
-- Level
 - Presence detection logic
 - Tunables
 
