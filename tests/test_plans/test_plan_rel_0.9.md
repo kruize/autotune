@@ -90,6 +90,11 @@ As part of the release testing, following tests will be executed:
 ### RELEASE TESTS RESULTS SUMMARY
 
 All Release tests have been run against the Kruize release 0.9 image and all tests have PASSED except the below:
+- No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+
+Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release. However, in terms of resource usage, I see these observations:
+- Kruize memory usage has reduced from 35.96 GB to 27.83 GB in 5k container exps
+- Cpu usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
 
 
 
@@ -142,7 +147,10 @@ Short Scalability run configuration:
 
 Scalability test result summary:
 
-Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release
+Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release. However, in terms of resource usage, I see these observations:
+- Kruize memory usage has reduced from 35.96 GB to 27.83 GB in 5k container exps
+- Cpu usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
+
 
 ----
 
