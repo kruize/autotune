@@ -217,6 +217,9 @@ public class BulkJobManager implements Runnable {
                         if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                         } else {
+                            if (!KruizeDeploymentInfo.test_use_only_cache_job_in_mem) {                       // Todo Try to avoid this check in multiple places
+                                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(dummyExperimentsString));
+                            }
                             try {
                                 processExperiments(datasource, createExperimentAPIObjectMap);
                             } finally {
@@ -314,7 +317,7 @@ public class BulkJobManager implements Runnable {
         if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {               //toDO avoid this check
             try {
                 if (null == jobData.getExperimentMap() || jobData.getExperimentMap().isEmpty()) {
-                    new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
+                    new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(dummyExperimentsString));
                 } else {
                     Set<String> includeFields = new HashSet<>(Arrays.asList(job_filter_to_db));
                     String experimentJSONString = filterJson(jobData, includeFields, Collections.emptySet(), null);
