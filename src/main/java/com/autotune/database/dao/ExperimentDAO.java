@@ -49,6 +49,12 @@ public interface ExperimentDAO {
     // Add Layer to DB
     public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry);
 
+    // Update Layer in DB
+    public ValidationOutputData updateLayerToDB(KruizeLMLayerEntry kruizeLayerEntry);
+
+    // Delete Layer from DB
+    public ValidationOutputData deleteLayerByName(String layerName);
+
     // If Kruize restarts load all layers
     List<KruizeLMLayerEntry> loadAllLayers() throws Exception;
 
