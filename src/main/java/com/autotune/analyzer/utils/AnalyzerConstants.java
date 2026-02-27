@@ -116,6 +116,7 @@ public class AnalyzerConstants {
     public static final String LM = "lm";
     public static final String VENDOR = "vendor";
     public static final String RUNTIME = "runtime";
+    public static final String LAYER_NAME = "name";
 
     private AnalyzerConstants() {
     }
