@@ -4547,6 +4547,306 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 
 </details>
 
+**Response for Experiment with Runtime Recommendations**
+
+When the experiment includes runtime workloads (e.g., Hotspot, Semeru, Quarkus) with corresponding layers(See [Layers](./KruizeLayers.md) for more info), the Generate Recommendations API returns **runtime recommendations** . It will be in addition to CPU and memory recommendations. 
+
+Runtime recommendations include:
+
+- **`config.env`**: A new `ENV` object along with requests and limits under the `config` object. It contains variables (`JDK_JAVA_OPTIONS`, `JAVA_OPTIONS`) with JVM flags such as GC policy (e.g., `-XX:+UseG1GC`, `-Xgcpolicy:gencon`) and `MaxRAMPercentage`
+
+The `config` object under each recommendation engine (`cost`, `performance`) will contain an `env` array when runtime recommendations are present.
+
+<details>
+<summary><b>Example Response Body (with Runtime Recommendations)</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "default",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2024-02-12T10:00:00.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    }
+                  },
+                  "monitoring_end_time": "2024-02-12T10:00:00.000Z",
+                  "current": {},
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2024-02-11T10:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "QUARKUS_THREAD_POOL_CORE_THREADS",
+                                "value": "1"
+                              }
+                            ]
+                          },
+                          "variation": {
+                            "limits": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "requests": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "QUARKUS_THREAD_POOL_CORE_THREADS",
+                                "value": "1"
+                              }
+                            ]
+                          },
+                          "variation": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.01218671898581346,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 4.825151488E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.01218671898581346,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 4.825151488E8,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 4,
+                        "plots_data": {
+                          "2026-02-24T15:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 5.237605665981167E-4,
+                              "q1": 0.0010168820497497148,
+                              "median": 0.0012949188382361935,
+                              "q3": 0.00162048430493273,
+                              "max": 0.010684760240729944,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 3.992576E8,
+                              "q1": 4.0384512E8,
+                              "median": 4.06585344E8,
+                              "q3": 4.07810048E8,
+                              "max": 4.08137728E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-24T21:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 5.146446544296039E-4,
+                              "q1": 6.941205138022867E-4,
+                              "median": 9.647044529493487E-4,
+                              "q3": 0.0010567015762191925,
+                              "max": 0.0012004138338751692,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 4.07990272E8,
+                              "q1": 4.0814592E8,
+                              "median": 4.08162304E8,
+                              "q3": 4.08211456E8,
+                              "max": 4.0835072E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-25T09:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 6.2707478466602E-4,
+                              "q1": 0.0019500985486472174,
+                              "median": 0.005781846524093427,
+                              "q3": 0.007923854401420485,
+                              "max": 0.01218671898581346,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 1.78597888E8,
+                              "q1": 2.5858048E8,
+                              "median": 3.31743232E8,
+                              "q3": 3.9942144E8,
+                              "max": 4.10128384E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-25T03:13:47.000Z": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 168.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 360.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "monitor_tfb_benchmark"
+  }
+]
+```
+
+</details>
+
 **Request for `namespace` experiment**
 
 `POST /generateRecommendations?experiment_name=?`
