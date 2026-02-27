@@ -214,6 +214,7 @@ public class KruizeConstants {
         public static final String TEMPLATE = "template";
         public static final String JAVA_OPTIONS = "JAVA_OPTIONS";
         public static final String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
+        public static final String QUARKUS_THREAD_POOL_CORE_THREADS = "QUARKUS_THREAD_POOL_CORE_THREADS";
         public static final String ENV = "ENV";
         public static final String TRIAL_RUNNING = "--Trial Running--";
         public static final String RESULT_VALUE = "result_value";
@@ -1116,6 +1117,17 @@ public class KruizeConstants {
         public static final String UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
+        }
+    }
+
+    public static final class LayerAPIMessages {
+        public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
+        public static final String ADD_LAYER_TO_DB = "Added Layer : {} into the DB";
+        public static final String LOAD_LAYER_FAILURE = "Failed to load layer data: {}";
+        public static final String LOAD_ALL_LAYERS_FAILURE = "Failed to load all layers: {}";
+
+        private LayerAPIMessages() {
         }
     }
 

@@ -65,6 +65,16 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Create Layer API](#create-layer-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+- [List Layers API](#list-layers-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -2812,6 +2822,333 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
 
 <br>
 
+<a name="create-layer-api"></a>
+
+### Create Layer API
+
+Creates a new layer configuration that defines tunable parameters and layer presence detection for application optimization.
+Kruize currently supports hotspot, semeur and quarkus layers.
+
+**Request**
+
+`POST /createLayer`
+
+`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createLayer`
+
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "hotspot"
+  },
+  "layer_name": "hotspot",
+  "details": "hotspot tunables",
+  "layer_presence": {
+    "queries": [
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+        "key": "pod"
+      }
+    ]
+  },
+  "tunables": [
+    {
+      "name": "GCPolicy",
+      "description": "Garbage collection policy",
+      "value_type": "categorical",
+      "choices": [
+        "G1GC",
+        "ParallelGC",
+        "SerialGC",
+        "ShenandoahGC",
+        "ZGC"
+      ]
+    },
+    {
+      "name": "MaxRAMPercentage",
+      "description": "Maximum RAM percentage to allocate",
+      "value_type": "integer",
+      "lower_bound": "25",
+      "upper_bound": "90",
+      "step": 1
+    }
+  ]
+}
+```
+
+</details>
+
+**Layer Presence Configuration**
+
+The `layer_presence` object can have one of the following configurations:
+
+- **Always present**: `{"presence": "always"}`
+- **Query-based**: `{"queries": [{"datasource": "prometheus", "query": "..."}]}`
+
+**Note:** Label-based presence detection is not yet supported and will be added in a future release.
+
+**Tunables Configuration**
+
+Each tunable can be either:
+
+- **Bounded (numeric)**: Requires `value_type`, `upper_bound`, `lower_bound`, and `step`
+- **Categorical**: Requires `value_type: "categorical"` and `choices` array
+
+**Response**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+
+```json
+{
+  "message": "Layer : <layer_name> created successfully. View Layers at /listLayers",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                                      |
+|------------------|------------------------------------------------------------------|
+| 400              | Invalid request body: missing required fields                    |
+| 400              | Layer with name 'container-layer' already exists                 |
+| 400              | Invalid bounds: `upper_bound` must be greater than `lower_bound` |
+| 400              | Invalid step: step must be > 0                                   |
+| 400              | Invalid categorical tunable: choices cannot be empty             |
+| 400              | Tunable with value_type 'categorical' cannot have bounds/step    |
+| 400              | Numeric tunable must have bounds and step                        |
+| 500              | Internal Server Error                                            |
+
+---
+
+<a name="list-layers-api"></a>
+
+### List Layers API
+
+Retrieves a list of all configured layers or a specific layer by name.
+
+**Request with layer_name parameter**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers?layer_name=<layer_name>`
+
+Returns the layer details of the specified layer
+<br><br>
+
+**Request for all layers**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers`
+
+Returns all configured layers
+
+**Response for all layers**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
+    "metadata": {
+      "name": "hotspot"
+    },
+    "layer_name": "hotspot",
+    "details": "hotspot tunables",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
+        "value_type": "categorical",
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
+      },
+      {
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
+        "value_type": "integer",
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Response for layer_name - `hotspot`**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
+    "metadata": {
+      "name": "hotspot"
+    },
+    "layer_name": "hotspot",
+    "details": "hotspot tunables",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
+        "value_type": "categorical",
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
+      },
+      {
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
+        "value_type": "integer",
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                    |
+|------------------|------------------------------------------------|
+| 404              | Layer with name 'xyz' not found                |
+| 500              | Internal Server Error                          |
+
 <a name="create-experiment-api"></a>
 
 ### Create Experiment API
@@ -4204,6 +4541,306 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
     ],
     "version": "v2.0",
     "experiment_name": "temp_1"
+  }
+]
+```
+
+</details>
+
+**Response for Experiment with Runtime Recommendations**
+
+When the experiment includes runtime workloads (e.g., Hotspot, Semeru, Quarkus) with corresponding layers(See [Layers](./KruizeLayers.md) for more info), the Generate Recommendations API returns **runtime recommendations** . It will be in addition to CPU and memory recommendations. 
+
+Runtime recommendations include:
+
+- **`config.env`**: A new `ENV` object along with requests and limits under the `config` object. It contains variables (`JDK_JAVA_OPTIONS`, `JAVA_OPTIONS`) with JVM flags such as GC policy (e.g., `-XX:+UseG1GC`, `-Xgcpolicy:gencon`) and `MaxRAMPercentage`
+
+The `config` object under each recommendation engine (`cost`, `performance`) will contain an `env` array when runtime recommendations are present.
+
+<details>
+<summary><b>Example Response Body (with Runtime Recommendations)</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "default",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-sample",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2024-02-12T10:00:00.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    }
+                  },
+                  "monitoring_end_time": "2024-02-12T10:00:00.000Z",
+                  "current": {},
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2024-02-11T10:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.006552455871066771,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 5.357027328E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "QUARKUS_THREAD_POOL_CORE_THREADS",
+                                "value": "1"
+                              }
+                            ]
+                          },
+                          "variation": {
+                            "limits": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "requests": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 2,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": { 
+                                "amount": 0.006552455871066771, 
+                                "format": "cores"
+                              },
+                              "memory": { 
+                                "amount": 5.357027328E8, 
+                                "format": "bytes"
+                              }
+                            },
+                            "env": [
+                              {
+                                "name": "JDK_JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "JAVA_OPTIONS",
+                                "value": "-XX:MaxRAMPercentage=80 -XX:+UseSerialGC "
+                              },
+                              {
+                                "name": "QUARKUS_THREAD_POOL_CORE_THREADS",
+                                "value": "1"
+                              }
+                            ]
+                          },
+                          "variation": {
+                            "requests": {
+                              "cpu": {
+                                "amount": 0.01218671898581346,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 4.825151488E8,
+                                "format": "bytes"
+                              }
+                            },
+                            "limits": {
+                              "cpu": {
+                                "amount": 0.01218671898581346,
+                                "format": "cores"
+                              },
+                              "memory": {
+                                "amount": 4.825151488E8,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "112104": {
+                              "type": "info",
+                              "message": "Runtimes Recommendations Available",
+                              "code": 112104
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 4,
+                        "plots_data": {
+                          "2026-02-24T15:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 5.237605665981167E-4,
+                              "q1": 0.0010168820497497148,
+                              "median": 0.0012949188382361935,
+                              "q3": 0.00162048430493273,
+                              "max": 0.010684760240729944,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 3.992576E8,
+                              "q1": 4.0384512E8,
+                              "median": 4.06585344E8,
+                              "q3": 4.07810048E8,
+                              "max": 4.08137728E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-24T21:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 5.146446544296039E-4,
+                              "q1": 6.941205138022867E-4,
+                              "median": 9.647044529493487E-4,
+                              "q3": 0.0010567015762191925,
+                              "max": 0.0012004138338751692,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 4.07990272E8,
+                              "q1": 4.0814592E8,
+                              "median": 4.08162304E8,
+                              "q3": 4.08211456E8,
+                              "max": 4.0835072E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-25T09:13:47.000Z": {
+                            "cpuUsage": {
+                              "min": 6.2707478466602E-4,
+                              "q1": 0.0019500985486472174,
+                              "median": 0.005781846524093427,
+                              "q3": 0.007923854401420485,
+                              "max": 0.01218671898581346,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 1.78597888E8,
+                              "q1": 2.5858048E8,
+                              "median": 3.31743232E8,
+                              "q3": 3.9942144E8,
+                              "max": 4.10128384E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2026-02-25T03:13:47.000Z": {}
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 168.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 360.0,
+                      "notifications": {
+                        "120001": {
+                          "type": "info",
+                          "message": "There is not enough data available to generate a recommendation.",
+                          "code": 120001
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "monitor_tfb_benchmark"
   }
 ]
 ```

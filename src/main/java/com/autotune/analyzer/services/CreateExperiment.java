@@ -16,15 +16,20 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.BulkNotSupportedException;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
@@ -92,64 +97,49 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(
+                    new Gson().fromJson(inputData, CreateExperimentAPIObject[].class)
+            );
+
             // check for bulk entries and respond accordingly
-            if (createExperimentAPIObjects.size() > 1) {
-                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
-            } else {
-                List<KruizeObject> kruizeExpList = new ArrayList<>();
-                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
-                    createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
-                    createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                    // validating the kubernetes objects and experiment type
-                    for (KubernetesAPIObject kubernetesAPIObject : createExperimentAPIObject.getKubernetesObjects()) {
-                        if (createExperimentAPIObject.isContainerExperiment()) {
-                            createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
-                            // check if namespace data is also set for container-type experiments
-                            if (null != kubernetesAPIObject.getNamespaceAPIObject()) {
-                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
-                            }
-                            if ((AnalyzerConstants.AUTO.equalsIgnoreCase(createExperimentAPIObject.getMode())
-                                    || AnalyzerConstants.RECREATE.equalsIgnoreCase(createExperimentAPIObject.getMode())) &&
-                                            AnalyzerConstants.REMOTE.equalsIgnoreCase(createExperimentAPIObject.getTargetCluster())) {
-                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE);
-                            }
-                        } else if (createExperimentAPIObject.isNamespaceExperiment()) {
-                            if (null != kubernetesAPIObject.getContainerAPIObjects()) {
-                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
-                            }
-                        } else {
-                            LOGGER.debug("Missing container/namespace data from the input json {}", createExperimentAPIObject);
-                        }
-                    }
-                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
-                    if (null != kruizeObject)
-                        kruizeExpList.add(kruizeObject);
-                }
-                new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
-                //TODO: UX needs to be modified - Handle response for the multiple objects
-                KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
-                if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
-                    for (KruizeObject ko : kruizeExpList) {
-                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
-                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
-                                .findAny()
-                                .orElse(null);
+            ServiceHelpers.checkForBulk(createExperimentAPIObjects);
+
+            List<KruizeObject> kruizeExpList = ServiceHelpers.normalizeAndValidateExperimentTypes(
+                    createExperimentAPIObjects
+            );
+
+            new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
+            //TODO: UX needs to be modified - Handle response for the multiple objects
+            KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
+            if (null == invalidKruizeObject) {
+                ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
+                for (KruizeObject ko : kruizeExpList) {
+                    CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                            .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                            .findAny()
+                            .orElse(null);
+                    if (null != validAPIObj)
                         validAPIObj.setValidationData(ko.getValidation_data());
-                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+
+                    // Detect layers only if it's local monitoring container experiment.
+                    if (null != validAPIObj && ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL) && validAPIObj.isContainerExperiment()) {
+                        ServiceHelpers.detectLayers(validAPIObj);
                     }
-                    if (addedToDB.isSuccess()) {
-                        sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
-                        statusValue = "success";
-                    } else {
-                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
-                    }
-                } else {
-                    sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
+                    addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                 }
+                if (addedToDB.isSuccess()) {
+                    sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
+                    statusValue = "success";
+                } else {
+                    sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                }
+            } else {
+                sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
             }
+
+        } catch (BulkNotSupportedException e) {
+            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
         } catch (InvalidExperimentType | JsonParseException e) {
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {

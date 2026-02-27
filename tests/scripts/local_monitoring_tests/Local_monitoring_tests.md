@@ -115,6 +115,72 @@ Here are the test scenarios:
 - Multiple delete attempts: Delete same metadata profile multiple times and validate the expected error message, ensuring redundant delete requests are handled gracefully.
 - Delete metadata profile, try to import cluster metadata and validate the expected error message. This testcase ensures that the cluster metadata cannot be imported once the MetadataProfile is deleted.
 
+### **Create Layer API tests**
+
+Here are the test scenarios:
+
+#### Positive Test Scenarios:
+- Create layer with different tunable types:
+  - Bounded tunables (lower_bound, upper_bound, step)
+  - Categorical tunables (choices list)
+  - Mixed tunables (combination of both)
+- Create layer with different layer_presence configurations:
+  - presence='always' (always applicable)
+  - queries (query-based detection using Prometheus/datasource queries)
+  - label (label-based detection using Kubernetes labels)
+- Create layer with minimum required fields
+
+#### Negative Test Scenarios:
+
+**A. Mandatory Fields Missing/NULL/Empty**
+- Create layer with null metadata.name
+- Create layer with empty metadata.name
+- Create layer with null layer_name
+- Create layer with empty layer_name
+- Create layer with null layer_presence
+- Create layer with null tunables
+- Create layer with empty tunables array
+
+**B. Invalid/Negative/Duplicate Values**
+- Create layer with negative layer_level value
+- Create layer with duplicate tunable names
+- Create layer with duplicate layer name (attempting to create same layer twice)
+
+**C. Wrong layer_presence Combinations**
+- Create layer with empty layer_presence (no type specified)
+- Create layer with both presence AND queries specified
+- Create layer with both presence AND label specified
+- Create layer with both queries AND label specified
+- Create layer with all three types specified (presence, queries, label)
+
+**D. Tunable Bounds/Step Validation**
+- Create layer with tunable having null upper_bound
+- Create layer with tunable having null lower_bound
+- Create layer with tunable having non-numeric upper_bound
+- Create layer with tunable having non-numeric lower_bound
+- Create layer with tunable having null step
+- Create layer with tunable having zero step
+- Create layer with tunable having negative step
+- Create layer with tunable having negative upper_bound
+- Create layer with tunable having negative lower_bound
+- Create layer with tunable where lower_bound >= upper_bound
+- Create layer with tunable where step > (upper_bound - lower_bound)
+
+**E. Categorical Tunable Validation**
+- Create layer with categorical tunable having null choices
+- Create layer with categorical tunable having empty choices array
+- Create layer with categorical tunable having both choices and bounds (mixed configuration)
+
+### **List Layers API tests**
+
+Here are the test scenarios:
+
+- List all layers without specifying any query parameters
+- List specific layer by name using query parameter
+- List layers with invalid layer name (non-existing layer)
+- List layers before creating any layers
+- Validate layer response structure and field values
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:
@@ -157,6 +223,43 @@ Here are the test scenarios:
   - Corresponding error message will be sent back in case of invalid scenario with Response code 400.
 - Validate bulk API response by passing an invalid datasource name in the input JSON.
   - Error message will be sent back with the response code 400
+
+### Runtime Recommendations Test:
+
+Kruize supports Runtime Recommendations for JVM workloads (OpenJDK/Hotspot and Semeru/OpenJ9). The recommendations provide GC policy and related JVM options (e.g., `-XX:+UseG1GC`) as `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` environment variables.
+
+The test `test_generate_recommendation.py::test_runtime_recommendation` validates that runtime recommendations are generated for JVM workloads when the necessary metrics and layers are available.
+
+#### Prerequisites to run the test:
+
+In addition to the pre-requisites mentioned above:
+
+- A JVM workload (e.g., TechEmpower Quarkus `tfb-qrh-sample` or Spring Petclinic) must be running and exposing `jvm_info` (and optionally `jvm_memory_max_bytes`) Prometheus metrics
+- Kruize layers (hotspot, semeru) must be loaded via createLayer API
+- The performance profile must include `jvmInfo`, `jvmInfoTotal` and `jvmMemoryMaxBytes` metrics (as in `resource_optimization_local_monitoring.json`)
+
+#### Test scenarios for runtime recommendations:
+
+- Hotspot GC policy (OpenJDK/Hotspot): JVM workload with OpenJDK or Hotspot runtime and layer `hotspot` present. 
+  - **Expected**: `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` contains appropriate GC flags (e.g., `-XX:+UseG1GC` for G1)
+
+The following tests are yet to be added:
+
+- Semeru GC policy (Semeru/OpenJ9): JVM workload with Semeru or OpenJ9 runtime and layer `semeru` present. 
+  - **Expected**: `JAVA_OPTIONS` contains `-Xgcpolicy:gencon`, `-Xgcpolicy:balanced`, or `-Xgcpolicy:optthruput`
+- Missing JVM metadata: Workload without `jvm_info` metrics or layer presence. 
+  - **Expected**: No runtime recommendations; `env` absent or empty
+- Missing JVM version: `jvm_info` present but version label missing. 
+  - **Expected**: No GC recommendation (null version handling)
+- Layer vs runtime mismatch: Layer name does not match effective runtime (e.g., hotspot layer for OpenJ9 workload). 
+  - **Expected**: No recommendation for mismatched layer
+- JVM heap from jvmMemoryMaxBytes: `jvm_memory_max_bytes` metric available. 
+  - **Expected**: Heap size used for GC policy decision (e.g., G1 vs ZGC for large heaps)
+- Non-runtime datasource: Datasource that does not support runtime recommendations. 
+  - **Expected**: API succeeds; server logs `RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE`
+
+Note: The test will skip or may not assert runtime recommendations if the workload does not expose JVM metrics or layers are not configured. Adjust workload name and namespace to match your JVM deployment.
+
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
