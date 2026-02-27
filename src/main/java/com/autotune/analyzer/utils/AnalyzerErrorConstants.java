@@ -385,13 +385,13 @@ public class AnalyzerErrorConstants {
             public static final String TUNABLE_MISSING_CONFIG = "Tunable '%s' must have either categorical choices or numeric bounds/step configured.";
 
             // Bounds validation errors
-            public static final String TUNABLE_NULL_BOUNDS = "Tunable '%s': Both 'upper_bound' and 'lower_bound' are required for numeric tunables";
-            public static final String TUNABLE_NON_NUMERIC_BOUNDS = "Tunable '%s': Bounds must be numeric values. Found upper_bound=%s, lower_bound=%s";
-            public static final String TUNABLE_NULL_STEP = "Tunable '%s': 'step' is required for numeric tunables";
-            public static final String TUNABLE_INVALID_STEP = "Tunable '%s': 'step' must be greater than 0. Found: %s";
-            public static final String TUNABLE_NEGATIVE_BOUNDS = "Tunable '%s': Bounds cannot be negative. Found upper_bound=%s, lower_bound=%s";
-            public static final String TUNABLE_INVALID_BOUND_RANGE = "Tunable '%s': 'lower_bound' (%s) must be less than 'upper_bound' (%s)";
-            public static final String TUNABLE_STEP_TOO_LARGE = "Tunable '%s': 'step' (%s) cannot be larger than the range (upper_bound - lower_bound = %s)";
+            public static final String TUNABLE_NULL_BOUNDS = "Tunable '%s' has null bounds; both upper_bound and lower_bound must be set";
+            public static final String TUNABLE_NON_NUMERIC_BOUNDS = "Tunable '%s' has non-numeric bounds: upper=%s, lower=%s";
+            public static final String TUNABLE_NULL_STEP = "Tunable '%s' has null step; step must be set for bounded tunables";
+            public static final String TUNABLE_INVALID_STEP = "Tunable '%s' has invalid step; step must be > 0, got: %s";
+            public static final String TUNABLE_NEGATIVE_BOUNDS = "Tunable '%s' has negative bounds; upperBound: %s lowerBound: %s";
+            public static final String TUNABLE_INVALID_BOUND_RANGE = "Tunable '%s' has invalid bounds; lowerBound (%s) must be less than upperBound (%s)";
+            public static final String TUNABLE_STEP_TOO_LARGE = "Tunable '%s' has invalid step; step (%s) must be <= (upperBound - lowerBound) (%s)";
 
             // Categorical validation errors
             public static final String TUNABLE_EMPTY_CHOICES = "Tunable '%s' is categorical but has null or empty choices list";
