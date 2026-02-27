@@ -16,10 +16,18 @@
 package com.autotune.analyzer.kruizeObject;
 
 import java.util.List;
+import java.util.Map;
+import com.autotune.analyzer.recommendations.model.RecommendationTunables;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 
 public class ModelSettings {
 
     private List<String> models;
+
+    @SerializedName(KruizeConstants.JSONKeys.MODEL_TUNABLE)
+    private Map<String, RecommendationTunables> modelTunable;
+
 
     public ModelSettings() {}
 
@@ -31,10 +39,19 @@ public class ModelSettings {
         this.models = models;
     }
 
+    public Map<String, RecommendationTunables> getModelTunable() {
+        return modelTunable;
+    }
+
+    public void setModelTunable(Map<String, RecommendationTunables> modelTunable) {
+        this.modelTunable = modelTunable;
+    }
+
     @Override
     public String toString() {
         return "ModelSettings{" +
                 "models=" + models +
+                ", modelTunable=" + modelTunable +
                 '}';
     }
 

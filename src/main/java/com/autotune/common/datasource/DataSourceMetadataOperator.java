@@ -198,8 +198,27 @@ public class DataSourceMetadataOperator {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field, metadataProfile); // Helper to map fields to PromQL queries
-            queries.put(field, String.format(queryTemplate, filter));
+            String queryTemplate = getQueryTemplate(field, metadataProfile);
+            String filteredQuery;
+            if (queryTemplate.contains("%s")) {
+                filteredQuery = String.format(queryTemplate, filter);
+
+            } else if (queryTemplate.contains(field + "!=\"\"")) {
+                filteredQuery = queryTemplate.replace(
+                    field + "!=\"\"",
+                    filter.isEmpty() ? field + "!=\"\"" : filter
+                );
+
+            } else {
+                LOGGER.warn(
+                    "No injectable filter placeholder found for field {} in queryTemplate={}",
+                    field,
+                    queryTemplate
+                );
+                filteredQuery = queryTemplate; // fallback
+            }
+
+            queries.put(field, filteredQuery);
         });
 
         // Construct queries

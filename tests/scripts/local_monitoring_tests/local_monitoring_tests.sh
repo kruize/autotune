@@ -15,16 +15,16 @@
 # limitations under the License.
 #
 #
-##### Script to perform basic tests for EM #####
+##### Script to perform tests for Local monitoring #####
 
 
 # Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/local_monitoring_tests"
-METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
+METRIC_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
-. ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
+. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
+
 
 # Tests to validate Local monitoring mode in Kruize
 function local_monitoring_tests() {
@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros" "runtimes")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -58,23 +58,26 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-  # check for 'isROSEnabled' flag
-  kruize_local_ros_patch
-  # check for 'servicename' and 'datasource_namespace' input variables
-  kruize_local_datasource_manifest_patch
-
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
-		echo "Setting up kruize..." | tee -a ${LOG}
-		echo "${KRUIZE_SETUP_LOG}"
-		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-	        echo "Setting up kruize...Done" | tee -a ${LOG}
+		pushd "${KRUIZE_REPO}" > /dev/null
+			# check for 'isROSEnabled' flag
+			kruize_local_ros_patch
+			# check for 'servicename' and 'datasource_namespace' input variables
+			kruize_local_datasource_manifest_patch
+			# increase cpu/memory resources, PV storage for openshift
+			kruize_local_patch
+			echo "Setting up kruize..." | tee -a ${LOG}
+			echo "${KRUIZE_SETUP_LOG}"
+			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize...Done" | tee -a ${LOG}
 
-		sleep 60
-
+			sleep 60
+		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
+
 
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
@@ -105,6 +108,23 @@ function local_monitoring_tests() {
 		TEST_DIR="${TEST_SUITE_DIR}/${test}"
 		mkdir ${TEST_DIR}
 		LOG="${TEST_DIR}/${test}.log"
+
+		if [ "${test}" == "runtimes" ]; then
+			quarkus_label="com.redhat.component-name=Quarkus"
+			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
+				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)
+				kubectl label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling kube state metrics labels..."
+				bash "${KRUIZE_REPO}/scripts/enable_kube_state_metrics_labels.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			else
+				quarkus_pod_name=$(oc get pod | grep tfb-qrh | cut -d " " -f1)
+				oc label pod "${quarkus_pod_name}" "${quarkus_label}" >> "${LOG}" 2>&1
+				echo -n "🔄 Enabling user workload monitoring..."
+				bash "${KRUIZE_REPO}/scripts/enable_user_workload_monitoring_openshift.sh" >> "${LOG}" 2>&1
+				echo "✅ Complete!"
+			fi
+		fi
 
 		echo ""
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}

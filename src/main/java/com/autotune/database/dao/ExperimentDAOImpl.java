@@ -26,6 +26,7 @@ import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -43,15 +44,13 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -495,6 +494,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * @param kruizePerformanceProfileEntry
+     * @return
+     */
+    @Override
+    public ValidationOutputData updatePerformanceProfileInDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdatePerfProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                // Overwrites all the values in the DB with this entry
+                session.merge(kruizePerformanceProfileEntry);
+
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to update performance profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to update performance profile due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdatePerfProfileDB) {
+                MetricsConfig.timerUpdatePerfProfile = MetricsConfig.timerBUpdatePerfProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdatePerfProfileDB.stop(MetricsConfig.timerUpdatePerfProfile);
+            }
+        }
+        return validationOutputData;
+    }
+
+    /**
      * Adds MetricProfile to database
      *
      * @param kruizeMetricProfileEntry Metric Profile Database object to be added
@@ -559,6 +596,95 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerAddMetadataProfileDB) {
                 MetricsConfig.timerAddMetadataProfileDB = MetricsConfig.timerBAddMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerAddMetadataProfileDB.stop(MetricsConfig.timerAddMetadataProfileDB);
+            }
+        }
+
+        return validationOutputData;
+    }
+
+
+    /**
+     * Update MetadataProfile in database
+     *
+     * @param kruizeMetadataProfileEntry Metadata Profile Database object to be updated
+     * @return validationOutputData contains the status of the DB update operation
+     */
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdateMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(UPDATE_METADATA_PROFILE_TO_DB, null);
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME_PARAMETER, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.API_VERSION, kruizeMetadataProfileEntry.getApi_version());
+                query.setParameter(AnalyzerConstants.KIND, kruizeMetadataProfileEntry.getKind());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA, kruizeMetadataProfileEntry.getMetadata());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.PROFILE_VERSION, kruizeMetadataProfileEntry.getProfile_version());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.K8STYPE, kruizeMetadataProfileEntry.getK8s_type());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.DATASOURCE, kruizeMetadataProfileEntry.getDatasource());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.QUERY_VARIABLES, kruizeMetadataProfileEntry.getQuery_variables());
+
+                int updatedCount = query.executeUpdate();
+                if (updatedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                }
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdateMetadataProfileDB) {
+                MetricsConfig.timerUpdateMetadataProfileDB = MetricsConfig.timerBUpdateMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateMetadataProfileDB.stop(MetricsConfig.timerUpdateMetadataProfileDB);
+            }
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Add Layer to database
+     *
+     * @param kruizeLayerEntry Layer Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddLayerDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            session.persist(kruizeLayerEntry);
+            tx.commit();
+            validationOutputData.setSuccess(true);
+            statusValue = "success";
+        } catch (HibernateException e) {
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            if (tx != null && tx.isActive()) tx.rollback();
+            e.printStackTrace();
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddLayerDB) {
+                MetricsConfig.timerAddLayerDB = MetricsConfig.timerBAddLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddLayerDB.stop(MetricsConfig.timerAddLayerDB);
             }
         }
 
@@ -799,6 +925,113 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public void deleteBulkJobByID(String jobId) {
         //todo
+    }
+
+    /**
+     * Updates the {@code update_date} column in the {@code kruize_experiments} table for the specified experiments.
+     *
+     * <p>This method executes a native SQL update query to set the {@code update_date} field for all experiments
+     * whose names are provided in the {@code experimentNames} set. The update is performed using a Hibernate session
+     * within a transaction.</p>
+     *
+     * @param experimentNames A set of experiment names to be updated.
+     * @param currentTimestamp The timestamp to be set in the {@code update_date} field.
+     * @return {@code true} if the update operation was executed (even if no rows were affected),
+     *         {@code false} if {@code experimentNames} is {@code null} or empty.
+     * @throws Exception If any exception occurs during the database update.
+     */
+    @Override
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        if (experimentNames == null || experimentNames.isEmpty()) {
+            return false;
+        }
+
+        String statusValue = "failure";
+        Timer.Sample timerUpdateExperiment = Timer.start(MetricsConfig.meterRegistry());
+
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+
+            session.beginTransaction();
+            session.createNativeQuery(UPDATE_EXPERIMENTS_DATE)
+                    .setParameter("updateDate", currentTimestamp)
+                    .setParameterList("experimentNames", experimentNames)
+                    .executeUpdate();
+
+            session.getTransaction().commit();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Failed to update update_date for experiments: {}", e.getMessage());
+            throw new Exception(e.getMessage());
+        } finally {
+            if (null != timerUpdateExperiment) {
+                MetricsConfig.timerUpdateExpDate = MetricsConfig.timerBUpdateExpDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateExperiment.stop(MetricsConfig.timerUpdateExpDate);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Delete performance profile with the name performanceProfileName
+     * This deletes the performance profile from kruize_performance_profiles table
+     *
+     * @param perfProfileName contains the name of the performance profile to be deleted
+     * @return validation object containing the status
+     */
+    @Override
+    public ValidationOutputData deletePerformanceProfileByName(String perfProfileName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME, null);
+                query.setParameter("perfProfileName", perfProfileName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("No performance profile found with the name: " + perfProfileName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Failed to delete performance profile {} due to {}", perfProfileName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting performance profile {} due to {}", perfProfileName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * @param perfProfileName name of the profile
+     * @return list of experiment names associated with the provided profile
+     */
+    @Override
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        Long experimentsCount;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            experimentsCount = session.createQuery(SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME, Long.class)
+                    .setParameter("performanceProfile", perfProfileName).uniqueResult();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiments by profile name {} due to {}", perfProfileName, e.getMessage());
+            throw new Exception("Error while loading existing experiments from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return experimentsCount;
     }
 
 
@@ -1198,6 +1431,62 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerLoadAllMetadataProfiles) {
                 MetricsConfig.timerLoadAllMetadataProfiles = MetricsConfig.timerBLoadAllMetadataProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerLoadAllMetadataProfiles.stop(MetricsConfig.timerLoadAllMetadataProfiles);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches all the Layer records from KruizeLMLayerEntry database table
+     *
+     * @return List of all KruizeLMLayerEntry database objects
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMLayerEntry> loadAllLayers() throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllLayers = Timer.start(MetricsConfig.meterRegistry());
+
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER, KruizeLMLayerEntry.class).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.UNABLE_TO_LOAD_LAYERS, e.getMessage());
+            throw new Exception(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.ERROR_LAYER_LOAD_DB, e);
+        } finally {
+            if (null != timerLoadAllLayers) {
+                MetricsConfig.timerLoadAllLayers = MetricsConfig.timerBLoadAllLayers.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllLayers.stop(MetricsConfig.timerLoadAllLayers);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches a single Layer record by layer name from KruizeLMLayerEntry database table
+     *
+     * @param layerName The name of the layer to retrieve
+     * @return List of KruizeLMLayerEntry database objects (should contain 0 or 1 element)
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMLayerEntry> loadLayerByName(String layerName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadLayerByName = Timer.start(MetricsConfig.meterRegistry());
+
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER_BY_NAME, KruizeLMLayerEntry.class)
+                    .setParameter("layerName", layerName).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.UNABLE_TO_LOAD_LAYER, layerName, e.getMessage());
+            throw new Exception(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.ERROR_LOADING_LAYER_DB, e);
+        } finally {
+            if (null != timerLoadLayerByName) {
+                MetricsConfig.timerLoadLayerByName = MetricsConfig.timerBLoadLayerByName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadLayerByName.stop(MetricsConfig.timerLoadLayerByName);
             }
         }
         return entries;

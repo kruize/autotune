@@ -5,19 +5,35 @@ import json
 import time
 
 import requests
+import sys
+sys.path.append("../../")
 
+from helpers.utils import get_metric_profile_dir
 
-def loadData():
-    json_file = open("./json_files/create_exp.json", "r")
-    createdata = json.loads(json_file.read())
+def loadData(exptype):
+    if exptype == "container":
+         exp_json_file = "./json_files/create_exp.json"
+         res_json_file = "./json_files/results.json"
+    elif exptype == "namespace":
+        exp_json_file = "./json_files/create_ns_exp.json"
+        res_json_file = "./json_files/ns_results.json"
+    elif exptype == "gpucontainer":
+        exp_json_file = "./json_files/create_gpu_exp.json"
+        res_json_file = "./json_files/gpu_results.json"
 
-    json_file = open("./json_files/results.json", "r")
-    data = json.loads(json_file.read())
-    
-    json_file = open("./json_files/profile.json", "r")
-    profile_data = json.loads(json_file.read())
+    with open(exp_json_file, 'r', encoding='utf-8') as exp_file:
+        create_data = json.load(exp_file)
 
-    return (data, createdata, profile_data)
+    with open(res_json_file, 'r', encoding='utf-8') as res_file:
+        data = json.load(res_file)
+
+    performance_profile_dir = get_metric_profile_dir()
+    profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
+
+    with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
+       profile_data = json.load(profile_file)
+
+    return (data, create_data, profile_data)
 
 def updateRecommendation(experiment_name, endDate):
     try:
@@ -65,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument('--ip', type=str, help='specify kruize  ip')
     parser.add_argument('--port', type=int, help='specify port')
     parser.add_argument('--name', type=str, help='specify experiment name')
+    parser.add_argument('--exptype', type=str, help='specify experiment type')
     parser.add_argument('--count', type=str,
                         help='specify input the number of experiments and corresponding results, separated by commas.')
     parser.add_argument('--startdate', type=str, help='Specify start date and time in  "%Y-%m-%dT%H:%M:%S.%fZ" format.')
@@ -87,6 +104,7 @@ if __name__ == "__main__":
         updateRecommendationURL = 'http://%s/updateRecommendations' % (args.ip)
 
     expnameprfix = args.name
+    exptype = args.exptype
     expcount = int(args.count.split(',')[0])
     rescount = int(args.count.split(',')[1])
     minutesjump = args.minutesjump
@@ -94,9 +112,11 @@ if __name__ == "__main__":
         'Content-Type': 'application/json'
     }
     timeout = (60, 60)
-    data, createdata, profile_data = loadData()
+
+    data, createdata, profile_data = loadData(exptype)
 
     if args.startdate:
+        print(args.startdate)
         data['interval_end_time'] = args.startdate
 
     if debug:
@@ -109,7 +129,7 @@ if __name__ == "__main__":
         print("startdate : %s" % (data['interval_end_time']))
         print("minutes jump : %s" % (minutesjump))
 
-    #Create a performance profile
+    # Create a performance profile
     profile_json_payload = json.dumps(profile_data)
     response = requests.post(createProfileURL, data=profile_json_payload, headers=headers)
     if response.status_code == 201:
@@ -122,7 +142,7 @@ if __name__ == "__main__":
     bulkDataPost_time = 0.0
     updateRec_time = 0.0
 
-    #Create experiment and post results
+    # Create experiment and post results
     start_time = time.time()
     for i in range(1, expcount + 1):
         try:
@@ -130,7 +150,7 @@ if __name__ == "__main__":
             experiment_name = "%s_%s" % (expnameprfix, i)
             createdata['experiment_name'] = experiment_name
             create_json_payload = json.dumps([createdata])
-            #Create experiment
+            # Create experiment
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
             createExp_start_time = time.time()
             response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)

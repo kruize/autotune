@@ -85,4 +85,82 @@ tuned.
       "status": "ERROR"
   }
   ```
+
+# Update Performance Profile
+
+Client will invoke the Kruize updatePerformanceProfile API for each deployment to update the performance profile to a new supported version. 
+
+# Attributes
+
+Same as in the createPerformanceProfile. You can refer [here](/design/PerformanceProfile.md#attributes)
+
+# Response
+
+* **Success**
+    
+    ```
+    {
+        "message": "Performance Profile <name> updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles",
+        "httpcode": 201,
+        "documentationLink": "",
+        "status": "SUCCESS"
+    }
+    ```
+
+* **Failure**
+
+    * Incorrect Performance Profile name.
+    ```
+    {
+        "message": "Validation failed: Performance Profile <name> not found. Use POST to create a new profile.",
+        "httpcode": 404,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Mandatory parameters are missing.
+    ```
+    {
+        "message": "Validation failed: Missing mandatory parameters: <list of params missing>",
+        "httpcode": 400,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Duplicate API request.
+    ```
+    {
+        "message": "Validation failed: Performance profile <name> already updated with the version <version>",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Duplicate SLO request.
+    ```
+    {
+        "message": "Validation failed: Performance profile 'resource-optimization-openshift' already updated with the provided SLO data",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * New profile data is not a superset of existing one.
+    ```
+    {
+        "message": "Validation failed: Updated profile must be a superset of existing data",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Any unknown exception on server side
+    ```
+    {
+        "message": "Internal Server Error",
+        "httpcode": 500,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
 * #####  You can get the API details [here](/design/PerformanceProfileAPI.md)

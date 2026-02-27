@@ -457,7 +457,7 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 ]
             },
             {
-                "name": "gpuCoreUsage",
+                "name": "acceleratorCoreUsage",
                 "datasource": "prometheus",
                 "value_type": "double",
                 "kubernetes_object": "container",
@@ -480,7 +480,7 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 ]
             },
             {
-                "name": "gpuMemoryUsage",
+                "name": "acceleratorMemoryUsage",
                 "datasource": "prometheus",
                 "value_type": "double",
                 "kubernetes_object": "container",
@@ -967,7 +967,7 @@ List metric profiles output JSON as follows.
                     }
                 },
                 {
-                    "name": "gpuCoreUsage",
+                    "name": "acceleratorCoreUsage",
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
@@ -990,7 +990,7 @@ List metric profiles output JSON as follows.
                     }
                 },
                 {
-                    "name": "gpuMemoryUsage",
+                    "name": "acceleratorMemoryUsage",
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",

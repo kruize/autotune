@@ -7,11 +7,13 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
 public interface ExperimentDAO {
 
@@ -40,6 +42,18 @@ public interface ExperimentDAO {
 
     // Add Metadata Profile  to DB
     public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
+    // Update Metadata Profile to DB
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
+    // Add Layer to DB
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry);
+
+    // If Kruize restarts load all layers
+    List<KruizeLMLayerEntry> loadAllLayers() throws Exception;
+
+    // Load a single Layer based on layer name
+    List<KruizeLMLayerEntry> loadLayerByName(String layerName) throws Exception;
 
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
@@ -157,4 +171,12 @@ public interface ExperimentDAO {
 
     void deleteBulkJobByID(String jobId);
 
+    boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
+
+    // Delete performance profile
+    ValidationOutputData deletePerformanceProfileByName(String perfProfileName) throws Exception;
+
+    Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception;
+
+    ValidationOutputData updatePerformanceProfileInDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 }

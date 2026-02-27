@@ -11,7 +11,7 @@ import java.util.Map;
 public class AcceleratorAutoscalerUtils {
     public static void updateResourceValues(String containerName,
                                             Container container,
-                                            HashMap<AnalyzerConstants.ResourceSetting,
+                                            HashMap<AnalyzerConstants.ConfigType,
                                                     HashMap<AnalyzerConstants.RecommendationItem,
                                                             RecommendationConfigItem>> recommendations,
                                             Map<String, Map<String, Quantity>> originalResourcesRequests,

@@ -1,21 +1,21 @@
 package com.autotune.common.data.metrics;
 
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 
 public class AcceleratorMetricResult {
-    private AcceleratorDeviceData acceleratorDeviceData;
+    private NvidiaAcceleratorDeviceData acceleratorDeviceData;
     private MetricResults metricResults;
 
-    public AcceleratorMetricResult(AcceleratorDeviceData acceleratorDeviceData, MetricResults metricResults) {
+    public AcceleratorMetricResult(NvidiaAcceleratorDeviceData acceleratorDeviceData, MetricResults metricResults) {
         this.acceleratorDeviceData = acceleratorDeviceData;
         this.metricResults = metricResults;
     }
 
-    public AcceleratorDeviceData getAcceleratorDeviceData() {
+    public NvidiaAcceleratorDeviceData getAcceleratorDeviceData() {
         return acceleratorDeviceData;
     }
 
-    public void setAcceleratorDeviceData(AcceleratorDeviceData acceleratorDeviceData) {
+    public void setAcceleratorDeviceData(NvidiaAcceleratorDeviceData acceleratorDeviceData) {
         this.acceleratorDeviceData = acceleratorDeviceData;
     }
 

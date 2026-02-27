@@ -8,4 +8,6 @@ public interface AcceleratorDeviceDetails extends DeviceDetails {
     public String getHostName();
     public String getUUID();
     public String getDeviceName();
+    public boolean isPartitionSupported();
+    public boolean isPartition();
 }
