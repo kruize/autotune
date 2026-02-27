@@ -194,7 +194,19 @@ Here are the test scenarios:
 - Create experiment specifying both namespaces and containers specifying the container experiment type
 - Create namespace experiment specifying containers 
 - Create container experiment specifying namespaces
-- Create multiple experiments with valid namespace
+- Create multiple experiments with valid namespace 
+- Create container experiment without specifying experiment_type and with auto mode 
+- Create container experiment without specifying experiment_type and with recreate mode 
+- Create container experiment specifying experiment_type and auto mode 
+- Create container experiment specifying experiment_type and recreate mode 
+- Create namespace experiment with auto mode 
+- Create namespace experiment with recreate mode 
+- Create container experiment specifying experiment_type, target_cluster as remote and mode as recreate 
+- Create container experiment specifying experiment_type, target_cluster as remote and mode as auto 
+- Create container experiment without specifying experiment_type, target_cluster as remote and mode as recreate
+- Create container experiment without specifying experiment_type, target_cluster as remote and mode as auto
+- Create container experiment with auto mode with invalid kubernetes object type 
+- Create container experiment with recreate mode with invalid kubernetes object type
 
 ### **List Recommendations API tests**
 
@@ -259,6 +271,19 @@ The following tests are yet to be added:
   - **Expected**: API succeeds; server logs `RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE`
 
 Note: The test will skip or may not assert runtime recommendations if the workload does not expose JVM metrics or layers are not configured. Adjust workload name and namespace to match your JVM deployment.
+
+
+### **Autoscaler tests**
+This test script validates the functionality of the Vertical Pod Autoscaler (VPA) integration with Kruize, 
+ensuring that the workflow operates as expected from creation to recommendation patching.
+
+Here are the test scenarios:
+- Validate VPA object creation 
+  - Ensure that a VPA object is created successfully with the expected name.
+  - Ensure that VPA object contains correct containers
+  - Validate VPA object is patched with recommendations
+  - Ensure that the VPA object contains appropriate resource recommendations for each container, 
+including CPU and memory recommendations.
 
 
 ## Prerequisites for running the tests:
