@@ -31,6 +31,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -250,6 +251,7 @@ public class PerformanceProfileService extends HttpServlet {
             }
             // remove the profile from the local storage as well
             performanceProfilesMap.remove(perfProfileName);
+            PerformanceProfileCache.remove(perfProfileName);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));

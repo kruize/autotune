@@ -118,7 +118,8 @@ public class PerformanceProfileValidation {
         // If the mandatory values are present, proceed for further validation else return the validation object directly
         if (validationOutputData.isSuccess()) {
             try {
-                new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
+                // This method verify if profile with same name already exist or not. So, load only one profile.
+                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfile.getName());
             } catch (Exception e) {
                 LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
             }
