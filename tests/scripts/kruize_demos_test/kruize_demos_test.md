@@ -34,7 +34,7 @@ Usage:
         [ -c ] : cluster_type. Supports minikube, kind and openshift cluster-type
         [ -i ] : kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo
         [ -o ] : Kruize operator image. Default - It will use the latest kruize operator image
-	[ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
+        [ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
         [ -b ] : Kruize demos git repo branch. Default - main
         [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes)
         [ -r ] : Kruize results dir path. Default - /tmp/kruize_demos_test_results
