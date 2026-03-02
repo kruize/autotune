@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2025, 2025 IBM Corporation, RedHat and others.
+# Copyright (c) 2025, 2026 IBM Corporation, RedHat and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -233,9 +233,9 @@ function run_demo() {
 		JSONS=(container_vpa_experiment_sysbench_recommendation.json)
 	elif [[ "${DEMO_NAME}" == "runtimes" ]]; then
 		CMD=(./runtimes_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
-		JSONS=(create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_openj9_exp_recommendation.json)
+		JSONS=(create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_semeru_exp_recommendation.json)
 		if [[ "${CLUSTER_TYPE}" == "openshift" ]]; then
-			JSONS=(create_tfb-db_exp_ocp_recommendation.json create_tfb_exp_ocp_recommendation.json create_petclinic_openj9_exp_ocp_recommendation.json)
+			JSONS=(create_tfb-db_exp_ocp_recommendation.json create_tfb_exp_ocp_recommendation.json create_petclinic_semeru_exp_ocp_recommendation.json)
 		fi
 	fi
 
