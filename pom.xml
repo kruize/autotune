@@ -194,6 +194,13 @@
             <artifactId>hibernate-c3p0</artifactId>
             <version>${hibernatecp30-version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.mchange</groupId>
+            <artifactId>mchange-commons-java</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
