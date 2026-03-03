@@ -176,7 +176,7 @@ def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name
     form_kruize_url(cluster_type)
 
     tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
-    
+
     # Build JSON manually to handle optional fields
     json_obj = {
         "apiVersion": apiVersion,
@@ -186,7 +186,7 @@ def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name
         "layer_presence": json.loads(layer_presence),
         "tunables": json.loads(tunables)
     }
-    
+
     # Add details based on flag
     if details == "NULL_DETAILS":
         json_obj["details"] = None
@@ -276,7 +276,7 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
     form_kruize_url(cluster_type)
 
     tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
-    
+
     # Check if we need to handle missing fields (API structure tests)
     if apiVersion == "SKIP_APIVERSION" or kind == "SKIP_KIND" or metadata_name == "SKIP_METADATA":
         # Build JSON manually for missing fields tests
@@ -291,7 +291,7 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
         json_obj["details"] = details
         json_obj["layer_presence"] = json.loads(layer_presence)
         json_obj["tunables"] = json.loads(tunables)
-        
+
         with open(tmp_json_file, "w") as f:
             json.dump(json_obj, f)
     else:

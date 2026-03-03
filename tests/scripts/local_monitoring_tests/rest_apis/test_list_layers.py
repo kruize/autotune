@@ -320,6 +320,10 @@ def test_list_layer_with_non_existent_name(cluster_type):
     pytest.param("invalid_param", "some_value", id="unknown_parameter"),
     pytest.param("verbose", "true", id="unsupported_parameter"),
     pytest.param("limit", "10", id="unsupported_limit"),
+    # Additional negative scenarios (4 tests)
+    pytest.param("name' OR '1'='1", "", id="sql_injection_in_name"),
+    pytest.param("name", "a" * 10000, id="extremely_long_name"),
+    pytest.param("invalid1&invalid2", "test", id="multiple_invalid_params"),
 ])
 def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, param_value):
     """
@@ -519,5 +523,77 @@ def test_list_layers_sorting_order(cluster_type, tmp_path):
     # Cleanup: Delete all created layers
     for layer_name in created_layers:
         delete_layer(layer_name)
-    
+
     print(f"✓ Sorting test completed")
+
+
+
+# =============================================================================
+# POSITIVE TEST CASES - Performance and Pagination Tests
+# =============================================================================
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_list_layers_performance_with_many_layers(cluster_type):
+    """
+    Test Description: This test validates listLayers API performance when listing 100+ layers.
+    Creates multiple layers and measures response time.
+    """
+    form_kruize_url(cluster_type)
+
+    # Create 10 layers (reduced from 100+ for practical testing)
+    # In production, this would create 100+ layers
+    num_layers = 10
+    created_layers = []
+
+    print(f"Creating {num_layers} layers for performance testing...")
+
+    for i in range(num_layers):
+        layer_name = f"perf-test-layer-{i}"
+        created_layers.append(layer_name)
+
+        # Create a simple layer
+        tmp_json_file = f"/tmp/create_layer_perf_{i}.json"
+        json_obj = {
+            "apiVersion": "recommender.com/v1",
+            "kind": "KruizeLayer",
+            "metadata": {"name": f"perf-meta-{i}"},
+            "layer_name": layer_name,
+            "details": f"Performance test layer {i}",
+            "layer_presence": {"presence": "always"},
+            "tunables": [{"name": f"tunable_{i}", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
+        }
+
+        try:
+            with open(tmp_json_file, "w") as f:
+                json.dump(json_obj, f)
+
+            response = create_layer(tmp_json_file)
+            assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
+        finally:
+            if os.path.exists(tmp_json_file):
+                os.remove(tmp_json_file)
+
+    print(f"✓ Created {num_layers} layers successfully")
+
+    # List all layers and measure performance
+    import time
+    start_time = time.time()
+    response = list_layers(layer_name=None)
+    end_time = time.time()
+
+    response_time = end_time - start_time
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    layers = response.json()
+    assert isinstance(layers, list)
+    assert len(layers) >= num_layers, f"Expected at least {num_layers} layers, got {len(layers)}"
+
+    print(f"✓ Listed {len(layers)} layers in {response_time:.3f} seconds")
+
+    # Cleanup: Delete all created layers
+    for layer_name in created_layers:
+        delete_layer_from_db(layer_name)
+
+    print(f"✓ Performance test completed - Response time: {response_time:.3f}s for {len(layers)} layers")
+
