@@ -35,12 +35,12 @@ failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
-SETUP=0
-WAIT_TIME=1800
+SETUP=1
+WAIT_TIME=20
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]"
 	echo "c = supports minikube, kind and openshift cluster-type"
 	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
 	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
@@ -49,7 +49,8 @@ function usage() {
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
 	echo "k = Disable operator and install kruize using deploy scripts instead."
-	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default 1800s"
+	echo "f = Sets up minikube/kind clusters"
+	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default ${WAIT_TIME} secs"
 	exit 1
 }
 
@@ -401,7 +402,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:w:r:i:o:a:b:t:kh gopts
+while getopts c:w:r:i:o:a:b:t:fkh gopts
 do
 	case ${gopts} in
 	c)
@@ -430,6 +431,9 @@ do
 		;;
 	k)
 		KRUIZE_OPERATOR=0
+      		;;
+	f)
+		SETUP=0
       		;;
 	h)
 		usage

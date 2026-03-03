@@ -25,7 +25,7 @@ Kruize Demos test validates the behaviour of Kruize APIs by running the Kruize d
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/kruize_demos_test/kruize_demos_test.sh -c [minikube|kind|openshift] [-i Kruize image] [-o Kruize operator image] [-r results directory path] [ -t <demo> ] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k]
+<KRUIZE_REPO>/tests/scripts/kruize_demos_test/kruize_demos_test.sh -c [minikube|kind|openshift] [-i Kruize image] [-o Kruize operator image] [-r results directory path] [ -t <demo> ] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]
 ```
 
 Where values for kruize_demos_test.sh are:
@@ -39,6 +39,9 @@ Usage:
         [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes)
         [ -r ] : Kruize results dir path. Default - /tmp/kruize_demos_test_results
         [ -k ] : Disable operator and install kruize using deploy scripts instead
+	[ -f ] : Sets up minikube/kind clusters
+        [ -w ] : Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default 20s"
+
 ```
 
 For example, to run only the local_monitoring demo on openshift cluster, execute the below command:
