@@ -126,6 +126,32 @@ function check_log() {
 	fi
 }
 
+function validate_runtimes_reco() {
+	DEMO_LOG_DIR=$1
+	tfb_msgs=("Runtimes Recommendations Available" "JDK_JAVA_OPTIONS" "JAVA_OPTIONS" "QUARKUS_THREAD_POOL_CORE_THREADS")
+	petclinic_msgs=("Runtimes Recommendations Available" "JDK_JAVA_OPTIONS" "JAVA_OPTIONS")
+
+	for reco_json in ${JSONS[@]}; do
+		json_file="${DEMO_LOG_DIR}/${reco_json}"
+		if [ -e "${json_file}" ]; then
+			if [[ "${json_file}" =~ "tfb_exp" ]]; then
+				msgs=${tfb_msgs[@]}
+			elif [[ "${json_file}" =~ "petclinic" ]]; then
+				msgs=${petclinic_msgs[@]}
+			fi
+			for expected_msg in ${tfb_envs[@]}; do
+				if ! grep -qi ${expected_msg} ${json_file}; then
+					echo "${expected_msg} not found in ${DEMO_LOG_DIR}/${json_file}" | tee -a ${LOG}
+					failed=1
+				fi
+			done
+		else
+			echo "Missing ${json_file}" | tee -a ${LOG}
+			failed=1
+		fi
+	done
+}
+
 function validate_sysbench_reco() {
 	# Obtain the kruize recommendations for the vpa optimize-sysbench
 	DEMO_LOG_DIR=$1
@@ -380,6 +406,14 @@ function run_demo() {
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
 
 		fi
+
+		# If demo is runtimes check for env recommendations
+		if [ "${DEMO_NAME}" == "runtimes" ]; then
+			echo "Validating runtimes recommendations..." | tee -a ${LOG}
+			validate_runtimes_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			echo "Validating runtimes recommendations...Done" | tee -a ${LOG}
+		fi
+
 
 		KRUIZE_POD_LOG="${DEMO_LOG_DIR}/${DEMO_NAME}_kruize_pod.log"
 		get_kruize_pod_log "${KRUIZE_POD_LOG}"
