@@ -575,26 +575,35 @@ spec:
   selector:
     app: kruize-ui-nginx
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: kruize-ui-nginx-pod
+  name: kruize-ui-nginx
   namespace: openshift-tuning
-  labels:
-    app: kruize-ui-nginx
 spec:
-  containers:
-    - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.8
-      imagePullPolicy: Always
-      env:
-        - name: KRUIZE_UI_ENV
-          value: "production"
-      volumeMounts:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kruize-ui-nginx
+  template:
+    metadata:
+      labels:
+        app: kruize-ui-nginx
+    spec:
+      containers:
+        - name: kruize-ui-nginx-container
+          image: quay.io/kruize/kruize-ui:0.0.9
+          imagePullPolicy: Always
+          env:
+            - name: KRUIZE_UI_ENV
+              value: "production"
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
         - name: nginx-config-volume
-          mountPath: /etc/nginx/nginx.conf
-          subPath: nginx.conf
-  volumes:
-    - name: nginx-config-volume
-      configMap:
-        name: nginx-config
+          configMap:
+            name: nginx-config
