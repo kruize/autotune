@@ -222,6 +222,7 @@ def _generate_and_list_recommendations_for_tfb(
     if layer_filter is not None:
         layer_json_files = [p for p in layer_json_files if layer_filter(p)]
 
+    created_layer_names = []
     for layer_input_json_file in layer_json_files:
         with open(layer_input_json_file, "r") as json_file:
             layer_json = json.load(json_file)
@@ -234,6 +235,7 @@ def _generate_and_list_recommendations_for_tfb(
         assert data["status"] == SUCCESS_STATUS
         assert data["message"] == CREATE_LAYER_SUCCESS_MSG % layer_name
 
+        created_layer_names.append(layer_name)
         print(f"✓ Layer '{layer_name}' created successfully")
 
     # Create experiment using TechEmpower Quarkus JVM workload
@@ -271,6 +273,15 @@ def _generate_and_list_recommendations_for_tfb(
         # Delete Metric Profile
         response = delete_metric_profile(metric_profile_json_file)
         print("delete metric profile = ", response.status_code)
+
+        # Delete metadata profile to avoid cross-test interference
+        response = delete_metadata_profile(metadata_profile_name)
+        print("delete metadata profile = ", response.status_code)
+
+        # Delete created layers to avoid accumulated state
+        for layer_name in created_layer_names:
+            delete_layer_from_db(layer_name)
+            print(f"delete layer '{layer_name}' = done")
 
         # Remove benchmarks directory
         if os.path.isdir("benchmarks"):

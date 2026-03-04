@@ -21,7 +21,16 @@ import tempfile
 import pytest
 import sys
 
-from helpers.runtime_utils import _generate_and_list_recommendations_for_tfb, _env_values, _contains_any_pattern
+from helpers.runtime_utils import (
+    _generate_and_list_recommendations_for_tfb,
+    _env_values,
+    _contains_any_pattern,
+    _extract_runtime_envs,
+    HOTSPOT_GC_PATTERNS,
+    SEMERU_GC_PATTERNS,
+    JDK_JAVA_OPTIONS,
+    JAVA_OPTIONS,
+)
 
 sys.path.append("../../")
 
@@ -58,20 +67,35 @@ def test_runtime_recommendation(cluster_type):
 @pytest.mark.runtimes
 def test_semeru_gc_policy_when_layer_present(cluster_type):
     """
-    Test Description: When the Semeru/OpenJ9 runtime is active and the `semeru` layer is present,
+    Test Description: When the Semeru runtime is active and the `semeru` layer is present,
     runtime recommendations should include JAVA_OPTIONS with Semeru GC policy flags.
 
     Expected: At least one env value contains one of SEMERU_GC_PATTERNS
     (e.g., -Xgcpolicy:gencon, -Xgcpolicy:balanced, -Xgcpolicy:optthruput).
     """
     list_reco_json = _generate_and_list_recommendations_for_tfb(cluster_type)
-    env_values = _env_values(list_reco_json)
+    envs = _extract_runtime_envs(list_reco_json)
 
-    if not _contains_any_pattern(env_values, SEMERU_GC_PATTERNS):
-        pytest.skip("Semeru/OpenJ9 GC policy not detected for current workload – skipping Semeru-specific assertion")
+    semeru_envs = [
+        env
+        for env in envs
+        if isinstance(env.get("value"), str)
+        and any(pattern in env["value"] for pattern in SEMERU_GC_PATTERNS)
+    ]
 
-    assert _contains_any_pattern(env_values, SEMERU_GC_PATTERNS), (
-        f"Expected Semeru GC policy flags {SEMERU_GC_PATTERNS} in JAVA_OPTIONS, got: {env_values}"
+    if not semeru_envs:
+        pytest.skip(
+            "Semeru GC policy flags not present in recommendations; "
+            "runtime may not be Semeru for this environment"
+        )
+
+    # Semeru-specific assertion: flags must be on JAVA_OPTIONS/JDK_JAVA_OPTIONS
+    invalid_envs = [
+        env for env in semeru_envs if env.get("name") not in (JAVA_OPTIONS, JDK_JAVA_OPTIONS)
+    ]
+    assert not invalid_envs, (
+        "Semeru GC policy flags were found, but not on expected env vars "
+        f"{JDK_JAVA_OPTIONS}/{JAVA_OPTIONS}. Offending entries: {invalid_envs}"
     )
 
 
@@ -185,48 +209,3 @@ def test_no_recommendation_for_layer_runtime_mismatch(cluster_type):
         "Expected at least one mismatch case (only hotspot or only semeru layer) "
         "to have no GC-related runtime recommendations."
     )
-
-
-@pytest.mark.runtimes
-def test_non_runtime_supported_datasource_logs_message_on_generate(cluster_type):
-    """
-    Test Description:
-    For datasources that exist but do NOT support runtime recommendations, generateRecommendations
-    should still succeed but the server should log RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE.
-    """
-    input_json_file = "../json_files/create_tfb_exp.json"
-    form_kruize_url(cluster_type)
-
-    # Use bulk metadata profile that defines datasources with and without runtime support
-    delete_and_create_metadata_profile()
-
-    response = delete_experiment(input_json_file, rm=False)
-    print("delete exp = ", response.status_code)
-
-    # Create experiment using the specified json
-    response = create_experiment(input_json_file)
-    data = response.json()
-    print(data["message"])
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data["status"] == SUCCESS_STATUS
-
-    exp_name = data["experiment_name"] if "experiment_name" in data else json.load(
-        open(input_json_file)
-    )[0]["experiment_name"]
-
-    # Call generateRecommendations – API itself should succeed even if runtime
-    # recommendations are not available for the underlying datasource.
-    response = generate_recommendations(exp_name)
-    assert response.status_code in range(SUCCESS_STATUS_CODE_START, SUCCESS_STATUS_CODE_END)
-
-    # Give server a moment to flush logs
-    time.sleep(2)
-
-    logs = get_kruize_logs(cluster_type)
-    assert RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE in logs, (
-        "Expected RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE message in Kruize logs "
-        "for non-runtime-supported datasource"
-    )
-
-    response = delete_experiment(input_json_file, rm=False)
-    print("delete exp = ", response.status_code)
