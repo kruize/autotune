@@ -13,12 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import json
-import os
-import shutil
-import tempfile
 
-import pytest
 import sys
 
 from helpers.runtime_utils import (
@@ -26,6 +21,7 @@ from helpers.runtime_utils import (
     _env_values,
     _contains_any_pattern,
     _extract_runtime_envs,
+    validate_runtime_recommendations_if_present,
     HOTSPOT_GC_PATTERNS,
     SEMERU_GC_PATTERNS,
     JDK_JAVA_OPTIONS,
@@ -35,9 +31,6 @@ from helpers.runtime_utils import (
 sys.path.append("../../")
 
 from helpers.fixtures import *
-from helpers.kruize import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_json_local_monitoring_schema
-from helpers.list_reco_json_validate import validate_list_reco_json
 from helpers.utils import *
 from pathlib import Path
 

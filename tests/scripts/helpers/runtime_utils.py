@@ -13,23 +13,34 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import csv
-import json
 import os
-import re
-import subprocess
-import time
-import math
-import docker
-from helpers.kruize import *
-from datetime import datetime, timedelta
-from kubernetes import client, config
+import shutil
+import tempfile
 from pathlib import Path
-from helpers.kruize import get_bulk_job_status
-from helpers.import_metadata_json_validate import *
+
+from helpers.kruize import *
+from helpers.kruize import delete_layer_from_db
 from helpers.list_metadata_json_validate import *
-from helpers.list_metadata_json_schema import *
-from helpers.list_metadata_json_verbose_true_schema import *
+from helpers.list_reco_json_local_monitoring_schema import list_reco_json_local_monitoring_schema
+from helpers.list_reco_json_validate import validate_list_reco_json
+from helpers.utils import (
+    SUCCESS_STATUS_CODE,
+    SUCCESS_200_STATUS_CODE,
+    SUCCESS_STATUS,
+    CREATE_LAYER_SUCCESS_MSG,
+    CREATE_EXP_SUCCESS_MSG,
+    CONTAINER_EXPERIMENT_TYPE,
+    clone_repo,
+    benchmarks_install,
+    get_metric_profile_dir,
+    get_layer_dir,
+    get_metadata_profile_dir,
+    validate_local_monitoring_recommendation_data_present,
+)
+
+metric_profile_dir = get_metric_profile_dir()
+metadata_profile_dir = get_metadata_profile_dir()
+layer_dir = get_layer_dir()
 
 RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 RUNTIMES_RECOMMENDATIONS_AVAILABLE = "Runtimes Recommendations Available"
@@ -40,7 +51,7 @@ NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE = "112104"
 # Expected env names for JVM runtime recommendations
 JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS"
 JAVA_OPTIONS = "JAVA_OPTIONS"
-QUARKUS_CORE_THREADS = "quarkus.thread-pool.core-threads"
+QUARKUS_THREAD_POOL_CORE_THREADS = "QUARKUS_THREAD_POOL_CORE_THREADS"
 
 # GC flag patterns (Hotspot)
 HOTSPOT_GC_PATTERNS = (
@@ -57,6 +68,12 @@ SEMERU_GC_PATTERNS = (
     "-Xgcpolicy:balanced",
     "-Xgcpolicy:optthruput",
 )
+
+ENV_VALUES = (
+            JDK_JAVA_OPTIONS,
+            JAVA_OPTIONS,
+            QUARKUS_THREAD_POOL_CORE_THREADS,
+            )
 
 def _has_runtime_env_value(value):
     """Check if env value contains GC-related JVM options."""
@@ -121,15 +138,25 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                         for env_item in env_list:
                             name = env_item.get("name")
                             value = env_item.get("value")
-                            assert name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS, QUARKUS_CORE_THREADS), (
-                                    f"Runtime env {name} should be among {JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}, {QUARKUS_CORE_THREADS}"
-                                )
-                            assert _has_runtime_env_value(value), f"Runtime values are incorrect"
-                            assert value, f"Runtime env {name} has empty value"
-                            assert _has_runtime_env_value(value), (
-                                    f"Runtime env {name} should contain GC flags, got: {value}"
+
+
+                            assert name in ENV_VALUES, (
+                                f"Runtime env {name} should be among "
+                                f"{JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}, "
+                                f"{QUARKUS_THREAD_POOL_CORE_THREADS}"
                             )
-                            return  # Found valid runtime recommendation
+
+                            # GC flags are only expected in JAVA options, not in thread-pool tunables
+                            if name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS):
+                                assert value, f"Runtime env {name} has empty value"
+                                assert _has_runtime_env_value(value), (
+                                    f"Runtime env {name} should contain GC flags, got: {value}"
+                                )
+                                return  # Found valid runtime recommendation
+
+                            if name == QUARKUS_THREAD_POOL_CORE_THREADS:
+                                # For thread-pool tunables, ensure we have a non-empty value
+                                assert value, f"Runtime env {name} has empty value"
 
 
 def _generate_and_list_recommendations_for_tfb(
@@ -149,8 +176,8 @@ def _generate_and_list_recommendations_for_tfb(
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
 
-    input_json_file = "../json_files/create_tfb_exp.json"
-    input_json_path = Path(__file__).parent / "../json_files/create_tfb_exp.json"
+    input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_tfb_exp.json")
+    input_json_file = str(input_json_path)
     with open(input_json_path) as f:
         input_json = json.load(f)
 
@@ -339,4 +366,3 @@ def _contains_any_pattern(values, patterns):
             if p in v:
                 return True
     return False
-
