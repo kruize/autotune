@@ -889,7 +889,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(experimentDetails);
-        JsonNode experimentsNode = rootNode.get("experiments");
+        JsonNode experimentsNode = rootNode != null ? rootNode.get("experiments") : null;
+        if (experimentsNode == null) {
+            String message = "experimentDetails JSON must contain an 'experiments' field";
+            LOGGER.warn("{} for job_id {}", message, jobId);
+            validationOutputData.setMessage(message);
+            return validationOutputData;
+        }
         Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {

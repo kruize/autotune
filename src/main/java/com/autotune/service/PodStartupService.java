@@ -86,7 +86,9 @@ public class PodStartupService {
 
             for (KruizePodStatus pod : stalePods) {
                 Pod k8sPod = k8sClient.pods().inNamespace(namespace).withName(pod.getPodName()).get();
-                boolean notRunning = (k8sPod == null || !"Running".equalsIgnoreCase(k8sPod.getStatus().getPhase()));
+                boolean notRunning = (k8sPod == null
+                        || k8sPod.getStatus() == null
+                        || !"Running".equalsIgnoreCase(k8sPod.getStatus().getPhase()));
                 if (notRunning) {
                     Transaction tx = session.beginTransaction();
                     try {

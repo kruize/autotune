@@ -185,9 +185,7 @@ public class BulkJobManager implements Runnable {
                             metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0L, 0L, 0, measurementDuration, includeResourcesMap, excludeResourcesMap);
                         }
 
-                        if (null == metadataInfo) {
-                            this.setFinalJobStatus("COMPLETED", String.valueOf(200), NotificationConstants.NOTHING_INFO, datasource);
-                        } else {
+                        if (null != metadataInfo) {
                             this.jobData.setMetadata(metadataInfo);
                             try {
                                 new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(dummyExperimentsString));
