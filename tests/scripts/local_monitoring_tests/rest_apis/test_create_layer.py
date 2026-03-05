@@ -147,6 +147,55 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     delete_layer_from_db(layer_name)
 
 
+@pytest.mark.layers
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("without_details", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "SKIP_DETAILS", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_details", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "NULL_DETAILS", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("empty_details", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_without_key", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+])
+def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+    """
+    Test Description: Validates createLayer API accepts requests with optional fields missing or null
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    
+    # Build JSON manually to handle optional fields
+    json_obj = {
+        "apiVersion": apiVersion,
+        "kind": kind,
+        "metadata": {"name": metadata_name},
+        "layer_name": layer_name,
+        "layer_presence": json.loads(layer_presence),
+        "tunables": json.loads(tunables)
+    }
+    
+    # Add details based on flag
+    if details == "NULL_DETAILS":
+        json_obj["details"] = None
+    elif details != "SKIP_DETAILS":
+        json_obj["details"] = details
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Expected status {SUCCESS_STATUS_CODE}, got {response.status_code}"
+        assert data['status'] == SUCCESS_STATUS, f"Expected status {SUCCESS_STATUS}, got {data['status']}"
+        assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
+
+        print(f"✓ Successfully created layer with optional field test: {test_name}")
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
 # =============================================================================
 # NEGATIVE TEST CASES - A. Mandatory Fields Missing/NULL/Empty
 # =============================================================================
@@ -168,6 +217,40 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("missing_layer_presence_config", LAYER_PRESENCE_MISSING_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", 'null', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', 'null'),
     ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[]'),
+    # Query Validation tests (7 tests)
+    ("query_invalid_promql_syntax", LAYER_QUERY_INVALID_PROMQL_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up{job="}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_missing_datasource", LAYER_QUERY_MISSING_DATASOURCE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_missing_query_field", LAYER_QUERY_MISSING_QUERY_FIELD_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_empty_datasource", LAYER_QUERY_EMPTY_DATASOURCE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_empty_query_string", LAYER_QUERY_EMPTY_QUERY_STRING_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": ""}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_null_datasource", LAYER_QUERY_NULL_DATASOURCE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": null, "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_null_query", LAYER_QUERY_NULL_QUERY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": null}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    # Label Validation tests (6 tests)
+    ("label_missing_name", LAYER_LABEL_MISSING_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("label_missing_value", LAYER_LABEL_MISSING_VALUE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"name": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("label_null_name", LAYER_LABEL_NULL_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"name": null, "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("label_null_value", LAYER_LABEL_NULL_VALUE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"name": "test", "value": null}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("label_empty_name", LAYER_LABEL_EMPTY_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"name": "", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("label_empty_value", LAYER_LABEL_EMPTY_VALUE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [{"name": "test", "value": ""}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    # Tunable Name Validation tests (4 tests)
+    ("tunable_null_name", TUNABLE_NULL_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": null, "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("tunable_empty_name", TUNABLE_EMPTY_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("tunable_missing_name", TUNABLE_MISSING_NAME_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_tunable_in_array", TUNABLE_NULL_IN_ARRAY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[null, {"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    # Tunable Value Type Validation tests (3 tests)
+    ("tunable_invalid_value_type", TUNABLE_INVALID_VALUE_TYPE_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "invalid_type", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("tunable_null_value_type", TUNABLE_NULL_VALUE_TYPE_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": null, "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("tunable_missing_value_type", TUNABLE_MISSING_VALUE_TYPE_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    # Numeric Tunable Partial Configuration tests (3 tests)
+    ("tunable_only_upper_bound", TUNABLE_ONLY_UPPER_BOUND_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100"}]'),
+    ("tunable_only_lower_bound", TUNABLE_ONLY_LOWER_BOUND_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "lower_bound": "10"}]'),
+    ("tunable_bounds_without_step", TUNABLE_BOUNDS_WITHOUT_STEP_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10"}]'),
+    # API Structure Validation tests (5 tests) - using special markers for missing fields
+    ("missing_metadata", LAYER_MISSING_METADATA_MSG, "recommender.com/v1", "KruizeLayer", "SKIP_METADATA", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("missing_apiversion", LAYER_MISSING_APIVERSION_MSG, "SKIP_APIVERSION", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("missing_kind", LAYER_MISSING_KIND_MSG, "recommender.com/v1", "SKIP_KIND", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("invalid_kind", LAYER_INVALID_KIND_MSG % 'InvalidKind', "recommender.com/v1", "InvalidKind", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("invalid_apiversion_format", LAYER_INVALID_APIVERSION_MSG % 'v1', "v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
 def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
@@ -176,23 +259,43 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
     form_kruize_url(cluster_type)
 
     tmp_json_file = f"/tmp/create_layer_{test_name}.json"
-    environment = Environment(loader=FileSystemLoader("../json_files/"))
-    template = environment.get_template("create_layer_template.json")
+    
+    # Check if we need to handle missing fields (API structure tests)
+    if apiVersion == "SKIP_APIVERSION" or kind == "SKIP_KIND" or metadata_name == "SKIP_METADATA":
+        # Build JSON manually for missing fields tests
+        json_obj = {}
+        if apiVersion != "SKIP_APIVERSION":
+            json_obj["apiVersion"] = apiVersion
+        if kind != "SKIP_KIND":
+            json_obj["kind"] = kind
+        if metadata_name != "SKIP_METADATA":
+            json_obj["metadata"] = {"name": metadata_name}
+        json_obj["layer_name"] = layer_name
+        json_obj["details"] = details
+        json_obj["layer_presence"] = json.loads(layer_presence)
+        json_obj["tunables"] = json.loads(tunables)
+        
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+    else:
+        # Use template for normal tests
+        environment = Environment(loader=FileSystemLoader("../json_files/"))
+        template = environment.get_template("create_layer_template.json")
 
-    content = template.render(
-        apiVersion=apiVersion,
-        kind=kind,
-        metadata_name=metadata_name,
-        layer_name=layer_name,
-        details=details,
-        layer_presence=layer_presence,
-        tunables=tunables
-    )
+        content = template.render(
+            apiVersion=apiVersion,
+            kind=kind,
+            metadata_name=metadata_name,
+            layer_name=layer_name,
+            details=details,
+            layer_presence=layer_presence,
+            tunables=tunables
+        )
 
-    try:
         with open(tmp_json_file, "w") as f:
             f.write(content)
 
+    try:
         response = create_layer(tmp_json_file)
         data = response.json()
 
