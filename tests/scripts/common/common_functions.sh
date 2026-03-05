@@ -244,9 +244,29 @@ function autotune_cleanup() {
 	fi
 
 	echo  "Removing Autotune dependencies..."
-	cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
-	echo "CMD = ${cmd}"
-	${cmd} >> ${KRUIZE_SETUP_LOG} 2>&1
+	
+	# Check if operator deployment was used
+	if [ "${USE_OPERATOR}" == "1" ]; then
+		echo "Cleaning up operator deployment..."
+		OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
+		if [ -d "${OPERATOR_REPO_DIR}" ]; then
+			pushd "${OPERATOR_REPO_DIR}" > /dev/null
+			echo "Running: make undeploy"
+			make undeploy >> ${KRUIZE_SETUP_LOG} 2>&1
+			if [ $? -ne 0 ]; then
+				echo "Warning: make undeploy failed, check ${KRUIZE_SETUP_LOG}"
+			fi
+			popd > /dev/null
+		else
+			echo "Warning: kruize-operator directory not found, skipping operator cleanup"
+		fi
+	else
+		# Standard cleanup using deploy scripts
+		cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
+		echo "CMD = ${cmd}"
+		${cmd} >> ${KRUIZE_SETUP_LOG} 2>&1
+	fi
+	
 	# Remove the prometheus setup
 	if [ "${cleanup_prometheus}" -eq "1" ]; then
 		prometheus_cleanup
@@ -1020,4 +1040,104 @@ function kruize_local_patch() {
 		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	fi
+}
+
+# Deploy kruize using operator
+function deploy_kruize_operator() {
+	echo "Deploying Kruize using operator..." | tee -a ${LOG}
+
+	# Create namespace based on cluster type
+	case "${cluster_type}" in
+		openshift)
+			NAMESPACE="openshift-tuning"
+			;;
+		*)
+			NAMESPACE="monitoring"
+			;;
+	esac
+
+	echo "Creating namespace ${NAMESPACE}..." | tee -a ${LOG}
+	kubectl create namespace "${NAMESPACE}" 2>/dev/null || echo "Namespace ${NAMESPACE} already exists" | tee -a ${LOG}
+
+	# Clone kruize-operator repo if not already present
+	OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
+	if [ ! -d "${OPERATOR_REPO_DIR}" ]; then
+		echo "Cloning kruize-operator repository..." | tee -a ${LOG}
+		pushd "${KRUIZE_REPO}" > /dev/null
+		clone_repos "kruize-operator"
+		popd > /dev/null
+	else
+		echo "kruize-operator repository already exists, using existing clone..." | tee -a ${LOG}
+	fi
+
+	# Patch the CR resources before deployment
+	kruize_operator_patch
+
+	# Deploy using operator
+	pushd "${OPERATOR_REPO_DIR}" > /dev/null
+
+	echo "Deploying operator using make deploy..." | tee -a ${LOG}
+
+	# Set the operator image if specified
+	if [ ! -z "${KRUIZE_OPERATOR_IMAGE}" ]; then
+		echo "Using operator image: ${KRUIZE_OPERATOR_IMAGE}" | tee -a ${LOG}
+		export IMG="${KRUIZE_OPERATOR_IMAGE}"
+	fi
+
+	# Deploy the operator using make
+	make deploy >> ${KRUIZE_SETUP_LOG} 2>&1
+
+	if [ $? -ne 0 ]; then
+		echo "Error: Failed to deploy Kruize operator using make deploy" | tee -a ${LOG}
+		echo "Check ${KRUIZE_SETUP_LOG} for details" | tee -a ${LOG}
+		popd > /dev/null
+		exit 1
+	fi
+
+	echo "Operator deployed successfully" | tee -a ${LOG}
+
+	# Apply the Kruize CR (Custom Resource)
+	echo "Applying Kruize CR..." | tee -a ${LOG}
+
+	# Determine the CR file based on cluster type
+	CR_FILE="config/samples/v1alpha1_kruize.yaml"
+
+	if [ -f "${CR_FILE}" ]; then
+		kubectl apply -f "${CR_FILE}" -n $NAMESPACE>> ${KRUIZE_SETUP_LOG} 2>&1
+		if [ $? -ne 0 ]; then
+			echo "Error: Failed to apply Kruize CR" | tee -a ${LOG}
+			echo "Check ${KRUIZE_SETUP_LOG} for details" | tee -a ${LOG}
+			popd > /dev/null
+			exit 1
+		fi
+		echo "Kruize CR applied successfully" | tee -a ${LOG}
+	else
+		echo "Warning: CR file ${CR_FILE} not found, skipping CR application" | tee -a ${LOG}
+	fi
+
+	popd > /dev/null
+	echo "Kruize operator deployment completed" | tee -a ${LOG}
+}
+
+# Cleanup kruize operator deployment
+function cleanup_kruize_operator() {
+	echo "Cleaning up Kruize operator deployment..." | tee -a ${LOG}
+
+	OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
+	if [ -d "${OPERATOR_REPO_DIR}" ]; then
+		pushd "${OPERATOR_REPO_DIR}" > /dev/null
+
+		echo "Undeploying operator using make undeploy..." | tee -a ${LOG}
+		make undeploy >> ${KRUIZE_SETUP_LOG} 2>&1
+
+		if [ $? -ne 0 ]; then
+			echo "Warning: Failed to undeploy operator, continuing cleanup..." | tee -a ${LOG}
+		fi
+
+		popd > /dev/null
+	else
+		echo "Warning: kruize-operator directory not found at ${OPERATOR_REPO_DIR}" | tee -a ${LOG}
+	fi
+
+	echo "Kruize operator cleanup completed" | tee -a ${LOG}
 }
