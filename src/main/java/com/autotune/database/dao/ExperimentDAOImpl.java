@@ -690,6 +690,81 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * Update Layer in DB
+     *
+     * @param kruizeLayerEntry
+     * @return validationOutputData contains the status of the DB update operation
+     */
+    @Override
+    public ValidationOutputData updateLayerToDB(KruizeLMLayerEntry kruizeLayerEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdateLayerDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            session.merge(kruizeLayerEntry);
+            tx.commit();
+            validationOutputData.setSuccess(true);
+            statusValue = "success";
+        } catch (HibernateException e) {
+            LOGGER.error("Not able to update layer due to: {}", e.getMessage(), e);
+            if (tx != null && tx.isActive()) tx.rollback();
+            e.printStackTrace();
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Not able to update layer due to: {}", e.getMessage(), e);
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdateLayerDB) {
+                MetricsConfig.timerUpdateLayerDB = MetricsConfig.timerBUpdateLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateLayerDB.stop(MetricsConfig.timerUpdateLayerDB);
+            }
+        }
+
+        return validationOutputData;
+    }
+
+    /**
+     * Delete Layer from DB by layer name
+     *
+     * @param layerName
+     * @return validationOutputData contains the status of the DB delete operation
+     */
+    @Override
+    public ValidationOutputData deleteLayerByName(String layerName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DBConstants.SQLQUERY.DELETE_FROM_LAYER_BY_NAME, null);
+                query.setParameter("layerName", layerName);
+                int deletedCount = query.executeUpdate();
+
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.DELETE_LAYER_ENTRY_NOT_FOUND_WITH_NAME + layerName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.DELETE_LAYER_ENTRY_ERROR_MSG, layerName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.DELETE_LAYER_ENTRY_ERROR_MSG, layerName, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
      * @param kruizeDataSourceEntry
      * @param validationOutputData
      * @return validationOutputData contains the status of the DB insert operation
