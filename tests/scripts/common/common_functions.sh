@@ -1070,8 +1070,10 @@ function deploy_kruize_operator() {
 		echo "kruize-operator repository already exists, using existing clone..." | tee -a ${LOG}
 	fi
 
-	# Patch the CR resources before deployment
-	kruize_operator_patch
+	# Patch the CR resources before deployment for openshift
+	if [ ${cluster_type} == "openshift" ]; then
+	  kruize_operator_patch
+	fi
 
 	# Deploy using operator
 	pushd "${OPERATOR_REPO_DIR}" > /dev/null
@@ -1099,8 +1101,16 @@ function deploy_kruize_operator() {
 	# Apply the Kruize CR (Custom Resource)
 	echo "Applying Kruize CR..." | tee -a ${LOG}
 
-	# Determine the CR file based on cluster type
+	# Determine the CR file
 	CR_FILE="config/samples/v1alpha1_kruize.yaml"
+
+	if [ -n "${KRUIZE_DOCKER_IMAGE}" ]; then
+	  sed -i -E 's#^([[:space:]]*)autotune_image:.*#\1autotune_image: "'"${KRUIZE_DOCKER_IMAGE}"'"#' "./config/samples/v1alpha1_kruize.yaml"
+	fi
+
+	sed -i -E 's#^([[:space:]]*)cluster_type:.*#\1cluster_type: "'"${cluster_type}"'"#' "./config/samples/v1alpha1_kruize.yaml"
+
+	sed -i -E 's#^([[:space:]]*)namespace:.*#\1namespace: "'"${NAMESPACE}"'"#' "./config/samples/v1alpha1_kruize.yaml"
 
 	if [ -f "${CR_FILE}" ]; then
 		kubectl apply -f "${CR_FILE}" -n $NAMESPACE>> ${KRUIZE_SETUP_LOG} 2>&1
@@ -1140,4 +1150,45 @@ function cleanup_kruize_operator() {
 	fi
 
 	echo "Kruize operator cleanup completed" | tee -a ${LOG}
+}
+
+# Patch operator CR resources for functional local monitoring tests
+function kruize_operator_patch() {
+  OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
+
+  CR_FILE="${OPERATOR_REPO_DIR}/config/samples/v1alpha1_kruize.yaml"
+
+  if [ ! -f "${CR_FILE}" ]; then
+   echo "Warning: CR file ${CR_FILE} not found, skipping resource patching"
+   return
+  fi
+
+  echo "Patching operator CR resources in ${CR_FILE}..."
+
+  # Backup original file
+  cp "${CR_FILE}" "${CR_FILE}.bak"
+
+  # Update database resources
+  sed -i '/database:/,/kruize:/ {
+   s/cpuRequest: ".*"/cpuRequest: "2"/
+   s/cpuLimit: ".*"/cpuLimit: "2"/
+   s/memoryRequest: ".*"/memoryRequest: "1Gi"/
+   s/memoryLimit: ".*"/memoryLimit: "1Gi"/
+  }' ${CR_FILE}
+
+  # Update kruize application resources
+  sed -i '/kruize:/,/persistentVolume:/ {
+   s/cpuRequest: ".*"/cpuRequest: "2"/
+   s/cpuLimit: ".*"/cpuLimit: "2"/
+   s/memoryRequest: ".*"/memoryRequest: "1Gi"/
+   s/memoryLimit: ".*"/memoryLimit: "1Gi"/
+  }' ${CR_FILE}
+
+  # Update persistent volume configuration
+   sed -i '/persistentVolume:/,/accessModes:/ {
+    s/pvStorageSize: ".*"/pvStorageSize: "1Gi"/
+    s/pvcStorageSize: ".*"/pvcStorageSize: "1Gi"/
+   }' ${CR_FILE}
+
+  echo "Operator CR resources patched successfully"
 }

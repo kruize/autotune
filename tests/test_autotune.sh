@@ -38,7 +38,7 @@ function usage() {
 	echo ""
 	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --resultsdir=/home/results"
 	echo "Example: $0 -c minikube --testsuite=local_monitoring_tests -o"
-	echo "Example: $0 -c minikube --testsuite=local_monitoring_tests -o quay.io/kruize/autotune_operator:latest"
+	echo "Example: $0 -c minikube --testsuite=local_monitoring_tests -o quay.io/kruize/kruize_operator:latest"
 	echo ""
 	test_suite_usage
 	echo ""
