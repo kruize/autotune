@@ -240,7 +240,12 @@ function autotune_cleanup() {
 		pushd ${KRUIZE_REPO} > /dev/null
 	else
 		KRUIZE_SETUP_LOG="kruize_setup.log"
-		pushd ${KRUIZE_REPO}/autotune > /dev/null
+		if [ "${USE_OPERATOR}" == "1" ]; then
+		  OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
+		  pushd "${OPERATOR_REPO_DIR}" > /dev/null
+		else
+		  pushd ${KRUIZE_REPO}/autotune > /dev/null
+		fi
 	fi
 
 	echo  "Removing Autotune dependencies..."
@@ -250,13 +255,13 @@ function autotune_cleanup() {
 		echo "Cleaning up operator deployment..."
 		OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
 		if [ -d "${OPERATOR_REPO_DIR}" ]; then
-			pushd "${OPERATOR_REPO_DIR}" > /dev/null
+      pushd "${OPERATOR_REPO_DIR}" > /dev/null
 			echo "Running: make undeploy"
-			make undeploy >> ${KRUIZE_SETUP_LOG} 2>&1
+			echo "make undeploy-${cluster_type}"
+			make undeploy-${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
 			if [ $? -ne 0 ]; then
 				echo "Warning: make undeploy failed, check ${KRUIZE_SETUP_LOG}"
 			fi
-			popd > /dev/null
 		else
 			echo "Warning: kruize-operator directory not found, skipping operator cleanup"
 		fi
@@ -1087,7 +1092,7 @@ function deploy_kruize_operator() {
 	fi
 
 	# Deploy the operator using make
-	make deploy >> ${KRUIZE_SETUP_LOG} 2>&1
+	make deploy-${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
 
 	if [ $? -ne 0 ]; then
 		echo "Error: Failed to deploy Kruize operator using make deploy" | tee -a ${LOG}
@@ -1125,6 +1130,97 @@ function deploy_kruize_operator() {
 		echo "Warning: CR file ${CR_FILE} not found, skipping CR application" | tee -a ${LOG}
 	fi
 
+	sleep 10
+  echo
+  echo "⏳ Waiting for all operator pods to be ready..."
+
+  # First wait for pod to exist
+  timeout=180
+  elapsed=0
+  while [ $elapsed -lt $timeout ]; do
+    if kubectl get pod -l app=kruize-db -n $NAMESPACE --no-headers 2>/dev/null | grep -q kruize-db; then
+      break
+    fi
+    echo -n "."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  if [ $elapsed -ge $timeout ]; then
+    echo "❌ Timeout waiting for kruize-db pod to be created"
+    kubectl get pods -n $NAMESPACE
+    exit 1
+  fi
+
+  echo "⏳ Waiting for kruize-db pod to be ready..."
+  kubectl wait --for=condition=Ready pod -l app=kruize-db -n $NAMESPACE --timeout=600s
+  if [ $? -ne 0 ]; then
+      echo "❌ Kruize-db pod failed to become ready"
+      kubectl get pods -n $NAMESPACE
+      kubectl describe pod -l app=kruize-db -n $NAMESPACE
+      exit 1
+  fi
+
+  # First wait for pod to exist
+  timeout=180
+  elapsed=0
+  while [ $elapsed -lt $timeout ]; do
+    if kubectl get pod -l app=kruize -n $NAMESPACE --no-headers 2>/dev/null | grep -q kruize; then
+      break
+    fi
+    echo -n "."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  if [ $elapsed -ge $timeout ]; then
+    echo "❌ Timeout waiting for kruize pod to be created"
+    kubectl get pods -n $NAMESPACE
+    exit 1
+  fi
+
+  kubectl wait --for=condition=Ready pod -l app=kruize -n $NAMESPACE --timeout=600s
+      if [ $? -ne 0 ]; then
+          echo "❌ Kruize pod failed to become ready"
+          kubectl get pods -n $NAMESPACE
+          kubectl describe pod -l app=kruize -n $NAMESPACE
+          exit 1
+      fi
+
+  echo "⏳ Waiting for kruize-ui pod to be ready..."
+  # First wait for pod to exist
+  timeout=180
+  elapsed=0
+  while [ $elapsed -lt $timeout ]; do
+    if kubectl get pod -l app=kruize-ui-nginx -n $NAMESPACE --no-headers 2>/dev/null | grep -q .; then
+      break
+    fi
+    echo -n "."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  if [ $elapsed -ge $timeout ]; then
+    echo "❌ Timeout waiting for kruize-ui pod to be created"
+    kubectl get pods -n $NAMESPACE
+    exit 1
+  fi
+
+
+  echo "⏳ Waiting for kruize-ui pod to be ready..."
+  kubectl wait --for=condition=Ready pod -l app=kruize-ui-nginx -n $NAMESPACE --timeout=600s
+  if [ $? -ne 0 ]; then
+      echo "❌ kruize-ui-nginx pod failed to become ready"
+      kubectl get pods -n $NAMESPACE
+      kubectl describe pod -l app=kruize-ui-nginx -n $NAMESPACE
+      exit 1
+  fi
+  echo "✅ All Kruize application pods are ready!"
+
+  echo "✅ Deployment complete! Checking status..."
+  kubectl get kruize -n $NAMESPACE
+  kubectl get pods -n $NAMESPACE
+
 	popd > /dev/null
 	echo "Kruize operator deployment completed" | tee -a ${LOG}
 }
@@ -1138,7 +1234,7 @@ function cleanup_kruize_operator() {
 		pushd "${OPERATOR_REPO_DIR}" > /dev/null
 
 		echo "Undeploying operator using make undeploy..." | tee -a ${LOG}
-		make undeploy >> ${KRUIZE_SETUP_LOG} 2>&1
+		make undeploy-${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
 
 		if [ $? -ne 0 ]; then
 			echo "Warning: Failed to undeploy operator, continuing cleanup..." | tee -a ${LOG}

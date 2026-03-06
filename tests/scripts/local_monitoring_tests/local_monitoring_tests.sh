@@ -69,7 +69,7 @@ function local_monitoring_tests() {
 				# Deploy using operator
 				echo "Setting up kruize using operator..." | tee -a ${LOG}
 				echo "${KRUIZE_SETUP_LOG}"
-				deploy_kruize_operator
+				deploy_kruize_operator >> ${KRUIZE_SETUP_LOG} 2>&1
 				echo "Setting up kruize using operator...Done" | tee -a ${LOG}
 			else
 				# Deploy using deploy scripts (default behavior)
