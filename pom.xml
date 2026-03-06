@@ -8,24 +8,23 @@
     <artifactId>autotune</artifactId>
     <version>0.9</version>
     <properties>
-        <fabric8-version>7.5.2</fabric8-version>
+        <fabric8-version>7.6.0</fabric8-version>
         <org-json-version>20240303</org-json-version>
-        <jetty-version>12.0.12</jetty-version>
+        <jetty-version>12.1.6</jetty-version>
         <slf4j-version>2.25.3</slf4j-version>
         <java-version>25</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
-        <gson-version>2.9.0</gson-version>
+        <gson-version>2.13.2</gson-version>
         <maven-compiler-plugin-version>3.8.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>2.2</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
-        <apachehttpclient-version>4.5.13</apachehttpclient-version>
-        <gson-version>2.9.0</gson-version>
-        <postgresql-version>42.7.3</postgresql-version>
+        <apachehttpclient-version>4.5.14</apachehttpclient-version>
+        <postgresql-version>42.7.10</postgresql-version>
         <hibernatecore-version>6.1.7.Final</hibernatecore-version>
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
-        <awssdk-version>2.41.25</awssdk-version>
+        <awssdk-version>2.42.5</awssdk-version>
     </properties>
     <dependencies>
         <dependency>
@@ -37,7 +36,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.17.0</version>
+            <version>2.21.0</version>
 	</dependency>
 
 	<!-- jackson-databind is an internal dependency in pubnub-gson, upgrade this jar didn't seem to help. Check in future and remove this
@@ -47,7 +46,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.17.0</version>
+            <version>2.21.0</version>
         </dependency>
 
 	<!-- snakeyaml and okio are internal dependencies in kubernetes-client, upgrading kubernetes client to latest needs code changes
@@ -221,7 +220,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>4.1.1</version>
+            <version>4.2.0</version>
         </dependency>
 
     </dependencies>
