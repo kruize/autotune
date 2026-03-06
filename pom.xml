@@ -10,7 +10,7 @@
     <properties>
         <fabric8-version>7.6.0</fabric8-version>
         <org-json-version>20240303</org-json-version>
-        <jetty-version>12.1.6</jetty-version>
+        <jetty-version>12.1.7</jetty-version>
         <slf4j-version>2.25.3</slf4j-version>
         <java-version>25</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
@@ -24,7 +24,7 @@
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
-        <awssdk-version>2.42.5</awssdk-version>
+        <awssdk-version>2.42.6</awssdk-version>
     </properties>
     <dependencies>
         <dependency>
@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.21.0</version>
+            <version>2.21.1</version>
 	</dependency>
 
 	<!-- jackson-databind is an internal dependency in pubnub-gson, upgrade this jar didn't seem to help. Check in future and remove this
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.0</version>
+            <version>2.21.1</version>
         </dependency>
 
 	<!-- snakeyaml and okio are internal dependencies in kubernetes-client, upgrading kubernetes client to latest needs code changes
