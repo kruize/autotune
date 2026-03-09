@@ -18,7 +18,7 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
 
 # Source the common functions scripts
@@ -159,7 +159,7 @@ KRUIZE_SERVICE_LOG="${LOG_DIR}/kruize_service.log"
 if [ ${kruize_setup} == true ]; then
 	echo "Setting up kruize..." | tee -a ${LOG}
 	echo "Removing isROSEnabled=false and local=true"
-	pushd ${KRUIZE_REPO} > /dev/null
+	pushd ${KRUIZE_REPO_PATH} > /dev/null
 		kruize_scale_test_remote_patch
         	echo "./deploy.sh -c ${cluster_type} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
 		./deploy.sh -c ${cluster_type} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
@@ -196,7 +196,7 @@ if [ ${kruize_setup} == true ]; then
 	create_performance_profile ${old_perf_profile}
 	curl -s "http://${SERVER_IP_ADDR}/listPerformanceProfiles" | jq > ${LOG_DIR}/listperf_profile_old.json
 else
-	new_perf_profile="${KRUIZE_REPO}/manifests/autotune/performance-profiles/resource_optimization_openshift.json"
+	new_perf_profile="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles/resource_optimization_openshift.json"
 	# Update perf profile using the provided json
 	update_performance_profile ${new_perf_profile}
 	curl -s "http://${SERVER_IP_ADDR}/listPerformanceProfiles" | jq > ${LOG_DIR}/listperf_profile_new.json
