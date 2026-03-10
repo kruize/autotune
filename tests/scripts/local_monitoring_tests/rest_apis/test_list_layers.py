@@ -28,22 +28,6 @@ from helpers.list_layers_schema import *
 
 layer_dir = get_layer_dir()
 
-# Layer names to clean up in tests
-CLEANUP_LAYER_NAMES = ['container', 'semeru', 'quarkus', 'hotspot', 'test-layer']
-
-
-@pytest.fixture(autouse=True)
-def cleanup_test_layers():
-    """Fixture to clean up test layers before and after each test"""
-    # Cleanup before test - clean up all known layer names
-    for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer(layer_name)
-    yield
-    # Cleanup after test - clean up all known layer names
-    for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer(layer_name)
-
-
 @pytest.mark.layers
 @pytest.mark.negative
 def test_list_layers_when_no_layers_exist(cluster_type):
@@ -82,6 +66,9 @@ def test_list_all_layers_no_parameter(cluster_type):
         input_json = json.load(json_file)
         expected_layer_name = input_json['layer_name']
 
+    # Cleanup before test to ensure clean state
+    delete_layer(expected_layer_name)
+
     create_response = create_layer(input_json_file)
 
     # Verify layer was created
@@ -107,6 +94,9 @@ def test_list_all_layers_no_parameter(cluster_type):
 
     print(f"✓ Successfully listed {len(layers)} layer(s)")
 
+    # Cleanup: Delete layer
+    delete_layer(expected_layer_name)
+
 
 @pytest.mark.layers
 @pytest.mark.sanity
@@ -125,6 +115,14 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
     ]
 
     created_layers_data = {}
+
+    # Cleanup before test to ensure clean state
+    for layer_file in layer_files:
+        input_json_file = layer_dir / layer_file
+        with open(input_json_file, "r") as json_file:
+            input_json = json.load(json_file)
+            layer_name = input_json['layer_name']
+            delete_layer(layer_name)
 
     for layer_file in layer_files:
         input_json_file = layer_dir / layer_file
@@ -166,6 +164,10 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
 
     print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layers_data)} created layers are present")
 
+    # Cleanup: Delete all created layers
+    for layer_name in created_layers_data.keys():
+        delete_layer(layer_name)
+
 
 @pytest.mark.layers
 @pytest.mark.sanity
@@ -191,6 +193,9 @@ def test_list_specific_layer_by_name(cluster_type, layer_file):
         expected_tunables = input_json['tunables']
         expected_presence = input_json['layer_presence']
 
+    # Cleanup before test to ensure clean state
+    delete_layer(expected_layer_name)
+
     create_response = create_layer(input_json_file)
     assert create_response.status_code == SUCCESS_STATUS_CODE
 
@@ -215,6 +220,9 @@ def test_list_specific_layer_by_name(cluster_type, layer_file):
     validate_layer_data(returned_layer, input_json, verbose=False)
 
     print(f"✓ Successfully listed layer '{expected_layer_name}' with {len(returned_layer['tunables'])} tunable(s)")
+
+    # Cleanup: Delete layer
+    delete_layer(expected_layer_name)
 
 
 @pytest.mark.layers
@@ -242,10 +250,14 @@ def test_list_layer_validates_all_fields_and_values(cluster_type, layer_file):
     with open(input_json_file, "r") as json_file:
         input_json = json.load(json_file)
 
+    layer_name = input_json['layer_name']
+
+    # Cleanup before test to ensure clean state
+    delete_layer(layer_name)
+
     create_response = create_layer(input_json_file)
     assert create_response.status_code == SUCCESS_STATUS_CODE
 
-    layer_name = input_json['layer_name']
     print(f"Testing comprehensive field validation for layer: {layer_name}")
 
     # List the layer
@@ -264,6 +276,9 @@ def test_list_layer_validates_all_fields_and_values(cluster_type, layer_file):
     # Validate all layer data matches input
     validate_layer_data(returned_layer, input_json, verbose=True)
     print(f"\n✓ All fields and values validated successfully for layer '{layer_name}'")
+
+    # Cleanup: Delete layer
+    delete_layer(layer_name)
 
 
 # ========== Negative Test Cases ==========
