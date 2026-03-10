@@ -37,11 +37,11 @@ def cleanup_test_layers():
     """Fixture to clean up test layers before and after each test"""
     # Cleanup before test - clean up all known layer names
     for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
     yield
     # Cleanup after test - clean up all known layer names
     for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
 
 
 @pytest.mark.layers
@@ -132,7 +132,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer_from_db(layer_name)
+    delete_layer(layer_name)
 
     response = create_layer(input_json_file)
     data = response.json()
@@ -144,7 +144,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     print(f"✓ Layer '{layer_name}' created successfully with minimum required fields")
 
     # Cleanup: Delete layer from database
-    delete_layer_from_db(layer_name)
+    delete_layer(layer_name)
 
 
 # =============================================================================
@@ -290,7 +290,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer_from_db(layer_name)
+    delete_layer(layer_name)
 
     response1 = create_layer(input_json_file)
 
@@ -305,7 +305,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     print(f"✓ Correctly rejected duplicate layer: {layer_name}")
 
     # Cleanup: Delete the layer that was successfully created
-    delete_layer_from_db(layer_name)
+    delete_layer(layer_name)
 
 
 # =============================================================================
