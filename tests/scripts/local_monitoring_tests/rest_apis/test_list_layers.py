@@ -37,11 +37,11 @@ def cleanup_test_layers():
     """Fixture to clean up test layers before and after each test"""
     # Cleanup before test - clean up all known layer names
     for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
     yield
     # Cleanup after test - clean up all known layer names
     for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
 
 
 @pytest.mark.layers
