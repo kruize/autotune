@@ -560,7 +560,7 @@ public class Converters {
 
                 // Parse basic layer fields
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
-                String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
+                String details = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS, null);
 
                 // Parse layer_presence
                 String presence = null;
@@ -570,7 +570,7 @@ public class Converters {
 
                 JSONObject layerPresenceObject = jsonObject.optJSONObject("layer_presence");
                 if (layerPresenceObject != null) {
-                    presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
+                    presence = layerPresenceObject.optString("presence", null);
 
                     // Parse queries array if present
                     if (layerPresenceObject.has("queries")) {
@@ -584,7 +584,7 @@ public class Converters {
                             JSONObject queryJsonObject = (JSONObject) queryObj;
                             String datasource = queryJsonObject.getString("datasource");
                             String query = queryJsonObject.getString("query");
-                            String key = queryJsonObject.has("key") ? queryJsonObject.getString("key") : null;
+                            String key = queryJsonObject.optString("key", null);
                             LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, query, key);
                             queries.add(layerPresenceQuery);
                         }
