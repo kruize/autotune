@@ -402,14 +402,15 @@ public class AnalyzerErrorConstants {
             }
 
             // Layer update errors
+            public static final String INVALID_LAYER_NAME = "Invalid layer name parameter";
             public static final String LAYER_NOT_FOUND = "Layer not found with name: %s";
             public static final String INVALID_LAYER_JSON = "Invalid Layer JSON for update";
             public static final String UPDATE_LAYER_TO_DB_FAILURE = "Failed to update layer in database: %s";
             public static final String LAYER_NAME_MISMATCH = "Layer name in URL (%s) does not match layer name in payload (%s)";
             public static final String VALIDATION_FAILED = "Validation failed: %s";
-            public static final String UPDATE_FAILED_PREFIX = "Failed to update layer: %s";
-            public static final String INVALID_JSON_PREFIX = "Invalid JSON in layer update request: %s";
             public static final String UNEXPECTED_ERROR = "Failed to update layer due to an internal error: %s";
+            public static final String INVALID_QUERY_PARAMS = "Invalid query parameter(s): %s. Supported parameters: %s";
+            public static final String MISSING_REQUIRED_FIELD = "Missing required field '%s'. Please ensure all required fields are present: apiVersion, kind, metadata, layer_name, layer_presence, tunables";
         }
 
         public static final class DeleteLayerAPI {
@@ -421,6 +422,7 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_LAYER_ENTRY_ERROR_MSG = "Failed to delete layer %s due to: %s";
             public static final String INVALID_LAYER_NAME = "Invalid layer name parameter";
             public static final String UNEXPECTED_ERROR = "Failed to delete layer due to an internal error: %s";
+            public static final String INVALID_QUERY_PARAMS = "Invalid query parameter(s): %s. Supported parameters: %s";
         }
 
     public static final class ListLayerAPI {
@@ -431,7 +433,6 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
         public static final String NO_LAYERS_EXCPTN = "No layers";
         public static final String NO_LAYERS = "No layers found!";
-        public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
         public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
     }
     }

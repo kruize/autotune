@@ -722,6 +722,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             validationOutputData.setMessage(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Not able to update layer due to: {}", e.getMessage(), e);
+            if (tx != null && tx.isActive()) tx.rollback();
+            validationOutputData.setSuccess(false);
             validationOutputData.setMessage(e.getMessage());
         } finally {
             if (null != timerUpdateLayerDB) {
@@ -752,7 +754,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
-                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.DELETE_LAYER_ENTRY_NOT_FOUND_WITH_NAME + layerName);
+                    validationOutputData.setMessage(String.format(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.DELETE_LAYER_ENTRY_NOT_FOUND_WITH_NAME, layerName));
                 } else {
                     validationOutputData.setSuccess(true);
                 }

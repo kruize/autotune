@@ -71,6 +71,14 @@ public class LayerService extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
+
+            // Validate that request body is not empty
+            if (inputData == null || inputData.trim().isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_LAYER_JSON);
+                return;
+            }
+
             KruizeLayer kruizeLayer = Converters.KruizeObjectConverters.convertInputJSONToCreateLayer(inputData);
 
             // Validate layer using LayerValidation helper
@@ -106,6 +114,11 @@ public class LayerService extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.ADD_LAYER_TO_DB_FAILURE, addedToDB.getMessage()));
             }
+        } catch (IllegalArgumentException e) {
+            // Handle validation errors from converter (e.g., null elements in arrays)
+            LOGGER.error("Invalid input in layer creation request: {}", e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,
+                    "Validation failed: " + e.getMessage());
         } catch (MonitoringAgentNotSupportedException e) {
             LOGGER.error("Failed to create layer: {}", e.getMessage());
             sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
@@ -225,15 +238,38 @@ public class LayerService extends HttpServlet {
         try {
             // Get layer name from query parameter
             String layerName = request.getParameter(AnalyzerConstants.LAYER_NAME);
-            
+
             if (layerName == null || layerName.trim().isEmpty()) {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
-                        AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.INVALID_LAYER_JSON);
+                        AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.INVALID_LAYER_NAME);
+                return;
+            }
+
+            // Validate query params
+            Set<String> invalidParams = new HashSet<>();
+            for (String param : request.getParameterMap().keySet()) {
+                if (!KruizeSupportedTypes.UPDATE_LAYERS_QUERY_PARAMS_SUPPORTED.contains(param)) {
+                    invalidParams.add(param);
+                }
+            }
+
+            if (!invalidParams.isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.INVALID_QUERY_PARAMS,
+                                invalidParams, KruizeSupportedTypes.UPDATE_LAYERS_QUERY_PARAMS_SUPPORTED));
                 return;
             }
 
             // Read input JSON
             String inputData = request.getReader().lines().collect(Collectors.joining());
+
+            // Validate that request body is not empty
+            if (inputData == null || inputData.trim().isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.INVALID_LAYER_JSON);
+                return;
+            }
+
             KruizeLayer kruizeLayer = Converters.KruizeObjectConverters.convertInputJSONToCreateLayer(inputData);
 
             // Validate that layer name in URL matches layer name in payload
@@ -278,6 +314,11 @@ public class LayerService extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         String.format(AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.UPDATE_LAYER_TO_DB_FAILURE, updatedInDB.getMessage()));
             }
+        } catch (IllegalArgumentException e) {
+            // Handle validation errors from converter (e.g., null elements in arrays)
+            LOGGER.error("Invalid input in layer update request: {}", e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.VALIDATION_FAILED, e.getMessage()));
         } catch (MonitoringAgentNotSupportedException e) {
             LOGGER.error("Failed to update layer: {}", e.getMessage());
             sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST,
@@ -292,7 +333,7 @@ public class LayerService extends HttpServlet {
                 int end = errorMsg.indexOf("\"]", start);
                 if (start > 1 && end > start) {
                     String fieldName = errorMsg.substring(start, end);
-                    userMsg = "Missing required field '" + fieldName + "'. Please ensure all required fields are present: apiVersion, kind, metadata, layer_name, layer_presence, tunables";
+                    userMsg = String.format(AnalyzerErrorConstants.APIErrors.UpdateLayerAPI.MISSING_REQUIRED_FIELD, fieldName);
                 }
             }
             sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, userMsg);
@@ -315,10 +356,25 @@ public class LayerService extends HttpServlet {
         try {
             // Get layer name from query parameter
             String layerName = request.getParameter(AnalyzerConstants.LAYER_NAME);
-            
+
             if (layerName == null || layerName.trim().isEmpty()) {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
                         AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.INVALID_LAYER_NAME);
+                return;
+            }
+
+            // Validate query params
+            Set<String> invalidParams = new HashSet<>();
+            for (String param : request.getParameterMap().keySet()) {
+                if (!KruizeSupportedTypes.DELETE_LAYERS_QUERY_PARAMS_SUPPORTED.contains(param)) {
+                    invalidParams.add(param);
+                }
+            }
+
+            if (!invalidParams.isEmpty()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DeleteLayerAPI.INVALID_QUERY_PARAMS,
+                                invalidParams, KruizeSupportedTypes.DELETE_LAYERS_QUERY_PARAMS_SUPPORTED));
                 return;
             }
 
@@ -448,10 +504,10 @@ public class LayerService extends HttpServlet {
      * @param status   "SUCCESS" or "ERROR"
      * @throws IOException
      */
-    public static void sendJsonResponse(HttpServletResponse response,
-                                        String message,
-                                        int statusCode,
-                                        String status) throws IOException {
+    private void sendJsonResponse(HttpServletResponse response,
+                                   String message,
+                                   int statusCode,
+                                   String status) throws IOException {
 
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -463,7 +519,7 @@ public class LayerService extends HttpServlet {
         responseMap.put("documentationLink", "");
         responseMap.put("status", status);
 
-        Gson gsonInstance = new Gson();
+        Gson gsonInstance = createGsonObject();
         PrintWriter out = response.getWriter();
         out.append(gsonInstance.toJson(responseMap));
         out.flush();
