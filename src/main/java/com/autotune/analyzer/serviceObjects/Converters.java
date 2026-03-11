@@ -663,19 +663,10 @@ public class Converters {
                         }
                         JSONObject tunableJsonObject = (JSONObject) tunableObj;
 
-                        // Validate tunable name
-                        if (!tunableJsonObject.has("name")) {
-                            throw new IllegalArgumentException("Tunable object must have 'name' field");
-                        }
-                        if (tunableJsonObject.isNull("name")) {
-                            throw new IllegalArgumentException("Tunable name cannot be null");
-                        }
-                        String tunableName = tunableJsonObject.getString("name");
-                        if (tunableName.trim().isEmpty()) {
-                            throw new IllegalArgumentException("Tunable name cannot be empty");
-                        }
+                        // Validate tunable name using helper method
+                        String tunableName = getRequiredString(tunableJsonObject, "name", "Tunable object", "name");
 
-                        // Validate value_type
+                        // Validate value_type with custom error messages that include tunable name
                         if (!tunableJsonObject.has("value_type")) {
                             throw new IllegalArgumentException(String.format("Tunable '%s' missing value_type field", tunableName));
                         }
