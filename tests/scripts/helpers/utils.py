@@ -141,10 +141,10 @@ LAYER_TUNABLES_EMPTY_MSG = "Validation failed: tunables cannot be null or empty 
 LAYER_PRESENCE_MISSING_MSG = "Validation failed: layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
 LAYER_PRESENCE_MULTIPLE_TYPES_MSG = "Validation failed: layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label"
 LAYER_DUPLICATE_TUNABLE_NAMES_MSG = "Validation failed: Layer contains duplicate tunable names: %s"
-TUNABLE_MIXED_CONFIG_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables."
-TUNABLE_MISSING_CONFIG_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' must have either categorical choices or numeric bounds/step configured."
-TUNABLE_NULL_BOUNDS_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null bounds; both upper_bound and lower_bound must be set"
-TUNABLE_NULL_STEP_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null step; step must be set for bounded tunables"
+TUNABLE_MIXED_CONFIG_MSG = "Validation failed: Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables."
+TUNABLE_MISSING_CONFIG_MSG = "Validation failed: Tunable '%s' must have either categorical choices or numeric bounds/step configured."
+TUNABLE_NULL_BOUNDS_MSG = "Validation failed: Tunable '%s' has null bounds; both upper_bound and lower_bound must be set"
+TUNABLE_NULL_STEP_MSG = "Validation failed: Tunable '%s' has null step; step must be set for bounded tunables"
 
 # Additional Layer API validation messages
 LAYER_QUERY_MISSING_DATASOURCE_MSG = "Validation failed: Query object must have 'datasource' field"

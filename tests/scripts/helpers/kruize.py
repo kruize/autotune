@@ -766,3 +766,26 @@ def delete_layer(layer_name):
     return response
 
 
+def cleanup_all_layers():
+    """
+    Delete all existing layers from the database.
+    Useful for test cleanup to ensure a clean state.
+
+    Returns:
+        int: Number of layers deleted
+    """
+    response = list_layers(layer_name=None, logging=False)
+    deleted_count = 0
+
+    if response.status_code == 200:
+        existing_layers = response.json()
+        if isinstance(existing_layers, list):
+            for layer in existing_layers:
+                delete_layer(layer['layer_name'])
+                deleted_count += 1
+            if deleted_count > 0:
+                print(f"Cleaned up {deleted_count} existing layers")
+
+    return deleted_count
+
+

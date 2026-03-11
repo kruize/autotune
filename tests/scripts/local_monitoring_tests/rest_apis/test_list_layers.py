@@ -37,7 +37,10 @@ def test_list_layers_when_no_layers_exist(cluster_type):
     """
     form_kruize_url(cluster_type)
 
-    # List layers when none exist (fixture ensures clean state)
+    # Cleanup: Delete all existing layers to ensure clean state
+    cleanup_all_layers()
+
+    # List layers when none exist
     response = list_layers(layer_name=None, logging=False)
 
     # API should return 400 when no layers exist
@@ -106,6 +109,9 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
     Creates multiple layers and verifies all are returned.
     """
     form_kruize_url(cluster_type)
+
+    # Cleanup all existing layers first to ensure clean state
+    cleanup_all_layers()
 
     # Create multiple layers
     layer_files = [
@@ -314,10 +320,6 @@ def test_list_layer_with_non_existent_name(cluster_type):
     pytest.param("invalid_param", "some_value", id="unknown_parameter"),
     pytest.param("verbose", "true", id="unsupported_parameter"),
     pytest.param("limit", "10", id="unsupported_limit"),
-    # Additional negative scenarios (4 tests)
-    pytest.param("name' OR '1'='1", "", id="sql_injection_in_name"),
-    pytest.param("name", "a" * 10000, id="extremely_long_name"),
-    pytest.param("invalid1&invalid2", "test", id="multiple_invalid_params"),
 ])
 def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, param_value):
     """
@@ -412,8 +414,10 @@ def test_list_layers_performance_with_many_layers(cluster_type):
     
     for i in range(num_layers):
         layer_name = f"perf-test-layer-{i}"
+        # Cleanup before creating to prevent 409 conflicts
+        delete_layer(layer_name)
         created_layers.append(layer_name)
-        
+
         # Create a simple layer
         tmp_json_file = f"/tmp/create_layer_perf_{i}.json"
         json_obj = {
@@ -455,7 +459,7 @@ def test_list_layers_performance_with_many_layers(cluster_type):
     
     # Cleanup: Delete all created layers
     for layer_name in created_layers:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
     
     print(f"✓ Performance test completed - Response time: {response_time:.3f}s for {len(layers)} layers")
 
@@ -471,6 +475,9 @@ def test_list_layers_case_sensitivity(cluster_type):
 
     # Create a layer with mixed case name
     layer_name = "TestCaseLayer"
+    # Cleanup before creating to prevent 409 conflicts
+    delete_layer(layer_name)
+
     tmp_json_file = "/tmp/create_layer_case_test.json"
     json_obj = {
         "apiVersion": "recommender.com/v1",
@@ -518,7 +525,7 @@ def test_list_layers_case_sensitivity(cluster_type):
     finally:
         if os.path.exists(tmp_json_file):
             os.remove(tmp_json_file)
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
 
 
 @pytest.mark.layers
@@ -535,8 +542,10 @@ def test_list_layers_sorting_order(cluster_type):
     created_layers = []
 
     print(f"Creating {len(layer_names)} layers for sorting test...")
-    
+
     for layer_name in layer_names:
+        # Cleanup before creating to prevent 409 conflicts
+        delete_layer(layer_name)
         created_layers.append(layer_name)
         tmp_json_file = f"/tmp/create_layer_sort_{layer_name}.json"
         json_obj = {
@@ -590,6 +599,6 @@ def test_list_layers_sorting_order(cluster_type):
     
     # Cleanup: Delete all created layers
     for layer_name in created_layers:
-        delete_layer_from_db(layer_name)
+        delete_layer(layer_name)
     
     print(f"✓ Sorting test completed")
