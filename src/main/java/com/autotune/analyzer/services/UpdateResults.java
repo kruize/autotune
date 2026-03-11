@@ -16,6 +16,26 @@
 
 package com.autotune.analyzer.services;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
@@ -25,33 +45,22 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+
 import io.micrometer.core.instrument.Timer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API used to receive Experiment metric results .
@@ -60,8 +69,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class UpdateResults extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
+    private static final Gson SIMPLE_GSON = new Gson();
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    private static int requestCount = 0;
+    private static final AtomicLong requestCount = new AtomicLong(0);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -70,11 +80,20 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int calCount = ++requestCount;
+        long calCount = requestCount.incrementAndGet();
+        String requestId = String.valueOf(calCount);
+        
+        LOGGER.info("Starting updateResults API processing - requestId: {}, remoteAddr: {}", 
+                requestId, request.getRemoteAddr());
         LOGGER.debug("updateResults API request count: {}", calCount);
+        
         String statusValue = "failure";
         Timer.Sample timerUpdateResults = Timer.start(MetricsConfig.meterRegistry());
         String inputData = "";
+        int bulkCount = 0;
+        int duplicateCount = 0;
+        int successfullyAdded = 0;
+        List<UpdateResultsAPIObject> actualFailures = null;
         try {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
@@ -87,64 +106,109 @@ public class UpdateResults extends HttpServlet {
                     .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                     .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                     .create();
-            LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("updateResults API request payload for requestID {}: {}", requestId, inputData);
+            }
+            
             try {
                 updateResultsAPIObjects = Arrays.asList(gson.fromJson(inputData, UpdateResultsAPIObject[].class));
+                LOGGER.debug("Successfully parsed JSON for requestID {}", requestId);
             } catch (JsonParseException e) {
-                LOGGER.error("{} : {}", AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR, e.getMessage());
+                LOGGER.error("JSON parsing failed for requestID {}: {} - Error: {}", 
+                        requestId, AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR, e.getMessage());
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR);
                 return;
             } catch (NumberFormatException e) {
-                LOGGER.error("{}", e.getMessage());
+                LOGGER.error("Number format validation failed for requestID {}: {}", requestId, e.getMessage());
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
                 return;
             }
-            LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
+            bulkCount = updateResultsAPIObjects.size();
+            LOGGER.info("updateResults API requestID {} processing {} experiment results", requestId, bulkCount);
+            
             // check for bulk entries and respond accordingly
-            if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
-                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
+            if (bulkCount > KruizeDeploymentInfo.bulk_update_results_limit) {
+                LOGGER.error("Bulk limit exceeded for requestID {}: {} results exceed limit of {}", 
+                        requestId, bulkCount, KruizeDeploymentInfo.bulk_update_results_limit);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT_RESULTS);
                 return;
+            } else if (bulkCount > KruizeDeploymentInfo.bulk_update_results_limit * 0.8) {
+                LOGGER.warn("Approaching bulk limit for requestID {}: {} results (limit: {})", 
+                        requestId, bulkCount, KruizeDeploymentInfo.bulk_update_results_limit);
             }
+            LOGGER.debug("Starting experiment validation and processing for requestID {}", requestId);
             ExperimentInitiator experimentInitiator = new ExperimentInitiator();
             experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
+            
             List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
             List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
-            if (!failureAPIObjs.isEmpty()) {
-                failureAPIObjs.forEach(
-                        (failObj) -> {
-                            FailedUpdateResultsAPIObject failJSONObj = new FailedUpdateResultsAPIObject(
-                                    failObj.getApiVersion(),
-                                    failObj.getExperimentName(),
-                                    failObj.getStartTimestamp(),
-                                    failObj.getEndTimestamp(),
-                                    failObj.getErrors()
-                            );
-                            jsonObjectList.add(
-                                    failJSONObj
-                            );
-                        }
-                );
+            actualFailures = new ArrayList<>();
+            
+            for (UpdateResultsAPIObject failObj : failureAPIObjs) {
+                boolean isDuplicate = isDuplicateError(failObj);
+                        
+                if (isDuplicate) {
+                    duplicateCount++;
+                    LOGGER.warn("Duplicate data point detected for experiment '{}' (start: {}, end: {})", 
+                            failObj.getExperimentName(), failObj.getStartTimestamp(), failObj.getEndTimestamp());
+                } else {
+                    actualFailures.add(failObj);
+                }
+            }
+            
+            successfullyAdded = bulkCount - actualFailures.size() - duplicateCount;
+            
+            if (!actualFailures.isEmpty()) {
+                LOGGER.warn("Partial failure in requestID {}: {} newly added, {} failed, {} duplicates skipped, {} total records", 
+                        requestId, successfullyAdded, actualFailures.size(), duplicateCount, bulkCount);
+                        
+                actualFailures.forEach(failObj -> jsonObjectList.add(
+                        new FailedUpdateResultsAPIObject(
+                                failObj.getApiVersion(),
+                                failObj.getExperimentName(),
+                                failObj.getStartTimestamp(),
+                                failObj.getEndTimestamp(),
+                                failObj.getErrors()
+                        )
+                ));
                 request.setAttribute("data", jsonObjectList);
-                String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
+                String errorMessage = String.format("Out of a total of %s records, %s failed to save, %s duplicates were skipped", 
+                        bulkCount, actualFailures.size(), duplicateCount);
+                LOGGER.error("updateResults API requestID {} completed with partial failures: {}", requestId, errorMessage);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
-                if (KruizeDeploymentInfo.log_http_req_resp)
-                    LOGGER.info("updateResults API request payload for requestID {} success is {}", calCount, new Gson().toJson(JsonParser.parseString(inputData)));
-                sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
+                String successMessage = AnalyzerConstants.ServiceConstants.RESULT_SAVED;
+                LOGGER.info("updateResults API requestID {} completed successfully - {} newly added, {} total records", 
+                        requestId, successfullyAdded, bulkCount);
+                
+                if (KruizeDeploymentInfo.log_http_req_resp && LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("updateResults API requestID {} success response payload: {}", 
+                            requestId, SIMPLE_GSON.toJson(JsonParser.parseString(inputData)));
+                }
+                sendSuccessResponse(response, successMessage);
                 statusValue = "success";
             }
         } catch (Exception e) {
-            LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
-            LOGGER.error("Exception: {}", e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("updateResults API requestID {} failed with unexpected error: {} - {}", 
+                    requestId, e.getClass().getSimpleName(), e.getMessage(), e);
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            LOGGER.debug("updateResults API request payload for requestID {} completed", calCount);
+            LOGGER.info("updateResults API requestID {} completed with status: {} (processed: {} items, {} successfully added, {} duplicates)", 
+                    requestId, statusValue, bulkCount, successfullyAdded, duplicateCount);
+            
             if (null != timerUpdateResults) {
                 MetricsConfig.timerUpdateResults = MetricsConfig.timerBUpdateResults.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerUpdateResults.stop(MetricsConfig.timerUpdateResults);
+            }
+            
+            if (MetricsConfig.timerBUpdateResultsAdded != null) {
+                MetricsConfig.timerBUpdateResultsAdded.register(MetricsConfig.meterRegistry()).increment(successfullyAdded);
+            }
+            if (MetricsConfig.timerBUpdateResultsDuplicates != null) {
+                MetricsConfig.timerBUpdateResultsDuplicates.register(MetricsConfig.meterRegistry()).increment(duplicateCount);
+            }
+            if (actualFailures != null && !actualFailures.isEmpty() && MetricsConfig.timerBUpdateResultsFailed != null) {
+                MetricsConfig.timerBUpdateResultsFailed.register(MetricsConfig.meterRegistry()).increment(actualFailures.size());
             }
         }
     }
@@ -154,26 +218,62 @@ public class UpdateResults extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
-        String successOutput = new Gson().toJson(
+        String successOutput = SIMPLE_GSON.toJson(
                 new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
         );
-        LOGGER.debug("Update Results API response: {}", successOutput);
-        out.append(
-                successOutput
-        );
+        LOGGER.debug("Sending success response - status: {}, message: {}", 
+                HttpServletResponse.SC_CREATED, message);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Update Results API success response payload: {}", successOutput);
+        }
+        out.append(successOutput);
         out.flush();
     }
 
     public void sendErrorResponse(String inputPayload, HttpServletRequest request, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
+        String clientInfo = String.format("client=%s, userAgent=%s", 
+                request.getRemoteAddr(), 
+                request.getHeader("User-Agent"));
+        
         if (null != e) {
-            LOGGER.error(e.toString());
-            e.printStackTrace();
+            LOGGER.error("Sending error response - status: {}, error: {} ({})", 
+                    httpStatusCode, errorMsg != null ? errorMsg : e.getMessage(), clientInfo, e);
             if (null == errorMsg) errorMsg = e.getMessage();
+        } else {
+            LOGGER.warn("Sending error response - status: {}, error: {} ({})", 
+                    httpStatusCode, errorMsg, clientInfo);
         }
-        if (KruizeDeploymentInfo.log_http_req_resp)
-            LOGGER.info("UpdateRequestsAPI  input pay load {} ", new Gson().toJson(JsonParser.parseString(inputPayload)));
+        
+        if (KruizeDeploymentInfo.log_http_req_resp && LOGGER.isDebugEnabled()) {
+            LOGGER.debug("UpdateResults error response - input payload size: {} chars", 
+                    inputPayload != null ? inputPayload.length() : 0);
+            if (LOGGER.isTraceEnabled()) {
+                try {
+                    LOGGER.trace("UpdateResults error response - input payload: {}", 
+                            inputPayload != null ? SIMPLE_GSON.toJson(JsonParser.parseString(inputPayload)) : "null");
+                } catch (Exception ex) {
+                    LOGGER.trace("UpdateResults error response - failed to parse JSON ({}), input payload (raw): {}", 
+                            ex.getMessage(), inputPayload);
+                }
+            }
+        }
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+    private boolean isDuplicateError(UpdateResultsAPIObject failObj) {
+        if (failObj.getErrors() == null) {
+            return false;
+        }
+        
+        for (var error : failObj.getErrors()) {
+            if (error != null && 
+                error.getMessage() != null && 
+                error.getMessage().equals(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class CustomNumberDeserializer implements JsonDeserializer<Number> {

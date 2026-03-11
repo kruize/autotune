@@ -1,8 +1,9 @@
 package com.autotune.utils;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
@@ -11,8 +12,6 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MetricsConfig {
     
@@ -32,6 +31,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles, timerBUpdatePerfProfileDB;
     public static Counter.Builder timerBKruizeNotifications, timerBBulkJobs;
+    public static Counter.Builder timerBUpdateResultsAdded, timerBUpdateResultsDuplicates, timerBUpdateResultsFailed;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
     public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
@@ -109,6 +109,10 @@ public class MetricsConfig {
         timerBAddLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addLayerToDB");
         timerBLoadAllLayers = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllLayers");
         timerBLoadLayerByName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadLayerByName");
+
+        timerBUpdateResultsAdded = Counter.builder("updateresults_datapoints_added").description("Data points newly added to database").tag("api", "updateResults");
+        timerBUpdateResultsDuplicates = Counter.builder("updateresults_datapoints_duplicates").description("Duplicate data points skipped").tag("api", "updateResults");
+        timerBUpdateResultsFailed = Counter.builder("updateresults_datapoints_failed").description("Data points that failed to be added").tag("api", "updateResults");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
