@@ -152,7 +152,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("empty_details", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("query_without_key", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API accepts requests with optional fields missing or null
     """
@@ -188,6 +188,9 @@ def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name
         assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
 
         print(f"✓ Successfully created layer with optional field test: {test_name}")
+
+        # Cleanup: Delete layer from database
+        delete_layer(layer_name)
     finally:
         if os.path.exists(tmp_json_file):
             os.remove(tmp_json_file)
