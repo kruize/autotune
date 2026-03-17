@@ -1122,8 +1122,12 @@ public class KruizeConstants {
 
     public static final class LayerAPIMessages {
         public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String UPDATE_LAYER_SUCCESS_MSG = "Layer : %s updated successfully.";
+        public static final String DELETE_LAYER_SUCCESS_MSG = "Layer : %s deleted successfully.";
         public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
         public static final String ADD_LAYER_TO_DB = "Added Layer : {} into the DB";
+        public static final String UPDATE_LAYER_TO_DB = "Updated Layer : {} in the DB";
+        public static final String DELETE_LAYER_FROM_DB = "Deleted Layer : {} from the DB";
         public static final String LOAD_LAYER_FAILURE = "Failed to load layer data: {}";
         public static final String LOAD_ALL_LAYERS_FAILURE = "Failed to load all layers: {}";
 
