@@ -1570,6 +1570,12 @@ public class RecommendationEngine implements RecommendationEngineService {
                         if (isAcceleratorPartitionMetric && !fetchAcceleratorMetrics)
                             continue;
 
+                        // Skip fetching runtime metrics (jvm_info, etc.) if no runtime layer is detected or runtime recommendations are disabled
+                        boolean runtimeRecommendationsEnabled = kruizeObject.getRecommendation_settings() == null
+                                || kruizeObject.getRecommendation_settings().isRecommendationTypeEnabled(KruizeConstants.RecommendationTypes.RUNTIME);
+                        if (JVM_INFO_METRICS.contains(metricEntry.getName()) && (!runtimeLayerDetected || !runtimeRecommendationsEnabled))
+                            continue;
+
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
                             // Determine promQL query on metric type
