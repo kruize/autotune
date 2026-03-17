@@ -9,6 +9,8 @@ tuned.
   A unique string name is specified for identifying individual experiments.
 * experiment_type \
   An optional string used to indicate whether the experiment is of type `namespace` or `container`. If no experiment type is specified, it will default to `container`.
+* recommendation_types \
+  An optional array of strings within `recommendation_settings` that specifies which recommendation categories to generate. Supported values: `resource` (CPU/memory right-sizing), `runtime` (JVM options, GC policy, etc.), `accelerator` (GPU recommendations). When omitted or empty, all recommendation types are generated (default behavior).
 * deployment_name \
   Stay tuned
 * namespace \

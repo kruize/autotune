@@ -28,6 +28,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -268,7 +269,11 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             ArrayList<RecommendationNotification> notifications = new ArrayList<>();
             RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
             RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = null;
+            if (kruizeObject.getRecommendation_settings() == null
+                    || kruizeObject.getRecommendation_settings().isRecommendationTypeEnabled(KruizeConstants.RecommendationTypes.ACCELERATOR)) {
+                recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
+            }
 
             RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
             RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
@@ -285,7 +290,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             List<RecommendationConfigEnv> runtimeRecommList = null;
 
             try {
-                if (RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap())) {
+                if (kruizeObject.getRecommendation_settings() != null
+                        && kruizeObject.getRecommendation_settings().isRecommendationTypeEnabled(KruizeConstants.RecommendationTypes.RUNTIME)
+                        && RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap())) {
                     runtimeRecommList = RuntimeRecommendationProcessor.handleRuntimeRecommendations(kruizeObject, containerData, model, filteredResultsMap, notifications, recommendationCpuRequest, recommendationMemRequest, recommendationCpuLimits, recommendationMemLimits);
                 }
             } catch (Exception e) {
