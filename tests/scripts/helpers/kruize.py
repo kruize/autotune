@@ -740,6 +740,36 @@ def list_layers(layer_name=None, logging=True):
 
 # Description: This function deletes a layer using DELETE /deleteLayer API
 # Input Parameters: layer name
+def update_layer(layer_name, input_json_file):
+    """
+    Update an existing layer using the UPDATE Layer API.
+
+    Args:
+        layer_name: Name of the layer to update
+        input_json_file: Path to the JSON file containing updated layer configuration
+
+    Returns:
+        Response object from requests.put()
+    """
+    print(f"\nUpdating layer: {layer_name}...")
+
+    query_params = {'name': layer_name}
+    url = URL + "/updateLayer"
+
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+
+    with open(input_json_file, "r") as file:
+        data = json.load(file)
+
+    response = requests.put(url, json=data, params=query_params)
+
+    print("Response status code = ", response.status_code)
+    print(response.text)
+
+    return response
+
+
 def delete_layer(layer_name):
     """
     Delete a layer using the DELETE Layer API.

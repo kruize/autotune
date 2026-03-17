@@ -181,6 +181,20 @@ LIST_LAYERS_INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exis
 LIST_LAYERS_NO_LAYERS_FOUND_MSG = "No layers found!"
 LIST_LAYERS_INVALID_QUERY_PARAM_MSG = "The query param(s) - [%s] is/are invalid"
 
+# Update Layer API Messages
+UPDATE_LAYER_SUCCESS_MSG = "Layer '%s' updated successfully"
+UPDATE_LAYER_NOT_FOUND_MSG = "Layer not found with name: %s"
+UPDATE_LAYER_INVALID_NAME_MSG = "Invalid layer name parameter"
+UPDATE_LAYER_NAME_MISMATCH_MSG = "Layer name in URL (%s) does not match layer name in payload (%s)"
+UPDATE_LAYER_INVALID_JSON_MSG = "Invalid Layer JSON for update"
+UPDATE_LAYER_MISSING_REQUIRED_FIELD_MSG = "Missing required field '%s'. Please ensure all required fields are present: apiVersion, kind, metadata, layer_name, layer_presence, tunables"
+
+# Delete Layer API Messages
+DELETE_LAYER_SUCCESS_MSG = "Layer : %s deleted successfully."
+DELETE_LAYER_NOT_FOUND_MSG = "Layer not found with name: %s"
+DELETE_LAYER_INVALID_NAME_MSG = "Invalid layer name parameter"
+DELETE_LAYER_WITH_EXPERIMENTS_MSG = "Cannot delete layer '%s' as it is currently associated with %d active experiment(s)"
+
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
