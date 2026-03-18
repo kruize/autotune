@@ -391,6 +391,7 @@ public class KruizeConstants {
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
         public static final String THANOS = "thanos";
+        public static final String POSTGRESQL = "postgresql";
 
         private SupportedDatasources() {
         }
@@ -451,6 +452,7 @@ public class KruizeConstants {
         public static final String DATASOURCE_SERVICE_NAME = "serviceName";
         public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
         public static final String DATASOURCE_URL = "url";
+        public static final String DATASOURCE_METRICS_DB_REF = "metricsDbRef";
         public static final String KRUIZE_DATASOURCE = "datasource";
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";

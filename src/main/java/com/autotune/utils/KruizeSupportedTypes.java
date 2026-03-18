@@ -26,7 +26,7 @@ public class KruizeSupportedTypes {
     public static final Set<String> DIRECTIONS_SUPPORTED =
             new HashSet<>(Arrays.asList("minimize", "maximize"));
     public static final Set<String> MONITORING_AGENTS_SUPPORTED =
-            new HashSet<>(Arrays.asList("prometheus"));
+            new HashSet<>(Arrays.asList("prometheus", "postgresql"));
     public static final Set<String> MODES_SUPPORTED =
             new HashSet<>(Arrays.asList("experiment", "monitor"));
     public static final Set<String> TARGET_CLUSTERS_SUPPORTED =

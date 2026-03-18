@@ -105,10 +105,25 @@ public class DataSourceCollection {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
+        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)
+                && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)
+                && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.POSTGRESQL)) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
-//        Continue validations in case of supported providers
+
+        // PostgreSQL metrics DB: add to collection without Kruize DB persistence
+        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.POSTGRESQL)) {
+            DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.POSTGRESQL);
+            if (op != null && op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                dataSourceCollection.put(name, datasource);
+                LOGGER.info(DATASOURCE_ADDED + " (metrics DB: " + name + ")");
+                return;
+            } else {
+                throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
+            }
+        }
+
+        // Continue validations for Prometheus/Thanos
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
         if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
@@ -198,21 +213,27 @@ public class DataSourceCollection {
                 String namespace = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 LOGGER.info(namespace);
                 String dataSourceURL = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                String metricsDbRef = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_METRICS_DB_REF);
                 LOGGER.info(dataSourceURL);
-                AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
 
-                // Validate input
-                if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
+                // Validate input (for postgresql, metricsDbRef is used)
+                if (!validateInputForProvider(name, provider, serviceName, dataSourceURL, namespace, metricsDbRef)) {
                     LOGGER.warn(DATASOURCE_VALIDATION_FAILURE, name);
                     failedDatasources.add(name + " (validation failed)");
                     continue;
                 }
                 try {
-                    URL url = null;
-                    if (!dataSourceURL.isBlank()) {
-                        url = new URI(dataSourceURL).toURL();
+                    if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.POSTGRESQL)) {
+                        dataSourceInfo = new DataSourceInfo(name, provider, null, null, null,
+                                AuthenticationConfig.noAuth(), metricsDbRef);
+                    } else {
+                        AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
+                        URL url = null;
+                        if (dataSourceURL != null && !dataSourceURL.isBlank()) {
+                            url = new URI(dataSourceURL).toURL();
+                        }
+                        dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
                     }
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
 
                     // Attempt to add, addDataSource() returns corresponding exception if it fails. Increment the success count otherwise.
                     addDataSource(dataSourceInfo);
@@ -272,13 +293,29 @@ public class DataSourceCollection {
      * @return boolean returns true if validation is successful otherwise return false
      */
     public boolean validateInput(String name, String provider, String servicename, String url, String namespace) {
+        return validateInput(name, provider, servicename, url, namespace, null);
+    }
+
+    private boolean validateInputForProvider(String name, String provider, String servicename, String url, String namespace, String metricsDbRef) {
+        return validateInput(name, provider, servicename, url, namespace, metricsDbRef);
+    }
+
+    private boolean validateInput(String name, String provider, String servicename, String url, String namespace, String metricsDbRef) {
         try {
-            if (name.isEmpty()) {
+            if (name == null || name.isEmpty()) {
                 throw new DataSourceMissingRequiredFiled(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_NAME);
             }
-            if (provider.isEmpty()) {
+            if (provider == null || provider.isEmpty()) {
                 throw new DataSourceMissingRequiredFiled(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_PROVIDER);
             }
+            if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.POSTGRESQL)) {
+                if (metricsDbRef == null || metricsDbRef.isEmpty()) {
+                    throw new DataSourceMissingRequiredFiled("Metrics DB reference (metricsDbRef) is required for PostgreSQL datasource");
+                }
+                return true;
+            }
+            if (servicename == null) servicename = "";
+            if (url == null) url = "";
             if (servicename.isEmpty() && url.isEmpty()) {
                 throw new DataSourceMissingRequiredFiled(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_SERVICENAME_AND_URL);
             }

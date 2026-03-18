@@ -3,6 +3,7 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.postgresql.PostgresqlDataOperatorImpl;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.exceptions.datasource.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -168,6 +169,9 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
     public DataSourceOperatorImpl getOperator(String provider) {
         if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return PrometheusDataOperatorImpl.getInstance();
+        }
+        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.POSTGRESQL)) {
+            return PostgresqlDataOperatorImpl.getInstance();
         }
         return null;
     }
