@@ -32,6 +32,7 @@ import com.autotune.common.exceptions.datasource.DataSourceNotServiceable;
 import com.autotune.common.exceptions.datasource.UnsupportedDataSourceProvider;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
+import com.autotune.database.init.MetricsDBConnectionManager;
 import com.autotune.experimentManager.core.ExperimentManager;
 import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -132,6 +133,9 @@ public class Autotune {
             if (KruizeDeploymentInfo.local) {
                 LOGGER.debug("Now running kruize local DDL's ");
                 executeDDLs(AnalyzerConstants.LM);
+                // Initialize metrics DB connections (db1) from KruizeConfig for Metric DB POC
+                MetricsDBConnectionManager.getInstance().initialize();
+                validateMetricsDBConnections();
                 // load available datasources from db
                 loadDataSourcesFromDB();
 
@@ -238,6 +242,18 @@ public class Autotune {
     }
 
     /**
+     * Validates metrics DB connections (Metric DB POC).
+     * Runs a SQL query on each configured metrics database and logs the query and output.
+     */
+    private static void validateMetricsDBConnections() {
+        MetricsDBConnectionManager manager = MetricsDBConnectionManager.getInstance();
+        for (String dbName : manager.getConfiguredDatabases()) {
+            String result = manager.executeQueryAndLog(dbName, "SELECT version()");
+            LOGGER.info("Metric DB POC - Connection validation for '{}' complete. Result: {}", dbName, result);
+        }
+    }
+
+    /**
      * loads datasources from database
      */
     private static void loadDataSourcesFromDB() {
@@ -258,8 +274,9 @@ public class Autotune {
             for (String name : dataSources.keySet()) {
                 DataSourceInfo dataSource = dataSources.get(name);
                 String dataSourceName = dataSource.getName();
-                String url = dataSource.getUrl().toString();
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+                String urlOrRef = dataSource.getUrl() != null ? dataSource.getUrl().toString()
+                        : (dataSource.getMetricsDbRef() != null ? "metricsDb:" + dataSource.getMetricsDbRef() : "N/A");
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + urlOrRef);
             }
         }
     }

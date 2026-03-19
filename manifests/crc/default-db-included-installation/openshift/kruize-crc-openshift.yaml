@@ -194,6 +194,21 @@ data:
         "port": 5432,
         "sslMode": "require",
         "username": "admin"
+      },
+      "metricsDatabases": {
+        "db1": {
+          "hostname": "kruize01.fyre.ibm.com",
+          "port": 5433,
+          "name": "metrics_db",
+          "username": "kruize_user",
+          "password": "kruize123",
+          "sslMode": "disable",
+          "dbdriver": "jdbc:postgresql://kruize01.fyre.ibm.com:5433/metrics_db",
+          "dialect": "org.hibernate.dialect.PostgreSQLDialect",
+          "driver": "org.postgresql.Driver",
+          "hbm2ddlauto": "none",
+          "showsql": "true"
+        }
       }
     }
   kruizeconfigjson: |
@@ -262,6 +277,11 @@ data:
                 "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
               }
           }
+        },
+        {
+          "name": "db1",
+          "provider": "postgresql",
+          "metricsDbRef": "db1"
         }
       ]
     }

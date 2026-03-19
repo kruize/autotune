@@ -41,13 +41,23 @@ public class DataSourceInfo {
     private final String namespace;
     private final URL url;
     private AuthenticationConfig authenticationConfig;
+    private final String metricsDbRef;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
     public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authConfig) {
+        this(name, provider, serviceName, namespace, url, authConfig, null);
+    }
+
+    /**
+     * Constructor for metrics DB (PostgreSQL) datasources that reference a configured metrics database.
+     *
+     * @param metricsDbRef reference to metrics database config (e.g., "db1", "db2")
+     */
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authConfig, String metricsDbRef) {
         this.name = name;
         this.provider = provider;
-        if (null == url) {
+        if (null == url && metricsDbRef == null) {
             this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
         } else {
             this.url = url;
@@ -55,6 +65,7 @@ public class DataSourceInfo {
         this.serviceName = serviceName;
         this.namespace = namespace;
         this.authenticationConfig = authConfig;
+        this.metricsDbRef = metricsDbRef;
     }
 
     /**
@@ -118,6 +129,15 @@ public class DataSourceInfo {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_URL);
         }
         return dnsUrl;
+    }
+
+    /**
+     * Returns the metrics database reference for PostgreSQL datasources.
+     *
+     * @return metrics DB ref (e.g., "db1", "db2") or null for non-PostgreSQL datasources
+     */
+    public String getMetricsDbRef() {
+        return metricsDbRef;
     }
 
     public AuthenticationConfig getAuthenticationConfig() {
