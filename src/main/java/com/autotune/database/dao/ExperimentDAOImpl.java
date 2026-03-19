@@ -337,6 +337,42 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return failedResultsEntries;
     }
 
+    private void createPartitions(KruizeRecommendationEntry entry) {
+        try {
+            LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
+            LocalDateTime newDateTime;
+            int dayOfTheMonth = localDateTime.getDayOfMonth();
+            // Subtract 15 days from the current date
+            newDateTime = localDateTime.minus(DBConstants.PARTITION_TYPES.LAST_N_DAYS, ChronoUnit.DAYS);
+            // Check if the start date is not within the same month and adjust the date accordingly
+            if (newDateTime.getMonth() != localDateTime.getMonth()) {
+                newDateTime = localDateTime.minusDays(DBConstants.PARTITION_TYPES.LAST_N_DAYS);
+                LOGGER.debug("newDateTime: {}", newDateTime);
+            }
+            // create partition for the previous 15 days
+            //addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+            addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", newDateTime.getMonthValue()), String.valueOf(newDateTime.getYear()), newDateTime.getDayOfMonth(), DBConstants.PARTITION_TYPES.BY_MONTH);
+
+            // check the dayOfTheMonth and create partitions accordingly
+            if (dayOfTheMonth < DBConstants.PARTITION_TYPES.PARTITION_DAY) {
+                //addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            } else {
+                // create the partitions for the rest of the days for the current month
+                // Fixing the partition type to 'by_month'
+                //addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+
+                // create the partitions for the next month
+                YearMonth yearMonth = buildDateForNextMonth(YearMonth.of(localDateTime.getYear(), localDateTime.getMonthValue()));
+                //addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+                addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", yearMonth.getMonthValue()), String.valueOf(yearMonth.getYear()), 1, DBConstants.PARTITION_TYPES.BY_MONTH);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while creating partitions for kruize_recommendations.", e);
+        }
+    }
+
     private void createPartitions(KruizeResultsEntry entry) {
         try {
             LocalDateTime localDateTime = entry.getInterval_end_time().toLocalDateTime();
@@ -386,16 +422,45 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (null == existingRecommendationEntry) {
                     tx = session.beginTransaction();
                     session.persist(recommendationEntry);
-                    tx.commit();
+                    session.flush();
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
                 } else {
                     tx = session.beginTransaction();
                     existingRecommendationEntry.setExtended_data(recommendationEntry.getExtended_data());
                     session.merge(existingRecommendationEntry);
-                    tx.commit();
+                    session.flush();
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
+                }
+            } catch (PersistenceException e) {
+                ConstraintViolationException constraintViolationException = null;
+                String message = "";
+                if (null != e.getCause()) {
+                    constraintViolationException = (ConstraintViolationException) e.getCause();
+                    message = constraintViolationException.getCause().getMessage();
+                } else {
+                    message = e.getMessage();
+                }
+                LOGGER.debug(message);
+                if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
+                    try {
+                        LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                        tx.commit();
+                        tx = session.beginTransaction();
+                        // create partitions based on entry object
+                        synchronized (new Object()) {
+                            createPartitions(recommendationEntry);
+                        }
+                        session.persist(recommendationEntry);
+                        session.flush();
+                        validationOutputData.setSuccess(true);
+                        statusValue = "success";
+                    } catch (Exception partitionException) {
+                        LOGGER.error("Error occurred while creating partitions.", partitionException);
+                    }
+                } else {
+                    LOGGER.error(message);
                 }
             } catch (Exception e) {
                 LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
@@ -404,9 +469,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
                 //todo save error to API_ERROR_LOG
+            } finally {
+                tx.commit();
             }
         } catch (Exception e) {
-            LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
+            LOGGER.error("Not able to save recommendation due to ", e);
         } finally {
             if (null != timerAddRecDB) {
                 MetricsConfig.timerAddRecDB = MetricsConfig.timerBAddRecDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());

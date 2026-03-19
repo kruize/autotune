@@ -18,9 +18,7 @@ import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Holds the variables used in the objective_function for the autotune object
@@ -121,5 +119,28 @@ public final class Metric {
                 ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", aggregationFunctionsMap=" + aggregationFunctionsMap +
                 '}';
+    }
+
+    public String getQuery(String function) {
+        if (aggregationFunctionsMap == null) {
+            return null;
+        }
+        AggregationFunctions aggregationFunctions = aggregationFunctionsMap.get(function);
+        return aggregationFunctions != null ? aggregationFunctions.getQuery() : null;
+    }
+
+    public List<String> getQueryParams(String function) {
+        if (aggregationFunctionsMap == null) {
+            return null;
+        }
+        AggregationFunctions aggregationFunctions = aggregationFunctionsMap.get(function);
+        return aggregationFunctions != null ? aggregationFunctions.getQueryParams() : null;
+    }
+
+    public Set<String> getAggregationFunctions() {
+        if (aggregationFunctionsMap == null) {
+            return Collections.emptySet();
+        }
+        return aggregationFunctionsMap.keySet();
     }
 }

@@ -23,6 +23,8 @@ import java.util.Set;
  * Supported types to both Autotune and KruizeLayer objects
  */
 public class KruizeSupportedTypes {
+    public static final Set<String> METRICS_QUERY_PARAMS_SUPPORTED =
+            new HashSet<>(Arrays.asList("container_name", "experiment_name", "namespace", "start_time", "end_time"));
     public static final Set<String> DIRECTIONS_SUPPORTED =
             new HashSet<>(Arrays.asList("minimize", "maximize"));
     public static final Set<String> MONITORING_AGENTS_SUPPORTED =

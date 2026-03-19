@@ -18,8 +18,10 @@ package com.autotune.common.data.result;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
@@ -32,7 +34,7 @@ import static com.autotune.utils.KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINU
  */
 public class IntervalResults {
     @SerializedName(METRICS)
-    HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
+    HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
     HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap;
     @SerializedName(INTERVAL_START_TIME)
     private Timestamp intervalStartTime;
@@ -45,6 +47,7 @@ public class IntervalResults {
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
         this.intervalStartTime = intervalStartTime;
         this.intervalEndTime = intervalEndTime;
+
         this.duration_in_seconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
         this.durationInMinutes = Double.valueOf(intervalEndTime.getTime() - intervalStartTime.getTime()) / (NO_OF_MSECS_IN_SEC * NO_OF_SECONDS_PER_MINUTE);
     }
@@ -104,5 +107,17 @@ public class IntervalResults {
                 ", durationInMinutes=" + durationInMinutes +
                 ", durationInSeconds=" + duration_in_seconds +
                 '}';
+    }
+
+    public void addMetricResult(String metricName, String function, Double value) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        MetricResults metricResults = metricResultsMap.computeIfAbsent(AnalyzerConstants.MetricName.valueOf(metricName),k->new MetricResults());
+        metricResults.setMetricValueByFunction(function, value);
+        if (metricResults.getFormat() == null) {
+            if (metricName.toLowerCase().contains("cpu")) {
+                metricResults.setFormat(CORES);
+            } else if (metricName.toLowerCase().contains("memory")) {
+                metricResults.setFormat(BYTES);
+            }
+        }
     }
 }
