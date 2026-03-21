@@ -603,11 +603,11 @@ public class PerformanceProfileValidation {
         String expression = null;
         for (Metric functionVariable : sloInfo.getFunctionVariables()) {
             // Check if datasource is supported
-            if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
+            /*if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
                 errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
                         .append(functionVariable.getName())
                         .append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
-            }
+            }*/
 
             // Check if value_type is supported
             if (!KruizeSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase())) {

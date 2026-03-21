@@ -17,9 +17,13 @@ package com.autotune.analyzer.performanceProfiles;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -147,5 +151,23 @@ public class PerformanceProfile {
                 ", k8s_type='" + k8s_type + '\'' +
                 ", sloInfo=" + sloInfo +
                 '}';
+    }
+
+    public List<Metric> getContainerMetrics() {
+        return sloInfo.getFunctionVariables().stream()
+            .filter(metric -> {
+                String name = metric.getName();
+                return KruizeConstants.JSONKeys.CONTAINER.equalsIgnoreCase(metric.getKubernetesObject());
+            })
+            .toList();
+    }
+
+    public List<Metric> getNamespaceMetrics() {
+        return sloInfo.getFunctionVariables().stream()
+                .filter(metric -> {
+                    String name = metric.getName();
+                    return !name.equals(AnalyzerConstants.MetricName.namespaceMaxDate.name()) && KruizeConstants.JSONKeys.NAMESPACE.equalsIgnoreCase(metric.getKubernetesObject());
+                })
+                .toList();
     }
 }

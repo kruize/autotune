@@ -16,10 +16,14 @@
 
 package com.autotune.database.init;
 
+import com.autotune.common.data.metrics.MetricDataPoint;
 import com.autotune.utils.KruizeConstants;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -202,6 +207,44 @@ public class MetricsDBConnectionManager {
                     session.close();
                 } catch (Exception e) {
                     LOGGER.debug("Error closing session: {}", e.getMessage());
+                }
+            }
+        }
+    }
+
+    public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params) {
+        Session session = null;
+        try {
+            session = getSession(metricsDbRef);
+            if (session == null) {
+                String err = "Metrics DB '" + metricsDbRef + "' not configured";
+                LOGGER.error("Metric DB POC: Connection failed - {}", err);
+                return null;
+            }
+            Query query = session.createNativeQuery(sql)
+                    .addScalar("interval_start_time", java.sql.Timestamp.class)
+                    .addScalar("interval_end_time", java.sql.Timestamp.class)
+                    .addScalar("value", String.class);
+            LOGGER.error("final query = {}", query.toString());
+            if (params != null) {
+                for (String key : params.keySet()) {
+                    query.setParameter(key, params.get(key));
+                }
+            }
+
+
+            List<Object[]> resultList = query.getResultList();
+            return resultList;
+
+        }  catch (Exception e) {
+            LOGGER.error("Metric DB POC: Validation failed - {}", e);
+            return null;
+        } finally {
+            if (session != null) {
+                try {
+                    session.close();
+                }  catch (Exception e) {
+                    LOGGER.error("Error closing session: {}", e.getMessage());
                 }
             }
         }

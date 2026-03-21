@@ -428,7 +428,14 @@ public class Converters {
                                         String function = aggrFuncJsonObject.optString(AnalyzerConstants.FUNCTION, null);
                                         String aggrFuncQuery = aggrFuncJsonObject.optString(KruizeConstants.JSONKeys.QUERY, null);
                                         String version = aggrFuncJsonObject.optString(KruizeConstants.JSONKeys.VERSION, null);
-                                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                                        JSONArray queryParamsArray = aggrFuncJsonObject.optJSONArray(KruizeConstants.JSONKeys.QUERY_PARAMS, null);
+                                        List<String> queryParams = new ArrayList<>();
+                                        if (queryParamsArray != null) {
+                                            for (Object param : queryParamsArray) {
+                                                queryParams.add((String) param);
+                                            }
+                                        }
+                                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version, queryParams);
                                         aggregationFunctionsMap.put(function, aggregationFunctions);
                                     } catch (Exception e) {
                                         LOGGER.info(e.getMessage());
@@ -483,7 +490,14 @@ public class Converters {
                         String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
                         String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
                         String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
-                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                        JSONArray queryParamsArray = aggrFuncJsonObject.optJSONArray(KruizeConstants.JSONKeys.QUERY_PARAMS, null);
+                        List<String> queryParams = new ArrayList<>();
+                        if (queryParamsArray != null) {
+                            for (Object param : queryParamsArray) {
+                                queryParams.add((String) param);
+                            }
+                        }
+                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version, queryParams);
                         aggregationFunctionsMap.put(function, aggregationFunctions);
                     }
                     metric.setAggregationFunctionsMap(aggregationFunctionsMap);
@@ -531,7 +545,14 @@ public class Converters {
                         String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
                         String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
                         String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
-                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                        JSONArray queryParamsArray = aggrFuncJsonObject.optJSONArray(KruizeConstants.JSONKeys.QUERY_PARAMS, null);
+                        List<String> queryParams = new ArrayList<>();
+                        if (queryParamsArray != null) {
+                            for (Object param : queryParamsArray) {
+                                queryParams.add((String) param);
+                            }
+                        }
+                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version, queryParams);
                         aggregationFunctionsMap.put(function, aggregationFunctions);
                     }
                     metric.setAggregationFunctionsMap(aggregationFunctionsMap);

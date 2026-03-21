@@ -23,14 +23,17 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.init.MetricsDBConnectionManager;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.*;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -40,10 +43,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.crypto.Data;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -1139,17 +1146,21 @@ public class RecommendationEngine implements RecommendationEngineService {
         mainKruizeExperimentMAP.put(experimentName, kruizeObject);
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
-            try {
-                boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
-                if (!resultsAvailable) {
-                    SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
-                            dateFormat.format(intervalStartTime), dateFormat.format(interval_end_time));
-                    LOGGER.error(errorMsg);
-                    return errorMsg;
+            if ("resource-optimization-openshift".equalsIgnoreCase(kruizeObject.getPerformanceProfile())) {
+                try {
+                    boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+                    if (!resultsAvailable) {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                        errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
+                                dateFormat.format(intervalStartTime), dateFormat.format(interval_end_time));
+                        LOGGER.error(errorMsg);
+                        return errorMsg;
+                    }
+                } catch (Exception e) {
+                    LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.FETCHING_RESULTS_FAILED, e.getMessage()));
                 }
-            } catch (Exception e) {
-                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.FETCHING_RESULTS_FAILED, e.getMessage()));
+            } else {
+                fetchMetricsBasedOnProfile(kruizeObject, intervalStartTime, interval_end_time, PerformanceProfileCache.get(kruizeObject.getPerformanceProfile()));
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
@@ -1165,6 +1176,13 @@ public class RecommendationEngine implements RecommendationEngineService {
         return errorMsg;
     }
 
+    public void fetchMetricsBasedOnProfile(KruizeObject kruizeObject, Timestamp startTime, Timestamp endTime, PerformanceProfile profile) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        if (kruizeObject.isContainerExperiment()) {
+            fetchContainerMetricsBasedOnProfile(kruizeObject, startTime, endTime, profile);
+        } else if (kruizeObject.isNamespaceExperiment()) {
+            fetchNamespaceMetricsBasedOnProfile(kruizeObject, startTime, endTime, profile);
+        }
+    }
 
     /**
      * Fetches metrics based on the specified datasource using queries from the metricProfile for the given time interval.
@@ -1368,6 +1386,115 @@ public class RecommendationEngine implements RecommendationEngineService {
         }
     }
 
+    private void fetchNamespaceMetricsBasedOnProfile(KruizeObject kruizeObject, Timestamp startTime, Timestamp endTime, PerformanceProfile profile) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        String experiment_name = kruizeObject.getExperimentName();
+        HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put("experiment_name", experiment_name);
+        for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+            String namespace = k8sObject.getNamespace();
+            for (ContainerData container : k8sObject.getContainerDataMap().values()) {
+                String container_name = container.getContainer_name();
+                queryParams.put("container_name", container_name);
+                HashMap<Timestamp, IntervalResults> results = container.getResults();
+                if (null == results) {
+                    results = new HashMap<>();
+                    container.setResults(results);
+                }
+                List<Metric> metrics = profile.getNamespaceMetrics();
+                for (Metric metric : metrics) {
+                    String metricName  = metric.getName();
+                    HashMap<Metric, MetricResults>  metricResults = new HashMap<>();
+                    String datasourceName = metric.getDatasource();
+                    MetricsDBConnectionManager metricsDBConnectionManager = MetricsDBConnectionManager.getInstance();
+                    Set<String> aggrFunctions = metric.getAggregationFunctions();
+                    for (String function : aggrFunctions) {
+                        String query = metric.getQuery(function).toLowerCase();
+                        List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                        for (String param : queryParamsFromProfile) {
+                            if ("container_name".equalsIgnoreCase(param))
+                                queryParams.put("container_name", container_name);
+                            else if ("namepsace".equalsIgnoreCase(param))
+                                queryParams.put("namepsace", namespace);
+                            else if ("experiment_name".equalsIgnoreCase(param))
+                                queryParams.put("experiment_name", experiment_name);
+                            else if ("start_time".equalsIgnoreCase(param))
+                                queryParams.put("start_time", experiment_name);
+
+                        }
+
+                        List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
+                        for (Object[] dbRow : dbResult) {
+                            Timestamp interval_start_time = (Timestamp) dbRow[0];
+                            Timestamp interval_end_time = (Timestamp) dbRow[1];
+                            Double value =  Double.valueOf((String) dbRow[2]);
+                            IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults());
+                            intervalResults.addMetricResult(metricName, function, value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void fetchContainerMetricsBasedOnProfile(KruizeObject kruizeObject, Timestamp startTime, Timestamp endTime, PerformanceProfile profile) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        String experiment_name = kruizeObject.getExperimentName();
+        HashMap<String, String> queryParams = new HashMap<>();
+        LocalDateTime startTimeLocalDateTime = startTime.toLocalDateTime();
+        LocalDateTime endTimeLocalDateTime = endTime.toLocalDateTime();
+        //LOGGER.error("experiment_name = {}, interval_start_time = {}, interval_end_time = {}", experiment_name, startTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), endTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+            String namespace = k8sObject.getNamespace();
+            for (ContainerData container : k8sObject.getContainerDataMap().values()) {
+                String container_name = container.getContainer_name();
+                HashMap<Timestamp, IntervalResults> results = container.getResults();
+                if (null == results) {
+                    results = new HashMap<>();
+                    container.setResults(results);
+                }
+                List<Metric> metrics = profile.getContainerMetrics();
+                for (Metric metric : metrics) {
+                    String metricName  = metric.getName();
+                    LOGGER.error("metricName = {}", metricName);
+                    HashMap<Metric, MetricResults>  metricResults = new HashMap<>();
+                    String datasourceName = metric.getDatasource();
+                    MetricsDBConnectionManager metricsDBConnectionManager = MetricsDBConnectionManager.getInstance();
+                    Set<String> aggrFunctions = metric.getAggregationFunctions();
+                    for (String function : aggrFunctions) {
+                        String query = metric.getQuery(function);
+                        // Populate query params as defined in profile from standard list
+                        List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                        for (String param : queryParamsFromProfile) {
+                            if ("container_name".equalsIgnoreCase(param))
+                                queryParams.put("container_name", container_name);
+                            else if ("namepsace".equalsIgnoreCase(param))
+                                queryParams.put("namepsace", namespace);
+                            else if ("experiment_name".equalsIgnoreCase(param))
+                                queryParams.put("experiment_name", experiment_name);
+                            else if ("start_time".equalsIgnoreCase(param))
+                                queryParams.put("start_time", startTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                            else if ("end_time".equalsIgnoreCase(param))
+                                queryParams.put("end_time", endTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                        }
+                        //LOGGER.error("query = {}", query);
+                        List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
+                        if (dbResult == null) {
+                            return;
+                        }
+                        for (Object[] dbRow : dbResult) {
+                            Timestamp interval_start_time = (Timestamp) dbRow[0];
+                            Timestamp interval_end_time = (Timestamp) dbRow[1];
+                            Double value =  Double.valueOf((String) dbRow[2]);
+                            IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults(interval_start_time, interval_end_time));
+                            intervalResults.setIntervalStartTime(interval_start_time);
+                            intervalResults.setIntervalEndTime(interval_end_time);
+                            intervalResults.addMetricResult(metricName, function, value);
+                            //LOGGER.error("interval_start_time = {}, interval_end_time = {}, metricName = {}, function = {}, value = {}", interval_start_time, interval_end_time, metricName, function, value);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Fetches Container metrics based on the specified datasource using queries from the metricProfile for the given time interval.

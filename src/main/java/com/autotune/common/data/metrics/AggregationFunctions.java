@@ -15,16 +15,28 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
+import java.util.List;
+
 public class AggregationFunctions {
 
     private String function;
     private String query;
+    private List<String> queryParams;
     private String version;
 
-    public AggregationFunctions(String function, String query, String version) {
+    public AggregationFunctions(String function, String query, String version, List<String> query_params) {
         this.function = function;
         this.query = query;
         this.version = version;
+        this.queryParams = query_params;
+    }
+
+    public List<String> getQueryParams() {
+        return queryParams;
+    }
+
+    public void setQueryParams(List<String> queryParams) {
+        this.queryParams = queryParams;
     }
 
     public String getFunction() {

@@ -21,6 +21,10 @@ import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
+import software.amazon.awssdk.utils.StringUtils;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class MetricResults {
     private String name;
@@ -99,6 +103,7 @@ public class MetricResults {
 
     public void setFormat(String format) {
         this.format = format;
+        metricAggregationInfoResults.setFormat(format);
     }
     public String getName() {
         return name;
@@ -126,5 +131,19 @@ public class MetricResults {
                 ", format='" + format + '\'' +
                 ", isPercentileResultsAvailable=" + percentile_results_available +
                 '}';
+    }
+
+    public void setMetricValueByFunction(String function, Double value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+        Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + StringUtils.capitalize(function), Double.class);
+        method.setAccessible(true);
+        method.invoke(metricAggregationInfoResults, value);
+    }
+
+    public void setMetricValueByFunction(String function, Integer value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+        Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + StringUtils.capitalize(function), Integer.class);
+        method.setAccessible(true);
+        method.invoke(metricAggregationInfoResults, value);
     }
 }
