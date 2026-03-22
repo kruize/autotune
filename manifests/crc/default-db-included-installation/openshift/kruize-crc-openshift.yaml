@@ -199,11 +199,11 @@ data:
         "db1": {
           "hostname": "kruize01.fyre.ibm.com",
           "port": 5433,
-          "name": "metrics_db",
+          "name": "ros_metrics_db",
           "username": "kruize_user",
           "password": "kruize123",
           "sslMode": "disable",
-          "dbdriver": "jdbc:postgresql://kruize01.fyre.ibm.com:5433/metrics_db",
+          "dbdriver": "jdbc:postgresql://",
           "dialect": "org.hibernate.dialect.PostgreSQLDialect",
           "driver": "org.postgresql.Driver",
           "hbm2ddlauto": "none",
