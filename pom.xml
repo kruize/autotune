@@ -20,8 +20,7 @@
         <appassembler-maven-plugin-version>2.1.0</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.14</apachehttpclient-version>
         <postgresql-version>42.7.10</postgresql-version>
-        <hibernatecore-version>6.6.44.Final</hibernatecore-version>
-        <hibernatecp30-version>6.6.44.Final</hibernatecp30-version>
+        <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
         <micrometer-version>1.12.10</micrometer-version>
         <awssdk-version>2.42.6</awssdk-version>
@@ -166,19 +165,14 @@
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${hibernatecore-version}</version>
+            <version>${hibernate-version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-c3p0</artifactId>
-            <version>${hibernatecp30-version}</version>
+            <version>${hibernate-version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.mchange</groupId>
-            <artifactId>mchange-commons-java</artifactId>
-            <version>0.4.0</version>
-        </dependency>
 
         <dependency>
             <groupId>org.hibernate.validator</groupId>
