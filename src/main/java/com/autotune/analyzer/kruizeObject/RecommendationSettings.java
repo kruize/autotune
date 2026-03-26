@@ -18,12 +18,16 @@ package com.autotune.analyzer.kruizeObject;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class RecommendationSettings {
     private Double threshold;
     @SerializedName(KruizeConstants.JSONKeys.MODEL_SETTINGS)
     private ModelSettings modelSettings;
     @SerializedName(KruizeConstants.JSONKeys.TERM_SETTINGS)
     private TermSettings termSettings;
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_TYPES)
+    private List<String> recommendationTypes;
 
     public RecommendationSettings(){}
 
@@ -51,12 +55,39 @@ public class RecommendationSettings {
         this.termSettings = termSettings;
     }
 
+    public List<String> getRecommendationTypes() {
+        return recommendationTypes;
+    }
+
+    public void setRecommendationTypes(List<String> recommendationTypes) {
+        this.recommendationTypes = recommendationTypes;
+    }
+
+    /**
+     * Returns true if the given recommendation type should be generated.
+     * When recommendationTypes is null or empty, all types are enabled (default behavior).
+     *
+     * @param type One of KruizeConstants.RecommendationTypes (RESOURCE, RUNTIME, ACCELERATOR)
+     * @return true if the type should be generated
+     */
+    public boolean isRecommendationTypeEnabled(String type) {
+        if (type == null || type.isEmpty()) {
+            return false;
+        }
+        if (recommendationTypes == null || recommendationTypes.isEmpty()) {
+            return true; // Default: all types enabled
+        }
+        return recommendationTypes.stream()
+                .anyMatch(t -> t != null && t.equalsIgnoreCase(type));
+    }
+
     @Override
     public String toString() {
         return "RecommendationSettings{" +
                 "threshold=" + threshold +
                 ", modelSettings=" + modelSettings +
                 ", termSettings=" + termSettings +
+                ", recommendationTypes=" + recommendationTypes +
                 '}';
     }
 }

@@ -96,6 +96,9 @@ public class Converters {
                     if (apiRecommendationSettings.getThreshold() != null) {
                         recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
                     }
+                    if (apiRecommendationSettings.getRecommendationTypes() != null) {
+                        recommendationSettings.setRecommendationTypes(apiRecommendationSettings.getRecommendationTypes());
+                    }
                 }
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
