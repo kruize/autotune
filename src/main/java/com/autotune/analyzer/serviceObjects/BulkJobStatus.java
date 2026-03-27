@@ -173,7 +173,8 @@ public class BulkJobStatus {
                     new ObjectMapper().writeValueAsString(getSummary().getNotifications()),
                     experimentsString,
                     new ObjectMapper().writeValueAsString(getMetadata()),
-                    new ObjectMapper().writeValueAsString(getSummary().getInput())
+                    new ObjectMapper().writeValueAsString(getSummary().getInput()),
+                    pod_name
             );
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
