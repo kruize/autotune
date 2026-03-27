@@ -278,7 +278,31 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
                 RecommendationConstants.RecommendationNotificationTypes.CRITICAL
         );
-
+        ERROR_NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION(
+                RecommendationConstants.NotificationCodes.ERROR_NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION,
+                RecommendationConstants.RecommendationNotificationMsgConstant.NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION,
+                RecommendationConstants.RecommendationNotificationTypes.ERROR
+        ),
+        INFO_NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT(
+                RecommendationConstants.NotificationCodes.INFO_NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT,
+                RecommendationConstants.RecommendationNotificationMsgConstant.NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT(
+                RecommendationConstants.NotificationCodes.INFO_NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT,
+                RecommendationConstants.RecommendationNotificationMsgConstant.NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_LIMIT_CALCULATED_USING_RATIO(
+                RecommendationConstants.NotificationCodes.INFO_LIMIT_CALCULATED_USING_RATIO,
+                RecommendationConstants.RecommendationNotificationMsgConstant.LIMIT_CALCULATED_USING_RATIO,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_RATIO_CALCULATION_DISABLED_USING_REQUEST(
+                RecommendationConstants.NotificationCodes.INFO_RATIO_CALCULATION_DISABLED_USING_REQUEST,
+                RecommendationConstants.RecommendationNotificationMsgConstant.RATIO_CALCULATION_DISABLED_USING_REQUEST,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        );
 
         private int code;
         private String message;
@@ -523,6 +547,11 @@ public class RecommendationConstants {
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 524000;
         public static final int CRITICAL_MEMORY_REQUEST_NOT_SET = 524001;
         public static final int CRITICAL_MEMORY_LIMIT_NOT_SET = 524002;
+        public static final int ERROR_NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION = 225001;
+        public static final int INFO_NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT = 125001;
+        public static final int INFO_NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT = 125002;
+        public static final int INFO_LIMIT_CALCULATED_USING_RATIO = 125003;
+        public static final int INFO_RATIO_CALCULATION_DISABLED_USING_REQUEST = 125004;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 524999;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 525000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 525999;
@@ -693,6 +722,11 @@ public class RecommendationConstants {
         public static final String CPU_REQUEST_NOT_SET = "CPU Request Not Set";
         public static final String MEMORY_REQUEST_NOT_SET = "Memory Request Not Set";
         public static final String MEMORY_LIMIT_NOT_SET = "Memory Limit Not Set";
+        public static final String NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION = "No valid recommended request available for limit calculation";
+        public static final String NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT = "No current limit found, using recommended request as limit";
+        public static final String NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT = "No current request found for ratio calculation, using recommended request as limit";
+        public static final String LIMIT_CALCULATED_USING_RATIO = "Limit calculated using ratio preservation based on current request/limit ratio";
+        public static final String RATIO_CALCULATION_DISABLED_USING_REQUEST = "Ratio-based limit calculation is disabled, using recommended request as limit";
         public static final String CPU_LIMIT_NOT_SET = "CPU Limit Not Set";
         public static final String CPU_RECORDS_NOT_AVAILABLE = "CPU metrics are not available, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_NOT_AVAILABLE = "Memory metrics are not available, No Memory Recommendations can be generated";
