@@ -27,16 +27,28 @@ APP_DEPLOYMENT="kruize"
 # Datasource serviceName overrides to simulate reachability
 declare -A datasource_scenarios
 datasource_scenarios=(
+  # OpenShift YAML: Prometheus + Thanos (both available in cluster)
   ["both-invalid"]="invalid invalid"
   ["both-valid"]="prometheus-k8s thanos-querier"
-  ["prom-valid-thanos-invalid"]="prometheus-k8s invalid-thanos"
-  ["prom-invalid-thanos-valid"]="invalid-prometheus thanos-querier"
+  ["valid-invalid"]="prometheus-k8s invalid-thanos"
+  ["invalid-valid"]="invalid-prometheus thanos-querier"
+  # Minikube/Kind YAML: Prometheus only (Thanos not running; could add more Prometheus DS)
+  ["invalid"]="invalid invalid"
+  ["valid"]="prometheus-k8s invalid"
 )
-datasource_scenario_order=(
+
+# OpenShift: test with Prometheus + Thanos (both in cluster YAML)
+openshift_scenario_order=(
   "both-invalid"
-  "prom-invalid-thanos-valid"
-  "prom-valid-thanos-invalid"
+  "invalid-valid"
+  "valid-invalid"
   "both-valid"
+)
+
+# Minikube/Kind: test with Prometheus only (Thanos not in cluster; YAML has one DS)
+non_openshift_scenario_order=(
+  "invalid"
+  "valid"
 )
 
 function datasource_tests() {
@@ -76,12 +88,24 @@ function datasource_tests() {
 
 	kubectl_cmd="kubectl -n ${NAMESPACE}"
 
+	# Select scenarios based on cluster type:
+	# - OpenShift: Prometheus + Thanos in YAML, test both
+	# - Minikube/Kind: Prometheus only in YAML (Thanos not running)
+	# Both cluster types support multiple datasources
+	if [ "$cluster_type" == "openshift" ]; then
+		scenario_order=("${openshift_scenario_order[@]}")
+		echo "Cluster type: OpenShift - Testing with Prometheus and Thanos datasources"
+	else
+		scenario_order=("${non_openshift_scenario_order[@]}")
+		echo "Cluster type: ${cluster_type} - Testing with Prometheus datasource (Thanos not available)"
+	fi
+
 	echo ""
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
 	echo ""
 
-  suffix=1
-	for scenario in "${datasource_scenario_order[@]}"; do
+	suffix=1
+	for scenario in "${scenario_order[@]}"; do
 		echo ""
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		echo " Running datasource scenario: ${scenario}"
@@ -121,13 +145,15 @@ run_datasource_scenario() {
 	suffix=$2
 	POD_LOG="${TEST_SUITE_DIR}/${scenario}-pod.log"
 
-	read PROM_SERVICE THANOS_SERVICE <<< "${datasource_scenarios[$scenario]}"
+	read DS1_SERVICE DS2_SERVICE <<< "${datasource_scenarios[$scenario]}"
 
 	echo "Updating YAML:"
-	echo "  Prometheus serviceName = ${PROM_SERVICE}"
-	echo "  Thanos serviceName     = ${THANOS_SERVICE}"
+	echo "  Datasource 1 serviceName = ${DS1_SERVICE}"
+	if [ "$cluster_type" == "openshift" ]; then
+		echo "  Datasource 2 serviceName = ${DS2_SERVICE}"
+	fi
 
-	update_yaml_with_datasources "${PROM_SERVICE}" "${THANOS_SERVICE}" "${suffix}"
+	update_yaml_with_datasources "${DS1_SERVICE}" "${DS2_SERVICE}" "${suffix}"
 
 	$kubectl_cmd apply -f "$YAML_FILE" > /dev/null
   $kubectl_cmd rollout restart deployment kruize
@@ -139,10 +165,10 @@ run_datasource_scenario() {
 		sleep 5
 		$kubectl_cmd logs "$POD_NAME" > "$POD_LOG" 2>&1
 
-		if [[ "$scenario" == "both-invalid" ]]; then
-		  echo "inside both-invalid"
+		if [[ "$scenario" == "both-invalid" ]] || [[ "$scenario" == "invalid" ]]; then
+		  echo "inside ${scenario} (expecting datasource failure)"
       if grep -i "No datasource could be added or are serviceable" "$POD_LOG"; then
-        echo "Expected failure detected (both datasources invalid)"
+        echo "Expected failure detected (datasource(s) invalid)"
         ((TESTS_PASSED++))
       else
         echo "Expected failure NOT detected"
@@ -178,28 +204,28 @@ cleanup_datasources_from_yaml() {
 }
 
 update_yaml_with_datasources() {
-	local prom_service=$1
-	local thanos_service=$2
-	# create unique datasource name for each scenario
+	local ds1_service=$1
+	local ds2_service=$2
+	# create unique datasource name for each scenario (YAML keys: prometheus-1, thanos-1)
 	SUFFIX=$3
-	PROM_DS_NAME="prometheus-${SUFFIX}"
-	THANOS_DS_NAME="thanos-${SUFFIX}"
+	DS1_NAME="prometheus-${SUFFIX}"
+	DS2_NAME="thanos-${SUFFIX}"
 
 	echo "Using datasource names:"
-	echo "  Prometheus: ${PROM_DS_NAME}"
-	echo "  Thanos:     ${THANOS_DS_NAME}"
+	echo "  Datasource 1: ${DS1_NAME}"
+	echo "  Datasource 2: ${DS2_NAME}"
 
 	# Backup once
 	cp "$YAML_FILE" "${YAML_FILE}.ds.bak"
 
 	sed -i '
 	/"name": *"prometheus-1"/,/}/{
-		s/"name": *"[^"]*"/"name": "'"$PROM_DS_NAME"'"/
-		s/"serviceName": *"[^"]*"/"serviceName": "'"$prom_service"'"/
+		s/"name": *"[^"]*"/"name": "'"$DS1_NAME"'"/
+		s/"serviceName": *"[^"]*"/"serviceName": "'"$ds1_service"'"/
 	}
 	/"name": *"thanos-1"/,/}/{
-		s/"name": *"[^"]*"/"name": "'"$THANOS_DS_NAME"'"/
-		s/"serviceName": *"[^"]*"/"serviceName": "'"$thanos_service"'"/
+		s/"name": *"[^"]*"/"name": "'"$DS2_NAME"'"/
+		s/"serviceName": *"[^"]*"/"serviceName": "'"$ds2_service"'"/
 	}
 	' "$YAML_FILE"
 
