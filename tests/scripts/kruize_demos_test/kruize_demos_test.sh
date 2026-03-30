@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2025, 2025 IBM Corporation, RedHat and others.
+# Copyright (c) 2025, 2026 IBM Corporation, RedHat and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,25 +28,29 @@ NAMESPACE=monitoring
 demo=all
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-KRUIZE_OPERATOR_IMAGE="quay.io/kruize/kruize-operator:0.0.2"
-KRUIZE_OPERATOR=0
+KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
+KRUIZE_OPERATOR_IMAGE=""
+KRUIZE_OPERATOR=1
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
-SETUP=0
+SETUP=1
+WAIT_TIME=20
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]"
 	echo "c = supports minikube, kind and openshift cluster-type"
-	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
-	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
+	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
+	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
+	echo "k = Disable operator and install kruize using deploy scripts instead."
+	echo "f = Sets up minikube/kind clusters"
+	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default ${WAIT_TIME} secs"
 	exit 1
 }
 
@@ -56,8 +60,18 @@ function get_kruize_pod_log() {
 	# Fetch the kruize pod log
 	echo "" | tee -a ${LOG}
 	echo "Fetch the kruize pod logs and store in ${log}..." | tee -a ${LOG}
-	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	
+	# Get the kruize pod name
+	kruize_pod=$(kubectl get pods -n ${NAMESPACE} -l app=kruize -o jsonpath='{.items[0].metadata.name}')
+
+	# Check if kruize_pod is empty
+	if [ -z "${kruize_pod}" ]; then
+		error_msg="Error: No kruize pod found in namespace ${NAMESPACE}, unable to fetch kruize pod log"
+		echo "${error_msg}" | tee -a ${LOG}
+	else
+		echo "kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &" | tee -a ${LOG}
+		kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	fi
 }
 
 function local_monitoring_demo() {
@@ -78,6 +92,12 @@ function vpa_demo() {
 	run_demo "${demo_name}" "${demo_dir}"
 }
 
+function runtimes_demo() {
+	demo_name="runtimes"
+	demo_dir="local_monitoring/runtimes_demo"
+	run_demo "${demo_name}" "${demo_dir}"
+}
+
 function remote_monitoring_demo() {
 	demo_name="remote_monitoring"
 	demo_dir="remote_monitoring_demo"
@@ -89,7 +109,11 @@ function all_demos() {
 	local_monitoring_demo
 	vpa_demo
 	bulk_demo
-	remote_monitoring_demo	
+	runtimes_demo
+	if [ "${KRUIZE_OPERATOR}" == 0 ]; then
+		# Include demos supported with manifests
+		remote_monitoring_demo
+	fi
 }
 
 function check_log() {
@@ -100,6 +124,32 @@ function check_log() {
 		echo "Exception/Failed messages found in ${log}" | tee -a ${LOG}
 		failed=1
 	fi
+}
+
+function validate_runtimes_reco() {
+	DEMO_LOG_DIR=$1
+	tfb_msgs=("Runtimes Recommendations Available" "JDK_JAVA_OPTIONS" "JAVA_OPTIONS" "QUARKUS_THREAD_POOL_CORE_THREADS")
+	petclinic_msgs=("Runtimes Recommendations Available" "JDK_JAVA_OPTIONS" "JAVA_OPTIONS")
+
+	for reco_json in ${JSONS[@]}; do
+		json_file="${DEMO_LOG_DIR}/${reco_json}"
+		if [ -e "${json_file}" ]; then
+			if [[ "${json_file}" =~ "tfb_exp" ]]; then
+				msgs=${tfb_msgs[@]}
+			elif [[ "${json_file}" =~ "petclinic" ]]; then
+				msgs=${petclinic_msgs[@]}
+			fi
+			for expected_msg in ${tfb_envs[@]}; do
+				if ! grep -qi ${expected_msg} ${json_file}; then
+					echo "${expected_msg} not found in ${DEMO_LOG_DIR}/${json_file}" | tee -a ${LOG}
+					failed=1
+				fi
+			done
+		else
+			echo "Missing ${json_file}" | tee -a ${LOG}
+			failed=1
+		fi
+	done
 }
 
 function validate_sysbench_reco() {
@@ -187,27 +237,82 @@ function validate_sysbench_reco() {
 	fi
 }
 
+# Maps demo name -> shell script to invoke
+declare -A DEMO_SCRIPT=(
+	[local_monitoring]="./local_monitoring_demo.sh"
+	[remote_monitoring]="./remote_monitoring_demo.sh"
+	[bulk]="./bulk_service_demo.sh"
+	[vpa]="./vpa_demo.sh"
+	[runtimes]="./runtimes_demo.sh"
+)
+
+# Maps demo name -> image flag used
+declare -A DEMO_IMAGE_FLAG=(
+	[local_monitoring]="-i"
+	[remote_monitoring]="-o"
+	[bulk]="-i"
+	[vpa]="-i"
+	[runtimes]="-i"
+)
+
+# Maps demo name -> list of expected recommendation JSON files
+declare -A DEMO_JSONS=(
+	[local_monitoring]="container_experiment_local_recommendation.json namespace_experiment_local_recommendation.json"
+	[remote_monitoring]="recommendations_data.json"
+	[bulk]="recommendations_data.json"
+	[vpa]="container_vpa_experiment_sysbench_recommendation.json"
+	[runtimes]="create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_semeru_exp_recommendation.json"
+)
+
+# Maps demo name -> log file name produced by the demo script
+declare -A DEMO_LOG_NAME=(
+	[local_monitoring]="kruize-demo.log"
+	[remote_monitoring]="kruize-demo.log"
+	[bulk]="kruize-bulk-demo.log"
+	[vpa]="kruize-demo.log"
+	[runtimes]="kruize-demo.log"
+)
+
+# Populates the CMD and JSONS arrays for the given demo name
+function get_demo_config() {
+	local demo_name=$1
+
+	if [[ -z "${DEMO_SCRIPT[$demo_name]}" ]]; then
+		echo "Error: unknown demo '${demo_name}'"
+		return 1
+	fi
+
+	local image_flag="${DEMO_IMAGE_FLAG[$demo_name]}"
+	CMD=("${DEMO_SCRIPT[$demo_name]}" -c "${CLUSTER_TYPE}" "${image_flag}" "${KRUIZE_IMAGE}")
+
+	# Populate JSONS
+	read -ra JSONS <<< "${DEMO_JSONS[$demo_name]}"
+
+	# Demo-specific overrides
+	if [[ "${demo_name}" == "local_monitoring" ]]; then
+		if [[ "${CLUSTER_TYPE}" == "minikube" || "${CLUSTER_TYPE}" == "kind" ]]; then
+			if [[ "${SETUP}" == 0 ]]; then
+				JSONS=(container_experiment_sysbench_recommendation.json namespace_experiment_sysbench_recommendation.json)
+			fi
+		fi
+	elif [[ "${demo_name}" == "runtimes" ]]; then
+		if [[ "${CLUSTER_TYPE}" == "openshift" ]]; then
+			JSONS=(create_tfb-db_exp_ocp_recommendation.json create_tfb_exp_ocp_recommendation.json create_petclinic_semeru_exp_ocp_recommendation.json)
+		fi
+	fi
+}
+
 function run_demo() {
 	DEMO_NAME=$1
 	DEMO_DIR=$2
 
-	if [[ "${DEMO_NAME}" == "local_monitoring" ]]; then
-		CMD=(./local_monitoring_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
-		JSONS=(container_experiment_sysbench_recommendation.json namespace_experiment_sysbench_recommendation.json)
-	elif [[ "${DEMO_NAME}" == "remote_monitoring" ]]; then
-		CMD=(./remote_monitoring_demo.sh -c ${CLUSTER_TYPE} -o ${KRUIZE_IMAGE})
-		JSONS=(recommendations_data.json)
-	elif [[ "${DEMO_NAME}" == "bulk" ]]; then
-		CMD=(./bulk_service_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
-		JSONS=(recommendations_data.json)
-	elif [[ "${DEMO_NAME}" == "vpa" ]]; then
-		CMD=(./vpa_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
-		JSONS=(container_vpa_experiment_sysbench_recommendation.json)
-	fi
+	get_demo_config "${DEMO_NAME}"
 
 	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
 		if [ "${KRUIZE_OPERATOR_IMAGE}" != "" ]; then
-			CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
+			if [[ "${DEMO_NAME}" != "remote_monitoring" && "${DEMO_NAME}" != "bulk" ]]; then
+				CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
+			fi
 		fi
 	fi
 
@@ -219,6 +324,15 @@ function run_demo() {
 				CMD+=( -f)
 				SETUP=1
 			fi
+		fi
+		if [ "${DEMO_NAME}" == "bulk" ]; then
+			CMD+=( -w ${WAIT_TIME})
+		fi
+	fi
+
+	if [ "${KRUIZE_OPERATOR}" == 0 ]; then
+		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+			CMD+=( -k)
 		fi
 	fi
 
@@ -260,11 +374,7 @@ function run_demo() {
 		${CMD[@]} | tee -a ${LOG}
 
 		# Copy the demo log to results dir
-		if [ "${DEMO_NAME}" == "bulk" ]; then
-			log_name="kruize-bulk-demo.log"
-		else
-			log_name="kruize-demo.log"
-		fi
+		log_name="${DEMO_LOG_NAME[$DEMO_NAME]}"
 
 		if [ -e "${log_name}" ]; then
 			cp "${log_name}" "${demo_log}"
@@ -297,6 +407,14 @@ function run_demo() {
 
 		fi
 
+		# If demo is runtimes check for env recommendations
+		if [ "${DEMO_NAME}" == "runtimes" ]; then
+			echo "Validating runtimes recommendations..." | tee -a ${LOG}
+			validate_runtimes_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			echo "Validating runtimes recommendations...Done" | tee -a ${LOG}
+		fi
+
+
 		KRUIZE_POD_LOG="${DEMO_LOG_DIR}/${DEMO_NAME}_kruize_pod.log"
 		get_kruize_pod_log "${KRUIZE_POD_LOG}"
 		sleep 5
@@ -318,7 +436,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:a:b:t:h gopts
+while getopts c:w:r:i:o:a:b:t:fkh gopts
 do
 	case ${gopts} in
 	c)
@@ -329,6 +447,9 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
+		;;
+	w)
+		WAIT_TIME="${OPTARG}"
 		;;
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
@@ -342,6 +463,12 @@ do
 	t)
 		demo="${OPTARG}"		
 		;;
+	k)
+		KRUIZE_OPERATOR=0
+      		;;
+	f)
+		SETUP=0
+      		;;
 	h)
 		usage
 		;;
@@ -390,8 +517,11 @@ case ${demo} in
 	vpa)
 		vpa_demo
 		;;
+	runtimes)
+		runtimes_demo
+		;;
 	*)
-		err_exit "Error: ${demo} is not supported. Valid demos - all/local_monitoring/remote_monitoring/bulk/vpa" | tee -a ${LOG}
+		err_exit "Error: ${demo} is not supported. Valid demos - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes" | tee -a ${LOG}
 		;;
 esac	
 

@@ -1,6 +1,8 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.kruizeLayer.*;
 import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -128,6 +130,9 @@ public class Converters {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
                         containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
+                if (null != containerAPIObject.getLayerMap() && !containerAPIObject.getLayerMap().isEmpty()) {
+                    containerData.setLayerMap(containerAPIObject.getLayerMap());
+                }
                 containerDataHashMap.put(containerData.getContainer_name(), containerData);
             }
             k8sObject.setContainerDataMap(containerDataHashMap);
@@ -536,6 +541,94 @@ public class Converters {
                 metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
             }
             return metadataProfile;
+        }
+
+        public static KruizeLayer convertInputJSONToCreateLayer(String inputData) throws Exception, MonitoringAgentNotSupportedException {
+            KruizeLayer kruizeLayer = null;
+
+            if (inputData != null) {
+                JSONObject jsonObject = new JSONObject(inputData);
+                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+
+                // Parse metadata
+                JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                String name = null;
+                if (metadataObject != null) {
+                    name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                }
+
+                // Parse basic layer fields
+                String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
+                String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
+
+                // Parse layer_presence
+                String presence = null;
+                List<LayerPresenceQuery> queries = null;
+                String labelName = null;
+                String labelValue = null;
+
+                JSONObject layerPresenceObject = jsonObject.optJSONObject("layer_presence");
+                if (layerPresenceObject != null) {
+                    presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
+
+                    // Parse queries array if present
+                    if (layerPresenceObject.has("queries")) {
+                        JSONArray queriesArray = layerPresenceObject.getJSONArray("queries");
+                        queries = new ArrayList<>();
+                        for (Object queryObj : queriesArray) {
+                            JSONObject queryJsonObject = (JSONObject) queryObj;
+                            String datasource = queryJsonObject.getString("datasource");
+                            String query = queryJsonObject.getString("query");
+                            String key = queryJsonObject.has("key") ? queryJsonObject.getString("key") : null;
+                            LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, query, key);
+                            queries.add(layerPresenceQuery);
+                        }
+                    }
+
+                    // Parse label array if present
+                    if (layerPresenceObject.has("label")) {
+                        JSONArray labelArray = layerPresenceObject.getJSONArray("label");
+                        if (labelArray.length() > 0) {
+                            JSONObject labelObject = labelArray.getJSONObject(0);
+                            labelName = labelObject.getString("name");
+                            labelValue = labelObject.getString("value");
+                        }
+                    }
+                }
+
+                // Parse tunables array
+                ArrayList<Tunable> tunables = null;
+                JSONArray tunablesArray = jsonObject.optJSONArray("tunables");
+                if (tunablesArray != null) {
+                    tunables = new ArrayList<>();
+                    for (Object tunableObj : tunablesArray) {
+                        JSONObject tunableJsonObject = (JSONObject) tunableObj;
+                        Tunable tunable = new Gson().fromJson(tunableJsonObject.toString(), Tunable.class);
+                        tunables.add(tunable);
+                    }
+                }
+
+                // Create LayerMetadata object
+                LayerMetadata metadata = new LayerMetadata();
+                metadata.setName(name);
+
+                // Create LayerPresence object
+                LayerPresence layerPresence = new LayerPresence();
+                layerPresence.setPresence(presence);
+                layerPresence.setQueries(queries);
+
+                // Convert label name/value to List<LayerPresenceLabel> if present
+                if (labelName != null && labelValue != null) {
+                    List<LayerPresenceLabel> labels = new ArrayList<>();
+                    labels.add(new LayerPresenceLabel(labelName, labelValue));
+                    layerPresence.setLabel(labels);
+                }
+
+                kruizeLayer = new KruizeLayer(apiVersion, kind, metadata, layerName,
+                        details, layerPresence, tunables);
+            }
+            return kruizeLayer;
         }
 
 

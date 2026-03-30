@@ -1,5 +1,8 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -250,6 +253,18 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         recommendationConfigItem = new RecommendationConfigItem(memRec, format);
         return recommendationConfigItem;
+    }
+
+    @Override
+    public RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getCPURequestRecommendation(filteredResultsMap, notifications);
+    }
+
+    @Override
+    public RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getMemoryRequestRecommendation(filteredResultsMap, notifications);
     }
 
     // helper functions for getMemoryRequestRecommendation
@@ -680,6 +695,24 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         return returnMap;
     }
+
+    /**
+     * @param metricName
+     * @param layerName
+     * @param filteredResultsMap
+     * @param tunableSpecObjectMap
+     * @param notifications
+     * @return
+     */
+    @Override
+    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> tunableSpecObjectMap,
+                                            ArrayList<RecommendationNotification> notifications) {
+        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+        return handler != null ? handler.generateRecommendations(metricName, tunableSpecObjectMap, filteredResultsMap) : null;
+    }
+
+
+
 
     @Override
     public String getModelName() {

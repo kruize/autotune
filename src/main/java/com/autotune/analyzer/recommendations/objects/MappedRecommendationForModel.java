@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.objects;
 
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -13,7 +14,7 @@ public class MappedRecommendationForModel {
     public MappedRecommendationForModel() {
         this.podsCount = 0;
         this.confidence_level = 0.0;
-        this.config = new HashMap<>();
+        this.config = new Config();
         this.variation = new HashMap<>();
         this.notificationHashMap = new HashMap<>();
     }
@@ -23,7 +24,7 @@ public class MappedRecommendationForModel {
     @SerializedName(KruizeConstants.JSONKeys.CONFIDENCE_LEVEL)
     private double confidence_level;
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
+    private Config config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
 
@@ -46,11 +47,11 @@ public class MappedRecommendationForModel {
         this.confidence_level = confidence_level;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getConfig() {
+    public Config getConfig() {
         return config;
     }
 
-    public void setConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config) {
+    public void setConfig(Config config) {
         this.config = config;
     }
 

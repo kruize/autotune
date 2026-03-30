@@ -77,6 +77,11 @@ public class KruizeSupportedTypes {
     public static final Set<String> UPDATE_METADATA_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
             "name"
     ));
+
+    public static final Set<String> LIST_LAYERS_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
+            "name"
+    ));
+
     public static final Set<String> RUNTIMES_SUPPORTED_DATASOURCES = new HashSet<>(Arrays.asList("thanos-querier"));
 
     private KruizeSupportedTypes() {

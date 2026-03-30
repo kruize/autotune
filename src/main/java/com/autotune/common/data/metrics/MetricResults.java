@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +32,8 @@ public class MetricResults {
     private String format;
     private boolean percentile_results_available;
     private MetricMetadata metadata;
+    @SerializedName(AnalyzerConstants.AutotuneObjectConstants.JVM_METADATA)
+    private MetricMetadataResults metricMetadataResults;
 
     public MetricMetadata getMetadata() {
         return metadata;
@@ -104,6 +107,15 @@ public class MetricResults {
     public void setName(String name) {
         this.name = name;
     }
+
+    public MetricMetadataResults getMetricMetadataResults() {
+        return metricMetadataResults;
+    }
+
+    public void setMetricMetadataResults(MetricMetadataResults metricMetadataResults) {
+        this.metricMetadataResults = metricMetadataResults;
+    }
+
     @Override
     public String toString() {
         return "MetricResults{" +

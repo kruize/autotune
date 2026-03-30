@@ -1,10 +1,12 @@
 package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -624,5 +626,74 @@ public class RecommendationUtils {
 
         return -1;
     }
-}
 
+    public static int parseMajorVersion(String version) {
+        if (version == null || version.isEmpty()) return 8;
+        version = version.trim();
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3));
+        }
+        int dotIndex = version.indexOf(".");
+        return (dotIndex != -1)
+                ? Integer.parseInt(version.substring(0, dotIndex))
+                : Integer.parseInt(version);
+    }
+
+    /**
+     * Formats tunable values for JVM environment variables (JDK_JAVA_OPTIONS / JAVA_OPTIONS).
+     * Shared by Hotspot, Semeru, and any future JVM runtime layer handlers.
+     *
+     * @param tunableName  tunable name (e.g. MaxRAMPercentage, GCPolicy)
+     * @param value       recommended value
+     * @param envBuilders map of env var name to StringBuilder
+     */
+    public static void formatForJVMEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
+        if (value == null) return;
+
+        StringBuilder jdkOpts = envBuilders.get(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS);
+        StringBuilder javaOpts = envBuilders.get(KruizeConstants.JSONKeys.JAVA_OPTIONS);
+        StringBuilder target = (jdkOpts != null) ? jdkOpts : javaOpts;
+        if (target == null) return;
+
+        switch (tunableName) {
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.MAX_RAM_PERC ->
+                    target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
+            case RecommendationConstants.RecommendationEngine.TunablesConstants.GC_POLICY -> target.append(value).append(" ");
+            case null, default -> {
+            }
+        }
+    }
+
+    /**
+     * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
+     * Looks for jvmRuntimeInfo metric in IntervalResults and returns its MetricMetadataResults.
+     *
+     * @param filteredResultsMap map of timestamp to IntervalResults
+     * @return MetricMetadataResults containing JVM info, or null if not found
+     */
+    public static MetricMetadataResults getJvmMetricMetadataFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        if (filteredResultsMap == null) {
+            return null;
+        }
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            if (intervalResults.getMetricResultsMap() == null) {
+                continue;
+            }
+            // Try jvmInfo first, then jvmInfoTotal (both provide runtime, vendor, version)
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfo);
+            if (metricResults == null) {
+                metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfoTotal);
+            }
+            if (metricResults == null || metricResults.getMetricMetadataResults() == null) {
+                continue;
+            }
+            return metricResults.getMetricMetadataResults();
+        }
+        return null;
+    }
+
+    public static Object getTunableValue(Map<TunableSpec, Object> tunableSpecObjectMap, String layerName, String tunableName) {
+        return tunableSpecObjectMap.get(new TunableSpec(layerName, tunableName));
+    }
+
+}

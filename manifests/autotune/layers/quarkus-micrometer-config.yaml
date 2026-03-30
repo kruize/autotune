@@ -1,0 +1,20 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "quarkus"
+layer_name: quarkus
+details: quarkus tunables
+layer_presence:
+  queries:
+  - datasource: 'prometheus'
+    query: 'container_cpu_usage_seconds_total{} * on(namespace, pod) group_left(label_com_redhat_component_name) kube_pod_labels{label_com_redhat_component_name="Quarkus"}'
+    key: pod
+tunables:
+# upper_bound is set to 8 times of cpu.
+- name: quarkus.thread-pool.core-threads
+  description: 'The core thread pool size. This number of threads will always be kept alive.'
+  value_type: integer
+  upper_bound: '10'
+  lower_bound: '1'
+  step: 1
+

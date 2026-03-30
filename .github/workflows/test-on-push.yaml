@@ -59,10 +59,10 @@ jobs:
         run: |
            echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.14.0
+        uses: manusa/actions-setup-minikube@v2.15.0
         with:
-          minikube version: 'v1.35.0'
-          kubernetes version: 'v1.33.0'
+          minikube version: 'v1.38.0'
+          kubernetes version: 'v1.34.4'
       - name: Display cluster info
         run: |
           kubectl cluster-info

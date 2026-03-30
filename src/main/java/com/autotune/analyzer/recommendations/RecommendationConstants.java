@@ -133,6 +133,11 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.MODEL_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
+        INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
@@ -335,6 +340,7 @@ public class RecommendationConstants {
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
+        public static final int INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE = 112104;
 
         public static final int COST_ENGINE_END = 112199;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
@@ -676,6 +682,7 @@ public class RecommendationConstants {
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
         public static final String MODEL_RECOMMENDATIONS_AVAILABLE = "Model Recommendations Available";
+        public static final String RUNTIMES_RECOMMENDATIONS_AVAILABLE = "Runtimes Recommendations Available";
         public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
@@ -777,6 +784,55 @@ public class RecommendationConstants {
             public static final Integer FIFTY_PERCENTILE = 50;
             public static final Integer COST_ACCELERATOR_PERCENTILE = 60;
             public static final Integer PERFORMANCE_ACCELERATOR_PERCENTILE = 98;
+        }
+
+        public static class RuntimeConstants {
+            public static final Double DEFAULT_MAX_RAM_PERCENTAGE_VALUE = 80.0;
+            public static final Double MAX_RAM_PERCENTAGE_50 = 50.0;
+            public static final String GPU = "gpu";
+
+            public static final double MEMORY_THRESHOLD_G1GC = 4096.0;
+            public static final int CPU_CORES_THRESHOLD_SERIAL = 1;
+            public static final int CPU_CORES_THRESHOLD_PARALLEL = 2;
+            public static final double RAM_PERCENTAGE_THRESHOLD_BELOW_ONE_CPU_CORE = 10.0;
+            public static final double RAM_PERCENTAGE_THRESHOLD_ONE_CPU_CORE = 5.0;
+            public static final double RAM_PERCENTAGE_THRESHOLD_256MB = 256.0;
+            public static final double RAM_PERCENTAGE_THRESHOLD_512MB = 512.0;
+            public static final double RAM_PERCENTAGE_THRESHOLD_4096MB = 4096.0;
+            public static final double RAM_PERCENTAGE_THRESHOLD_8192MB = 8192.0;
+
+
+            public static final double MEMORY_THRESHOLD_BALANCED_GC = 4096.0;
+            public static final int THREADS_PER_CORE = 1;
+            public static final int MIN_CORE_THREADS = 1;
+            public static final int MAX_CORE_THREADS = 100;
+
+            // GC Policy
+            public static final String GC_BALANCED = "-Xgcpolicy:balanced";
+            public static final String GC_GENCON = "-Xgcpolicy:gencon";
+            public static final String GC_SERIAL = "-XX:+UseSerialGC";
+            public static final String GC_PARALLEL = "-XX:+UseParallelGC";
+            public static final String GC_ZGC = "-XX:+UseZGC";
+            public static final String GC_SHENANDOAH = "-XX:+UseShenandoahGC";
+            public static final String GC_G1GC = "-XX:+UseG1GC";
+
+            // JDK version thresholds
+            public static final int JDK_VERSION_SHENANDOAH = 11;
+            public static final int JDK_VERSION_ZGC = 17;
+            public static final int JDK_VERSION_SERVER_FLAG_THRESHOLD = 8;
+        }
+
+        public static final class TunablesConstants {
+            private TunablesConstants() {}
+
+            // Container tunables
+            public static final String MEMORY_LIMIT = "memoryLimit";
+            public static final String CPU_LIMIT =  "cpuLimit";
+            // Hotspot tunables
+            public static final String MAX_RAM_PERC = "MaxRAMPercentage";
+            public static final String GC_POLICY = "GCPolicy";
+            // Quarkus tunables
+            public static final String QUARKUS_THREAD_POOL_CORE_THREADS = "quarkus.thread-pool.core-threads";
         }
     }
 }

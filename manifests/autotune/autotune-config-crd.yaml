@@ -35,9 +35,6 @@ spec:
           layer_name:
             description: 'Name of the layer'
             type: string
-          layer_level:
-            description: 'Denotes the level of tunables offered by the layer. 0 = container, 1 = runtime'
-            type: integer
           details:
             description: 'Description of the layer'
             type: string
@@ -133,6 +130,5 @@ spec:
               - slo_class
         required:
         - layer_name
-        - layer_level
         - layer_presence
         - tunables

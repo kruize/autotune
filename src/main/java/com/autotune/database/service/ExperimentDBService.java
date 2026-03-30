@@ -16,8 +16,10 @@
 package com.autotune.database.service;
 
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
+import com.autotune.analyzer.exceptions.LayerConversionException;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
@@ -36,14 +38,17 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -386,6 +391,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()) {
+                PerformanceProfileCache.put(performanceProfile.getName(), performanceProfile);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
         }
@@ -403,6 +411,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()) {
+                PerformanceProfileCache.put(performanceProfile.getName(), performanceProfile);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
         }
@@ -458,6 +469,44 @@ public class ExperimentDBService {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.UPDATE_METADATA_PROFILE_FROM_DB_ERROR, e.getMessage());
         }
         return validationOutputData;
+    }
+
+    /**
+     * Adds Layer to kruizeLMLayerEntry
+     *
+     * @param kruizeLayer Layer object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addLayerToDB(KruizeLayer kruizeLayer) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMLayerEntry kruizeLayerEntry = DBHelpers.Converters.KruizeObjectConverters.convertLayerObjectToLayerDBObj(kruizeLayer);
+            validationOutputData = this.experimentDAO.addLayerToDB(kruizeLayerEntry);
+        } catch (Exception e) {
+            LOGGER.error("Failed to add layer to database: {}", e.getMessage(), e);
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage("Failed to add layer to database: " + e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Load all layers from the database and populate them into the provided map
+     *
+     * @param layerMap Map to store the loaded layers (key: layer_name, value: KruizeLayer)
+     * @throws Exception if there's an error loading or converting layers
+     */
+    public void loadAllLayers(Map<String, KruizeLayer> layerMap) throws Exception {
+        if (null == layerMap)
+            return;
+        List<KruizeLMLayerEntry> entries = experimentDAO.loadAllLayers();
+        if (null != entries && !entries.isEmpty()) {
+            List<KruizeLayer> kruizeLayers = DBHelpers.Converters.KruizeObjectConverters.convertLayerEntryToLayerObject(entries);
+            if (!kruizeLayers.isEmpty()) {
+                kruizeLayers.forEach(layer -> layerMap.put(layer.getLayerName(), layer));
+            }
+        }
     }
 
 
@@ -590,6 +639,13 @@ public class ExperimentDBService {
     }
 
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
+        // Serve from cache if found
+        PerformanceProfile pp = PerformanceProfileCache.get(performanceProfileName);
+        if (null != pp) {
+            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, pp);
+            return;
+        }
+        // cache miss
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
             List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
@@ -597,6 +653,7 @@ public class ExperimentDBService {
             if (!performanceProfiles.isEmpty()) {
                 for (PerformanceProfile performanceProfile : performanceProfiles) {
                     if (null != performanceProfile) {
+                        PerformanceProfileCache.put(performanceProfileName, performanceProfile); // Update cache
                         PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile);
                     }
                 }

@@ -114,6 +114,8 @@ public class AnalyzerConstants {
     public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
     public static final String RM = "rm";
     public static final String LM = "lm";
+    public static final String VENDOR = "vendor";
+    public static final String RUNTIME = "runtime";
 
     private AnalyzerConstants() {
     }
@@ -218,6 +220,22 @@ public class AnalyzerConstants {
         limits
     }
 
+    public enum RuntimesSetting {
+        env
+    }
+
+    public enum ConfigType {
+        REQUESTS(ResourceSetting.requests),
+        LIMITS(ResourceSetting.limits),
+        ENV(RuntimesSetting.env);
+
+        private final Enum<?> sourceEnum;
+
+        ConfigType(Enum<?> sourceEnum) {
+            this.sourceEnum = sourceEnum;
+        }
+    }
+
     public enum PersistenceType {
         LOCAL,              //Store only local  , Default
         HYBRID,             //Store data both in db and local
@@ -263,7 +281,9 @@ public class AnalyzerConstants {
         namespaceMaxDate,
         acceleratorCoreUsage,
         acceleratorMemoryUsage,
-        acceleratorFrameBufferUsage
+        acceleratorFrameBufferUsage,
+        jvmInfo,
+        jvmInfoTotal
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -381,6 +401,14 @@ public class AnalyzerConstants {
     public enum OperationType {
         CREATE, UPDATE
     }
+
+    public enum LayerConversionSection {
+        BASIC_FIELDS,
+        METADATA,
+        LAYER_PRESENCE,
+        TUNABLES
+    }
+
 
     /**
      * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
@@ -581,6 +609,7 @@ public class AnalyzerConstants {
         public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
+        public static final String JVM_METADATA = "jvm_metadata";
 
         private AutotuneObjectConstants() {
         }
@@ -594,6 +623,7 @@ public class AnalyzerConstants {
         public static final String METADATA = "metadata";
         public static final String NAMESPACE = "namespace";
         public static final String DATASOURCE = "datasource";
+        public static final String LAYER_NAME = "layer_name";
         public static final String LAYER_PRESENCE = "layer_presence";
         public static final String PRESENCE = "presence";
         public static final String LABEL = "label";
@@ -626,12 +656,96 @@ public class AnalyzerConstants {
         public static final String LAYER_CONTAINER = "container";
         public static final String LAYER_HOTSPOT = "hotspot";
         public static final String LAYER_QUARKUS = "quarkus";
-        public static final String LAYER_OPENJ9 = "openj9";
+        public static final String LAYER_SEMERU = "semeru";
         public static final String LAYER_NODEJS = "nodejs";
 
         private AutotuneConfigConstants() {
         }
 
+    }
+
+    /**
+     * Contains constants related to KruizeLayer presence detection
+     */
+    public static final class LayerConstants {
+
+        /**
+         * Enum for different types of layer presence detection
+         */
+        public enum PresenceType {
+            ALWAYS,
+            QUERY,
+            LABEL
+        }
+
+        public static final String DEFAULT_PRESENCE = "always";
+
+        // PromQL label names used in query-based presence detection
+        public static final String LABEL_NAMESPACE = "namespace";
+        public static final String LABEL_CONTAINER = "container";
+
+        // Supported Layers
+        public static final String CONTAINER_LAYER = "container";
+        public static final String HOTSPOT_LAYER = "hotspot";
+        public static final String QUARKUS_LAYER = "quarkus";
+        public static final String SEMERU_LAYER = "semeru";
+
+        public static final List<String> SUPPORTED_LAYERS = Arrays.asList(
+                CONTAINER_LAYER,
+                HOTSPOT_LAYER,
+                QUARKUS_LAYER,
+                SEMERU_LAYER
+        );
+
+        /**
+         * Log messages for layer detection operations
+         */
+        public static final class LogMessages {
+            // Error messages
+            public static final String CONTAINER_NAME_NULL_OR_EMPTY = "Container name cannot be null or empty";
+            public static final String NAMESPACE_NULL_OR_EMPTY = "Namespace cannot be null or empty";
+
+            // Layer detection log messages
+            public static final String ERROR_DETECTING_LAYER = "Error detecting layer '{}': {}";
+            public static final String NO_LAYERS_DETECTED = "No layers detected for container '{}' in namespace '{}'";
+            public static final String LAYERS_DETECTED = "Detected {} layer(s) for container '{}': {}";
+            public static final String DETECTING_LAYERS = "Detecting layers for container '{}' in namespace '{}'";
+            public static final String LAYER_DETECTED = "Detected layer: '{}' for container '{}'";
+            public static final String LAYER_NOT_DETECTED = "Layer '{}' not detected for container '{}'";
+            public static final String NO_PRESENCE_DETECTOR = "Layer '{}' has no presence detector configured, skipping";
+            public static final String LABEL_BASED_PRESENCE_NOT_IMPLEMENTED = "Skipping layer '{}' configured with LabelBasedPresence: label-based presence detection is not yet implemented; this layer will not be auto-detected";
+            public static final String NO_LAYERS_IN_DB = "No layers found in database";
+            public static final String LOADED_LAYERS_FROM_DB = "Loaded {} layers from database";
+            public static final String FAILED_TO_LOAD_LAYERS = "Failed to load layers from database";
+
+            // QueryBasedPresence log messages
+            public static final String NO_QUERIES_DEFINED = "No queries defined for layer presence detection";
+            public static final String NULL_QUERY_ENCOUNTERED = "Encountered null query in layer presence queries, skipping";
+            public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
+            public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
+            public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
+            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', container '{}'";
+            public static final String ERROR_EXECUTING_QUERY = "Error executing layer presence query for datasource '{}'";
+
+            // Tunable Spec messages
+            public static final String LAYER_NAME_N_TUNABLE_NAME_NOT_NULL = "layerName and tunableName must not be null";
+            public static final String LAYER_NAME_NOT_NULL = "layerName must not be null or empty";
+            public static final String TUNABLE_NAME_NOT_NULL = "tunableName must not be null or empty";
+
+            // Query validation log messages
+            public static final String QUERY_VALIDATION_NO_DATASOURCES = "No datasources available for query validation";
+            public static final String QUERY_VALIDATION_SKIP_NO_OPERATOR = "No operator available for datasource provider '{}', skipping datasource '{}'";
+            public static final String QUERY_VALIDATION_VALIDATING_SYNTAX = "Validating query syntax: {}";
+            public static final String QUERY_VALIDATION_SYNTAX_SUCCESS = "Query syntax validation successful for query: {}";
+            public static final String QUERY_VALIDATION_SYNTAX_FAILED = "Query validation failed for query '%s': %s";
+            public static final String QUERY_VALIDATION_COMPLETE = "Query syntax validation completed successfully for layer: {}";
+
+            private LogMessages() {
+            }
+        }
+
+        private LayerConstants() {
+        }
     }
 
     /**

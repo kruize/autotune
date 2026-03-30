@@ -16,7 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.google.gson.annotations.SerializedName;
-import org.hibernate.validator.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 
 public abstract class BaseSO {
