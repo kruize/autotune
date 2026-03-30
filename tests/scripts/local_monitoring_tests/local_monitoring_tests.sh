@@ -110,6 +110,15 @@ function local_monitoring_tests() {
 		LOG="${TEST_DIR}/${test}.log"
 
 		if [ "${test}" == "runtimes" ]; then
+		  if [ ! -d "benchmarks" ]; then
+        echo -n "🔄 Pulling required repositories... "
+        clone_repos benchmarks
+      fi
+		  echo -n "🔄 Installing the required benchmarks..."
+			benchmarks_install >> "${LOG}" 2>&1
+			apply_benchmark_load >> "${LOG}" 2>&1
+			echo "✅ Completed!"
+
 			quarkus_label="com.redhat.component-name=Quarkus"
 			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
 				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)
