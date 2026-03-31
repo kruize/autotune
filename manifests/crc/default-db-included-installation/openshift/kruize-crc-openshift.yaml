@@ -583,7 +583,10 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: kruize-ui-nginx
