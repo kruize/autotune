@@ -209,7 +209,14 @@ metadata:
 data:
   nginx.conf: |
     events {}
+    pid /tmp/nginx.pid;
     http {
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+    
       upstream kruize-api {
         server kruize:8080;
       }
