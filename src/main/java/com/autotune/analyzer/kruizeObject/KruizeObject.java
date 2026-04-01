@@ -443,13 +443,13 @@ public final class KruizeObject implements ExperimentTypeAware {
 
         switch (term) {
             case KruizeConstants.JSONKeys.SHORT_TERM:
-                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_MIN_DATAPOINTS;
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_MIN_DATAPOINTS; // 2
                 break;
             case KruizeConstants.JSONKeys.MEDIUM_TERM:
-                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_MIN_DATAPOINTS;
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_MIN_DATAPOINTS; // 192
                 break;
             case KruizeConstants.JSONKeys.LONG_TERM:
-                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_MIN_DATAPOINTS;
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_MIN_DATAPOINTS; // 768
                 break;
         }
 

@@ -463,7 +463,6 @@ public class RecommendationEngine implements RecommendationEngineService {
      * @param recommendationModel                 The model used to map recommendations.
      * @param notifications                       A list to which recommendation notifications will be added.
      * @param internalMapToPopulate               The internal map to populate with recommendation configuration items.
-     * @param numPods                             The number of pods to consider for the recommendation.
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
@@ -474,7 +473,6 @@ public class RecommendationEngine implements RecommendationEngineService {
                                    MappedRecommendationForModel recommendationModel,
                                    ArrayList<RecommendationNotification> notifications,
                                    HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                   int numPods,
                                    double cpuThreshold,
                                    double memoryThreshold,
                                    Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
@@ -867,23 +865,6 @@ public class RecommendationEngine implements RecommendationEngineService {
 
         // build the engine level notifications here
         ArrayList<RecommendationNotification> engineNotifications = new ArrayList<>();
-        if (numPods == 0) {
-            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
-            engineNotifications.add(recommendationNotification);
-            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO
-                    .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
-                            experimentName, interval_end_time)));
-            isSuccess = false;
-        } else if (numPods < 0) {
-            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
-            engineNotifications.add(recommendationNotification);
-            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE
-                    .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
-                            experimentName, interval_end_time)));
-            isSuccess = false;
-        } else {
-            recommendationModel.setPodsCount(numPods);
-        }
 
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
