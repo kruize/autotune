@@ -23,7 +23,7 @@
         <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
         <micrometer-version>1.12.10</micrometer-version>
-        <awssdk-version>2.42.6</awssdk-version>
+        <awssdk-version>2.42.25</awssdk-version>
         <jackson-version>2.21.1</jackson-version>
         <evalex-version>3.6.0</evalex-version>
         <mockito-version>5.21.0</mockito-version>
