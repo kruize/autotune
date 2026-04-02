@@ -171,7 +171,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             // Extract the datapoints from monitoringStartTime to monitoringEndTime to be used for all recommendation models
             Map<Timestamp, IntervalResults> filteredResultsMap = null;
             if (containerData.getResults() != null) {
-                filteredResultsMap = containerData.getResults().entrySet().stream().filter(entry -> (entry.getKey().after(monitoringStartTime) && entry.getKey().before(monitoringEndTime))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                filteredResultsMap = containerData.getResults().entrySet().stream().filter(entry -> (entry.getKey().compareTo(monitoringStartTime) >= 0 && entry.getKey().compareTo(monitoringEndTime) <= 0)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             }
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
