@@ -339,7 +339,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
                 .filter(metricEntry -> metricEntry.getKey() == AnalyzerConstants.MetricName.cpuUsage)
                 .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
-                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getSum() != null))
+                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
                 .toList();
         LOGGER.debug("cpuUsageMetrics : size = {}, content = {}", cpuUsageMetrics.size(), cpuUsageMetrics);
         if (!cpuUsageMetrics.isEmpty()) {
@@ -366,7 +366,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
                 .filter(metricEntry -> metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage)
                 .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
-                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getSum() != null))
+                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
                 .toList();
         LOGGER.debug("memoryUsageMetrics : size = {}, content = {}", memoryUsageMetrics.size(), memoryUsageMetrics);
         if (!memoryUsageMetrics.isEmpty()) {
