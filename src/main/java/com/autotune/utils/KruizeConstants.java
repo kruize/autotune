@@ -271,6 +271,7 @@ public class KruizeConstants {
         public static final String VERSION = "version";
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
+        public static final String RECOMMENDATION_TYPES = "recommendation_types";
         public static final String INTERVAL_START_TIME = "interval_start_time";
 
         public static final String CALCULATED_START_TIME = "calculated_start_time";
@@ -321,6 +322,22 @@ public class KruizeConstants {
         public static final String NODE = "node";
 
         private JSONKeys() {
+        }
+    }
+
+    /**
+     * Supported recommendation types for createExperiment API.
+     * When recommendation_types is null or empty, all types are generated (default).
+     */
+    public static final class RecommendationTypes {
+        /** CPU and memory right-sizing recommendations */
+        public static final String RESOURCE = "resource";
+        /** Runtime tuning recommendations (JVM options, GC policy, etc.) */
+        public static final String RUNTIME = "runtime";
+        /** Accelerator (GPU) recommendations */
+        public static final String ACCELERATOR = "accelerator";
+
+        private RecommendationTypes() {
         }
     }
 
