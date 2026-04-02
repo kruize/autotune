@@ -277,6 +277,7 @@ public class KruizeConstants {
         public static final String INTERVAL_END_TIME = "interval_end_time";
         public static final String DURATION_IN_MINUTES = "duration_in_minutes";
         public static final String DURATION_IN_HOURS = "duration_in_hours";
+        public static final String METRICS_INFO = "metrics_info";
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";

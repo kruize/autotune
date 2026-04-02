@@ -17,14 +17,56 @@
 package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Model class to represent recommendation configuration.
+ * Updated to support new schema with replicas and nested resources structure using HashMap.
+ */
 public class Config {
+    @SerializedName("replicas")
+    private Integer replicas;
+    
+    @SerializedName("resources")
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
+    
+    @SerializedName("env")
+    private List<RecommendationConfigEnv> env;
+
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
-    private List<RecommendationConfigEnv> env;
+
+    public Config() {
+        this.resources = new HashMap<>();
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
+    }
+
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
+        return resources;
+    }
+
+    public void setResources(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
+        this.resources = resources;
+    }
+
+    public List<RecommendationConfigEnv> getEnv() {
+        return env;
+    }
+
+    public void setEnv(List<RecommendationConfigEnv> env) {
+        this.env = env;
+    }
 
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
         return requests;
@@ -40,13 +82,5 @@ public class Config {
 
     public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
         this.limits = limits;
-    }
-
-    public List<RecommendationConfigEnv> getEnv() {
-        return env;
-    }
-
-    public void setEnv(List<RecommendationConfigEnv> env) {
-        this.env = env;
     }
 }
