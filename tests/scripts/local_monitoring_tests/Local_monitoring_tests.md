@@ -387,26 +387,42 @@ The test can be run using the command below:
 
 #### Scenarios
 
-**both-valid**
+Both cluster types support multiple datasources. Scenarios vary by which datasources are in the cluster YAML:
+- **OpenShift:** YAML has Prometheus + Thanos (both available in cluster)
+- **Minikube/Kind:** YAML has Prometheus only (Thanos not running; multiple Prometheus datasources are also valid)
 
-Both Prometheus and Thanos Querier datasources are reachable.
+**both-valid** (OpenShift)
+
+Both datasources are reachable.
 
 **✔ Expected:** Kruize starts successfully.
 
-**prom-valid-thanos-invalid**
+**valid-invalid** (OpenShift)
 
-Prometheus is reachable and Thanos Querier is unreachable.
+Datasource 1 is reachable, datasource 2 is unreachable.
 
-**✔ Expected:** Kruize starts successfully and logs an error for Thanos.
+**✔ Expected:** Kruize starts successfully and logs an error for datasource 2.
 
-**prom-invalid-thanos-valid**
+**invalid-valid** (OpenShift)
 
-Prometheus is unreachable and Thanos Querier is reachable.
+Datasource 1 is unreachable, datasource 2 is reachable.
 
-**✔ Expected:** Kruize starts successfully and logs an error for Prometheus.
+**✔ Expected:** Kruize starts successfully and logs an error for datasource 1.
 
-**both-invalid**
+**both-invalid** (OpenShift)
 
-Both Prometheus and Thanos Querier datasources are unreachable.
+Both datasources are unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.
+
+**valid** (Minikube/Kind)
+
+Datasource is reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**invalid** (Minikube/Kind)
+
+Datasource is unreachable.
 
 **❌ Expected:** Kruize fails to start and exits with an error.

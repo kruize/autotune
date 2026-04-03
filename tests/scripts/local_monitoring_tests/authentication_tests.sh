@@ -33,7 +33,15 @@ tokens=(
   ["empty"]=""
 )
 # Tests to validate authentication types in Kruize
+# Note: Skipped on minikube/kind - the minikube YAML has no datasource authentication block,
+# and Prometheus on minikube typically does not require bearer auth. These tests only apply
+# to OpenShift where Prometheus enforces OAuth/bearer token authentication.
 function authentication_tests() {
+	if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
+		echo "Skipping authentication_tests: datasource auth is not configured on ${cluster_type} (Prometheus does not require bearer token)."
+		return 0
+	fi
+
 	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS=0
