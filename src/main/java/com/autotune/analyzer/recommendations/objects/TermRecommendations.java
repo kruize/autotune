@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -19,6 +20,10 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
+
+    @SerializedName(KruizeConstants.JSONKeys.METRICS_INFO)
+    private HashMap<String, MetricAggregationInfoResults> metricsInfo;
+
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
 
@@ -105,5 +110,13 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public void setPlots(PlotData.PlotsData plots) {
         this.plots = plots;
+    }
+
+    public void addMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
+        if (null != metricName && null != metricAggregationInfoResults) {
+            if (null == this.metricsInfo)
+                this.metricsInfo = new HashMap<>();
+            this.metricsInfo.put(metricName, metricAggregationInfoResults);
+        }
     }
 }
