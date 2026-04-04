@@ -3,17 +3,12 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
 
-/**
- * Model class to represent recommendations for a specific term (short/medium/long).
- * Updated to support new schema with metrics_info containing pod_count and other metrics.
- */
 public class TermRecommendations implements MappedRecommendationForTerm {
 
     public TermRecommendations() {
@@ -27,9 +22,6 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
 
-    @SerializedName(KruizeConstants.JSONKeys.METRICS_INFO)
-    private HashMap<String, MetricAggregationInfoResults> metricsInfo;
-
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_ENGINES)
     private HashMap<String, MappedRecommendationForModel> recommendationForModelHashMap;
 
@@ -37,14 +29,6 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public TermRecommendations(RecommendationConstants.RecommendationTerms recommendationTerm) {
         this.durationInHrs = recommendationTerm.getDuration();
-    }
-
-    public HashMap<String, MetricAggregationInfoResults> getMetricsInfo() {
-        return metricsInfo;
-    }
-
-    public void setMetricsInfo(HashMap<String, MetricAggregationInfoResults> metricsInfo) {
-        this.metricsInfo = metricsInfo;
     }
 
     @Override
