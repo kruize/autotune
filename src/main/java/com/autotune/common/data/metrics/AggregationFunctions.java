@@ -20,6 +20,7 @@ public class AggregationFunctions {
     private String function;
     private String query;
     private String version;
+    private String requiredLayer;
 
     public AggregationFunctions(String function, String query, String version) {
         this.function = function;
@@ -51,12 +52,21 @@ public class AggregationFunctions {
         this.version = version;
     }
 
+    public String getRequiredLayer() {
+        return requiredLayer;
+    }
+
+    public void setRequiredLayer(String requiredLayer) {
+        this.requiredLayer = requiredLayer;
+    }
+
     @Override
     public String toString() {
         return "AggregationFunctions{" +
                 "function='" + function + '\'' +
                 ", query='" + query + '\'' +
                 ", version='" + version + '\'' +
+                ", requiredLayer='" + requiredLayer + '\'' +
                 '}';
     }
 }

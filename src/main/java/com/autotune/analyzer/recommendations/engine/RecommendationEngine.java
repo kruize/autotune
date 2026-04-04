@@ -1572,6 +1572,27 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
+                            // Check if this metric requires a specific layer
+                            String requiredLayer = aggregationFunctionsEntry.getValue().getRequiredLayer();
+                            if (requiredLayer != null && !requiredLayer.isEmpty()) {
+                                // Check if any of the required layers are detected
+                                String[] requiredLayers = requiredLayer.split(",");
+                                boolean layerDetected = false;
+                                for (String layer : requiredLayers) {
+                                    if (containerData.getLayerMap() != null &&
+                                            containerData.getLayerMap().containsKey(layer.trim())) {
+                                        layerDetected = true;
+                                        break;
+                                    }
+                                }
+                                // Skip this metric if required layer is not detected
+                                if (!layerDetected) {
+                                    LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
+                                            metricEntry.getName(), requiredLayer, containerName);
+                                    continue;
+                                }
+                            }
+
                             // Determine promQL query on metric type
                             String promQL = aggregationFunctionsEntry.getValue().getQuery();
 
