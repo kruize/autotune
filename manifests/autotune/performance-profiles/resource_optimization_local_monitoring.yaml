@@ -236,7 +236,7 @@ slo:
     - function: sum
       query: 'sum by(container, namespace) (avg_over_time(container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
-    # Pod Count (based on READY containers, not total pods)
+  # Pod Count (based on READY containers, not total pods)
   - name: podCount
     datasource: prometheus
     value_type: "double"
