@@ -773,3 +773,382 @@ def test_update_layer_with_experiments_active(cluster_type):
     delete_layer(layer_name)
     os.remove(tmp_create)
     os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_update_layer_idempotency(cluster_type):
+    """
+    Test Description: This test validates that applying the same update twice is idempotent
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-idempotency"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # First update
+    update_data = copy.deepcopy(create_data)
+    update_data['tunables'][0]['upper_bound'] = "8192"
+    update_data['details'] = "Updated for idempotency test"
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w") as f:
+        json.dump(update_data, f)
+
+    response1 = update_layer(layer_name, tmp_update)
+    assert response1.status_code == SUCCESS_200_STATUS_CODE
+    data1 = response1.json()
+    assert data1['status'] == SUCCESS_STATUS
+    assert data1['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Second update with same data (should be idempotent)
+    response2 = update_layer(layer_name, tmp_update)
+    assert response2.status_code == SUCCESS_200_STATUS_CODE
+    data2 = response2.json()
+    assert data2['status'] == SUCCESS_STATUS
+    assert data2['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Verify the layer state is consistent
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+    assert layers[0]['tunables'][0]['upper_bound'] == "8192"
+    assert layers[0]['details'] == "Updated for idempotency test"
+
+    print(f"✓ Successfully verified idempotency")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_update_layer_preserves_metadata(cluster_type):
+    """
+    Test Description: This test validates that metadata name is preserved during updates
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-preserve-metadata"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # Update layer - change tunables but keep metadata
+    update_data = copy.deepcopy(create_data)
+    update_data['tunables'][0]['upper_bound'] = "16384"
+    update_data['details'] = "Updated to verify metadata preservation"
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w") as f:
+        json.dump(update_data, f)
+
+    response = update_layer(layer_name, tmp_update)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    data = response.json()
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Verify metadata is preserved
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+
+    # Check metadata name is preserved
+    assert layers[0]['metadata']['name'] == layer_name
+
+    # Verify the update was applied
+    assert layers[0]['tunables'][0]['upper_bound'] == "16384"
+
+    print(f"✓ Successfully verified metadata preservation")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_update_layer_partial_update(cluster_type):
+    """
+    Test Description: This test validates updating specific fields and verifies via GET
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-partial-update"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # Update only the details field
+    update_data = copy.deepcopy(create_data)
+    new_details = "Partially updated - only details field changed"
+    update_data['details'] = new_details
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w") as f:
+        json.dump(update_data, f)
+
+    response = update_layer(layer_name, tmp_update)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    data = response.json()
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # GET the layer and verify
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+
+    retrieved_layer = layers[0]
+
+    # Verify only details changed
+    assert retrieved_layer['details'] == new_details
+    assert retrieved_layer['layer_name'] == layer_name
+    assert retrieved_layer['tunables'] == create_data['tunables']
+    assert retrieved_layer['layer_presence'] == create_data['layer_presence']
+
+    print(f"✓ Successfully verified partial update via GET")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.extended
+def test_update_layer_special_characters(cluster_type):
+    """
+    Test Description: This test validates updating layer with special characters in strings
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-special-chars"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # Update with special characters
+    update_data = copy.deepcopy(create_data)
+    special_details = "Test with special chars: @#$%^&*()_+-=[]{}|;':\",./<>?`~ and quotes 'single' \"double\""
+    update_data['details'] = special_details
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w") as f:
+        json.dump(update_data, f)
+
+    response = update_layer(layer_name, tmp_update)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    data = response.json()
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Verify special characters are preserved
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+    assert layers[0]['details'] == special_details
+
+    print(f"✓ Successfully updated layer with special characters")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.extended
+def test_update_layer_unicode_content(cluster_type):
+    """
+    Test Description: This test validates updating layer with unicode characters
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-unicode"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f, ensure_ascii=False)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # Update with unicode characters
+    update_data = copy.deepcopy(create_data)
+    unicode_details = "Unicode test: 你好世界 مرحبا بالعالم Здравствуй мир こんにちは世界 🚀🔥💻"
+    update_data['details'] = unicode_details
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w", encoding='utf-8') as f:
+        json.dump(update_data, f, ensure_ascii=False)
+
+    response = update_layer(layer_name, tmp_update)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    data = response.json()
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Verify unicode characters are preserved
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+    assert layers[0]['details'] == unicode_details
+
+    print(f"✓ Successfully updated layer with unicode content")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)
+
+
+@pytest.mark.layers
+@pytest.mark.extended
+def test_update_layer_very_large_payload(cluster_type):
+    """
+    Test Description: This test validates updating layer with a large number of tunables
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    layer_name = "test-large-payload"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    delete_layer(layer_name)
+
+    # Create layer with initial tunables
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+
+    # Update with many tunables (100 tunables)
+    update_data = copy.deepcopy(create_data)
+
+    # Generate 100 tunables
+    large_tunables = []
+    for i in range(100):
+        tunable = {
+            "name": f"tunable_{i}",
+            "value_type": "double",
+            "upper_bound": str(1000 + i * 10),
+            "lower_bound": str(100 + i),
+            "step": 1,
+            "units": "Mi"
+        }
+        large_tunables.append(tunable)
+
+    update_data['tunables'] = large_tunables
+
+    tmp_update = f"/tmp/update_{layer_name}.json"
+    with open(tmp_update, "w") as f:
+        json.dump(update_data, f)
+
+    response = update_layer(layer_name, tmp_update)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    data = response.json()
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_LAYER_SUCCESS_MSG % layer_name
+
+    # Verify large payload was accepted
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+    assert len(layers[0]['tunables']) == 100
+
+    # Verify a few tunables
+    assert layers[0]['tunables'][0]['name'] == "tunable_0"
+    assert layers[0]['tunables'][99]['name'] == "tunable_99"
+
+    print(f"✓ Successfully updated layer with large payload (100 tunables)")
+
+    # Cleanup
+    delete_layer(layer_name)
+    os.remove(tmp_create)
+    os.remove(tmp_update)

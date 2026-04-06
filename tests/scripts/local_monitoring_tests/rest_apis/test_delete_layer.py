@@ -553,3 +553,151 @@ def test_delete_layer_sql_injection(cluster_type):
         print(f"✓ SQL injection pattern handled safely: {injection_pattern}")
 
     print(f"✓ All {len(sql_injection_patterns)} SQL injection patterns handled correctly")
+
+
+# =============================================================================
+# C. EDGE CASES - Special Deletion Scenarios (2 tests)
+# =============================================================================
+
+@pytest.mark.layers
+@pytest.mark.extended
+def test_delete_layer_case_sensitivity(cluster_type):
+    """
+    Test Description: This test validates that layer names are case-sensitive during deletion
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    # Create layer with mixed case name
+    layer_name = "test-Case-Sensitive"
+    create_data = copy.deepcopy(layer_data)
+    create_data['layer_name'] = layer_name
+    create_data['metadata']['name'] = layer_name
+
+    tmp_create = f"/tmp/create_{layer_name}.json"
+    with open(tmp_create, "w") as f:
+        json.dump(create_data, f)
+
+    # Cleanup: Delete layer if it exists from previous run
+    delete_layer(layer_name)
+
+    # Create the layer
+    create_response = create_layer(tmp_create)
+    assert create_response.status_code == SUCCESS_STATUS_CODE
+    print(f"✓ Created layer: {layer_name}")
+
+    # Try to delete with lowercase (should fail if case-sensitive)
+    lowercase_name = layer_name.lower()
+    response_lowercase = delete_layer(lowercase_name)
+    data_lowercase = response_lowercase.json()
+
+    assert response_lowercase.status_code == ERROR_404_STATUS_CODE
+    assert data_lowercase['status'] == ERROR_STATUS
+    assert data_lowercase['message'] == DELETE_LAYER_NOT_FOUND_MSG % lowercase_name
+    print(f"✓ Correctly rejected deletion with lowercase: {lowercase_name}")
+
+    # Try to delete with uppercase (should fail if case-sensitive)
+    uppercase_name = layer_name.upper()
+    response_uppercase = delete_layer(uppercase_name)
+    data_uppercase = response_uppercase.json()
+
+    assert response_uppercase.status_code == ERROR_404_STATUS_CODE
+    assert data_uppercase['status'] == ERROR_STATUS
+    assert data_uppercase['message'] == DELETE_LAYER_NOT_FOUND_MSG % uppercase_name
+    print(f"✓ Correctly rejected deletion with uppercase: {uppercase_name}")
+
+    # Verify original layer still exists
+    list_response = list_layers(layer_name=layer_name)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    print(f"✓ Original layer still exists after failed deletion attempts")
+
+    # Delete with exact case (should succeed)
+    response_exact = delete_layer(layer_name)
+    data_exact = response_exact.json()
+
+    assert response_exact.status_code == SUCCESS_200_STATUS_CODE
+    assert data_exact['status'] == SUCCESS_STATUS
+    assert data_exact['message'] == DELETE_LAYER_SUCCESS_MSG % layer_name
+    print(f"✓ Successfully deleted layer with exact case: {layer_name}")
+
+    # Verify layer is deleted
+    list_response = list_layers(layer_name=layer_name)
+    assert list_response.status_code == ERROR_404_STATUS_CODE
+
+    print(f"✓ Successfully verified case sensitivity in layer deletion")
+
+    # Cleanup temp file (layer already deleted)
+    os.remove(tmp_create)
+
+
+@pytest.mark.layers
+@pytest.mark.extended
+def test_delete_layer_with_special_chars(cluster_type):
+    """
+    Test Description: This test validates deleting layers with valid special characters
+    (hyphens, underscores, numbers)
+    """
+    form_kruize_url(cluster_type)
+
+    input_json_file = layer_dir / "container-config.json"
+    with open(input_json_file, "r") as f:
+        layer_data = json.load(f)
+
+    # Test various valid layer names with special characters
+    test_cases = [
+        "test-layer-with-hyphens",
+        "test_layer_with_underscores",
+        "test-layer-123-numbers",
+        "test_layer_mixed-chars_456",
+        "layer-name-2024",
+        "my_test_layer_v1"
+    ]
+
+    tmp_files = []
+
+    for layer_name in test_cases:
+        create_data = copy.deepcopy(layer_data)
+        create_data['layer_name'] = layer_name
+        create_data['metadata']['name'] = layer_name
+
+        tmp_file = f"/tmp/create_{layer_name}.json"
+        tmp_files.append(tmp_file)
+
+        with open(tmp_file, "w") as f:
+            json.dump(create_data, f)
+
+        # Cleanup: Delete layer if it exists from previous run
+        delete_layer(layer_name)
+
+        # Create layer
+        create_response = create_layer(tmp_file)
+        assert create_response.status_code == SUCCESS_STATUS_CODE
+        print(f"✓ Created layer with special chars: {layer_name}")
+
+        # Verify layer exists
+        list_response = list_layers(layer_name=layer_name)
+        assert list_response.status_code == SUCCESS_200_STATUS_CODE
+
+        # Delete the layer
+        response = delete_layer(layer_name)
+        data = response.json()
+
+        # Verify deletion success
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == DELETE_LAYER_SUCCESS_MSG % layer_name
+
+        # Verify layer is deleted
+        list_response = list_layers(layer_name=layer_name)
+        assert list_response.status_code == ERROR_404_STATUS_CODE
+
+        print(f"✓ Successfully deleted layer with special chars: {layer_name}")
+
+    print(f"✓ All {len(test_cases)} layers with special characters deleted successfully")
+
+    # Cleanup temp files
+    for tmp_file in tmp_files:
+        os.remove(tmp_file)
