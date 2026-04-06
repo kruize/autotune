@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2026 IBM Corporation and others.
+ * Copyright (c) 2025 IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,31 +14,47 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.v1;
+package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.Config;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * ConfigV1 extends Config to add v1-specific fields for the new API endpoint.
- * Adds replicas field and provides resources as a nested structure.
- */
-public class ConfigV1 extends Config {
-    
+public class Variation {
     @SerializedName(KruizeConstants.JSONKeys.REPLICAS)
     private Integer replicas;
-    
     @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
+    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
+    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
+    private List<RecommendationConfigEnv> env;
 
-    public ConfigV1() {
-        super();
-        this.resources = new HashMap<>();
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
+        return requests;
+    }
+
+    public void setRequests(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests) {
+        this.requests = requests;
+    }
+
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getLimits() {
+        return limits;
+    }
+
+    public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
+        this.limits = limits;
+    }
+
+    public List<RecommendationConfigEnv> getEnv() {
+        return env;
+    }
+
+    public void setEnv(List<RecommendationConfigEnv> env) {
+        this.env = env;
     }
 
     public Integer getReplicas() {

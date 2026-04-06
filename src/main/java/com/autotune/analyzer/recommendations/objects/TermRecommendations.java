@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 

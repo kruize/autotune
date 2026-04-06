@@ -17,11 +17,18 @@
 package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Config {
+    @SerializedName(KruizeConstants.JSONKeys.REPLICAS)
+    private Integer replicas;
+    @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
@@ -48,5 +55,21 @@ public class Config {
 
     public void setEnv(List<RecommendationConfigEnv> env) {
         this.env = env;
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
+    }
+
+    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
+        return resources;
+    }
+
+    public void setResources(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
+        this.resources = resources;
     }
 }
