@@ -182,6 +182,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             } else {
                 // Determine min, max, avg pod count for a given term
                 MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
+                LOGGER.info("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
                 mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
@@ -300,7 +301,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
     private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
         MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
         Double avg = 0.0, min = 0.0, max = 0.0;
-        LOGGER.debug("filteredResultsMap: size = {}", filteredResultsMap.size());
+        LOGGER.info("filteredResultsMap: size = {}", filteredResultsMap.size());
 
         // 1. Use 'podCount' metric data points
         List<MetricAggregationInfoResults> podCountMetrics = filteredResultsMap.values().stream()
@@ -310,7 +311,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
                 .filter(aggInfo -> aggInfo != null && aggInfo.getAvg() != null)
                 .toList();
-        LOGGER.debug("podCountMetrics : size = {}, content = {}", podCountMetrics.size(), podCountMetrics);
+        LOGGER.info("podCountMetrics : size = {}, content = {}", podCountMetrics.size(), podCountMetrics);
         if (!podCountMetrics.isEmpty()) {
             avg = podCountMetrics.stream()
                     .mapToDouble(MetricAggregationInfoResults::getAvg)
@@ -341,7 +342,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
                 .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
                 .toList();
-        LOGGER.debug("cpuUsageMetrics : size = {}, content = {}", cpuUsageMetrics.size(), cpuUsageMetrics);
+        LOGGER.info("cpuUsageMetrics : size = {}, content = {}", cpuUsageMetrics.size(), cpuUsageMetrics);
         if (!cpuUsageMetrics.isEmpty()) {
             List<Double> calcPodCounts = cpuUsageMetrics.stream()
                     .mapToDouble(aggInfo -> aggInfo.getSum() / aggInfo.getAvg())
@@ -368,7 +369,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
                 .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
                 .toList();
-        LOGGER.debug("memoryUsageMetrics : size = {}, content = {}", memoryUsageMetrics.size(), memoryUsageMetrics);
+        LOGGER.info("memoryUsageMetrics : size = {}, content = {}", memoryUsageMetrics.size(), memoryUsageMetrics);
         if (!memoryUsageMetrics.isEmpty()) {
             List<Double> calcPodCounts = memoryUsageMetrics.stream()
                     .mapToDouble(aggInfo -> aggInfo.getSum() / aggInfo.getAvg())
