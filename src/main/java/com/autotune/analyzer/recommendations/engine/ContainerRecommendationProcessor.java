@@ -298,6 +298,18 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         return mappedRecommendationForModel;
     }
 
+    /**
+     * getPodCountAggrInfo is utility function responsible to determine min, max and avg of pods based on following sequence
+     *
+     * 1. From 'podCount' metric data if exists.
+     * 2. From 'cpuUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     * 3. From 'memoryUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     *
+     * To avoid issues with formulae, results are filtered to chose datapoints whose sum, avg is not null and avg is not 0.0.
+     *
+     * @param filteredResultsMap
+     * @return aggregated results like min, max, avg of pods from the results supplied.
+     */
     private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
         MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
         Double avg = 0.0, min = 0.0, max = 0.0;
