@@ -332,12 +332,67 @@ public class KruizeConstants {
     public static final class RecommendationTypes {
         /** CPU and memory right-sizing recommendations */
         public static final String RESOURCE = "resource";
-        /** Runtime tuning recommendations (JVM options, GC policy, etc.) */
+        /** Runtime tuning recommendations (JVM options, GC policy, etc.) - enables all runtime layers */
         public static final String RUNTIME = "runtime";
         /** Accelerator (GPU) recommendations */
         public static final String ACCELERATOR = "accelerator";
+        
+        // Specific runtime layer types for granular control
+        /** Hotspot JVM runtime recommendations */
+        public static final String HOTSPOT = "hotspot";
+        /** Quarkus framework runtime recommendations */
+        public static final String QUARKUS = "quarkus";
+        /** Semeru JVM runtime recommendations */
+        public static final String SEMERU = "semeru";
+        /** Node.js runtime recommendations */
+        public static final String NODEJS = "nodejs";
+        /** Spring Boot framework recommendations */
+        public static final String SPRINGBOOT = "springboot";
 
         private RecommendationTypes() {
+        }
+    }
+
+    /**
+     * Supported resource types for granular resource recommendation control.
+     */
+    public static final class ResourceTypes {
+        /** CPU resource recommendations */
+        public static final String CPU = "cpu";
+        /** Memory resource recommendations */
+        public static final String MEMORY = "memory";
+
+        private ResourceTypes() {
+        }
+    }
+
+    /**
+     * Supported runtime layer names for granular runtime recommendation control.
+     */
+    public static final class RuntimeLayers {
+        /** Hotspot JVM layer */
+        public static final String HOTSPOT = "hotspot";
+        /** Quarkus framework layer */
+        public static final String QUARKUS = "quarkus";
+        /** Semeru JVM layer */
+        public static final String SEMERU = "semeru";
+        /** Node.js runtime layer */
+        public static final String NODEJS = "nodejs";
+        /** Spring Boot framework layer */
+        public static final String SPRINGBOOT = "springboot";
+
+        private RuntimeLayers() {
+        }
+    }
+
+    /**
+     * Supported accelerator types for granular accelerator recommendation control.
+     */
+    public static final class AcceleratorTypes {
+        /** GPU accelerator */
+        public static final String GPU = "gpu";
+
+        private AcceleratorTypes() {
         }
     }
 

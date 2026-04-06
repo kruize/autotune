@@ -3207,50 +3207,6 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 </details>
 
-**Request with `recommendation_types` field**
-
-The `recommendation_types` field within `recommendation_settings` is optional and allows users to specify which recommendation categories to generate. Supported values: `resource` (CPU/memory right-sizing), `runtime` (JVM options, GC policy, framework tuning), `accelerator` (GPU recommendations). When omitted or empty, all recommendation types are generated (default).
-
-<details>
-<summary><b>Example Request with recommendation_types - resource and runtime only</b></summary>
-
-```json
-[
-  {
-    "version": "v2.0",
-    "experiment_name": "default|default|deployment|tfb-qrh-deployment",
-    "cluster_name": "default",
-    "performance_profile": "resource-optimization-local-monitoring",
-    "metadata_profile": "cluster-metadata-local-monitoring",
-    "mode": "monitor",
-    "target_cluster": "local",
-    "kubernetes_objects": [
-      {
-        "type": "deployment",
-        "name": "tfb-qrh-deployment",
-        "namespace": "default",
-        "containers": [
-          {
-            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server-1"
-          }
-        ]
-      }
-    ],
-    "trial_settings": {
-      "measurement_duration": "15min"
-    },
-    "recommendation_settings": {
-      "threshold": "0.1",
-      "recommendation_types": ["resource", "runtime"]
-    },
-    "datasource": "prometheus-1"
-  }
-]
-```
-
-</details>
-
 **Request with `experiment_type` field**
 
 The `experiment_type` field in the JSON is optional and can be used to
