@@ -51,7 +51,6 @@ public interface RecommendationEngineService {
      * @param recommendationModel              The model to populate with recommendations
      * @param notifications                    List of notifications to be added
      * @param internalMapToPopulate           Map containing current and recommended values
-     * @param numPods                         Number of pods
      * @param cpuThreshold                    CPU threshold value
      * @param memoryThreshold                 Memory threshold value
      * @param recommendationAcceleratorRequestMap Map of accelerator recommendations (can be null)
@@ -62,7 +61,6 @@ public interface RecommendationEngineService {
                                    MappedRecommendationForModel recommendationModel,
                                    ArrayList<RecommendationNotification> notifications,
                                    HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                   int numPods,
                                    double cpuThreshold,
                                    double memoryThreshold,
                                    Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
