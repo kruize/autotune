@@ -175,18 +175,22 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             int duration = termsEntry.getValue().getDays();
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
 
+            // Extract the datapoints from monitoringStartTime to monitoringEndTime to be used for all recommendation models
+            Map<Timestamp, IntervalResults> filteredResultsMap = null;
+            if (namespaceData.getResults() != null) {
+                filteredResultsMap = namespaceData.getResults().entrySet().stream().filter(entry -> (entry.getKey().compareTo(monitoringStartTime) >= 0 && entry.getKey().compareTo(monitoringEndTime) <= 0)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            }
+
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
-            if (!Terms.checkIfMinDataAvailableForTermForNamespace(namespaceData, terms, monitoringEndTime, measurementDuration)) {
+            if (!Terms.checkIfMinDataAvailableForTermForNamespace(filteredResultsMap, terms, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
-                            monitoringStartTime, model, namespaceData, monitoringEndTime, kruizeObject.getRecommendation_settings(), currentConfig, termsEntry);
+                            model, filteredResultsMap, kruizeObject.getRecommendation_settings(), currentConfig, termsEntry);
 
-                    if (null == mappedRecommendationForModel)
-                        continue;
 
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
@@ -245,10 +249,8 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         return namespaceRecommendationAvailable;
     }
 
-    private MappedRecommendationForModel generateNamespaceRecommendationBasedOnModel(Timestamp monitoringStartTime,
-                                                                                    RecommendationModel model,
-                                                                                    NamespaceData namespaceData,
-                                                                                    Timestamp monitoringEndTime,
+    private MappedRecommendationForModel generateNamespaceRecommendationBasedOnModel(RecommendationModel model,
+                                                                                    Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                                     RecommendationSettings recommendationSettings,
                                                                                     HashMap<AnalyzerConstants.ResourceSetting,
                                                                                             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
@@ -267,49 +269,24 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         RecommendationConfigItem currentNamespaceMemRequest = currentConfig.memoryRequest;
         RecommendationConfigItem currentNamespaceMemLimit = currentConfig.memoryLimit;
 
-        if (null != monitoringStartTime) {
-            Timestamp finalMonitoringStartTime = monitoringStartTime;
-            Map<Timestamp, IntervalResults> filteredResultsMap = namespaceData.getResults().entrySet().stream()
-                    .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0) && (x.getKey().compareTo(monitoringEndTime) <= 0))))
-                    .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        ArrayList<RecommendationNotification> notifications = new ArrayList<>();
+        RecommendationConfigItem namespaceRecommendationCpuRequest = model.getCPURequestRecommendationForNamespace(filteredResultsMap, notifications);
+        RecommendationConfigItem namespaceRecommendationMemRequest = model.getMemoryRequestRecommendationForNamespace(filteredResultsMap, notifications);
+        RecommendationConfigItem namespaceRecommendationCpuLimits = namespaceRecommendationCpuRequest;
+        RecommendationConfigItem namespaceRecommendationMemLimits = namespaceRecommendationMemRequest;
 
-            int numPodsInNamespace = getNumPodsForNamespace(filteredResultsMap);
-            mappedRecommendationForModel.setPodsCount(numPodsInNamespace);
+        HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentNamespaceCPURequest);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentNamespaceCPULimit);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentNamespaceMemRequest);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentNamespaceMemLimit);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, namespaceRecommendationCpuRequest);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, namespaceRecommendationCpuLimits);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, namespaceRecommendationMemRequest);
+        internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, namespaceRecommendationMemLimits);
 
-            ArrayList<RecommendationNotification> notifications = new ArrayList<>();
-            RecommendationConfigItem namespaceRecommendationCpuRequest = model.getCPURequestRecommendationForNamespace(filteredResultsMap, notifications);
-            RecommendationConfigItem namespaceRecommendationMemRequest = model.getMemoryRequestRecommendationForNamespace(filteredResultsMap, notifications);
-            RecommendationConfigItem namespaceRecommendationCpuLimits = namespaceRecommendationCpuRequest;
-            RecommendationConfigItem namespaceRecommendationMemLimits = namespaceRecommendationMemRequest;
+        engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, namespaceCpuThreshold, namespaceMemoryThreshold, null, null);
 
-            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentNamespaceCPURequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentNamespaceCPULimit);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentNamespaceMemRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentNamespaceMemLimit);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, namespaceRecommendationCpuRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, namespaceRecommendationCpuLimits);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, namespaceRecommendationMemRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, namespaceRecommendationMemLimits);
-
-            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPodsInNamespace, namespaceCpuThreshold, namespaceMemoryThreshold, null, null);
-        } else {
-            RecommendationNotification notification = new RecommendationNotification(
-                    RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            mappedRecommendationForModel.addNotification(notification);
-        }
         return mappedRecommendationForModel;
-    }
-
-    private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        LOGGER.debug("Size of Filter Map: {}", filteredResultsMap.size());
-        Double max_pods_cpu = filteredResultsMap.values().stream()
-                .map(e -> {
-                    Optional<MetricResults> numPodsResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceTotalPods));
-                    double numPods = numPodsResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    return numPods;
-                })
-                .max(Double::compareTo).get();
-        return (int) Math.ceil(max_pods_cpu);
     }
 }
