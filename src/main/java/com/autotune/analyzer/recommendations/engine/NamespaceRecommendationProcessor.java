@@ -178,7 +178,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             // Extract the datapoints from monitoringStartTime to monitoringEndTime to be used for all recommendation models
             Map<Timestamp, IntervalResults> filteredResultsMap = null;
             if (namespaceData.getResults() != null) {
-                filteredResultsMap = namespaceData.getResults().entrySet().stream().filter(entry -> (entry.getKey().after(monitoringStartTime) && entry.getKey().before(monitoringEndTime))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                filteredResultsMap = namespaceData.getResults().entrySet().stream().filter(entry -> (entry.getKey().compareTo(monitoringStartTime) >= 0 && entry.getKey().compareTo(monitoringEndTime) <= 0)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             }
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
