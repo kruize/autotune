@@ -1268,31 +1268,26 @@ function kruize_operator_patch() {
   sed -i '/kruize-db:/,/volumeMounts:/ {
     /requests:/,/limits:/ {
       s/cpu: ".*"/cpu: "2"/g
-      s/memory: ".*"/memory: "1Gi"/g
+      s/memory: ".*"/memory: "2Gi"/g
     }
   }' ${CR_FILE}
 
   sed -i '/kruize-db:/,/volumeMounts:/ {
     /limits:/,/volumeMounts:/ {
       s/cpu: ".*"/cpu: "2"/g
-      s/memory: ".*"/memory: "1Gi"/g
-    }
-  }' ${CR_FILE}
-
-
-  # Update kruize application resources
-  sed -i '/^[[:space:]]*kruize:/,/^[[:space:]]*[a-z-]*:/ {
-    /requests:/,/limits:/ {
-      s/cpu: ".*"/cpu: "2"/g
-      s/memory: ".*"/memory: "1Gi"/g
+      s/memory: ".*"/memory: "2Gi"/g
     }
   }' ${CR_FILE}
 
   # Update kruize application resources
-  sed -i '/^[[:space:]]*kruize:/,/^[[:space:]]*[a-z-]*:/ {
-    /limits:/,$ {
-      s/cpu: ".*"/cpu: "2"/g
-      s/memory: ".*"/memory: "1Gi"/g
+  sed -i '/^[[:space:]]*kruize:/,$ {
+    /^[[:space:]]*requests:/,/^[[:space:]]*limits:/ {
+        s/cpu: ".*"/cpu: "2"/g
+        s/memory: ".*"/memory: "2Gi"/g
+    }
+    /^[[:space:]]*limits:/,$ {
+        s/cpu: ".*"/cpu: "2"/g
+        s/memory: ".*"/memory: "2Gi"/g
     }
   }' ${CR_FILE}
 
