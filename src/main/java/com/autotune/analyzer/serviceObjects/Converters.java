@@ -639,5 +639,41 @@ public class Converters {
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
         }
+
+        /**
+         * Converts KruizeObject to ListRecommendationsAPIObject using V1 schema
+         * This method transforms recommendations to the new schema with:
+         * - replicas attribute at current and recommendation levels
+         * - nested resources structure (limits and requests under resources)
+         * - metrics_info with pod_count metrics (avg, max, min)
+         * - variation with replicas
+         *
+         * @param kruizeObject The KruizeObject to convert
+         * @param getLatest Whether to get only the latest recommendation
+         * @param checkForTimestamp Whether to check for a specific timestamp
+         * @param monitoringEndTime The specific monitoring end time to filter by
+         * @return ListRecommendationsAPIObject with V1 schema structure
+         */
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1(
+                KruizeObject kruizeObject,
+                boolean getLatest,
+                boolean checkForTimestamp,
+                Timestamp monitoringEndTime) {
+            // TODO: Implement V1 schema conversion
+            // For now, delegate to the existing converter
+            // The actual V1 transformation logic will be implemented in a subsequent commit
+            // This includes:
+            // 1. Adding replicas to current section
+            // 2. Nesting limits/requests under resources
+            // 3. Adding metrics_info with pod_count (avg, max, min)
+            // 4. Adding replicas to recommendation config
+            // 5. Adding replicas to variation section
+            // 6. Removing pods_count from config
+
+            LOGGER.debug("Converting KruizeObject to V1 schema for experiment: {}", kruizeObject.getExperimentName());
+
+            // Use existing converter as base, V1-specific transformations will be added
+            return convertKruizeObjectToListRecommendationSO(kruizeObject, getLatest, checkForTimestamp, monitoringEndTime);
+        }
     }
 }
