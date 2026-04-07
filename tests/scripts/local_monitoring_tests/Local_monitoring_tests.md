@@ -242,9 +242,6 @@ In addition to the pre-requisites mentioned above:
 
 - Hotspot GC policy (OpenJDK/Hotspot): JVM workload with OpenJDK or Hotspot runtime and layer `hotspot` present. 
   - **Expected**: `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` contains appropriate GC flags (e.g., `-XX:+UseG1GC` for G1)
-
-The following tests are yet to be added:
-
 - Semeru GC policy (Semeru/OpenJ9): JVM workload with Semeru or OpenJ9 runtime and layer `semeru` present. 
   - **Expected**: `JAVA_OPTIONS` contains `-Xgcpolicy:gencon`, `-Xgcpolicy:balanced`, or `-Xgcpolicy:optthruput`
 - Missing JVM metadata: Workload without `jvm_info` metrics or layer presence. 
@@ -253,8 +250,6 @@ The following tests are yet to be added:
   - **Expected**: No GC recommendation (null version handling)
 - Layer vs runtime mismatch: Layer name does not match effective runtime (e.g., hotspot layer for OpenJ9 workload). 
   - **Expected**: No recommendation for mismatched layer
-- JVM heap from jvmMemoryMaxBytes: `jvm_memory_max_bytes` metric available. 
-  - **Expected**: Heap size used for GC policy decision (e.g., G1 vs ZGC for large heaps)
 - Non-runtime datasource: Datasource that does not support runtime recommendations. 
   - **Expected**: API succeeds; server logs `RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE`
 

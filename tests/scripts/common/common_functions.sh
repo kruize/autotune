@@ -1026,44 +1026,31 @@ function kruize_local_patch() {
 #   Benchmarks Install
 ###########################################
 function benchmarks_install() {
-	APP_NAMESPACE="default"
+	APP_NAMESPACE="${1:-${APP_NAMESPACE}}"
+	BENCHMARK="${2:-tfb}"
 
 	echo
 	echo "#######################################"
 	pushd benchmarks >/dev/null
-    echo "5. Installing TechEmpower (Quarkus REST EASY) benchmark into cluster"
-    pushd techempower >/dev/null
-    kubectl apply -f manifests/default_manifests -n ${APP_NAMESPACE}
-    check_err "ERROR: TechEmpower app failed to start, exiting"
-    popd >/dev/null
-
-	popd >/dev/null
+	  if [ ${BENCHMARK} == "tfb" ]; then
+      echo "Installing TechEmpower (Quarkus REST EASY) benchmark into cluster"
+      pushd techempower >/dev/null
+        kubectl apply -f manifests/default_manifests -n ${APP_NAMESPACE}
+        check_err "ERROR: TechEmpower app failed to start, exiting"
+      popd >/dev/null
+    fi
+    if [ ${BENCHMARK} == "petclinic" ]; then
+			echo "Installing spring petclinic benchmark into cluster"
+			pushd spring-petclinic >/dev/null
+        if [ "${MANIFESTS}" != "default_manifests" ]; then
+          kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        else
+          kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
+        fi
+        check_err "ERROR: spring petclinic failed to start, exiting"
+			popd >/dev/null
+		fi
+  popd >/dev/null
 	echo "#######################################"
 	echo
-}
-
-#
-# Start a background load on the benchmark for 20 mins
-#
-function apply_benchmark_load() {
-	TECHEMPOWER_LOAD_IMAGE="quay.io/kruizehub/tfb_hyperfoil_load:0.25.2"
-	APP_NAMESPACE="default"
-	LOAD_DURATION="-1200"
-
-  if kubectl get pods --namespace ${APP_NAMESPACE} -o jsonpath='{.items[*].metadata.name}' | grep -q "tfb"; then
-    echo
-    echo "################################################################################################################"
-    echo " Starting ${LOAD_DURATION} secs background load against the techempower benchmark in ${APP_NAMESPACE} namespace "
-    echo "################################################################################################################"
-    echo
-    if [ ${CLUSTER_TYPE} == "kind" ] || [ ${CLUSTER_TYPE} == "minikube" ]; then
-      TECHEMPOWER_ROUTE=${TECHEMPOWER_URL}
-    elif [ ${CLUSTER_TYPE} == "aks" ]; then
-      TECHEMPOWER_ROUTE=${TECHEMPOWER_URL}
-    elif [ ${CLUSTER_TYPE} == "openshift" ]; then
-      TECHEMPOWER_ROUTE=$(oc get route -n ${APP_NAMESPACE} --template='{{range .items}}{{.spec.host}}{{"\n"}}{{end}}')
-    fi
-    # docker run -d --rm --network="host"  ${TECHEMPOWER_LOAD_IMAGE} /opt/run_hyperfoil_load.sh ${TECHEMPOWER_ROUTE} <END_POINT> <DURATION> <THREADS> <CONNECTIONS>
-    docker run -d --rm --network="host"  ${TECHEMPOWER_LOAD_IMAGE} /opt/run_hyperfoil_load.sh ${TECHEMPOWER_ROUTE} queries?queries=20 ${LOAD_DURATION} 512 4096 #1024 8096
-  fi
 }

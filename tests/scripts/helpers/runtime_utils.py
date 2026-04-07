@@ -1,5 +1,5 @@
 """
-Copyright (c) 2022, 2024 Red Hat, IBM Corporation and others.
+Copyright (c) 2026 IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,7 +76,29 @@ ENV_VALUES = (
             )
 
 def _has_runtime_env_value(value):
-    """Check if env value contains GC-related JVM options."""
+    """
+    Check if an environment variable value contains GC-related JVM options.
+    
+    This function validates whether a given string contains any of the known
+    Garbage Collection (GC) flags for either Hotspot JVM or Semeru/OpenJ9 JVM.
+    
+    Args:
+        value: The environment variable value to check. Expected to be a string
+               containing JVM options.
+    
+    Returns:
+        bool: True if the value contains any GC-related pattern from either
+              HOTSPOT_GC_PATTERNS or SEMERU_GC_PATTERNS, False otherwise.
+              Returns False if value is None, empty, or not a string.
+    
+    Examples:
+        >>> _has_runtime_env_value("-XX:+UseG1GC -Xmx512m")
+        True
+        >>> _has_runtime_env_value("-Xgcpolicy:gencon")
+        True
+        >>> _has_runtime_env_value("-Xmx512m")
+        False
+    """
     if not value or not isinstance(value, str):
         return False
     for pattern in HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS:
@@ -87,9 +109,43 @@ def _has_runtime_env_value(value):
 
 def validate_runtime_recommendations_if_present(recommendations_json):
     """
-    Validates runtime recommendations when present.
-    Runtime recommendations appear as env entries (JDK_JAVA_OPTIONS or JAVA_OPTIONS)
-    with GC flags in config of recommendation_engines (cost/performance).
+    Validate runtime recommendations when present in the recommendations JSON.
+    
+    This function performs comprehensive validation of runtime recommendations,
+    ensuring that:
+    1. Runtime recommendations appear as environment variable entries
+       (JDK_JAVA_OPTIONS, JAVA_OPTIONS, or QUARKUS_THREAD_POOL_CORE_THREADS)
+    2. GC flags are present in JAVA options
+    3. Notification codes and messages are correctly set in both cost and
+       performance recommendation engines
+    4. Environment variable values are non-empty and contain expected patterns
+    
+    The function traverses the recommendations JSON structure through:
+    kubernetes_objects -> containers -> recommendations -> data ->
+    recommendation_terms -> recommendation_engines -> config -> env
+    
+    Args:
+        recommendations_json (list): A list containing recommendation objects.
+                                    Expected to have at least one element with
+                                    experiment_type, kubernetes_objects, etc.
+    
+    Returns:
+        None: This function performs assertions and returns early if validation
+              passes or if recommendations are not applicable (empty list,
+              non-container experiment, etc.)
+    
+    Raises:
+        AssertionError: If any validation check fails, including:
+            - Missing runtime notification codes
+            - Incorrect notification messages
+            - Invalid environment variable names
+            - Empty environment variable values
+            - Missing GC flags in JAVA options
+    
+    Note:
+        - Only validates container experiment types
+        - Returns early without error if recommendations_json is empty or None
+        - Returns early if no kubernetes_objects are present
     """
     if not recommendations_json or len(recommendations_json) == 0:
         return
@@ -168,10 +224,67 @@ def _generate_and_list_recommendations_for_tfb(
     layer_filter=None,
 ):
     """
-    Helper to run the end-to-end flow:
-    clone benchmarks -> install workload -> create metric/metadata profiles -> create layers
-    -> create experiment -> generate & list recommendations.
-    Returns the parsed listRecommendations JSON.
+    Generate and list recommendations for TechEmpower Framework Benchmarks (TFB).
+    
+    This is a comprehensive end-to-end test helper function that orchestrates the
+    complete workflow for generating runtime recommendations for TechEmpower
+    Quarkus JVM workload. The workflow includes:
+    
+    1. Clone the benchmarks repository
+    2. Install the workload
+    3. Create and configure metric profiles (with JVM runtime metrics)
+    4. Create and configure metadata profiles
+    5. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
+    6. Create experiment using TFB configuration
+    7. Generate recommendations
+    8. List and validate recommendations
+    9. Clean up all created resources
+    
+    Args:
+        cluster_type (str): The type of cluster to test against. Supported values:
+                           - "minikube": Uses local monitoring without recording rules
+                           - Other values: Uses standard local monitoring with thanos-1
+        metric_profile_json_modifier (callable, optional): A function that takes
+                                                          the metric profile JSON
+                                                          and returns a modified version.
+                                                          Used for test-specific customization.
+        metadata_profile_filename (str, optional): Name of the metadata profile JSON
+                                                  file to use. Defaults to
+                                                  "cluster_metadata_local_monitoring.json"
+        metadata_profile_json_modifier (callable, optional): A function that takes
+                                                            the metadata profile JSON
+                                                            and returns a modified version.
+        layer_filter (callable, optional): A function that takes a Path object and
+                                          returns True/False to filter which layer
+                                          JSON files to create. If None, all layers
+                                          are created.
+    
+    Returns:
+        dict: The parsed listRecommendations JSON response containing the generated
+              recommendations with runtime tuning parameters.
+    
+    Raises:
+        AssertionError: If any step in the workflow fails, including:
+            - Profile creation failures
+            - Layer creation failures
+            - Experiment creation failures
+            - Recommendation generation failures
+            - JSON schema validation failures
+    
+    Note:
+        - Uses temporary files for modified profiles to avoid affecting original files
+        - Automatically cleans up all resources in the finally block
+        - Deletes experiments, profiles, layers, and temporary files
+        - Removes the cloned benchmarks directory
+        - For non-minikube clusters, updates datasource from prometheus-1 to thanos-1
+    
+    Example:
+        >>> def filter_hotspot_only(path):
+        ...     return "hotspot" in path.name.lower()
+        >>> recommendations = _generate_and_list_recommendations_for_tfb(
+        ...     "minikube",
+        ...     layer_filter=filter_hotspot_only
+        ... )
     """
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
@@ -327,8 +440,31 @@ def _generate_and_list_recommendations_for_tfb(
 
 def _extract_runtime_envs(list_reco_json):
     """
-    Traverse listRecommendations JSON and return all env entries from
-    recommendation_engines[*].config.env for container experiments.
+    Extract all runtime environment variables from recommendations JSON.
+    
+    This function traverses the listRecommendations JSON structure and extracts
+    all environment variable entries from the config.env section of each
+    recommendation engine (cost, performance, etc.) for container experiments.
+    
+    The traversal path is:
+    list_reco_json[0] -> kubernetes_objects -> containers -> recommendations ->
+    data -> recommendation_terms -> recommendation_engines -> config -> env
+    
+    Args:
+        list_reco_json (list): The listRecommendations JSON response, expected
+                              to be a list with at least one recommendation object.
+    
+    Returns:
+        list: A list of environment variable dictionaries, where each dictionary
+              contains 'name' and 'value' keys. Returns an empty list if:
+              - list_reco_json is None or empty
+              - experiment_type is not CONTAINER_EXPERIMENT_TYPE
+              - No environment variables are found
+    
+    Example:
+        >>> reco_json = [{"experiment_type": "container", ...}]
+        >>> envs = _extract_runtime_envs(reco_json)
+        >>> # Returns: [{"name": "JDK_JAVA_OPTIONS", "value": "-XX:+UseG1GC"}, ...]
     """
     if not list_reco_json:
         return []
@@ -355,10 +491,57 @@ def _extract_runtime_envs(list_reco_json):
 
 
 def _env_values(list_reco_json):
+    """
+    Extract environment variable values from recommendations JSON.
+    
+    This is a convenience function that extracts only the 'value' field from
+    all environment variables found in the recommendations JSON. It internally
+    uses _extract_runtime_envs() to get the full environment variable objects
+    and then extracts just the values.
+    
+    Args:
+        list_reco_json (list): The listRecommendations JSON response.
+    
+    Returns:
+        list: A list of environment variable value strings. Returns an empty
+              list if no environment variables are found or if values are missing.
+              Empty strings are returned for env entries without a 'value' key.
+    
+    Example:
+        >>> reco_json = [{"experiment_type": "container", ...}]
+        >>> values = _env_values(reco_json)
+        >>> # Returns: ["-XX:+UseG1GC -Xmx512m", "4", ...]
+    """
     return [env.get("value", "") for env in _extract_runtime_envs(list_reco_json)]
 
 
 def _contains_any_pattern(values, patterns):
+    """
+    Check if any value in a list contains any of the specified patterns.
+    
+    This utility function searches through a list of values (typically strings)
+    and checks if any of them contain any of the specified patterns. It's used
+    to verify the presence of specific JVM flags or configuration patterns in
+    environment variable values.
+    
+    Args:
+        values (list): A list of values to search through. Non-string values
+                      are skipped.
+        patterns (tuple or list): A collection of string patterns to search for.
+                                 Each pattern is checked using substring matching.
+    
+    Returns:
+        bool: True if any value contains any of the patterns, False otherwise.
+              Returns False if all values are non-strings or if no matches found.
+    
+    Example:
+        >>> values = ["-XX:+UseG1GC -Xmx512m", "some other value"]
+        >>> patterns = ("-XX:+UseG1GC", "-XX:+UseZGC")
+        >>> _contains_any_pattern(values, patterns)
+        True
+        >>> _contains_any_pattern(["no match here"], patterns)
+        False
+    """
     for v in values:
         if not isinstance(v, str):
             continue
