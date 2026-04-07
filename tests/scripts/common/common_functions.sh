@@ -1264,27 +1264,51 @@ function kruize_operator_patch() {
   # Backup original file
   cp "${CR_FILE}" "${CR_FILE}.bak"
 
-  # Update database resources
-  sed -i '/database:/,/kruize:/ {
-   s/cpuRequest: ".*"/cpuRequest: "2"/
-   s/cpuLimit: ".*"/cpuLimit: "2"/
-   s/memoryRequest: ".*"/memoryRequest: "1Gi"/
-   s/memoryLimit: ".*"/memoryLimit: "1Gi"/
+  # Update kruize-db resources
+  sed -i '/kruize-db:/,/volumeMounts:/ {
+    /requests:/,/limits:/ {
+      s/cpu: ".*"/cpu: "2"/g
+      s/memory: ".*"/memory: "1Gi"/g
+    }
+  }' ${CR_FILE}
+
+  sed -i '/kruize-db:/,/volumeMounts:/ {
+    /limits:/,/volumeMounts:/ {
+      s/cpu: ".*"/cpu: "2"/g
+      s/memory: ".*"/memory: "1Gi"/g
+    }
+  }' ${CR_FILE}
+
+
+  # Update kruize application resources
+  sed -i '/^[[:space:]]*kruize:/,/^[[:space:]]*[a-z-]*:/ {
+    /requests:/,/limits:/ {
+      s/cpu: ".*"/cpu: "2"/g
+      s/memory: ".*"/memory: "1Gi"/g
+    }
   }' ${CR_FILE}
 
   # Update kruize application resources
-  sed -i '/kruize:/,/persistentVolume:/ {
-   s/cpuRequest: ".*"/cpuRequest: "2"/
-   s/cpuLimit: ".*"/cpuLimit: "2"/
-   s/memoryRequest: ".*"/memoryRequest: "1Gi"/
-   s/memoryLimit: ".*"/memoryLimit: "1Gi"/
+  sed -i '/^[[:space:]]*kruize:/,/^[[:space:]]*[a-z-]*:/ {
+    /limits:/,$ {
+      s/cpu: ".*"/cpu: "2"/g
+      s/memory: ".*"/memory: "1Gi"/g
+    }
   }' ${CR_FILE}
 
   # Update persistent volume configuration
-   sed -i '/persistentVolume:/,/accessModes:/ {
-    s/pvStorageSize: ".*"/pvStorageSize: "1Gi"/
-    s/pvcStorageSize: ".*"/pvcStorageSize: "1Gi"/
-   }' ${CR_FILE}
+  sed -i '/persistentVolume:/,/persistentVolumeClaim:/ {
+    /capacity:/,/accessModes:/ {
+      s/storage: ".*"/storage: "1Gi"/
+    }
+  }' ${CR_FILE}
+
+  # Update persistent volume claim storage request
+  sed -i '/persistentVolumeClaim:/,/kruize-db:/ {
+    /resources:/,/labels:/ {
+      s/storage: ".*"/storage: "1Gi"/
+    }
+  }' ${CR_FILE}
 
   echo "Operator CR resources patched successfully"
 }
