@@ -1078,6 +1078,8 @@ function deploy_kruize_operator() {
 	# Patch the CR resources before deployment for openshift
 	if [ ${cluster_type} == "openshift" ]; then
 	  kruize_operator_patch
+	else
+	  remove_optional_cr_blocks_for_minikube
 	fi
 
 	# Deploy using operator
@@ -1134,87 +1136,12 @@ function deploy_kruize_operator() {
   echo
   echo "⏳ Waiting for all operator pods to be ready..."
 
-  # First wait for pod to exist
-  timeout=180
-  elapsed=0
-  while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod -l app=kruize-db -n $NAMESPACE --no-headers 2>/dev/null | grep -q kruize-db; then
-      break
-    fi
-    echo -n "."
-    sleep 2
-    elapsed=$((elapsed + 2))
-  done
+  wait_for_pod_ready kruize-db
 
-  if [ $elapsed -ge $timeout ]; then
-    echo "❌ Timeout waiting for kruize-db pod to be created"
-    kubectl get pods -n $NAMESPACE
-    exit 1
-  fi
+  wait_for_pod_ready kruize
 
-  echo "⏳ Waiting for kruize-db pod to be ready..."
-  kubectl wait --for=condition=Ready pod -l app=kruize-db -n $NAMESPACE --timeout=600s
-  if [ $? -ne 0 ]; then
-      echo "❌ Kruize-db pod failed to become ready"
-      kubectl get pods -n $NAMESPACE
-      kubectl describe pod -l app=kruize-db -n $NAMESPACE
-      exit 1
-  fi
+  wait_for_pod_ready kruize-ui-nginx
 
-  # First wait for pod to exist
-  timeout=180
-  elapsed=0
-  while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod -l app=kruize -n $NAMESPACE --no-headers 2>/dev/null | grep -q kruize; then
-      break
-    fi
-    echo -n "."
-    sleep 2
-    elapsed=$((elapsed + 2))
-  done
-
-  if [ $elapsed -ge $timeout ]; then
-    echo "❌ Timeout waiting for kruize pod to be created"
-    kubectl get pods -n $NAMESPACE
-    exit 1
-  fi
-
-  kubectl wait --for=condition=Ready pod -l app=kruize -n $NAMESPACE --timeout=600s
-      if [ $? -ne 0 ]; then
-          echo "❌ Kruize pod failed to become ready"
-          kubectl get pods -n $NAMESPACE
-          kubectl describe pod -l app=kruize -n $NAMESPACE
-          exit 1
-      fi
-
-  echo "⏳ Waiting for kruize-ui pod to be ready..."
-  # First wait for pod to exist
-  timeout=180
-  elapsed=0
-  while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod -l app=kruize-ui-nginx -n $NAMESPACE --no-headers 2>/dev/null | grep -q .; then
-      break
-    fi
-    echo -n "."
-    sleep 2
-    elapsed=$((elapsed + 2))
-  done
-
-  if [ $elapsed -ge $timeout ]; then
-    echo "❌ Timeout waiting for kruize-ui pod to be created"
-    kubectl get pods -n $NAMESPACE
-    exit 1
-  fi
-
-
-  echo "⏳ Waiting for kruize-ui pod to be ready..."
-  kubectl wait --for=condition=Ready pod -l app=kruize-ui-nginx -n $NAMESPACE --timeout=600s
-  if [ $? -ne 0 ]; then
-      echo "❌ kruize-ui-nginx pod failed to become ready"
-      kubectl get pods -n $NAMESPACE
-      kubectl describe pod -l app=kruize-ui-nginx -n $NAMESPACE
-      exit 1
-  fi
   echo "✅ All Kruize application pods are ready!"
 
   echo "✅ Deployment complete! Checking status..."
@@ -1248,6 +1175,45 @@ function cleanup_kruize_operator() {
 	echo "Kruize operator cleanup completed" | tee -a ${LOG}
 }
 
+# Helper function to wait for pod to be ready based on label and namespace
+wait_for_pod_ready() {
+  local label="$1"
+  local namespace="${2:-$NAMESPACE}"
+  local create_timeout="${3:-180}"
+  local ready_timeout="${4:-600s}"
+
+  local elapsed=0
+  local pod_names=""
+
+  while [ "$elapsed" -lt "$create_timeout" ]; do
+    pod_names=$(kubectl get pods -l "app=${label}" -n "$namespace" -o name 2>/dev/null)
+    if [ -n "$pod_names" ]; then
+      echo
+      break
+    fi
+    echo -n "."
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  if [ "$elapsed" -ge "$create_timeout" ]; then
+    echo
+    echo "❌ Timeout waiting for pod with label app=${label} to be created"
+    kubectl get pods -n "$namespace"
+    exit 1
+  fi
+
+  echo "⏳ Waiting for pod with label app=${label} to be ready..."
+  kubectl wait --for=condition=Ready pod -l "app=${label}" -n "$namespace" --timeout="$ready_timeout"
+  if [ $? -ne 0 ]; then
+    echo "❌ Pod with label app=${label} failed to become ready"
+    kubectl get pods -n "$namespace"
+    kubectl describe pod -l "app=${label}" -n "$namespace"
+    exit 1
+  fi
+}
+
+
 # Patch operator CR resources for functional local monitoring tests
 function kruize_operator_patch() {
   OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
@@ -1263,16 +1229,22 @@ function kruize_operator_patch() {
 
   # Backup original file
   cp "${CR_FILE}" "${CR_FILE}.bak"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    SED_INPLACE="sed -i ''"
+  else
+    SED_INPLACE="sed -i"
+  fi
+
 
   # Update kruize-db resources
-  sed -i '/kruize-db:/,/volumeMounts:/ {
+  $(SED_INPLACE) -i '/kruize-db:/,/volumeMounts:/ {
     /requests:/,/limits:/ {
       s/cpu: ".*"/cpu: "2"/g
       s/memory: ".*"/memory: "2Gi"/g
     }
   }' ${CR_FILE}
 
-  sed -i '/kruize-db:/,/volumeMounts:/ {
+  $(SED_INPLACE) -i '/kruize-db:/,/volumeMounts:/ {
     /limits:/,/volumeMounts:/ {
       s/cpu: ".*"/cpu: "2"/g
       s/memory: ".*"/memory: "2Gi"/g
@@ -1280,7 +1252,7 @@ function kruize_operator_patch() {
   }' ${CR_FILE}
 
   # Update kruize application resources
-  sed -i '/^[[:space:]]*kruize:/,$ {
+  $(SED_INPLACE) -i '/^[[:space:]]*kruize:/,$ {
     /^[[:space:]]*requests:/,/^[[:space:]]*limits:/ {
         s/cpu: ".*"/cpu: "2"/g
         s/memory: ".*"/memory: "2Gi"/g
@@ -1292,18 +1264,51 @@ function kruize_operator_patch() {
   }' ${CR_FILE}
 
   # Update persistent volume configuration
-  sed -i '/persistentVolume:/,/persistentVolumeClaim:/ {
+  $(SED_INPLACE) -i '/persistentVolume:/,/persistentVolumeClaim:/ {
     /capacity:/,/accessModes:/ {
       s/storage: ".*"/storage: "1Gi"/
     }
   }' ${CR_FILE}
 
   # Update persistent volume claim storage request
-  sed -i '/persistentVolumeClaim:/,/kruize-db:/ {
+  $(SED_INPLACE) -i '/persistentVolumeClaim:/,/kruize-db:/ {
     /resources:/,/labels:/ {
       s/storage: ".*"/storage: "1Gi"/
     }
   }' ${CR_FILE}
 
   echo "Operator CR resources patched successfully"
+}
+
+# Patch to remove resources config from CR for minikube/kind clusters
+remove_optional_cr_blocks_for_minikube() {
+  local CR_FILE="${OPERATOR_REPO_DIR}/config/samples/v1alpha1_kruize.yaml"
+
+  if [ ! -f "${CR_FILE}" ]; then
+    echo "Warning: CR file ${CR_FILE} not found, skipping cleanup"
+    return
+  fi
+
+  echo "Removing optional CR blocks for minikube from ${CR_FILE}..."
+
+  cp "${CR_FILE}" "${CR_FILE}.bak"
+
+  awk '
+    BEGIN {
+      skip = 0
+    }
+
+    # start skipping these top-level spec children
+    /^  persistentVolume:$/      { skip = 1; next }
+    /^  persistentVolumeClaim:$/ { skip = 1; next }
+    /^  kruize-db:$/             { skip = 1; next }
+    /^  kruize:$/                { skip = 1; next }
+
+    # next top-level spec child stops skipping
+    /^  [a-zA-Z0-9_-]+:/ {
+      skip = 0
+    }
+
+    !skip { print }
+  ' "${CR_FILE}" > "${CR_FILE}.tmp" && mv "${CR_FILE}.tmp" "${CR_FILE}"
 }
