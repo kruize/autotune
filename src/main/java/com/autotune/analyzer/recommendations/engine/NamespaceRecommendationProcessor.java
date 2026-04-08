@@ -19,10 +19,7 @@ package com.autotune.analyzer.recommendations.engine;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.plots.PlotManager;
-import com.autotune.analyzer.recommendations.NamespaceRecommendations;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.model.RecommendationModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
@@ -94,8 +91,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
 
             timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
-                    getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
+            Config currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
             timestampRecommendation.setCurrentConfig(currentConfig);
 
             boolean recommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
@@ -119,10 +115,9 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         }
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(
-            NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
+    private Config getCurrentNamespaceConfigData(NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfig = new HashMap<>();
+        Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceLimitsMap = new HashMap<>();
@@ -130,20 +125,37 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
 
+
+
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValueForNamespace(namespaceData.getResults(), monitoringEndTime, resourceSetting, recommendationItem, notifications);
-
-                // Use base class validation method
-                if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
-                    continue;
-                }
-
+                AnalyzerConstants.MetricName metricName = null;
                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                    currentNamespaceRequestsMap.put(recommendationItem, configItem);
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.namespaceCpuRequest;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.namespaceMemoryRequest;
+                } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.namespaceCpuLimit;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.namespaceMemoryLimit;
                 }
-                if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                    currentNamespaceLimitsMap.put(recommendationItem, configItem);
+
+                if (metricName != null) {
+                    RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(metricName, namespaceData.getResults(), monitoringEndTime, notifications);
+
+                    // Use base class validation method
+                    if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
+                        continue;
+                    }
+
+                    if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                        currentNamespaceRequestsMap.put(recommendationItem, configItem);
+                    }
+                    if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                        currentNamespaceLimitsMap.put(recommendationItem, configItem);
+                    }
                 }
             }
         }
@@ -152,18 +164,17 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
         if (!currentNamespaceRequestsMap.isEmpty()) {
-            currentNamespaceConfig.put(AnalyzerConstants.ResourceSetting.requests, currentNamespaceRequestsMap);
+            currentConfig.setRequests(currentNamespaceRequestsMap);
         }
         if (!currentNamespaceLimitsMap.isEmpty()) {
-            currentNamespaceConfig.put(AnalyzerConstants.ResourceSetting.limits, currentNamespaceLimitsMap);
+            currentConfig.setLimits(currentNamespaceLimitsMap);
         }
-        return currentNamespaceConfig;
+        return currentConfig;
     }
 
     private boolean generateNamespaceRecommendationsBasedOnTerms(NamespaceData namespaceData, KruizeObject kruizeObject,
                                                                 Timestamp monitoringEndTime,
-                                                                HashMap<AnalyzerConstants.ResourceSetting,
-                                                                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                                Config currentConfig,
                                                                 MappedRecommendationForTimestamp timestampRecommendation) {
         boolean namespaceRecommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -252,8 +263,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
     private MappedRecommendationForModel generateNamespaceRecommendationBasedOnModel(RecommendationModel model,
                                                                                     Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                                     RecommendationSettings recommendationSettings,
-                                                                                    HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
+                                                                                    Config currentConfig,
                                                                                     Map.Entry<String, Terms> termEntry) {
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         
@@ -263,11 +273,11 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         double namespaceMemoryThreshold = thresholds.memoryThreshold;
 
         // Extract current config using base class helper
-        CurrentConfigValues currentConfig = extractCurrentConfig(currentNamespaceConfigMap);
-        RecommendationConfigItem currentNamespaceCPURequest = currentConfig.cpuRequest;
-        RecommendationConfigItem currentNamespaceCPULimit = currentConfig.cpuLimit;
-        RecommendationConfigItem currentNamespaceMemRequest = currentConfig.memoryRequest;
-        RecommendationConfigItem currentNamespaceMemLimit = currentConfig.memoryLimit;
+        CurrentConfigValues currentConfigValues = extractCurrentConfig(currentConfig);
+        RecommendationConfigItem currentNamespaceCPURequest = currentConfigValues.cpuRequest;
+        RecommendationConfigItem currentNamespaceCPULimit = currentConfigValues.cpuLimit;
+        RecommendationConfigItem currentNamespaceMemRequest = currentConfigValues.memoryRequest;
+        RecommendationConfigItem currentNamespaceMemLimit = currentConfigValues.memoryLimit;
 
         ArrayList<RecommendationNotification> notifications = new ArrayList<>();
         RecommendationConfigItem namespaceRecommendationCpuRequest = model.getCPURequestRecommendationForNamespace(filteredResultsMap, notifications);

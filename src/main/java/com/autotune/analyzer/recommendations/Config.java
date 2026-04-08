@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Config {
+    private Integer replicas;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
@@ -48,5 +49,13 @@ public class Config {
 
     public void setEnv(List<RecommendationConfigEnv> env) {
         this.env = env;
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
     }
 }

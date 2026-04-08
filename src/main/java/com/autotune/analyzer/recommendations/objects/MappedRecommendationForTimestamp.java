@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.objects;
 
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -23,7 +24,7 @@ public class MappedRecommendationForTimestamp {
     private Timestamp monitoringEndTime;
 
     @SerializedName(KruizeConstants.JSONKeys.CURRENT)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
+    private Config currentConfig;
 
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_TERMS)
     private HashMap<String, TermRecommendations> recommendationForTermHashMap;
@@ -44,11 +45,11 @@ public class MappedRecommendationForTimestamp {
         this.monitoringEndTime = monitoringEndTime;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfig() {
+    public Config getCurrentConfig() {
         return currentConfig;
     }
 
-    public void setCurrentConfig(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig) {
+    public void setCurrentConfig(Config currentConfig) {
         this.currentConfig = currentConfig;
     }
 

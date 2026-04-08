@@ -88,8 +88,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
-                getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
+        Config currentConfig = getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
         timestampRecommendation.setCurrentConfig(currentConfig);
 
         boolean recommendationAvailable = generateRecommendationsBasedOnTerms(containerData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
@@ -110,10 +109,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         containerData.setContainerRecommendations(containerRecommendations);
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfigData(
-            ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
+    private Config getCurrentConfigData(ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+        Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
@@ -121,21 +119,42 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
 
+        RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(AnalyzerConstants.MetricName.podCount, containerData.getResults(), monitoringEndTime, notifications);
+        if (configItem != null) {
+            int replicas = configItem.getAmount().intValue();
+            LOGGER.info("Current replicas for workload '{}' is {}", containerData.getContainer_name(), replicas);
+            currentConfig.setReplicas(replicas);
+        }
+
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(containerData.getResults(),
-                        monitoringEndTime, resourceSetting, recommendationItem, notifications);
-
-                // Use base class validation method
-                if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
-                    continue;
-                }
-
+                AnalyzerConstants.MetricName metricName = null;
                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                    currentRequestsMap.put(recommendationItem, configItem);
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.cpuRequest;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.memoryRequest;
+                } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.cpuLimit;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.memoryLimit;
                 }
-                if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                    currentLimitsMap.put(recommendationItem, configItem);
+                // metricName is null for RecommendationItem other than MEMORY and CPU
+                if (metricName != null) {
+                    configItem = RecommendationUtils.getCurrentValue(metricName, containerData.getResults(), monitoringEndTime, notifications);
+                    // Use base class validation method
+                    // Handle case of missing (avg is null) or invalid data (avg is <= 0)
+                    if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {
+                        continue;
+                    }
+
+                    if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                        currentRequestsMap.put(recommendationItem, configItem);
+                    }
+                    if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                        currentLimitsMap.put(recommendationItem, configItem);
+                    }
                 }
             }
         }
@@ -143,19 +162,19 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
+
         if (!currentRequestsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+            currentConfig.setRequests(currentRequestsMap);
         }
         if (!currentLimitsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+            currentConfig.setLimits(currentLimitsMap);
         }
         return currentConfig;
     }
 
     private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
                                                        Timestamp monitoringEndTime,
-                                                       HashMap<AnalyzerConstants.ResourceSetting,
-                                                               HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                       Config currentConfig,
                                                        MappedRecommendationForTimestamp timestampRecommendation) {
         boolean recommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -248,8 +267,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
     private MappedRecommendationForModel generateRecommendationBasedOnModel(RecommendationModel model, ContainerData containerData,
                                                                             Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                             KruizeObject kruizeObject,
-                                                                            HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
+                                                                            Config currentConfig,
                                                                             Map.Entry<String, Terms> termEntry) {
 
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
@@ -260,11 +278,11 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         double memoryThreshold = thresholds.memoryThreshold;
 
         // Extract current config using base class helper
-        CurrentConfigValues currentConfig = extractCurrentConfig(currentConfigMap);
-        RecommendationConfigItem currentCPURequest = currentConfig.cpuRequest;
-        RecommendationConfigItem currentCPULimit = currentConfig.cpuLimit;
-        RecommendationConfigItem currentMemRequest = currentConfig.memoryRequest;
-        RecommendationConfigItem currentMemLimit = currentConfig.memoryLimit;
+        CurrentConfigValues currentConfigValues = extractCurrentConfig(currentConfig);
+        RecommendationConfigItem currentCPURequest = currentConfigValues.cpuRequest;
+        RecommendationConfigItem currentCPULimit = currentConfigValues.cpuLimit;
+        RecommendationConfigItem currentMemRequest = currentConfigValues.memoryRequest;
+        RecommendationConfigItem currentMemLimit = currentConfigValues.memoryLimit;
 
         ArrayList<RecommendationNotification> notifications = new ArrayList<>();
         RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
