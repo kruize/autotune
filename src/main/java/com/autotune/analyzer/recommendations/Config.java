@@ -28,7 +28,7 @@ public class Config {
     @SerializedName(KruizeConstants.JSONKeys.REPLICAS)
     private Integer replicas;
     @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
+    private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
@@ -65,11 +65,11 @@ public class Config {
         this.replicas = replicas;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
+    public Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
         return resources;
     }
 
-    public void setResources(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
+    public void setResources(Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
         this.resources = resources;
     }
 }
