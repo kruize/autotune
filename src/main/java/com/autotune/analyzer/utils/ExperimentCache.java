@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.utils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,7 +83,7 @@ public class ExperimentCache {
      * @return true if experiment exists in database, false otherwise
      */
     private boolean checkExperimentInDatabase(String experiment_name) {
-        Map<String, KruizeObject> experimentMap = new ConcurrentHashMap<>();
+        Map<String, KruizeObject> experimentMap = new HashMap<>();
         try {
             if (KruizeDeploymentInfo.is_ros_enabled) {
                 // load from kruize_experiments table
