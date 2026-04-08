@@ -1,0 +1,29 @@
+[{
+  "version": "v2.0",
+  "experiment_name": "monitor_petclinic_benchmark",
+  "cluster_name": "default",
+  "performance_profile": "resource-optimization-local-monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "mode": "monitor",
+  "target_cluster": "local",
+  "datasource": "prometheus-1",
+  "kubernetes_objects": [
+    {
+      "type": "deployment",
+      "name": "petclinic-sample",
+      "namespace": "default",
+      "containers": [
+        {
+          "container_image_name": "quay.io/kruizehub/spring_petclinic:2.2.0-jdk-11.0.8-openj9-0.21.0",
+          "container_name": "petclinic-tomcat"
+        }
+      ]
+    }
+  ],
+  "trial_settings": {
+    "measurement_duration": "15min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}]

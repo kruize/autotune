@@ -16,6 +16,7 @@ limitations under the License.
 import os
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 from helpers.kruize import *
@@ -27,6 +28,7 @@ from helpers.utils import (
     SUCCESS_STATUS_CODE,
     SUCCESS_200_STATUS_CODE,
     SUCCESS_STATUS,
+    ERROR_409_STATUS_CODE,
     CREATE_LAYER_SUCCESS_MSG,
     CREATE_EXP_SUCCESS_MSG,
     CONTAINER_EXPERIMENT_TYPE,
@@ -371,12 +373,19 @@ def _generate_and_list_recommendations_for_tfb(
         response = create_layer(layer_input_json_file)
         data = response.json()
 
-        assert response.status_code == SUCCESS_STATUS_CODE
-        assert data["status"] == SUCCESS_STATUS
-        assert data["message"] == CREATE_LAYER_SUCCESS_MSG % layer_name
-
-        created_layer_names.append(layer_name)
-        print(f"✓ Layer '{layer_name}' created successfully")
+        # Handle both success (201) and conflict (409 - layer already exists)
+        if response.status_code == SUCCESS_STATUS_CODE:
+            assert data["status"] == SUCCESS_STATUS
+            assert data["message"] == CREATE_LAYER_SUCCESS_MSG % layer_name
+            created_layer_names.append(layer_name)
+            print(f"✓ Layer '{layer_name}' created successfully")
+        elif response.status_code == ERROR_409_STATUS_CODE:
+            # Layer already exists, log and continue
+            print(f"ℹ Layer '{layer_name}' already exists, skipping creation")
+            created_layer_names.append(layer_name)
+        else:
+            # Unexpected status code, fail the test
+            assert False, f"Unexpected status code {response.status_code} for layer '{layer_name}': {data}"
 
     # Create experiment using TechEmpower Quarkus JVM workload
     response = delete_experiment(input_json_file, rm=False)
@@ -436,6 +445,250 @@ def _generate_and_list_recommendations_for_tfb(
             os.unlink(temp_metric_profile_file)
         if temp_metadata_profile_file and os.path.exists(temp_metadata_profile_file):
             os.unlink(temp_metadata_profile_file)
+
+def _generate_and_list_recommendations_for_petclinic(
+    cluster_type,
+    *,
+    metric_profile_json_modifier=None,
+    metadata_profile_filename="cluster_metadata_local_monitoring.json",
+    metadata_profile_json_modifier=None,
+    layer_filter=None,
+):
+    """
+    Generate and list recommendations for Spring Petclinic (OpenJ9/Semeru runtime).
+    
+    This is a comprehensive end-to-end test helper function that orchestrates the
+    complete workflow for generating runtime recommendations for Spring Petclinic
+    with OpenJ9/Semeru JVM workload. The workflow includes:
+    
+    1. Clone the benchmarks repository
+    2. Install the workload
+    3. Create and configure metric profiles (with JVM runtime metrics)
+    4. Create and configure metadata profiles
+    5. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
+    6. Create experiment using Petclinic configuration
+    7. Generate recommendations
+    8. List and validate recommendations
+    9. Clean up all created resources
+    
+    Args:
+        cluster_type (str): The type of cluster to test against. Supported values:
+                           - "minikube": Uses local monitoring without recording rules
+                           - Other values: Uses standard local monitoring with thanos-1
+        metric_profile_json_modifier (callable, optional): A function that takes
+                                                          the metric profile JSON
+                                                          and returns a modified version.
+                                                          Used for test-specific customization.
+        metadata_profile_filename (str, optional): Name of the metadata profile JSON
+                                                  file to use. Defaults to
+                                                  "cluster_metadata_local_monitoring.json"
+        metadata_profile_json_modifier (callable, optional): A function that takes
+                                                            the metadata profile JSON
+                                                            and returns a modified version.
+        layer_filter (callable, optional): A function that takes a Path object and
+                                          returns True/False to filter which layer
+                                          JSON files to create. If None, all layers
+                                          are created.
+    
+    Returns:
+        dict: The parsed listRecommendations JSON response containing the generated
+              recommendations with runtime tuning parameters.
+    
+    Raises:
+        AssertionError: If any step in the workflow fails, including:
+            - Profile creation failures
+            - Layer creation failures
+            - Experiment creation failures
+            - Recommendation generation failures
+            - JSON schema validation failures
+    
+    Note:
+        - Uses temporary files for modified profiles to avoid affecting original files
+        - Automatically cleans up all resources in the finally block
+        - Deletes experiments, profiles, layers, and temporary files
+        - Removes the cloned benchmarks directory
+        - For non-minikube clusters, updates datasource from prometheus-1 to thanos-1
+    
+    Example:
+        >>> def filter_semeru_only(path):
+        ...     return "semeru" in path.name.lower()
+        >>> recommendations = _generate_and_list_recommendations_for_petclinic(
+        ...     "openshift",
+        ...     layer_filter=filter_semeru_only
+        ... )
+    """
+    clone_repo("https://github.com/kruize/benchmarks")
+    
+    # Clean up existing petclinic deployment to ensure fresh start with updated configs
+    print("Cleaning up existing petclinic deployment...")
+    petclinic_manifests = Path("benchmarks/spring-petclinic/manifests")
+    if petclinic_manifests.exists():
+        subprocess.run(
+            f"kubectl delete -f {petclinic_manifests}/petclinic.yaml --ignore-not-found",
+            shell=True,
+            capture_output=True
+        )
+        subprocess.run(
+            f"kubectl delete -f {petclinic_manifests}/service-monitor.yaml --ignore-not-found",
+            shell=True,
+            capture_output=True
+        )
+        print("Cleanup complete, waiting for resources to be removed...")
+        time.sleep(10)  # Wait for resources to be fully removed
+    
+    benchmarks_install()
+    
+    # Wait for petclinic pod to be ready and metrics to be available
+    # This is crucial for Semeru layer detection as Prometheus needs time to scrape metrics
+    print("Waiting for petclinic pod to be ready and metrics to be scraped by Prometheus...")
+    time.sleep(60)  # Wait 60 seconds for pod readiness and initial metric scraping
+    print("Wait complete, proceeding with experiment creation...")
+
+    input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_petclinic_exp.json")
+    input_json_file = str(input_json_path)
+    with open(input_json_path) as f:
+        input_json = json.load(f)
+
+    temp_input_json_file = None
+    temp_metric_profile_file = None
+    temp_metadata_profile_file = None
+
+    form_kruize_url(cluster_type)
+
+    # Install metric profile (use resource_optimization_local_monitoring with jvmRuntimeInfo/jvmMemoryMaxBytes)
+    if cluster_type == "minikube":
+        metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring_norecordingrules.json"
+    else:
+        metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring.json"
+        # Update datasource from prometheus-1 to thanos-1 before using in the test
+        for exp in input_json:
+            if exp.get("datasource") == "prometheus-1":
+                exp["datasource"] = "thanos-1"
+                break
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            json.dump(input_json, tf, indent=2)
+            temp_input_json_file = tf.name
+            input_json_file = temp_input_json_file
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    response = create_metric_profile(metric_profile_json_file)
+    data = response.json()
+    print(data["message"])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data["status"] == SUCCESS_STATUS
+
+    # Install metadata profile
+    metadata_profile_json_file = metadata_profile_dir / metadata_profile_filename
+    with open(metadata_profile_json_file) as f:
+        metadata_profile_json = json.load(f)
+
+    if metadata_profile_json_modifier is not None:
+        metadata_profile_json = metadata_profile_json_modifier(metadata_profile_json)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            json.dump(metadata_profile_json, tf, indent=2)
+            temp_metadata_profile_file = tf.name
+            metadata_profile_json_file = Path(temp_metadata_profile_file)
+
+    metadata_profile_name = metadata_profile_json["metadata"]["name"]
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    response = create_metadata_profile(metadata_profile_json_file)
+    data = response.json()
+    print(data["message"])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data["status"] == SUCCESS_STATUS
+
+    # Create layers for all JSON files in layer_dir
+    layer_json_files = sorted(layer_dir.glob("*.json"))
+    if layer_filter is not None:
+        layer_json_files = [p for p in layer_json_files if layer_filter(p)]
+
+    created_layer_names = []
+    for layer_input_json_file in layer_json_files:
+        with open(layer_input_json_file, "r") as json_file:
+            layer_json = json.load(json_file)
+            layer_name = layer_json["layer_name"]
+
+        response = create_layer(layer_input_json_file)
+        data = response.json()
+
+        # Handle both success (201) and conflict (409 - layer already exists)
+        if response.status_code == SUCCESS_STATUS_CODE:
+            assert data["status"] == SUCCESS_STATUS
+            assert data["message"] == CREATE_LAYER_SUCCESS_MSG % layer_name
+            created_layer_names.append(layer_name)
+            print(f"✓ Layer '{layer_name}' created successfully")
+        elif response.status_code == ERROR_409_STATUS_CODE:
+            # Layer already exists, log and continue
+            print(f"ℹ Layer '{layer_name}' already exists, skipping creation")
+            created_layer_names.append(layer_name)
+        else:
+            # Unexpected status code, fail the test
+            assert False, f"Unexpected status code {response.status_code} for layer '{layer_name}': {data}"
+
+    # Create experiment using Spring Petclinic OpenJ9 workload
+    response = delete_experiment(input_json_file, rm=False)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(input_json_file)
+    data = response.json()
+    print(data["message"])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data["status"] == SUCCESS_STATUS
+    assert data["message"] == CREATE_EXP_SUCCESS_MSG
+
+    exp_name = input_json[0]["experiment_name"]
+
+    try:
+        response = generate_recommendations(exp_name)
+        assert response.status_code == SUCCESS_STATUS_CODE
+
+        response = list_recommendations(exp_name)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
+
+        error_msg = validate_list_reco_json(list_reco_json, list_reco_json_local_monitoring_schema)
+        assert error_msg == ""
+
+        validate_local_monitoring_recommendation_data_present(list_reco_json)
+        return list_reco_json
+    finally:
+        # Delete experiment
+        response = delete_experiment(input_json_file, rm=False)
+        print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
+
+        # Delete Metric Profile
+        response = delete_metric_profile(metric_profile_json_file)
+        print("delete metric profile = ", response.status_code)
+
+        # Delete metadata profile to avoid cross-test interference
+        response = delete_metadata_profile(metadata_profile_name)
+        print("delete metadata profile = ", response.status_code)
+
+        # Delete created layers to avoid accumulated state
+        for layer_name in created_layer_names:
+            delete_layer_from_db(layer_name)
+            print(f"delete layer '{layer_name}' = done")
+
+        # Remove benchmarks directory
+        if os.path.isdir("benchmarks"):
+            shutil.rmtree("benchmarks")
+
+        # Clean up temp experiment JSON file
+        if temp_input_json_file and os.path.exists(temp_input_json_file):
+            os.unlink(temp_input_json_file)
+
+        # Clean up temp metric/metadata profile JSON files
+        if temp_metric_profile_file and os.path.exists(temp_metric_profile_file):
+            os.unlink(temp_metric_profile_file)
+        if temp_metadata_profile_file and os.path.exists(temp_metadata_profile_file):
+            os.unlink(temp_metadata_profile_file)
+
 
 
 def _extract_runtime_envs(list_reco_json):

@@ -18,6 +18,7 @@ import sys
 
 from helpers.runtime_utils import (
     _generate_and_list_recommendations_for_tfb,
+    _generate_and_list_recommendations_for_petclinic,
     _env_values,
     _contains_any_pattern,
     _extract_runtime_envs,
@@ -65,8 +66,10 @@ def test_semeru_gc_policy_when_layer_present(cluster_type):
 
     Expected: At least one env value contains one of SEMERU_GC_PATTERNS
     (e.g., -Xgcpolicy:gencon, -Xgcpolicy:balanced, -Xgcpolicy:optthruput).
+    
+    Note: This test uses Spring Petclinic with OpenJ9/Semeru JVM instead of TFB which uses Hotspot.
     """
-    list_reco_json = _generate_and_list_recommendations_for_tfb(cluster_type)
+    list_reco_json = _generate_and_list_recommendations_for_petclinic(cluster_type)
     envs = _extract_runtime_envs(list_reco_json)
 
     semeru_envs = [
