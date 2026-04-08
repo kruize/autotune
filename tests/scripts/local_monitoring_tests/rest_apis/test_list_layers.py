@@ -400,8 +400,10 @@ def test_list_layer_with_special_characters_in_name(cluster_type, special_char_n
 @pytest.mark.sanity
 def test_list_layers_performance_with_many_layers(cluster_type):
     """
-    Test Description: This test validates listLayers API performance when listing 100+ layers.
-    Creates multiple layers and measures response time.
+    Test Description: This test validates listLayers API correctness and scalability with multiple layers.
+    Creates multiple layers, lists them, and verifies correct results are returned.
+    Note: Response time is measured and logged for informational purposes only - no strict latency
+    SLO is enforced to keep this test stable across different environments.
     """
     form_kruize_url(cluster_type)
 

@@ -663,6 +663,66 @@ def test_update_layer_invalid_query_syntax(cluster_type):
 
 @pytest.mark.layers
 @pytest.mark.negative
+def test_update_layer_empty_body(cluster_type):
+    """
+    Test Description: This test validates updateLayer API rejects empty request body
+    """
+    form_kruize_url(cluster_type)
+
+    layer_name = "test-empty-body"
+
+    # Create empty file
+    tmp_empty = f"/tmp/update_empty_{layer_name}.json"
+    with open(tmp_empty, "w") as f:
+        f.write("")
+
+    # Try to update with empty body
+    response = update_layer(layer_name, tmp_empty)
+    data = response.json()
+
+    # Verify error response
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_LAYER_INVALID_JSON_MSG
+
+    print(f"✓ Correctly rejected: empty_body")
+
+    # Cleanup
+    os.remove(tmp_empty)
+
+
+@pytest.mark.layers
+@pytest.mark.negative
+def test_update_layer_whitespace_body(cluster_type):
+    """
+    Test Description: This test validates updateLayer API rejects whitespace-only request body
+    """
+    form_kruize_url(cluster_type)
+
+    layer_name = "test-whitespace-body"
+
+    # Create whitespace-only file
+    tmp_whitespace = f"/tmp/update_whitespace_{layer_name}.json"
+    with open(tmp_whitespace, "w") as f:
+        f.write("   \n\t  ")
+
+    # Try to update with whitespace-only body
+    response = update_layer(layer_name, tmp_whitespace)
+    data = response.json()
+
+    # Verify error response
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_LAYER_INVALID_JSON_MSG
+
+    print(f"✓ Correctly rejected: whitespace_body")
+
+    # Cleanup
+    os.remove(tmp_whitespace)
+
+
+@pytest.mark.layers
+@pytest.mark.negative
 def test_update_layer_change_to_invalid_value_type(cluster_type):
     """
     Test Description: This test validates updateLayer API rejects changing tunable value_type to invalid type

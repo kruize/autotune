@@ -329,7 +329,7 @@ def test_delete_layer_all_types(cluster_type):
 
 
 # =============================================================================
-# B. NEGATIVE SCENARIOS - Delete Layer Failures (8 tests)
+# B. NEGATIVE SCENARIOS - Delete Layer Failures (9 tests)
 # =============================================================================
 
 @pytest.mark.layers
@@ -438,6 +438,33 @@ def test_delete_layer_missing_name_param(cluster_type):
     assert data['message'] == DELETE_LAYER_INVALID_NAME_MSG
 
     print(f"✓ Correctly rejected deletion without name parameter")
+
+
+@pytest.mark.layers
+@pytest.mark.negative
+def test_delete_layer_invalid_query_params(cluster_type):
+    """
+    Test Description: This test validates deleteLayer API rejects unsupported query parameters
+    """
+    form_kruize_url(cluster_type)
+
+    layer_name = "test-layer-invalid-query"
+
+    # Make direct request with unsupported query parameter
+    url = get_kruize_url() + "/deleteLayer"
+    params = {
+        "name": layer_name,
+        "extra": "unsupported"
+    }
+    response = requests.delete(url, params=params)
+    data = response.json()
+
+    # Verify error response
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == DELETE_LAYER_INVALID_QUERY_PARAM_MSG % "extra"
+
+    print(f"✓ Correctly rejected deletion with invalid query parameter")
 
 
 @pytest.mark.layers

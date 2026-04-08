@@ -194,6 +194,7 @@ DELETE_LAYER_SUCCESS_MSG = "Layer : %s deleted successfully."
 DELETE_LAYER_NOT_FOUND_MSG = "Layer not found with name: %s"
 DELETE_LAYER_INVALID_NAME_MSG = "Invalid layer name parameter"
 DELETE_LAYER_WITH_EXPERIMENTS_MSG = "Cannot delete layer '%s' as it is currently associated with %d active experiment(s)"
+DELETE_LAYER_INVALID_QUERY_PARAM_MSG = "The query param(s) - [%s] is/are invalid"
 
 
 # Kruize Recommendations Notification codes
