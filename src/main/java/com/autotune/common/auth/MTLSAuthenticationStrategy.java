@@ -75,11 +75,14 @@ public class MTLSAuthenticationStrategy implements AuthenticationStrategy {
     /**
      * Creates an SSL context configured for mutual TLS authentication.
      * Loads the client certificate, private key, and optionally a CA certificate.
+     * This method implements the AuthenticationStrategy interface to provide
+     * custom SSL configuration for mTLS.
      *
      * @return Configured SSLContext for mTLS
      * @throws Exception if certificate loading or SSL context creation fails
      */
-    public SSLContext createSSLContext() throws Exception {
+    @Override
+    public SSLContext getSSLContext() throws Exception {
         // Load client certificate
         X509Certificate clientCert = loadCertificate(clientCertPath);
         

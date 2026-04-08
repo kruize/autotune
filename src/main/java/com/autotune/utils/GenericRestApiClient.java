@@ -17,7 +17,6 @@ package com.autotune.utils;
 
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
-import com.autotune.common.auth.MTLSAuthenticationStrategy;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
@@ -136,28 +135,29 @@ public class GenericRestApiClient {
 
 
     /**
-     * Common method to setup SSL context for trust-all certificates or mTLS.
-     * If the authentication strategy is mTLS, it configures the SSL context with client certificates.
-     * Otherwise, it uses a trust-all configuration.
+     * Common method to setup HTTP client with appropriate SSL context.
+     * The SSL context is obtained from the authentication strategy if it provides one,
+     * otherwise uses a default trust-all configuration.
      *
-     * @return CloseableHttpClient
+     * @return CloseableHttpClient configured with appropriate SSL settings
      */
     private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         SSLContext sslContext;
         
-        // Check if mTLS authentication is being used
-        if (authenticationStrategy instanceof MTLSAuthenticationStrategy) {
-            MTLSAuthenticationStrategy mtlsStrategy = (MTLSAuthenticationStrategy) authenticationStrategy;
-            try {
-                sslContext = mtlsStrategy.createSSLContext();
-                LOGGER.debug("mTLS SSL context created successfully");
-            } catch (Exception e) {
-                LOGGER.error("Failed to create mTLS SSL context: {}", e.getMessage(), e);
-                throw new KeyManagementException("Failed to setup mTLS: " + e.getMessage(), e);
+        try {
+            // Get SSL context from authentication strategy (returns null for most auth types)
+            sslContext = (authenticationStrategy != null) ? authenticationStrategy.getSSLContext() : null;
+            
+            if (sslContext != null) {
+                LOGGER.debug("Using custom SSL context from authentication strategy");
+            } else {
+                // Default trust-all configuration when no custom SSL context is provided
+                sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();
+                LOGGER.debug("Using default trust-all SSL context");
             }
-        } else {
-            // Default trust-all configuration for non-mTLS authentication
-            sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();
+        } catch (Exception e) {
+            LOGGER.error("Failed to create SSL context: {}", e.getMessage(), e);
+            throw new KeyManagementException("Failed to setup SSL context: " + e.getMessage(), e);
         }
         
         SSLConnectionSocketFactory sslConnectionSocketFactory =

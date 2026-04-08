@@ -15,6 +15,31 @@
  *******************************************************************************/
 package com.autotune.common.auth;
 
+import javax.net.ssl.SSLContext;
+
+/**
+ * AuthenticationStrategy defines the contract for all authentication mechanisms.
+ * It handles both HTTP header-based authentication (Basic, Bearer, API Key, OAuth2)
+ * and SSL/TLS-based authentication (mTLS).
+ */
 public interface AuthenticationStrategy {
+    /**
+     * Returns the authentication header value for HTTP-based authentication.
+     * For SSL/TLS-based authentication (like mTLS), this returns null.
+     *
+     * @return Authorization header value, or null if authentication is handled at SSL/TLS layer
+     */
     String applyAuthentication();
+    
+    /**
+     * Returns a custom SSLContext if the authentication strategy requires special SSL configuration.
+     * Most authentication strategies (Basic, Bearer, API Key, OAuth2) return null to use default SSL.
+     * mTLS authentication returns a configured SSLContext with client certificates.
+     *
+     * @return Custom SSLContext, or null to use default SSL configuration
+     * @throws Exception if SSL context creation fails
+     */
+    default SSLContext getSSLContext() throws Exception {
+        return null;
+    }
 }
