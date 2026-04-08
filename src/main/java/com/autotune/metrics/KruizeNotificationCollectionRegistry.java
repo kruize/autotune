@@ -57,8 +57,8 @@ public class KruizeNotificationCollectionRegistry {
                 TermRecommendations termRecommendations = entry.getValue();
                 HashMap<Integer, RecommendationNotification> termLevelNotificationHashMap = termRecommendations.getNotifications();
                 createCounterTag("term", termName, null, termLevelNotificationHashMap.values());
-                if (null != termRecommendations.getRecommendationForModelMap()) {
-                    for (Map.Entry<String, MappedRecommendationForModel> recommendationForModel : termRecommendations.getRecommendationForModelMap().entrySet()) {
+                if (null != termRecommendations.getRecommendationForModelHashMap()) {
+                    for (Map.Entry<String, MappedRecommendationForModel> recommendationForModel : termRecommendations.getRecommendationForModelHashMap().entrySet()) {
                         String modelName = recommendationForModel.getKey();
                         MappedRecommendationForModel mappedRecommendationForModel = recommendationForModel.getValue();
                         HashMap<Integer, RecommendationNotification> modelNotificationHashMap = mappedRecommendationForModel.getNotificationHashMap();

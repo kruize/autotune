@@ -1072,12 +1072,12 @@ public class RecommendationEngine implements RecommendationEngineService {
             currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
         }
 
-        // Set Request variation map
+        // Set Request variation object
         if (!requestsVariationMap.isEmpty()) {
             variation.setRequests(requestsVariationMap);
         }
 
-        // Set Limits variation map
+        // Set Limits variation object
         if (!limitsVariationMap.isEmpty()) {
             variation.setLimits(limitsVariationMap);
         }
