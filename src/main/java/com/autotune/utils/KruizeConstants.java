@@ -282,6 +282,7 @@ public class KruizeConstants {
         public static final String MONITORING_START_TIME = "monitoring_start_time";
         public static final String MONITORING_END_TIME = "monitoring_end_time";
         public static final String PODS_COUNT = "pods_count";
+        public static final String REPLICAS = "replicas";
         public static final String ERROR_MSG = "error_msg";
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";

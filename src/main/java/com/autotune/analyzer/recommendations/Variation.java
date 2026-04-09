@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 IBM Corporation and others.
+ * Copyright (c) 2026 IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Config {
+public class Variation {
     @SerializedName(KruizeConstants.JSONKeys.REPLICAS)
     private Integer replicas;
     @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
-    private List<RecommendationConfigEnv> env;
 
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
         return requests;
@@ -47,14 +46,6 @@ public class Config {
 
     public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
         this.limits = limits;
-    }
-
-    public List<RecommendationConfigEnv> getEnv() {
-        return env;
-    }
-
-    public void setEnv(List<RecommendationConfigEnv> env) {
-        this.env = env;
     }
 
     public Integer getReplicas() {
