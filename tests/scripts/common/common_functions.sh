@@ -1237,14 +1237,14 @@ function kruize_operator_patch() {
 
 
   # Update kruize-db resources
-  $(SED_INPLACE) -i '/kruize-db:/,/volumeMounts:/ {
+  ${SED_INPLACE} -i '/kruize-db:/,/volumeMounts:/ {
     /requests:/,/limits:/ {
       s/cpu: ".*"/cpu: "2"/g
       s/memory: ".*"/memory: "2Gi"/g
     }
   }' ${CR_FILE}
 
-  $(SED_INPLACE) -i '/kruize-db:/,/volumeMounts:/ {
+  ${SED_INPLACE} -i '/kruize-db:/,/volumeMounts:/ {
     /limits:/,/volumeMounts:/ {
       s/cpu: ".*"/cpu: "2"/g
       s/memory: ".*"/memory: "2Gi"/g
@@ -1252,7 +1252,7 @@ function kruize_operator_patch() {
   }' ${CR_FILE}
 
   # Update kruize application resources
-  $(SED_INPLACE) -i '/^[[:space:]]*kruize:/,$ {
+  ${SED_INPLACE} -i '/^[[:space:]]*kruize:/,$ {
     /^[[:space:]]*requests:/,/^[[:space:]]*limits:/ {
         s/cpu: ".*"/cpu: "2"/g
         s/memory: ".*"/memory: "2Gi"/g
@@ -1264,14 +1264,14 @@ function kruize_operator_patch() {
   }' ${CR_FILE}
 
   # Update persistent volume configuration
-  $(SED_INPLACE) -i '/persistentVolume:/,/persistentVolumeClaim:/ {
+  ${SED_INPLACE} -i '/persistentVolume:/,/persistentVolumeClaim:/ {
     /capacity:/,/accessModes:/ {
       s/storage: ".*"/storage: "1Gi"/
     }
   }' ${CR_FILE}
 
   # Update persistent volume claim storage request
-  $(SED_INPLACE) -i '/persistentVolumeClaim:/,/kruize-db:/ {
+  ${SED_INPLACE} -i '/persistentVolumeClaim:/,/kruize-db:/ {
     /resources:/,/labels:/ {
       s/storage: ".*"/storage: "1Gi"/
     }
