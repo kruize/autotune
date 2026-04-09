@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.Variation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -15,7 +16,7 @@ public class MappedRecommendationForModel {
         this.podsCount = 0;
         this.confidence_level = 0.0;
         this.config = new Config();
-        this.variation = new HashMap<>();
+        this.variation = new Variation();
         this.notificationHashMap = new HashMap<>();
     }
 
@@ -26,7 +27,7 @@ public class MappedRecommendationForModel {
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
     private Config config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
+    private Variation variation;
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationHashMap;
@@ -55,11 +56,11 @@ public class MappedRecommendationForModel {
         this.config = config;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getVariation() {
+    public Variation getVariation() {
         return variation;
     }
 
-    public void setVariation(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation) {
+    public void setVariation(Variation variation) {
         this.variation = variation;
     }
 
