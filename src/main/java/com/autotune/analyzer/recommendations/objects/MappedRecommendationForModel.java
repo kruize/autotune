@@ -13,15 +13,12 @@ import java.util.HashMap;
 public class MappedRecommendationForModel {
 
     public MappedRecommendationForModel() {
-        this.podsCount = 0;
         this.confidence_level = 0.0;
         this.config = new Config();
         this.variation = new Variation();
         this.notificationHashMap = new HashMap<>();
     }
 
-    @SerializedName(KruizeConstants.JSONKeys.PODS_COUNT)
-    private int podsCount;
     @SerializedName(KruizeConstants.JSONKeys.CONFIDENCE_LEVEL)
     private double confidence_level;
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
@@ -31,14 +28,6 @@ public class MappedRecommendationForModel {
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationHashMap;
-
-    public int getPodsCount() {
-        return podsCount;
-    }
-
-    public void setPodsCount(int podsCount) {
-        this.podsCount = podsCount;
-    }
 
     public double getConfidence_level() {
         return confidence_level;
