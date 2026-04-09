@@ -164,7 +164,7 @@ public abstract class BaseRecommendationProcessor {
     /**
      * Extracts current configuration items from requests and limits maps.
      *
-     * @param currentConfig object to reresent current configuration
+     * @param currentConfig object to represent current configuration
      * @return CurrentConfigValues object containing CPU and memory request/limit values
      */
     protected CurrentConfigValues extractCurrentConfig(Config currentConfig) {
