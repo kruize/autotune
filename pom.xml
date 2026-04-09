@@ -28,6 +28,7 @@
         <evalex-version>3.6.0</evalex-version>
         <mockito-version>5.21.0</mockito-version>
         <kafka-version>4.2.0</kafka-version>
+        <swagger-version>2.2.27</swagger-version>
         <maven-surefire-plugin-version>3.5.2</maven-surefire-plugin-version>
         <argLine></argLine>
         <surefireArgLine>-Dnet.bytebuddy.experimental=true</surefireArgLine>
@@ -190,6 +191,14 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>${micrometer-version}</version>
         </dependency>
+
+        <!-- Swagger/OpenAPI dependencies for API documentation -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger-version}</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
         <dependency>
             <groupId>org.apache.kafka</groupId>

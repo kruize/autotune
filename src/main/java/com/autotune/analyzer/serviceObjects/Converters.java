@@ -639,5 +639,19 @@ public class Converters {
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
         }
+
+        /**
+         * Converts KruizeObject to ListRecommendationsAPIObject using V1 schema
+         * This method transforms recommendations to the new schema with:
+         * - replicas attribute at current and recommendation levels
+         * - nested resources structure (limits and requests under resources)
+         * - metrics_info with pod_count metrics (avg, max, min)
+         * - variation with replicas
+         * @return ListRecommendationsAPIObject with V1 schema structure
+         */
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1() {
+            // TODO: Implement V1 schema conversion
+            return null;
+        }
     }
 }
