@@ -93,7 +93,7 @@ public class RecommendationUtils {
 
                 // if podCount is determined to be 0, return null.
                 if (currentValue != null && currentValue > 0.0) {
-                    return new RecommendationConfigItem(currentValue, format);
+                    return new RecommendationConfigItem(Math.ceil(currentValue), format);
                 }
             } else { // limits & requests
                 MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
