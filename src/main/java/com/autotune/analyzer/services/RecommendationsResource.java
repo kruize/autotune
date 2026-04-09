@@ -47,9 +47,9 @@ import java.io.IOException;
  */
 @WebServlet(asyncSupported = true)
 @Tag(name = "Recommendations V1", description = "API v1 for getting recommendations with new schema")
-public class ListRecommendationsV1 extends HttpServlet {
+public class RecommendationsResource extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ListRecommendationsV1.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationsResource.class);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -91,7 +91,7 @@ public class ListRecommendationsV1 extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
-        LOGGER.info("ListRecommendationsV1 GET request received");
+        LOGGER.info("RecommendationsResource GET request received");
     }
 
     /**
@@ -134,7 +134,7 @@ public class ListRecommendationsV1 extends HttpServlet {
     })
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        LOGGER.info("ListRecommendationsV1 POST request received");
+        LOGGER.info("RecommendationsResource POST request received");
     }
 
 }
