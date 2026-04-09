@@ -143,7 +143,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                 }
 
                 if (metricName != null) {
-                    RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(metricName, namespaceData.getResults(), monitoringEndTime, notifications);
+                    RecommendationConfigItem configItem = RecommendationUtils.getCurrentValueForNamespace(metricName, namespaceData.getResults(), monitoringEndTime, notifications);
 
                     // Use base class validation method
                     if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {

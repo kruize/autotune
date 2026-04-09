@@ -38,6 +38,19 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 public class RecommendationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
 
+    /**
+     * To populate current config of containers, we need to get request and limits of CPU and MEMORY of last datapoint.
+     * Currently, it supports
+     *   limits
+     *   requests
+     *   replicas
+     *
+     * @param metricName Name of the metric for which current value is to be determined
+     * @param filteredResultsMap List of datapoints of all metrics
+     * @param timestampToExtract Timestamp of datapoint to consider for current config
+     * @param notifications List of errors (if any).
+     * @return RecommendationConfigItem with value and format.
+     */
     public static RecommendationConfigItem getCurrentValue(AnalyzerConstants.MetricName metricName, Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp timestampToExtract, ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
         Double currentValue = null;
         String format = null;
@@ -96,14 +109,59 @@ public class RecommendationUtils {
         }
 
         // Shouldn't reach here in normal scenarios
-        if (metricName == AnalyzerConstants.MetricName.cpuRequest)
-            notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
-        else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
-            notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
-        else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
-            notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
-        else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
-            notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+        if (notifications != null) {
+            if (metricName == AnalyzerConstants.MetricName.cpuRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+        }
+
+        return null;
+    }
+
+    /**
+     * To populate current config of namespace, we need to get request and limits of CPU and MEMORY of last datapoint.
+     * Currently, it supports
+     *   limits
+     *   requests
+     *
+     * @param metricName Name of the metric for which current value is to be determined
+     * @param filteredResultsMap List of datapoints of all metrics
+     * @param timestampToExtract Timestamp of datapoint to consider for current config
+     * @param notifications List of errors (if any).
+     * @return RecommendationConfigItem with value and format.
+     */
+    public static RecommendationConfigItem getCurrentValueForNamespace(AnalyzerConstants.MetricName metricName, Map<Timestamp, IntervalResults> filteredResultsMap, Timestamp timestampToExtract, ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
+        Double currentValue = null;
+        String format = null;
+        IntervalResults intervalResults = filteredResultsMap.get(timestampToExtract);
+        if (null != intervalResults) {
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
+            if (null != metricResults) {
+                MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                if (null != metricAggregationInfoResults) {
+                    currentValue = metricAggregationInfoResults.getSum();
+                    format = metricAggregationInfoResults.getFormat();
+                    return new RecommendationConfigItem(currentValue, format);
+                }
+            }
+        }
+
+        // Shouldn't reach here in normal scenarios
+        if (notifications != null) {
+            if (metricName == AnalyzerConstants.MetricName.namespaceCpuRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.namespaceMemoryRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.namespaceCpuLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.namespaceMemoryLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+        }
 
         return null;
     }
