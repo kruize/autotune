@@ -1028,6 +1028,7 @@ function kruize_local_patch() {
 function benchmarks_install() {
 	APP_NAMESPACE="${1:-${APP_NAMESPACE}}"
 	BENCHMARK="${2:-tfb}"
+	MANIFESTS="${3:-default_manifests}"
 
 	echo
 	echo "#######################################"
@@ -1035,7 +1036,7 @@ function benchmarks_install() {
 	  if [ ${BENCHMARK} == "tfb" ]; then
       echo "Installing TechEmpower (Quarkus REST EASY) benchmark into cluster"
       pushd techempower >/dev/null
-        kubectl apply -f manifests/default_manifests -n ${APP_NAMESPACE}
+			  kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
         check_err "ERROR: TechEmpower app failed to start, exiting"
       popd >/dev/null
     fi
