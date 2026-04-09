@@ -17,6 +17,7 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_CPU_THRESHOLD;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
@@ -163,43 +164,26 @@ public abstract class BaseRecommendationProcessor {
     /**
      * Extracts current configuration items from requests and limits maps.
      *
-     * @param currentConfigMap Map containing current configuration
+     * @param currentConfig object to represent current configuration
      * @return CurrentConfigValues object containing CPU and memory request/limit values
      */
-    protected CurrentConfigValues extractCurrentConfig(
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap) {
+    protected CurrentConfigValues extractCurrentConfig(Config currentConfig) {
 
         RecommendationConfigItem currentCPURequest = null;
         RecommendationConfigItem currentCPULimit = null;
         RecommendationConfigItem currentMemRequest = null;
         RecommendationConfigItem currentMemLimit = null;
 
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) &&
-                null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap =
-                    currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
-                    null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
-                    null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
-        }
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = currentConfig.getRequests();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = currentConfig.getLimits();
 
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) &&
-                null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap =
-                    currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
-                    null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
-            }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
-                    null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
-            }
+        if (null != requests) {
+            currentCPURequest = requests.get(AnalyzerConstants.RecommendationItem.CPU);
+            currentMemRequest = requests.get(AnalyzerConstants.RecommendationItem.MEMORY);
+        }
+        if (null != limits) {
+            currentCPULimit = limits.get(AnalyzerConstants.RecommendationItem.CPU);
+            currentMemLimit = limits.get(AnalyzerConstants.RecommendationItem.MEMORY);
         }
 
         return new CurrentConfigValues(currentCPURequest, currentCPULimit, currentMemRequest, currentMemLimit);
