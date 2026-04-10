@@ -54,7 +54,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * This is generic wrapper class used to retrieve RESTAPI response.
  * This class support following RESTAPI authentication mode
- * Basic , Bearer , APIKey , OAUTH2 , NO Auth
+ * Basic , Bearer , APIKey , OAUTH2 , MTLS , NO Auth
  */
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
@@ -135,26 +135,50 @@ public class GenericRestApiClient {
 
 
     /**
-     * Common method to setup SSL context for trust-all certificates.
+     * Common method to setup HTTP client with appropriate SSL context.
+     * The SSL context is obtained from the authentication strategy if it provides one,
+     * otherwise uses a default trust-all configuration.
      *
-     * @return CloseableHttpClient
+     * @return CloseableHttpClient configured with appropriate SSL settings
      */
     private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  // Trust all certificates
+        SSLContext sslContext;
+        
+        try {
+            // Get SSL context from authentication strategy (returns null for most auth types)
+            sslContext = (authenticationStrategy != null) ? authenticationStrategy.getSSLContext() : null;
+            
+            if (sslContext != null) {
+                LOGGER.debug("Using custom SSL context from authentication strategy");
+            } else {
+                // Default trust-all configuration when no custom SSL context is provided
+                sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();
+                LOGGER.debug("Using default trust-all SSL context");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to create SSL context: {}", e.getMessage(), e);
+            throw new KeyManagementException("Failed to setup SSL context: " + e.getMessage(), e);
+        }
+        
         SSLConnectionSocketFactory sslConnectionSocketFactory =
-                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2"}, null, NoopHostnameVerifier.INSTANCE);
+                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2", "TLSv1.3"}, null, NoopHostnameVerifier.INSTANCE);
         return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
     }
 
     /**
      * Common method to apply authentication to the HTTP request.
+     * For mTLS, authentication is handled at the SSL/TLS layer, so no header is set.
+     * For other authentication types, the Authorization header is set.
      *
      * @param httpRequestBase the HTTP request (GET, POST, etc.)
      */
     private void applyAuthentication(HttpRequestBase httpRequestBase) {
         if (authenticationStrategy != null) {
             String authHeader = authenticationStrategy.applyAuthentication();
-            httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
+            // Only set the Authorization header if it's not null (mTLS returns null)
+            if (authHeader != null) {
+                httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
+            }
         }
     }
 
