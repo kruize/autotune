@@ -99,7 +99,7 @@ def test_semeru_gc_policy_when_layer_present(cluster_type):
 
 
 @pytest.mark.runtimes
-def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
+def test_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
     """
     Test Description: If jvmInfo/jvmInfoTotal metrics are not configured in the metric profile,
     runtime recommendations should still be generated.
@@ -119,7 +119,7 @@ def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
 
 
 @pytest.mark.runtimes
-def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
+def test_gc_recommendation_when_jvm_version_missing(cluster_type):
     """
     Test Description: If jvm_info metrics are present but the version label is not part
     of the aggregation (simulating missing version), GC-specific recommendation should still be present.

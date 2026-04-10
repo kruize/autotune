@@ -121,6 +121,7 @@ def validate_runtime_recommendations_if_present(recommendations_json):
     3. Notification codes and messages are correctly set in both cost and
        performance recommendation engines
     4. Environment variable values are non-empty and contain expected patterns
+    5. When runtime notification is present, at least one runtime env must exist
     
     The function traverses the recommendations JSON structure through:
     kubernetes_objects -> containers -> recommendations -> data ->
@@ -132,9 +133,8 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                                     experiment_type, kubernetes_objects, etc.
     
     Returns:
-        None: This function performs assertions and returns early if validation
-              passes or if recommendations are not applicable (empty list,
-              non-container experiment, etc.)
+        None: This function performs assertions and validates all runtime
+              recommendations without returning early.
     
     Raises:
         AssertionError: If any validation check fails, including:
@@ -143,11 +143,14 @@ def validate_runtime_recommendations_if_present(recommendations_json):
             - Invalid environment variable names
             - Empty environment variable values
             - Missing GC flags in JAVA options
+            - Runtime notification present but no runtime env variables found
     
     Note:
         - Only validates container experiment types
         - Returns early without error if recommendations_json is empty or None
         - Returns early if no kubernetes_objects are present
+        - Validates ALL runtime recommendations, not just the first one found
+        - Fails if runtime notification is present but no runtime envs are found
     """
     if not recommendations_json or len(recommendations_json) == 0:
         return
@@ -159,6 +162,9 @@ def validate_runtime_recommendations_if_present(recommendations_json):
     kubernetes_objects = rec.get("kubernetes_objects", [])
     if not kubernetes_objects:
         return
+
+    has_runtime_notification = False
+    runtime_env_vars_found = []
 
     for k8s_obj in kubernetes_objects:
         containers = k8s_obj.get("containers", [])
@@ -175,18 +181,19 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                     # Check cost engine has runtime notification (code and message)
                     if "cost" in engines:
                         cost_notifications = engines["cost"].get("notifications", {})
-                        assert NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in cost_notifications, \
-                            f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in cost engine notifications"
-                        assert cost_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
-                            f"Runtime recommendations notification message mismatch in cost engine notifications"
+                        if NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in cost_notifications:
+                            has_runtime_notification = True
+                            assert cost_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
+                                f"Runtime recommendations notification message mismatch in cost engine notifications"
 
                     # Check performance engine has runtime notification (code and message)
                     if "performance" in engines:
                         perf_notifications = engines["performance"].get("notifications", {})
-                        assert NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in perf_notifications, \
-                            f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} not found in performance engine notifications"
-                        assert perf_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
-                            f"Runtime recommendations notification message mismatch in performance engine notifications"
+                        if NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE in perf_notifications:
+                            has_runtime_notification = True
+                            assert perf_notifications[NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE].get("message") == RUNTIMES_RECOMMENDATIONS_AVAILABLE, \
+                                f"Runtime recommendations notification message mismatch in performance engine notifications"
+                    
                     for _engine_name, engine_obj in engines.items():
                         config = engine_obj.get("config", {})
                         env_list = config.get("env")
@@ -210,11 +217,20 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                                 assert _has_runtime_env_value(value), (
                                     f"Runtime env {name} should contain GC flags, got: {value}"
                                 )
-                                return  # Found valid runtime recommendation
+                                runtime_env_vars_found.append(name)
 
                             if name == QUARKUS_THREAD_POOL_CORE_THREADS:
                                 # For thread-pool tunables, ensure we have a non-empty value
                                 assert value, f"Runtime env {name} has empty value"
+                                runtime_env_vars_found.append(name)
+
+    # If runtime notification is present, we must have at least one runtime env variable
+    if has_runtime_notification:
+        assert runtime_env_vars_found, (
+            f"Runtime recommendations notification code {NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE} "
+            f"is present, but no runtime environment variables ({JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}, "
+            f"{QUARKUS_THREAD_POOL_CORE_THREADS}) were found in the recommendations"
+        )
 
 
 def _generate_and_list_recommendations_for_tfb(
