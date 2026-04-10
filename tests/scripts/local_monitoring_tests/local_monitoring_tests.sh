@@ -123,8 +123,8 @@ function local_monitoring_tests() {
 			kubectl delete job petclinic-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
 			kubectl delete job tfb-qrh-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
 
-			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}" 2>&1
-			benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}" 2>&1
+			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}"
+			benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}"
 			echo "✅ Completed!"
 
 			quarkus_label="com.redhat.component-name=Quarkus"

@@ -288,9 +288,6 @@ def _generate_and_list_recommendations_for_tfb(
         ...     layer_filter=filter_hotspot_only
         ... )
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-    benchmarks_install()
-
     input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_tfb_exp.json")
     input_json_file = str(input_json_path)
     with open(input_json_path) as f:
@@ -302,11 +299,9 @@ def _generate_and_list_recommendations_for_tfb(
 
     form_kruize_url(cluster_type)
 
-    # Install metric profile (use resource_optimization_local_monitoring with jvmRuntimeInfo/jvmMemoryMaxBytes)
-    if cluster_type == "minikube":
-        metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring_norecordingrules.json"
-    else:
-        metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring.json"
+    # Install metric profile
+    metric_profile_json_file = metric_profile_dir / "resource_optimization_local_monitoring.json"
+    if cluster_type == "openshift":
         # Update datasource from prometheus-1 to thanos-1 before using in the test
         for exp in input_json:
             if exp.get("datasource") == "prometheus-1":
@@ -317,7 +312,7 @@ def _generate_and_list_recommendations_for_tfb(
             temp_input_json_file = tf.name
             input_json_file = temp_input_json_file
 
-    # Optional: tweak metric profile JSON for specific scenarios
+    # Point the metric profile JSON to a temp file to avoid using the original one
     if metric_profile_json_modifier is not None:
         with open(metric_profile_json_file) as f:
             metric_profile_json = json.load(f)
@@ -517,31 +512,10 @@ def _generate_and_list_recommendations_for_petclinic(
         ...     layer_filter=filter_semeru_only
         ... )
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-    
-    # Clean up existing petclinic deployment to ensure fresh start with updated configs
-    print("Cleaning up existing petclinic deployment...")
-    petclinic_manifests = Path("benchmarks/spring-petclinic/manifests")
-    if petclinic_manifests.exists():
-        subprocess.run(
-            f"kubectl delete -f {petclinic_manifests}/petclinic.yaml --ignore-not-found",
-            shell=True,
-            capture_output=True
-        )
-        subprocess.run(
-            f"kubectl delete -f {petclinic_manifests}/service-monitor.yaml --ignore-not-found",
-            shell=True,
-            capture_output=True
-        )
-        print("Cleanup complete, waiting for resources to be removed...")
-        time.sleep(10)  # Wait for resources to be fully removed
-    
-    benchmarks_install()
-    
     # Wait for petclinic pod to be ready and metrics to be available
     # This is crucial for Semeru layer detection as Prometheus needs time to scrape metrics
     print("Waiting for petclinic pod to be ready and metrics to be scraped by Prometheus...")
-    time.sleep(60)  # Wait 60 seconds for pod readiness and initial metric scraping
+    time.sleep(30)  # Wait 30 seconds for pod readiness and initial metric scraping
     print("Wait complete, proceeding with experiment creation...")
 
     input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_petclinic_exp.json")
@@ -802,3 +776,26 @@ def _contains_any_pattern(values, patterns):
             if p in v:
                 return True
     return False
+
+
+def remove_jvm_metrics(metric_profile_json):
+    vars_list = metric_profile_json.get("slo", {}).get("function_variables", [])
+    filtered = [
+        v for v in vars_list
+        if v.get("name") not in ("jvmInfo", "jvmInfoTotal")
+    ]
+    metric_profile_json["slo"]["function_variables"] = filtered
+    return metric_profile_json
+
+
+def strip_version_from_jvm_queries(metric_profile_json):
+    def _rewrite_query(q):
+        return q.replace(", version", "")
+
+    for var in metric_profile_json.get("slo", {}).get("function_variables", []):
+        if var.get("name") in ("jvmInfo", "jvmInfoTotal"):
+            for af in var.get("aggregation_functions", []):
+                query = af.get("query")
+                if isinstance(query, str) and "sum by(" in query and "version" in query:
+                    af["query"] = _rewrite_query(query)
+    return metric_profile_json

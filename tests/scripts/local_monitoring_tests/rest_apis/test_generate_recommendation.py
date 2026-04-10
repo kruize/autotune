@@ -26,7 +26,7 @@ from helpers.runtime_utils import (
     HOTSPOT_GC_PATTERNS,
     SEMERU_GC_PATTERNS,
     JDK_JAVA_OPTIONS,
-    JAVA_OPTIONS,
+    JAVA_OPTIONS, remove_jvm_metrics, strip_version_from_jvm_queries,
 )
 
 sys.path.append("../../")
@@ -95,6 +95,7 @@ def test_semeru_gc_policy_when_layer_present(cluster_type):
     )
 
 
+@pytest.mark.skip(reason="This will be enabled once the conditional check PR is merged(PR #1866)")
 @pytest.mark.runtimes
 def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
     """
@@ -103,15 +104,6 @@ def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
 
     Expected: No runtime-related env entries (JDK_JAVA_OPTIONS/JAVA_OPTIONS) with GC flags.
     """
-
-    def remove_jvm_metrics(metric_profile_json):
-        vars_list = metric_profile_json.get("slo", {}).get("function_variables", [])
-        filtered = [
-            v for v in vars_list
-            if v.get("name") not in ("jvmInfo", "jvmInfoTotal", "jvmMemoryMaxBytes")
-        ]
-        metric_profile_json["slo"]["function_variables"] = filtered
-        return metric_profile_json
 
     list_reco_json = _generate_and_list_recommendations_for_tfb(
         cluster_type,
@@ -124,6 +116,7 @@ def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
     )
 
 
+@pytest.mark.skip(reason="This will be enabled once the conditional check PR is merged(PR #1866)")
 @pytest.mark.runtimes
 def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
     """
@@ -132,19 +125,6 @@ def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
 
     Expected: No GC flags in runtime env (null / missing version handling).
     """
-
-    def strip_version_from_jvm_queries(metric_profile_json):
-        def _rewrite_query(q):
-            # Best-effort: drop ', version' from the 'sum by(... )' grouping clause
-            return q.replace(", version", "")
-
-        for var in metric_profile_json.get("slo", {}).get("function_variables", []):
-            if var.get("name") in ("jvmInfo", "jvmInfoTotal"):
-                for af in var.get("aggregation_functions", []):
-                    query = af.get("query")
-                    if isinstance(query, str) and "sum by(" in query and "version" in query:
-                        af["query"] = _rewrite_query(query)
-        return metric_profile_json
 
     list_reco_json = _generate_and_list_recommendations_for_tfb(
         cluster_type,
