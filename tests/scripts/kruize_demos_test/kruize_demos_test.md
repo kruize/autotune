@@ -25,7 +25,7 @@ Kruize Demos test validates the behaviour of Kruize APIs by running the Kruize d
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/kruize_demos_test/kruize_demos_test.sh -c [minikube|kind|openshift] [-i Kruize image] [-o Kruize operator image] [-r results directory path] [ -t <demo> ] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]
+<KRUIZE_REPO>/tests/scripts/kruize_demos_test/kruize_demos_test.sh -c [minikube|kind|openshift] [-i Kruize image] [-o Kruize operator image] [-s Kruize operator branch] [-r results directory path] [ -t <demo> ] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]
 ```
 
 Where values for kruize_demos_test.sh are:
@@ -34,6 +34,7 @@ Usage:
         [ -c ] : cluster_type. Supports minikube, kind and openshift cluster-type
         [ -i ] : kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo
         [ -o ] : Kruize operator image. Default - It will use the latest kruize operator image
+        [ -s ] = Kruize operator git repo branch. Default - mvp_demo"
         [ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
         [ -b ] : Kruize demos git repo branch. Default - main
         [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes)

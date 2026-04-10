@@ -31,6 +31,7 @@ target="crc"
 KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 KRUIZE_OPERATOR_IMAGE=""
 KRUIZE_OPERATOR=1
+KRUIZE_OPERATOR_BRANCH="mvp_demo"
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
@@ -40,10 +41,11 @@ WAIT_TIME=20
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [-s Kruize operator branch] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]"
 	echo "c = supports minikube, kind and openshift cluster-type"
 	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
 	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
+	echo "s = Kruize operator git repo branch. Default - mvp_demo"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
@@ -362,7 +364,7 @@ function run_demo() {
 		if [[ "${KRUIZE_OPERATOR}" -eq 1 ]]; then
 			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
 				pwd
-				clone_repos "kruize-operator"
+				git clone -b ${KRUIZE_OPERATOR_BRANCH} https://github.com/kruize/kruize-operator.git
 			fi
 		fi
 		pwd
@@ -453,6 +455,9 @@ do
 		;;
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
+		;;
+	s)
+		KRUIZE_OPERATOR_BRANCH="${OPTARG}"
 		;;
 	a)
 		KRUIZE_DEMOS_REPO="${OPTARG}"		
