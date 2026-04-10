@@ -193,6 +193,19 @@ public class DataSourceMetadataOperator {
 
         MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
 
+        // Extract label filters from includeResources if present
+        String labelFilter = includeResources.getOrDefault("labels", "");
+        if (labelFilter.isEmpty()) {
+            labelFilter = excludeResources.getOrDefault("labels", "");
+        }
+        // Use labelFilter if provided, otherwise use uniqueKey
+        String effectiveLabelFilter = !labelFilter.isEmpty() ? labelFilter : uniqueKey;
+
+        LOGGER.info("[BULK API LABEL FILTER] Label filter from includeResources: {}", includeResources.getOrDefault("labels", "NOT_FOUND"));
+        LOGGER.info("[BULK API LABEL FILTER] Label filter from excludeResources: {}", excludeResources.getOrDefault("labels", "NOT_FOUND"));
+        LOGGER.info("[BULK API LABEL FILTER] uniqueKey parameter: {}", uniqueKey);
+        LOGGER.info("[BULK API LABEL FILTER] Effective label filter to be applied: {}", effectiveLabelFilter);
+
         // Populate filters for each field
         fields.forEach(field -> {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
@@ -227,12 +240,14 @@ public class DataSourceMetadataOperator {
         String containerQuery = queries.get("container");
 
         String dataSourceName = dataSourceInfo.getName();
-        if (null != uniqueKey && !uniqueKey.isEmpty()) {
-            LOGGER.debug("uniquekey: {}", uniqueKey);
-            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+        if (null != effectiveLabelFilter && !effectiveLabelFilter.isEmpty()) {
+            LOGGER.info("[BULK API LABEL FILTER] Applying label filter to queries: {}", effectiveLabelFilter);
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + effectiveLabelFilter);
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + effectiveLabelFilter);
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + effectiveLabelFilter);
+            LOGGER.info("[BULK API LABEL FILTER] Label filter applied successfully to all queries");
         } else {
+            LOGGER.info("[BULK API LABEL FILTER] No label filter to apply - queries will fetch all resources");
             namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
             workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
             containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
@@ -242,9 +257,9 @@ public class DataSourceMetadataOperator {
         workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
         containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
-        LOGGER.info("namespaceQuery: {}", namespaceQuery);
-        LOGGER.info("workloadQuery: {}", workloadQuery);
-        LOGGER.info("containerQuery: {}", containerQuery);
+        LOGGER.info("[BULK API LABEL FILTER] Final namespaceQuery: {}", namespaceQuery);
+        LOGGER.info("[BULK API LABEL FILTER] Final workloadQuery: {}", workloadQuery);
+        LOGGER.info("[BULK API LABEL FILTER] Final containerQuery: {}", containerQuery);
 
         JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
         LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
