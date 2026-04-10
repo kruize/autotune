@@ -511,6 +511,12 @@ public class BulkJobManager implements Runnable {
         try {
             Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
             Collection<DataSource> dataSourceCollection = metadataInfo.getDatasources().values();
+            LOGGER.info("[BULK API LABEL FILTER] Starting to process metadata and create experiments");
+            LOGGER.info("[BULK API LABEL FILTER] Label string used for experiment naming: {}", labelString != null ? labelString : "NONE");
+            
+            int totalWorkloadsProcessed = 0;
+            int totalExperimentsCreated = 0;
+            
             for (DataSource ds : dataSourceCollection) {
                 HashMap<String, DataSourceCluster> clusterHashMap = ds.getClusters();
                 for (DataSourceCluster dsc : clusterHashMap.values()) {
@@ -519,6 +525,7 @@ public class BulkJobManager implements Runnable {
                         HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getWorkloads();
                         if (dataSourceWorkloadHashMap != null) {
                             for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
+                                totalWorkloadsProcessed++;
                                 HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getContainers();
                                 if (dataSourceContainerHashMap != null) {
                                     for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
@@ -529,6 +536,9 @@ public class BulkJobManager implements Runnable {
                                         CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
                                                 experiment_name, createExperimentAPIObjectList);
                                         createExperimentAPIObjectMap.put(experiment_name, apiObject);
+                                        totalExperimentsCreated++;
+                                        LOGGER.info("[BULK API LABEL FILTER] Created experiment for: cluster={}, namespace={}, workload={}, container={}, experiment_name={}",
+                                                dsc.getDataSourceClusterName(), namespace.getNamespace(), dsw.getWorkloadName(), dc.getContainerName(), experiment_name);
                                     }
                                 }
                             }
@@ -536,6 +546,8 @@ public class BulkJobManager implements Runnable {
                     }
                 }
             }
+            LOGGER.info("[BULK API LABEL FILTER] Summary: Processed {} workloads, created {} experiments", totalWorkloadsProcessed, totalExperimentsCreated);
+            LOGGER.info("[BULK API LABEL FILTER] If label filter was applied correctly, only workloads matching the label should appear above");
             return createExperimentAPIObjectMap;
         } finally {
             if (null != timerGetExpMap) {
@@ -581,7 +593,19 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            // Add label filters to the resource filters map
+            if (filter.getLabels() != null && !filter.getLabels().isEmpty()) {
+                String labelFilterString = getLabels(new BulkInput.FilterWrapper() {{
+                    setInclude(filter);
+                }});
+                resourceFilters.put("labels", labelFilterString);
+                LOGGER.info("[BULK API LABEL FILTER] Label filters extracted from request: {}", labelFilterString);
+                LOGGER.info("[BULK API LABEL FILTER] Label filter map: {}", filter.getLabels());
+            } else {
+                LOGGER.info("[BULK API LABEL FILTER] No label filters found in request");
+            }
         }
+        LOGGER.info("[BULK API LABEL FILTER] Complete resource filters map: {}", resourceFilters);
         return resourceFilters;
     }
 
