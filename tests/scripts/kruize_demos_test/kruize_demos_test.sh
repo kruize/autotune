@@ -364,7 +364,7 @@ function run_demo() {
 		if [[ "${KRUIZE_OPERATOR}" -eq 1 ]]; then
 			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
 				pwd
-				git clone -b ${KRUIZE_OPERATOR_BRANCH} "kruize-operator"
+				git clone -b ${KRUIZE_OPERATOR_BRANCH} https://github.com/kruize/kruize-operator.git
 			fi
 		fi
 		pwd
