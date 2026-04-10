@@ -799,3 +799,12 @@ def strip_version_from_jvm_queries(metric_profile_json):
                 if isinstance(query, str) and "sum by(" in query and "version" in query:
                     af["query"] = _rewrite_query(query)
     return metric_profile_json
+
+
+def no_jvm_layers(path: Path) -> bool:
+    """Filter out all JVM-related layers (hotspot, semeru, quarkus)"""
+    return not (
+        path.name.startswith("hotspot-") or
+        path.name.startswith("semeru-") or
+        path.name.startswith("quarkus-")
+    )

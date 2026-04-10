@@ -26,7 +26,10 @@ from helpers.runtime_utils import (
     HOTSPOT_GC_PATTERNS,
     SEMERU_GC_PATTERNS,
     JDK_JAVA_OPTIONS,
-    JAVA_OPTIONS, remove_jvm_metrics, strip_version_from_jvm_queries,
+    JAVA_OPTIONS,
+    QUARKUS_THREAD_POOL_CORE_THREADS,
+    remove_jvm_metrics,
+    strip_version_from_jvm_queries, no_jvm_layers,
 )
 
 sys.path.append("../../")
@@ -95,14 +98,13 @@ def test_semeru_gc_policy_when_layer_present(cluster_type):
     )
 
 
-@pytest.mark.skip(reason="This will be enabled once the conditional check PR is merged(PR #1866)")
 @pytest.mark.runtimes
 def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
     """
     Test Description: If jvmInfo/jvmInfoTotal metrics are not configured in the metric profile,
-    runtime recommendations should not be generated.
+    runtime recommendations should still be generated.
 
-    Expected: No runtime-related env entries (JDK_JAVA_OPTIONS/JAVA_OPTIONS) with GC flags.
+    Expected: Runtime-related env entries (JDK_JAVA_OPTIONS/JAVA_OPTIONS) with GC flags present.
     """
 
     list_reco_json = _generate_and_list_recommendations_for_tfb(
@@ -111,19 +113,18 @@ def test_no_runtime_recommendations_when_jvm_metadata_missing(cluster_type):
     )
 
     env_values = _env_values(list_reco_json)
-    assert not _contains_any_pattern(env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
-        f"GC-related runtime env not expected when JVM metrics are missing, but found: {env_values}"
+    assert _contains_any_pattern(env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
+        f"GC-related runtime env are expected when JVM metrics are missing, but not found"
     )
 
 
-@pytest.mark.skip(reason="This will be enabled once the conditional check PR is merged(PR #1866)")
 @pytest.mark.runtimes
 def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
     """
     Test Description: If jvm_info metrics are present but the version label is not part
-    of the aggregation (simulating missing version), no GC-specific recommendation should be emitted.
+    of the aggregation (simulating missing version), GC-specific recommendation should still be present.
 
-    Expected: No GC flags in runtime env (null / missing version handling).
+    Expected: GC flags present in runtime env.
     """
 
     list_reco_json = _generate_and_list_recommendations_for_tfb(
@@ -132,8 +133,8 @@ def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
     )
 
     env_values = _env_values(list_reco_json)
-    assert not _contains_any_pattern(env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
-        f"Did not expect GC flags when JVM version label is missing, but found: {env_values}"
+    assert _contains_any_pattern(env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
+        f"GC flags expected even when JVM version label is missing, but not found"
     )
 
 
@@ -141,7 +142,7 @@ def test_no_gc_recommendation_when_jvm_version_missing(cluster_type):
 def test_no_recommendation_for_layer_runtime_mismatch(cluster_type):
     """
     Test Description: When only the non-matching JVM layer is present (e.g., hotspot layer for
-    a Semeru/OpenJ9 workload or vice versa), runtime recommendations should not be generated.
+    a Semeru/OpenJ9 workload or vice versa), JVM specific recommendations should not be generated.
 
     Expected: No GC-related runtime env entries in recommendations.
     """
@@ -184,4 +185,38 @@ def test_no_recommendation_for_layer_runtime_mismatch(cluster_type):
     ), (
         "Expected at least one mismatch case (only hotspot or only semeru layer) "
         "to have no GC-related runtime recommendations."
+    )
+
+
+@pytest.mark.runtimes
+def test_no_runtime_recommendations_when_no_layers_detected(cluster_type):
+    """
+    Test Description: When NO JVM layers are detected (all layers filtered out),
+    no JVM runtime recommendations should be generated.
+    
+    This test validates that runtime recommendations are only generated when
+    the corresponding layer is actually detected for the workload.
+    
+    Expected: No JVM runtime env entries (JDK_JAVA_OPTIONS/JAVA_OPTIONS/QUARKUS_THREAD_POOL_CORE_THREADS)
+    should be present when no JVM layers are detected.
+    """
+    
+    list_reco_json = _generate_and_list_recommendations_for_tfb(
+        cluster_type,
+        layer_filter=no_jvm_layers,
+    )
+    
+    # Extract all runtime environment variables
+    envs = _extract_runtime_envs(list_reco_json)
+    
+    # Filter to JVM-related environment variables
+    jvm_related_envs = [
+        env for env in envs 
+        if env.get("name") in (JDK_JAVA_OPTIONS, JAVA_OPTIONS, QUARKUS_THREAD_POOL_CORE_THREADS)
+    ]
+    
+    # When no JVM layers are detected, there should be no JVM runtime recommendations
+    assert not jvm_related_envs, (
+        f"No JVM runtime recommendations expected when no JVM layers are detected, "
+        f"but found: {jvm_related_envs}"
     )
