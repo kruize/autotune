@@ -31,6 +31,7 @@ target="crc"
 KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 KRUIZE_OPERATOR_IMAGE=""
 KRUIZE_OPERATOR=1
+KRUIZE_OPERATOR_BRANCH="mvp_demo"
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
@@ -362,7 +363,7 @@ function run_demo() {
 		if [[ "${KRUIZE_OPERATOR}" -eq 1 ]]; then
 			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
 				pwd
-				clone_repos "kruize-operator"
+				git clone -b ${KRUIZE_OPERATOR_BRANCH} "kruize-operator"
 			fi
 		fi
 		pwd
