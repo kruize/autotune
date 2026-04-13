@@ -482,7 +482,7 @@
           {
             "function": "sum",
             "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-            "required_layer": "hotspot,semeru"
+            "required_layer": ["hotspot", "semeru"]
           }
         ]
       },
@@ -495,7 +495,7 @@
           {
             "function": "sum",
             "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-            "required_layer": "hotspot,semeru"
+            "required_layer": ["hotspot", "semeru"]
           }
         ]
       }
