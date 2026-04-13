@@ -47,17 +47,46 @@ metadata_profile_dir = get_metadata_profile_dir()
 @pytest.mark.runtimes
 def test_runtime_recommendation(cluster_type):
     """
-    Test Description: Validates that runtime recommendations (GC policy / JVM options)
-    are generated for JVM workloads when jvm_info metrics and layers (hotspot/semeru) are available.
+    Test Description: Validates that runtime recommendations (GC policy / JVM options and Quarkus tunables)
+    are generated for Quarkus JVM workloads when jvm_info metrics and layers (hotspot/quarkus) are available.
 
     Flow: create metric profile -> create metadata profile -> create layers -> create experiment -> generate recommendations -> list recommendations
-    Asserts: When a JVM layer is present, config.env contains JDK_JAVA_OPTIONS or JAVA_OPTIONS
-    with GC flags (e.g. -XX:+UseG1GC or -Xgcpolicy:gencon).
+    Asserts:
+    1. When JVM layers are present, config.env contains JDK_JAVA_OPTIONS or JAVA_OPTIONS with GC flags
+    2. When Quarkus layer is present, config.env contains QUARKUS_THREAD_POOL_CORE_THREADS
+
+    Note: TFB (TechEmpower Framework Benchmarks) uses Quarkus, so both JVM and Quarkus recommendations are expected.
     """
 
     list_reco_json = _generate_and_list_recommendations_for_tfb(cluster_type)
 
-    # Generic runtime recommendation validation as before
+    # Extract all runtime environment variables
+    runtime_envs = _extract_runtime_envs(list_reco_json)
+    env_names = [env.get("name") for env in runtime_envs]
+    env_values = [env.get("value", "") for env in runtime_envs]
+    
+    # MUST have runtime recommendations when JVM layers and metrics are present
+    assert runtime_envs, (
+        "Runtime recommendations MUST be generated when JVM layers are present and "
+        "jvm_info metrics are available, but no environment variables were found in recommendations"
+    )
+    
+    # Verify that JVM GC recommendations are present
+    assert _contains_any_pattern(env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
+        f"JVM GC recommendations are missing. "
+        f"Expected one of {HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS}, "
+        f"but got env values: {env_values}"
+    )
+    
+    # Verify that Quarkus thread pool recommendations are present for TFB (Quarkus workload)
+    assert QUARKUS_THREAD_POOL_CORE_THREADS in env_names, (
+        f"Quarkus thread pool recommendations are missing. "
+        f"Expected '{QUARKUS_THREAD_POOL_CORE_THREADS}' in environment variables, "
+        f"but only found: {env_names}. "
+        f"TFB uses Quarkus framework, so Quarkus layer recommendations should be present."
+    )
+    
+    # Validate the structure and content of runtime recommendations
     validate_runtime_recommendations_if_present(list_reco_json)
 
 
@@ -169,20 +198,21 @@ def test_no_recommendation_for_layer_runtime_mismatch(cluster_type):
 
     # At least one of these runs should represent a layer/runtime mismatch.
     # For the mismatched case, we expect no GC flags.
-    both_have_gc = (
-        _contains_any_pattern(hotspot_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
-        and _contains_any_pattern(semeru_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
+    hotspot_has_gc = _contains_any_pattern(hotspot_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
+    semeru_has_gc = _contains_any_pattern(semeru_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
+    
+    # Both having GC recommendations indicates a bug - the mismatch detection is not working
+    assert not (hotspot_has_gc and semeru_has_gc), (
+        "FAIL: Both hotspot-only and semeru-only runs produced GC recommendations. "
+        "This indicates that runtime recommendations are being generated even when there's a "
+        "layer/runtime mismatch. Expected the mismatched case (semeru layers with hotspot runtime) "
+        "to have NO GC-related runtime recommendations.\n"
+        f"Hotspot-only run has GC: {hotspot_has_gc}\n"
+        f"Semeru-only run has GC: {semeru_has_gc}"
     )
-    if both_have_gc:
-        pytest.skip(
-            "Both hotspot-only and semeru-only runs produced GC recommendations; "
-            "cannot reliably assert mismatch behaviour in this environment."
-        )
 
-    assert (
-        not _contains_any_pattern(hotspot_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
-        or not _contains_any_pattern(semeru_env_values, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS)
-    ), (
+    # At least one should have no GC recommendations (the mismatched case)
+    assert (not hotspot_has_gc or not semeru_has_gc), (
         "Expected at least one mismatch case (only hotspot or only semeru layer) "
         "to have no GC-related runtime recommendations."
     )
