@@ -14,6 +14,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'cpuRequest' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -32,6 +33,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'cpuLimit' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -50,6 +52,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value, metrics -> 'results' -> 'aggregation_info' ->> 'min' as min_value, metrics -> 'results' -> 'aggregation_info' ->> 'max' as max_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'cpuUsage' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -78,6 +81,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value, metrics -> 'results' -> 'aggregation_info' ->> 'min' as min_value, metrics -> 'results' -> 'aggregation_info' ->> 'max' as max_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'cpuThrottle' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -106,6 +110,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'memoryRequest' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -124,6 +129,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'memoryLimit' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -142,6 +148,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value, metrics -> 'results' -> 'aggregation_info' ->> 'min' as min_value, metrics -> 'results' -> 'aggregation_info' ->> 'max' as max_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'memoryUsage' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",
@@ -170,6 +177,7 @@
         "datasource": "db1",
         "value_type": "double",
         "kubernetes_object": "container",
+        "query": "select interval_start as interval_start_time, interval_end as interval_end_time, metrics -> 'results' -> 'aggregation_info' ->> 'avg' as avg_value, metrics -> 'results' -> 'aggregation_info' ->> 'sum' as sum_value, metrics -> 'results' -> 'aggregation_info' ->> 'min' as min_value, metrics -> 'results' -> 'aggregation_info' ->> 'max' as max_value from workload_metrics wm, workloads w, LATERAL jsonb_array_elements(wm.usage_metrics) as metrics where w.id = wm.workload_id and w.experiment_name = :experiment_name and metrics ->> 'name' = 'memoryRSS' and interval_start >= cast(:start_time as timestamp) and interval_end <= cast(:end_time as timestamp) order by interval_end desc;",
         "aggregation_functions": [
           {
             "function": "avg",

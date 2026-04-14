@@ -1406,29 +1406,77 @@ public class RecommendationEngine implements RecommendationEngineService {
                     HashMap<Metric, MetricResults>  metricResults = new HashMap<>();
                     String datasourceName = metric.getDatasource();
                     MetricsDBConnectionManager metricsDBConnectionManager = MetricsDBConnectionManager.getInstance();
-                    Set<String> aggrFunctions = metric.getAggregationFunctions();
-                    for (String function : aggrFunctions) {
-                        String query = metric.getQuery(function).toLowerCase();
-                        List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                    
+                    // Check if metric has unified query at metric level
+                    if (metric.hasUnifiedQuery()) {
+                        // Use unified query path - single query returns all aggregate values
+                        String unifiedQuery = metric.getQuery();
+                        List<String> queryParamsFromProfile = metric.getUnifiedQueryParams();
+                        List<String> expectedFunctions = metric.getExpectedResultColumns();
+                        
+                        // Populate query parameters
+                        queryParams.clear();
                         for (String param : queryParamsFromProfile) {
                             if ("container_name".equalsIgnoreCase(param))
                                 queryParams.put("container_name", container_name);
-                            else if ("namepsace".equalsIgnoreCase(param))
-                                queryParams.put("namepsace", namespace);
+                            else if ("namespace".equalsIgnoreCase(param))
+                                queryParams.put("namespace", namespace);
                             else if ("experiment_name".equalsIgnoreCase(param))
                                 queryParams.put("experiment_name", experiment_name);
                             else if ("start_time".equalsIgnoreCase(param))
                                 queryParams.put("start_time", experiment_name);
-
                         }
+                        
+                        // Execute unified query
+                        List<Object[]> unifiedResults = metricsDBConnectionManager.getUnifiedMetricsData(
+                            datasourceName, unifiedQuery, queryParams, expectedFunctions);
+                        
+                        if (unifiedResults != null && !unifiedResults.isEmpty()) {
+                            // Process unified results - each row contains all aggregate values
+                            for (Object[] row : unifiedResults) {
+                                Timestamp interval_start_time = (Timestamp) row[0];
+                                Timestamp interval_end_time = (Timestamp) row[1];
+                                
+                                IntervalResults intervalResults = results.computeIfAbsent(
+                                    interval_end_time, k -> new IntervalResults());
+                                
+                                // Process each aggregate function value
+                                for (int i = 0; i < expectedFunctions.size(); i++) {
+                                    String function = expectedFunctions.get(i);
+                                    String valueStr = (String) row[2 + i];
+                                    if (valueStr != null) {
+                                        Double value = Double.valueOf(valueStr);
+                                        intervalResults.addMetricResult(metricName, function, value);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback to individual aggregation function queries (backward compatibility)
+                        Set<String> aggrFunctions = metric.getAggregationFunctions();
+                        for (String function : aggrFunctions) {
+                            String query = metric.getQuery(function).toLowerCase();
+                            List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                            for (String param : queryParamsFromProfile) {
+                                if ("container_name".equalsIgnoreCase(param))
+                                    queryParams.put("container_name", container_name);
+                                else if ("namepsace".equalsIgnoreCase(param))
+                                    queryParams.put("namepsace", namespace);
+                                else if ("experiment_name".equalsIgnoreCase(param))
+                                    queryParams.put("experiment_name", experiment_name);
+                                else if ("start_time".equalsIgnoreCase(param))
+                                    queryParams.put("start_time", experiment_name);
 
-                        List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
-                        for (Object[] dbRow : dbResult) {
-                            Timestamp interval_start_time = (Timestamp) dbRow[0];
-                            Timestamp interval_end_time = (Timestamp) dbRow[1];
-                            Double value =  Double.valueOf((String) dbRow[2]);
-                            IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults());
-                            intervalResults.addMetricResult(metricName, function, value);
+                            }
+
+                            List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
+                            for (Object[] dbRow : dbResult) {
+                                Timestamp interval_start_time = (Timestamp) dbRow[0];
+                                Timestamp interval_end_time = (Timestamp) dbRow[1];
+                                Double value =  Double.valueOf((String) dbRow[2]);
+                                IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults());
+                                intervalResults.addMetricResult(metricName, function, value);
+                            }
                         }
                     }
                 }
@@ -1458,16 +1506,21 @@ public class RecommendationEngine implements RecommendationEngineService {
                     HashMap<Metric, MetricResults>  metricResults = new HashMap<>();
                     String datasourceName = metric.getDatasource();
                     MetricsDBConnectionManager metricsDBConnectionManager = MetricsDBConnectionManager.getInstance();
-                    Set<String> aggrFunctions = metric.getAggregationFunctions();
-                    for (String function : aggrFunctions) {
-                        String query = metric.getQuery(function);
-                        // Populate query params as defined in profile from standard list
-                        List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                    
+                    // Check if metric has unified query at metric level
+                    if (metric.hasUnifiedQuery()) {
+                        // Use unified query path - single query returns all aggregate values
+                        String unifiedQuery = metric.getQuery();
+                        List<String> queryParamsFromProfile = metric.getUnifiedQueryParams();
+                        List<String> expectedFunctions = metric.getExpectedResultColumns();
+                        
+                        // Populate query parameters
+                        queryParams.clear();
                         for (String param : queryParamsFromProfile) {
                             if ("container_name".equalsIgnoreCase(param))
                                 queryParams.put("container_name", container_name);
-                            else if ("namepsace".equalsIgnoreCase(param))
-                                queryParams.put("namepsace", namespace);
+                            else if ("namespace".equalsIgnoreCase(param))
+                                queryParams.put("namespace", namespace);
                             else if ("experiment_name".equalsIgnoreCase(param))
                                 queryParams.put("experiment_name", experiment_name);
                             else if ("start_time".equalsIgnoreCase(param))
@@ -1475,19 +1528,70 @@ public class RecommendationEngine implements RecommendationEngineService {
                             else if ("end_time".equalsIgnoreCase(param))
                                 queryParams.put("end_time", endTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                         }
-                        //LOGGER.error("query = {}", query);
-                        List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
-                        if (dbResult == null) {
-                            return;
+                        
+                        // Execute unified query
+                        List<Object[]> unifiedResults = metricsDBConnectionManager.getUnifiedMetricsData(
+                            datasourceName, unifiedQuery, queryParams, expectedFunctions);
+                        
+                        if (unifiedResults == null || unifiedResults.isEmpty()) {
+                            continue;
                         }
-                        for (Object[] dbRow : dbResult) {
-                            Timestamp interval_start_time = (Timestamp) dbRow[0];
-                            Timestamp interval_end_time = (Timestamp) dbRow[1];
-                            Double value =  Double.valueOf((String) dbRow[2]);
-                            IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults(interval_start_time, interval_end_time));
+                        
+                        // Process unified results - each row contains all aggregate values
+                        for (Object[] row : unifiedResults) {
+                            Timestamp interval_start_time = (Timestamp) row[0];
+                            Timestamp interval_end_time = (Timestamp) row[1];
+                            
+                            IntervalResults intervalResults = results.computeIfAbsent(
+                                interval_end_time, k -> new IntervalResults(interval_start_time, interval_end_time));
                             intervalResults.setIntervalStartTime(interval_start_time);
                             intervalResults.setIntervalEndTime(interval_end_time);
-                            intervalResults.addMetricResult(metricName, function, value);
+                            
+                            // Process each aggregate function value
+                            for (int i = 0; i < expectedFunctions.size(); i++) {
+                                String function = expectedFunctions.get(i);
+                                String valueStr = (String) row[2 + i];
+                                if (valueStr != null) {
+                                    Double value = Double.valueOf(valueStr);
+                                    intervalResults.addMetricResult(metricName, function, value);
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback to individual aggregation function queries (backward compatibility)
+                        Set<String> aggrFunctions = metric.getAggregationFunctions();
+                        for (String function : aggrFunctions) {
+                            String query = metric.getQuery(function);
+                            // Populate query params as defined in profile from standard list
+                            List<String> queryParamsFromProfile = metric.getQueryParams(function);
+                            for (String param : queryParamsFromProfile) {
+                                if ("container_name".equalsIgnoreCase(param))
+                                    queryParams.put("container_name", container_name);
+                                else if ("namepsace".equalsIgnoreCase(param))
+                                    queryParams.put("namepsace", namespace);
+                                else if ("experiment_name".equalsIgnoreCase(param))
+                                    queryParams.put("experiment_name", experiment_name);
+                                else if ("start_time".equalsIgnoreCase(param))
+                                    queryParams.put("start_time", startTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                                else if ("end_time".equalsIgnoreCase(param))
+                                    queryParams.put("end_time", endTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                            }
+                            //LOGGER.error("query = {}", query);
+                            List<Object[]> dbResult = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams);
+                            if (dbResult == null) {
+                                return;
+                            }
+                            for (Object[] dbRow : dbResult) {
+                                Timestamp interval_start_time = (Timestamp) dbRow[0];
+                                Timestamp interval_end_time = (Timestamp) dbRow[1];
+                                Double value =  Double.valueOf((String) dbRow[2]);
+                                IntervalResults intervalResults = results.computeIfAbsent(interval_end_time, k -> new IntervalResults(interval_start_time, interval_end_time));
+                                intervalResults.setIntervalStartTime(interval_start_time);
+                                intervalResults.setIntervalEndTime(interval_end_time);
+                                intervalResults.addMetricResult(metricName, function, value);
+                            }
+                        }
+                    }
                             //LOGGER.error("interval_start_time = {}, interval_end_time = {}, metricName = {}, function = {}, value = {}", interval_start_time, interval_end_time, metricName, function, value);
                         }
                     }

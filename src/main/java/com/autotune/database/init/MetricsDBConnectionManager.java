@@ -27,6 +27,7 @@ import org.hibernate.query.Query;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Collections;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -34,6 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 
 /**
  * Manages Hibernate sessions for metrics databases (db1, db2) configured in KruizeConfig.
@@ -249,6 +252,55 @@ public class MetricsDBConnectionManager {
             }
         }
     }
+// change added getUnifiedMetricsData
+    public List<Object[]> getUnifiedMetricsData(String metricsDbRef,String sql,Map<String, String> params,List<String> expectedFunctions) {
+
+    Session session = null;
+    try {
+        session = getSession(metricsDbRef);
+        if (session == null) {
+            LOGGER.error("Metrics DB '{}' not configured", metricsDbRef);
+            return Collections.emptyList(); // ✅ avoid null
+        }
+
+        Query query = session.createNativeQuery(sql)
+                .addScalar("interval_start_time", java.sql.Timestamp.class)
+                .addScalar("interval_end_time", java.sql.Timestamp.class);
+
+        for (String function : expectedFunctions) {
+            query.addScalar(function + "_value", String.class);
+        }
+
+        if (params != null) {
+            for (String key : params.keySet()) {
+                if (!sql.contains(":" + key)) {
+                    LOGGER.warn("Parameter {} not found in SQL", key);
+                }
+                query.setParameter(key, params.get(key));
+            }
+        }
+
+        List<Object[]> resultList = query.getResultList();
+
+        if (resultList == null || resultList.isEmpty()) {
+            LOGGER.warn("No results returned for unified query. DB: {}, SQL: {}", metricsDbRef, sql);
+        }
+
+        return resultList;
+
+    } catch (Exception e) {
+        LOGGER.error("Unified query execution failed", e);
+        return Collections.emptyList(); 
+    } finally {
+        if (session != null) {
+            try {
+                session.close();
+            } catch (Exception e) {
+                LOGGER.error("Error closing session", e);
+            }
+        }
+    }
+}
 
     /**
      * Checks if a metrics database is configured.
@@ -278,4 +330,5 @@ public class MetricsDBConnectionManager {
         }
         sessionFactoryMap.clear();
     }
+
 }

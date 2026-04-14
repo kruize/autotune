@@ -143,4 +143,31 @@ public final class Metric {
         }
         return aggregationFunctionsMap.keySet();
     }
+// change added 
+    public boolean hasUnifiedQuery() {
+    // Unified query exists if query field is populated at metric level
+    // AND we have aggregation_functions to know what columns to expect
+    return query != null &&
+           !query.isEmpty() &&
+           aggregationFunctionsMap != null &&
+           !aggregationFunctionsMap.isEmpty();
+}
+
+    // Helper to get expected result columns from aggregation_functions
+    public List<String> getExpectedResultColumns() {
+        if (aggregationFunctionsMap == null) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(aggregationFunctionsMap.keySet());
+    }
+
+    // Helper to get query_params from aggregation_functions 
+    public List<String> getUnifiedQueryParams() {
+        if (aggregationFunctionsMap == null || aggregationFunctionsMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Get query_params from first aggregation function
+        AggregationFunctions firstFunc = aggregationFunctionsMap.values().iterator().next();
+        return firstFunc.getQueryParams();
+    }
 }
