@@ -71,7 +71,7 @@ SEMERU_GC_PATTERNS = (
     "-Xgcpolicy:optthruput",
 )
 
-ENV_VALUES = (
+EXPECTED_ENV_VALUES = (
             JDK_JAVA_OPTIONS,
             JAVA_OPTIONS,
             QUARKUS_THREAD_POOL_CORE_THREADS,
@@ -200,16 +200,19 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                         if not env_list or not isinstance(env_list, list):
                             continue
 
+                        # verify all expected env vars are present in the config
+                        if env_list:
+                            found_env_names = {env_item.get("name") for env_item in env_list}
+                            missing_env_vars = set(EXPECTED_ENV_VALUES) - found_env_names
+                            assert not missing_env_vars, (
+                                f"Expected runtime environment variables are missing from config: "
+                                f"{', '.join(sorted(missing_env_vars))}. "
+                                f"Found: {', '.join(sorted(found_env_names))}"
+                            )
+
                         for env_item in env_list:
                             name = env_item.get("name")
                             value = env_item.get("value")
-
-
-                            assert name in ENV_VALUES, (
-                                f"Runtime env {name} should be among "
-                                f"{JDK_JAVA_OPTIONS}, {JAVA_OPTIONS}, "
-                                f"{QUARKUS_THREAD_POOL_CORE_THREADS}"
-                            )
 
                             # GC flags are only expected in JAVA options, not in thread-pool tunables
                             if name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS):
