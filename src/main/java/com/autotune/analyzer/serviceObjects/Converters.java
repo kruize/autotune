@@ -649,7 +649,7 @@ public class Converters {
          * - variation with replicas
          * @return ListRecommendationsAPIObject with V1 schema structure
          */
-        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1() {
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1(KruizeObject ko, boolean getLatest, boolean checkForTimestamp, Timestamp monitoringEndTime) {
             // TODO: Implement V1 schema conversion
             return null;
         }

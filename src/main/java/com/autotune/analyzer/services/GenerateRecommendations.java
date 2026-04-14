@@ -15,26 +15,16 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
-import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.analyzer.utils.RecommendationHelpers;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +38,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -138,46 +127,28 @@ public class GenerateRecommendations extends HttpServlet {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
-        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
+        
+        //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
+        
+        // Use RecommendationHelpers to convert single KruizeObject
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
         try {
-            //LOGGER.debug(ko.getKubernetes_objects().toString());
-            ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                    convertKruizeObjectToListRecommendationSO(
+            ListRecommendationsAPIObject listRecommendationsAPIObject =
+                    RecommendationHelpers.convertKruizeObjectToRecommendation(
                             ko,
                             false,
                             false,
-                            interval_end_time);
-            recommendationList.add(listRecommendationsAPIObject);
+                            interval_end_time,
+                            false); // useV1Converter = false for standard API
+            if (listRecommendationsAPIObject != null) {
+                recommendationList.add(listRecommendationsAPIObject);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
         }
-        ExclusionStrategy strategy = new ExclusionStrategy() {
-            @Override
-            public boolean shouldSkipField(FieldAttributes field) {
-                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
-            }
-
-            @Override
-            public boolean shouldSkipClass(Class<?> clazz) {
-                return false;
-            }
-        };
-        String gsonStr = "[]";
-        if (recommendationList.size() > 0) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                    .setExclusionStrategies(strategy)
-                    .create();
-            gsonStr = gsonObj.toJson(recommendationList);
-        }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
+        
+        // Use RecommendationHelpers to write response (logResponse = false)
+        RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false);
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
