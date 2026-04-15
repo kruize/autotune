@@ -86,7 +86,7 @@ def test_semeru_gc_policy_when_layer_present(cluster_type):
     ]
 
     if not semeru_envs:
-        pytest.skip(
+        pytest.fail(
             "Semeru GC policy flags not present in recommendations; "
             "runtime may not be Semeru for this environment"
         )
