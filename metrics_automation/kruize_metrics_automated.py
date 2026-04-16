@@ -7,6 +7,7 @@ import threading
 import argparse
 import math
 import os
+import shlex
 
 # --- [Constants and Global Variables remain the same] ---
 # Note: The csv_headers list is left as a placeholder, though not used in the final output formatting.
@@ -39,17 +40,19 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     OC_AUTH_TOKEN = token
     GABI_AUTH_TOKEN = gabi_token
 
+    # SSL verification - disabled for OpenShift clusters with self-signed certificates
+    ssl_verify = False
     if cluster_type == "openshift":
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
     headers = {'Authorization': f'Bearer {OC_AUTH_TOKEN}'}
 
     #####Gabi Auth tokens needed
-    cmd1 = ["curl", "-s", gabi_url,
-       "-H", "Authorization: Bearer " + GABI_AUTH_TOKEN,
+    cmd1 = ["curl", "-s", shlex.quote(gabi_url),
+       "-H", "Authorization: Bearer " + shlex.quote(GABI_AUTH_TOKEN),
        "-d", '{"query":"select count(*) from public.kruize_experiments"}']
 
-    process1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     stdout1, stderr1 = process1.communicate()
 
     try:
@@ -71,11 +74,11 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
         print(f"Response: {stdout1.decode().strip()}")
         total_exp = 0
 
-    cmd2 = ["curl", "-s", gabi_url,
-       "-H","Authorization: Bearer " + GABI_AUTH_TOKEN,
+    cmd2 = ["curl", "-s", shlex.quote(gabi_url),
+       "-H","Authorization: Bearer " + shlex.quote(GABI_AUTH_TOKEN),
        "-d", '{"query":"SELECT pg_size_pretty(pg_database_size(current_database()));"}']
 
-    process2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     stdout2, stderr2 = process2.communicate()
 
     try:
@@ -101,8 +104,8 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     params2={
         "query": 'aws_rds_free_storage_space_average{job=~"cloudwatch-exporter.*",dbinstance_identifier=~"(kruize-prod|kruize-stage)"}'
     }
-    aws_response = requests.get(prometheus_url_1, headers={'Authorization': f'Bearer {OC_AUTH_TOKEN}' }, params=params2, verify=False)
-    
+    aws_response = requests.get(prometheus_url_1, headers={'Authorization': f'Bearer {OC_AUTH_TOKEN}' }, params=params2, verify=ssl_verify)
+
     ### Open shift Auth Tokens needed
     params = {
     "query": 'max_over_time(sum(rate(container_cpu_usage_seconds_total{container!="POD",image!="",pod=~"kruize-recommendations-[^-]*-[^-]*$"}[1m]))[24h:])'
@@ -110,9 +113,9 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     params1={
         "query": 'max_over_time(sum(container_memory_working_set_bytes{container!="POD",image!="",pod=~"kruize-recommendations-[^-]*-[^-]*$"})[24h:])/1024/1024/1024'
         }
-  
-    cpu_response = requests.get(prometheus_url_1, headers=headers, params=params, verify=False)
-    mem_response = requests.get(prometheus_url_1, headers=headers, params=params1, verify=False)
+
+    cpu_response = requests.get(prometheus_url_1, headers=headers, params=params, verify=ssl_verify)
+    mem_response = requests.get(prometheus_url_1, headers=headers, params=params1, verify=ssl_verify)
     
     if cpu_response.status_code == 200:
             cpu_data = cpu_response.json()["data"]["result"][0]["value"][1]
@@ -142,8 +145,8 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
         results_map['total_exp'] = total_exp
         for key, query in queries_data:
             if key in ["db_size", "total_experiments", "aws_fss"]:
-                continue 
-            response = requests.get(prometheus_url_1, headers=headers, params={'query': query}, verify=False)
+                continue
+            response = requests.get(prometheus_url_1, headers=headers, params={'query': query}, verify=ssl_verify)
 
             if response.status_code == 200:
                 results_data[key] = response.json()['data']
