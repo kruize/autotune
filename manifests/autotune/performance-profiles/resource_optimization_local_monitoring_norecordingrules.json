@@ -455,6 +455,7 @@
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
+        "layers_required": ["hotspot", "semeru"],
         "aggregation_functions": [
           {
             "function": "sum",
@@ -467,6 +468,7 @@
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
+        "layers_required": ["hotspot", "semeru"],
         "aggregation_functions": [
           {
             "function": "sum",

@@ -440,6 +440,9 @@ slo:
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
@@ -450,6 +453,9 @@ slo:
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
