@@ -271,6 +271,7 @@ declare -A DEMO_JSONS=(
 	[bulk]="recommendations_data.json"
 	[vpa]="container_vpa_experiment_sysbench_recommendation.json"
 	[runtimes]="create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_semeru_exp_recommendation.json"
+	[optimizer]="container_sysbench_deployment_sysbench_optimizer_recommendation.json container_tfb-qrh-sample_deployment_tfb-server_optimizer_recommendation.json"
 )
 
 # Maps demo name -> log file name produced by the demo script
