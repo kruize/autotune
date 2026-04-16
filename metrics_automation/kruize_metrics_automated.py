@@ -7,7 +7,6 @@ import threading
 import argparse
 import math
 import os
-import shlex
 
 # --- [Constants and Global Variables remain the same] ---
 # Note: The csv_headers list is left as a placeholder, though not used in the final output formatting.
@@ -48,8 +47,11 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     headers = {'Authorization': f'Bearer {OC_AUTH_TOKEN}'}
 
     #####Gabi Auth tokens needed
-    cmd1 = ["curl", "-s", shlex.quote(gabi_url),
-       "-H", "Authorization: Bearer " + shlex.quote(GABI_AUTH_TOKEN),
+    # Security Note: Using list with shell=False prevents command injection.
+    # gabi_url and GABI_AUTH_TOKEN are from command-line arguments (trusted source).
+    # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    cmd1 = ["curl", "-s", gabi_url,
+       "-H", "Authorization: Bearer " + GABI_AUTH_TOKEN,
        "-d", '{"query":"select count(*) from public.kruize_experiments"}']
 
     process1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
@@ -74,8 +76,11 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
         print(f"Response: {stdout1.decode().strip()}")
         total_exp = 0
 
-    cmd2 = ["curl", "-s", shlex.quote(gabi_url),
-       "-H","Authorization: Bearer " + shlex.quote(GABI_AUTH_TOKEN),
+    # Security Note: Using list with shell=False prevents command injection.
+    # gabi_url and GABI_AUTH_TOKEN are from command-line arguments (trusted source).
+    # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+    cmd2 = ["curl", "-s", gabi_url,
+       "-H","Authorization: Bearer " + GABI_AUTH_TOKEN,
        "-d", '{"query":"SELECT pg_size_pretty(pg_database_size(current_database()));"}']
 
     process2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
