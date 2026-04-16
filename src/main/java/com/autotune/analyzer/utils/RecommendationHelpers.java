@@ -21,11 +21,13 @@ import com.autotune.analyzer.adapters.MetricAggregationInfoResultsIntSerializer;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
+import com.autotune.analyzer.recommendations.Variation;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.result.ContainerData;
@@ -54,15 +56,21 @@ public class RecommendationHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationHelpers.class);
 
     /**
-     * Converts a list of KruizeObjects to ListRecommendationsAPIObjects.
-     * This is the common conversion logic used by both ListRecommendations and UpdateRecommendations.
+     * Converts a collection of {@link KruizeObject} instances into recommendation response
+     * objects.
      *
-     * @param kruizeObjectList   List of KruizeObjects to convert
-     * @param getLatest         Whether to get only the latest recommendation
-     * @param checkForTimestamp Whether to check for a specific timestamp
-     * @param monitoringEndTime The specific monitoring end time to filter by
-     * @param useV1Converter    Whether to use V1 converter for new schema
-     * @return List of ListRecommendationsAPIObject
+     * <p>This helper centralizes the shared conversion flow used by the recommendation listing and
+     * generation endpoints. Depending on {@code useV1Converter}, it routes conversion to either
+     * the legacy schema converter or the V1 schema converter.
+     *
+     * @param kruizeObjectList the experiment objects to convert
+     * @param getLatest whether only the latest recommendation should be retained when no explicit
+     *                  timestamp filtering is requested
+     * @param checkForTimestamp whether recommendations should be filtered using
+     *                          {@code monitoringEndTime}
+     * @param monitoringEndTime the timestamp to retain when {@code checkForTimestamp} is true
+     * @param useV1Converter whether the V1 recommendation converter should be used
+     * @return a list of converted {@link ListRecommendationsAPIObject} instances
      */
     public static List<ListRecommendationsAPIObject> convertKruizeObjectsToRecommendations(
             List<KruizeObject> kruizeObjectList,
@@ -98,15 +106,21 @@ public class RecommendationHelpers {
     }
 
     /**
-     * Converts a single KruizeObject to ListRecommendationsAPIObject.
-     * Convenience method for single object conversion.
+     * Converts a single {@link KruizeObject} into a recommendation response object.
      *
-     * @param kruizeObject      The KruizeObject to convert
-     * @param getLatest        Whether to get only the latest recommendation
-     * @param checkForTimestamp Whether to check for a specific timestamp
-     * @param monitoringEndTime The specific monitoring end time to filter by
-     * @param useV1Converter   Whether to use V1 converter for new schema
-     * @return ListRecommendationsAPIObject or null if conversion fails
+     * <p>This is a convenience wrapper over the shared conversion flow for callers that only need
+     * to serialize one experiment. The legacy or V1 converter is selected using
+     * {@code useV1Converter}.
+     *
+     * @param kruizeObject the experiment object to convert
+     * @param getLatest whether only the latest recommendation should be retained when no explicit
+     *                  timestamp filtering is requested
+     * @param checkForTimestamp whether recommendations should be filtered using
+     *                          {@code monitoringEndTime}
+     * @param monitoringEndTime the timestamp to retain when {@code checkForTimestamp} is true
+     * @param useV1Converter whether the V1 recommendation converter should be used
+     * @return the converted {@link ListRecommendationsAPIObject}, or {@code null} if conversion
+     *         fails
      */
     public static ListRecommendationsAPIObject convertKruizeObjectToRecommendation(
             KruizeObject kruizeObject,
@@ -131,17 +145,45 @@ public class RecommendationHelpers {
     }
 
     /**
-     * Creates the common Gson object with all necessary type adapters and exclusion strategies.
-     * This is the common JSON serialization configuration used by both servlets.
+     * Creates the shared {@link Gson} serializer used by the recommendation endpoints.
      *
-     * @return Configured Gson object
+     * <p>The serializer registers all custom adapters required by the recommendation response
+     * model and applies schema-specific exclusion rules:
+     * <ul>
+     *     <li>legacy responses hide V1-only fields such as {@code replicas} and
+     *     {@code metricsInfo}</li>
+     *     <li>V1 responses hide legacy duplication such as top-level {@code requests},
+     *     {@code limits}, and {@code podsCount}</li>
+     * </ul>
+     *
+     * @param useV1Converter whether the serializer should be configured for the V1 recommendation
+     *                       schema
+     * @return a configured {@link Gson} instance
      */
-    public static Gson createGsonObject() {
+    public static Gson createGsonObject(boolean useV1Converter) {
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
-                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
+                boolean skipDefaultFields =
+                        field.getDeclaringClass() == ContainerData.class && field.getName().equals(KruizeConstants.JSONKeys.RESULTS)
+                                || field.getDeclaringClass() == ContainerAPIObject.class && field.getName().equals(KruizeConstants.JSONKeys.METRICS);
+
+                if (skipDefaultFields) {
+                    return true;
+                }
+
+                if (useV1Converter) {
+                    return ((field.getDeclaringClass() == Config.class || field.getDeclaringClass() == Variation.class)
+                            && (field.getName().equals(KruizeConstants.JSONKeys.REQUESTS)
+                            || field.getName().equals(KruizeConstants.JSONKeys.LIMITS)))
+                            || (field.getDeclaringClass() == MappedRecommendationForModel.class
+                            && field.getName().equals("podsCount"));
+                }
+
+                return (field.getDeclaringClass() == Config.class
+                        && field.getName().equals(KruizeConstants.JSONKeys.REPLICAS))
+                        || (field.getDeclaringClass() == TermRecommendations.class
+                        && field.getName().equals("metricsInfo"));
             }
 
             @Override
@@ -164,25 +206,29 @@ public class RecommendationHelpers {
     }
 
     /**
-     * Writes the recommendation list as JSON to the HTTP response.
-     * This is the common response writing logic used by both servlets.
+     * Serializes recommendation response objects and writes them to the HTTP response.
      *
-     * @param response          The HttpServletResponse to write to
-     * @param recommendationList The list of recommendations to serialize
-     * @param logResponse       Whether to log the response (for debugging)
-     * @throws IOException if writing to response fails
+     * <p>This helper applies the correct JSON serialization rules for either the legacy or V1
+     * response schema and optionally logs the generated payload.
+     *
+     * @param response the HTTP response to write to
+     * @param recommendationList the recommendation response objects to serialize
+     * @param logResponse whether the serialized payload should be logged
+     * @param useV1Converter whether V1 serialization rules should be applied
+     * @throws IOException if the response cannot be written
      */
     public static void writeRecommendationsResponse(
             HttpServletResponse response,
             List<ListRecommendationsAPIObject> recommendationList,
-            boolean logResponse) throws IOException {
+            boolean logResponse,
+            boolean useV1Converter) throws IOException {
 
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
         String gsonStr = "[]";
         if (!recommendationList.isEmpty()) {
-            Gson gsonObj = createGsonObject();
+            Gson gsonObj = createGsonObject(useV1Converter);
             gsonStr = gsonObj.toJson(recommendationList);
         }
 

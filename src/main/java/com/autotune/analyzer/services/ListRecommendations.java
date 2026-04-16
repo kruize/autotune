@@ -78,6 +78,7 @@ public class ListRecommendations extends HttpServlet {
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         String bulkJobID = request.getParameter(JOB_ID);
+        boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
         Timestamp monitoringEndTimestamp = null;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
 
@@ -206,14 +207,14 @@ public class ListRecommendations extends HttpServlet {
                                 getLatest,
                                 checkForTimestamp,
                                 monitoringEndTimestamp,
-                                false); // useV1Converter = false for standard API
+                                useV1Converter); // useV1Converter = false for standard API
                 
                 if (!recommendationList.isEmpty()) {
                     statusValue = "success";
                 }
                 
                 // Write response (logResponse = false)
-                RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false);
+                RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false, useV1Converter);
             }
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());

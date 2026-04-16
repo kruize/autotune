@@ -103,9 +103,10 @@ public class RecommendationsResource extends HttpServlet {
         // This endpoint delegates to ListRecommendations but uses V1 converter
         // Call ListRecommendations.doGet() which will handle all the logic
         ListRecommendations listRecommendations = new ListRecommendations();
+        HttpServletRequest v1Request = new RecommendationV1RequestWrapper(request);
         try {
             listRecommendations.init(getServletConfig());
-            listRecommendations.doGet(request, response);
+            listRecommendations.doGet(v1Request, response);
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Exception in RecommendationsResource GET: {}", e.getMessage());
@@ -185,15 +186,17 @@ public class RecommendationsResource extends HttpServlet {
                 // Remote monitoring mode - delegate to UpdateRecommendations
                 LOGGER.debug("Using remote monitoring mode (UpdateRecommendations flow)");
                 UpdateRecommendations updateRecommendations = new UpdateRecommendations();
+                HttpServletRequest v1Request = new RecommendationV1RequestWrapper(request);
                 updateRecommendations.init(getServletConfig());
-                updateRecommendations.doPost(request, response);
+                updateRecommendations.doPost(v1Request, response);
                 statusValue = KruizeConstants.APIMessages.SUCCESS;
             } else if ("local".equals(target)) {
                 // Local monitoring mode - delegate to GenerateRecommendations
                 LOGGER.debug("Using local monitoring mode (GenerateRecommendations flow)");
                 GenerateRecommendations generateRecommendations = new GenerateRecommendations();
+                HttpServletRequest v1Request = new RecommendationV1RequestWrapper(request);
                 generateRecommendations.init(getServletConfig());
-                generateRecommendations.doPost(request, response);
+                generateRecommendations.doPost(v1Request, response);
                 statusValue = KruizeConstants.APIMessages.SUCCESS;
             } else {
                 // Invalid target value
@@ -226,4 +229,30 @@ public class RecommendationsResource extends HttpServlet {
         response.sendError(httpStatusCode, errorMsg);
     }
 
+}
+
+/**
+ * Request wrapper used by the V1 recommendations endpoint to mark delegated requests
+ * as V1-originated without changing the existing servlet method signatures.
+ *
+ * <p>When {@link RecommendationsResource} forwards a request to the existing
+ * recommendation servlets, this wrapper overrides {@code getParameter("useV1Converter")}
+ * and returns {@code true}. This allows the downstream servlets to switch to the
+ * V1 recommendation converter only for requests coming through the new API, while
+ * preserving the default V0/standard behavior for direct calls to the existing APIs.
+ */
+class RecommendationV1RequestWrapper extends javax.servlet.http.HttpServletRequestWrapper {
+    private static final String USE_V1_CONVERTER_PARAM = "useV1Converter";
+
+    public RecommendationV1RequestWrapper(HttpServletRequest request) {
+        super(request);
+    }
+
+    @Override
+    public String getParameter(String name) {
+        if (USE_V1_CONVERTER_PARAM.equals(name)) {
+            return Boolean.TRUE.toString();
+        }
+        return super.getParameter(name);
+    }
 }

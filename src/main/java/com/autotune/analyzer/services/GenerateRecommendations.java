@@ -86,6 +86,7 @@ public class GenerateRecommendations extends HttpServlet {
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
             String bulkJobID = request.getParameter(JOB_ID);
+            boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
             Timestamp interval_end_time, interval_start_time;
 
             // create recommendation engine object
@@ -98,7 +99,7 @@ public class GenerateRecommendations extends HttpServlet {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time, useV1Converter);
                     statusValue = "success";
                 } else {
                     LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
@@ -122,7 +123,7 @@ public class GenerateRecommendations extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time, boolean useV1Converter) throws IOException {
         LOGGER.debug("sendSuccessResponse");
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -139,7 +140,7 @@ public class GenerateRecommendations extends HttpServlet {
                             false,
                             false,
                             interval_end_time,
-                            false); // useV1Converter = false for standard API
+                            useV1Converter); // useV1Converter = false for standard API
             if (listRecommendationsAPIObject != null) {
                 recommendationList.add(listRecommendationsAPIObject);
             }
@@ -148,7 +149,7 @@ public class GenerateRecommendations extends HttpServlet {
         }
         
         // Use RecommendationHelpers to write response (logResponse = false)
-        RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false);
+        RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false, useV1Converter);
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws

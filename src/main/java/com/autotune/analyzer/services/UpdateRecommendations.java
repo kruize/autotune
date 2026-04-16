@@ -85,6 +85,7 @@ public class UpdateRecommendations extends HttpServlet {
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
 
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
         Timestamp interval_end_time;
         Timestamp interval_start_time = null;
         if (KruizeDeploymentInfo.log_http_req_resp)
@@ -104,7 +105,7 @@ public class UpdateRecommendations extends HttpServlet {
                     sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
                     LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS, experiment_name,
                             sdf.format(interval_end_time)));
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time, useV1Converter);
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
                     LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
@@ -128,7 +129,7 @@ public class UpdateRecommendations extends HttpServlet {
             }
         }
     }
-private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
+private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time, boolean useV1Converter) throws IOException {
     response.setContentType(JSON_CONTENT_TYPE);
     response.setCharacterEncoding(CHARACTER_ENCODING);
     response.setStatus(HttpServletResponse.SC_CREATED);
@@ -145,7 +146,7 @@ private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, 
                         false,
                         false,
                         interval_end_time,
-                        false); // useV1Converter = false for standard API
+                        useV1Converter); // useV1Converter = false for standard API
         if (listRecommendationsAPIObject != null) {
             recommendationList.add(listRecommendationsAPIObject);
         }
@@ -157,7 +158,11 @@ private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, 
     // Serialize recommendations using RecommendationHelpers
     String gsonStr = "[]";
     if (!recommendationList.isEmpty()) {
-        Gson gsonObj = RecommendationHelpers.createGsonObject();
+        if (!useV1Converter) {
+            RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false, false);
+            return;
+        }
+        Gson gsonObj = RecommendationHelpers.createGsonObject(true);
         gsonStr = gsonObj.toJson(recommendationList);
     }
     
