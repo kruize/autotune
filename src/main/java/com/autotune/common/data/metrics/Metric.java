@@ -41,6 +41,8 @@ public final class Metric {
     private String valueType;
     @SerializedName("kubernetes_object")
     private String kubernetesObject;
+    @SerializedName("layers_required")
+    private List<String> layersRequired;
     private final LinkedHashMap<String, MetricResults> trialSummaryResult = new LinkedHashMap<>();
     @SerializedName("results")
     private MetricResults metricResults;
@@ -111,6 +113,14 @@ public final class Metric {
         this.aggregationFunctionsMap = aggregationFunctionsMap;
     }
 
+    public List<String> getLayersRequired() {
+        return layersRequired;
+    }
+
+    public void setLayersRequired(List<String> layersRequired) {
+        this.layersRequired = layersRequired;
+    }
+
     @Override
     public String toString() {
         return "Metric{" +
@@ -119,6 +129,7 @@ public final class Metric {
                 ", datasource='" + datasource + '\'' +
                 ", valueType='" + valueType + '\'' +
                 ", kubernetesObject='" + kubernetesObject + '\'' +
+                ", layersRequired=" + layersRequired +
                 ", aggregationFunctionsMap=" + aggregationFunctionsMap +
                 '}';
     }

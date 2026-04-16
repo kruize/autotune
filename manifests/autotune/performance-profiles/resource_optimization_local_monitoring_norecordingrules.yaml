@@ -440,23 +440,23 @@ slo:
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
         query: 'sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
-        required_layer:
-          - "hotspot"
-          - "semeru"
 
   # JVM Info Total (runtime, vendor, version from jvm_info_total metric)
   - name: jvmInfoTotal
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
         query: 'sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
-        required_layer:
-          - "hotspot"
-          - "semeru"

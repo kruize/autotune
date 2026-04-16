@@ -25,11 +25,12 @@ for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggrega
 }
 ```
 
+**Problem:** Even if a container has no JVM runtime, queries like `jvm_info` are still executed, wasting resources.
 
 ### Problem Statement
 
-Even if a container has no JVM runtime, queries like `jvm_info` are still executed, wasting resources.
-
+**JIRA Requirement:**
+> Modify the logic so that runtime-specific queries are executed only when a runtime layer is detected during layer analysis.
 
 **Expected Behavior:**
 - Detect whether a runtime layer (e.g., JVM or other supported runtime) is present
@@ -43,7 +44,7 @@ Even if a container has no JVM runtime, queries like `jvm_info` are still execut
 
 ## Decision
 
-We will introduce a **new optional field** `required_layer` in the aggregation function definition within performance profiles. This field will specify which layer(s) must be detected before executing the associated metric query.
+We will introduce a **new optional field** `layers_required` at the **metric level** within performance profiles. This field will specify which layer(s) must be detected before executing any queries for that metric.
 
 ### Design Changes
 
@@ -51,17 +52,19 @@ We will introduce a **new optional field** `required_layer` in the aggregation f
 
 **New Field Introduction:**
 
-We are adding an optional `required_layer` field to aggregation functions. This field accepts an array of layer names.
+We are adding an optional `layers_required` field at the metric level (not inside aggregation_functions). This field accepts an array of layer names and applies to all aggregation functions for that metric.
 
 **Before (No layer checking):**
 ```json
 {
   "name": "jvmInfo",
+  "datasource": "prometheus",
+  "value_type": "double",
+  "kubernetes_object": "container",
   "aggregation_functions": [
     {
       "function": "sum",
       "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
-      // No layer requirement - query always executed
     }
   ]
 }
@@ -71,12 +74,14 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 ```json
 {
   "name": "jvmInfo",
+  "datasource": "prometheus",
+  "value_type": "double",
+  "kubernetes_object": "container",
+  "layers_required": ["hotspot", "semeru"],
   "aggregation_functions": [
     {
       "function": "sum",
-      "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-      "required_layer": ["hotspot", "semeru"]
-      // Query executed only if hotspot OR semeru layer detected
+      "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
     }
   ]
 }
@@ -85,27 +90,121 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 **YAML Representation:**
 ```yaml
 - name: jvmInfo
+  datasource: prometheus
+  value_type: "double"
+  kubernetes_object: "container"
+  layers_required:
+    - "hotspot"
+    - "semeru"
   aggregation_functions:
     - function: sum
       query: 'sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
-      required_layer:
-        - "hotspot"
-        - "semeru"
 ```
 
 **Key Points:**
-- `required_layer` is **optional** - if not specified, query is always executed (backward compatible)
+- `layers_required` is **optional** - if not specified, all queries for the metric are always executed (backward compatible)
+- Placed at **metric level**, not inside aggregation_functions - applies to ALL aggregation functions for that metric
 - Accepts an **array of strings** representing layer names
-- Uses **OR logic** - query executes if ANY of the specified layers is detected
+- Uses **OR logic** - metric queries execute if ANY of the specified layers is detected
 - Empty array or null means no layer requirement (always execute)
+- **Field name:** `layers_required` (not `required_layer`) for better clarity
+
+#### 2. Data Model Update
+
+**File:** `src/main/java/com/autotune/common/data/metrics/Metric.java`
+
+**New Field Addition:**
+```java
+import java.util.List;
+import com.fasterxml.jackson.annotation.SerializedName;
+
+public final class Metric {
+    private String name;
+    private String query;
+    private String datasource;
+    @SerializedName("value_type")
+    private String valueType;
+    @SerializedName("kubernetes_object")
+    private String kubernetesObject;
+    @SerializedName("layers_required")
+    private List<String> layersRequired;  // NEW FIELD
+    @SerializedName("aggregation_functions")
+    private HashMap<String, AggregationFunctions> aggregationFunctionsMap;
+
+    // Existing getters/setters...
+
+    // NEW: Getter for layers required
+    public List<String> getLayersRequired() {
+        return layersRequired;
+    }
+
+    // NEW: Setter for layers required
+    public void setLayersRequired(List<String> layersRequired) {
+        this.layersRequired = layersRequired;
+    }
+}
+```
+
+**Design Choice:** 
+- Field placed at **Metric level** (not AggregationFunctions level)
+- Using `List<String>` provides type safety, no parsing overhead, natural JSON/YAML representation
+- `@SerializedName("layers_required")` maps to JSON field name
+- Applies to entire metric, not individual aggregation functions
+
+#### 3. Recommendation Engine Logic Update
+
+**File:** `src/main/java/com/autotune/analyzer/recommendations/engine/RecommendationEngine.java`
+
+**New Logic Addition:**
+
+Check is performed at metric level before processing any aggregation functions:
+
+```java
+// NEW: Check if this metric requires specific layers (at metric level)
+List<String> layersRequired = metricEntry.getLayersRequired();
+if (layersRequired != null && !layersRequired.isEmpty()) {
+    // Check if any of the required layers are detected
+    boolean layerDetected = false;
+    for (String layer : layersRequired) {
+        if (containerData.getLayerMap() != null &&
+                containerData.getLayerMap().containsKey(layer)) {
+            layerDetected = true;
+            break;
+        }
+    }
+    // Skip this metric entirely if required layer is not detected
+    if (!layerDetected) {
+        LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
+                metricEntry.getName(), layersRequired, containerName);
+        continue;  // Skip entire metric (all aggregation functions)
+    }
+}
+
+// Proceed with aggregation functions only if layer check passed
+HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
+for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
+    String promQL = aggregationFunctionsEntry.getValue().getQuery();
+    executeQuery(promQL);
+}
+```
+
+**Logic Flow:**
+1. Check if `layers_required` is specified at the metric level
+2. If specified, verify at least one required layer is detected in the container
+3. If no required layer is detected, skip the **entire metric** (all its aggregation functions) and log the decision
+4. If layer is detected (or no requirement specified), proceed with all aggregation functions for that metric
+
+**Key Advantage:** Single check per metric instead of per aggregation function - more efficient
 
 ### Key Design Decisions
 
-1. **Optional Field** - Backward compatible; existing metrics without `required_layer` work unchanged
-2. **Array Format** - Using `List<String>` for type safety and clean representation
-3. **OR Logic** - Query executes if ANY specified layer is detected (flexible for multi-runtime support)
-4. **Early Exit** - Skip query execution immediately if layer not detected (performance optimization)
-5. **Debug Logging** - Log skipped queries for troubleshooting and monitoring
+1. **Optional Field** - Backward compatible; existing metrics without `layers_required` work unchanged
+2. **Metric Level Placement** - Field at metric level (not aggregation function level) for simplicity and efficiency
+3. **Array Format** - Using `List<String>` for type safety and clean representation
+4. **OR Logic** - Metric queries execute if ANY specified layer is detected (flexible for multi-runtime support)
+5. **Early Exit** - Skip entire metric if layer not detected (performance optimization)
+6. **Debug Logging** - Log skipped metrics for troubleshooting and monitoring
+7. **Field Naming** - `layers_required` (plural) is more descriptive than `required_layer`
 
 ## Consequences
 
@@ -122,9 +221,10 @@ We are adding an optional `required_layer` field to aggregation functions. This 
    - Reduced noise in logs (no failed queries for non-existent metrics)
 
 4. **Maintainability**
-   - Cleaner data structure
+   - Cleaner data structure (array at metric level)
    - Easier to add new runtime layers
    - Type-safe implementation
+   - Single check per metric (not per aggregation function)
 
 5. **Extensibility**
    - Pattern can be applied to other layer-specific metrics
@@ -133,17 +233,17 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 ### Negative
 
 1. **Schema Change**
-   - Performance profile schema is extended with new optional field
    - Requires documentation updates
+   - No change with respect to schema since it's part of SLO JsonNode column
 
 2. **Testing Requirements**
    - Need to test with various layer combinations
-   - Verify backward compatibility (metrics without `required_layer`)
+   - Verify backward compatibility (metrics without `layers_required`)
    - Validate query skipping logic
    - Test OR logic with multiple layers
 
 3. **Potential for Misconfiguration**
-   - Incorrect layer names in `required_layer` will cause queries to be skipped
+   - Incorrect layer names in `layers_required` will cause queries to be skipped
    - Need validation to ensure specified layers are valid/supported
 
 ### Neutral
@@ -151,15 +251,15 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 1. **Documentation Updates**
    - Performance profile documentation needs updates
    - API examples need to reflect new format
-   - Migration guide for existing users
+   - Design documentation updates
 
 ## Implementation Plan
 
 ### Phase 1: Core Changes (Completed)
-- [x] Add `requiredLayer` field to `AggregationFunctions.java` as `List<String>`
-- [x] Implement layer checking logic in `RecommendationEngine.java`
-- [x] Update performance profile JSON files with `required_layer` for runtime metrics
-- [x] Update performance profile YAML files with `required_layer` for runtime metrics
+- [x] Add `layersRequired` field to `Metric.java` as `List<String>`
+- [x] Implement layer checking logic in `RecommendationEngine.java` at metric level
+- [x] Update performance profile JSON files with `layers_required` for runtime metrics
+- [x] Update performance profile YAML files with `layers_required` for runtime metrics
 
 ### Phase 2: Testing
 - [ ] Unit tests for layer detection logic
@@ -169,7 +269,6 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 
 ### Phase 3: Documentation
 - [ ] Update Performance Profile API documentation
-- [ ] Create migration guide for existing users
 - [ ] Update design documentation
 - [ ] Add examples to API samples
 
@@ -253,7 +352,7 @@ We are adding an optional `required_layer` field to aggregation functions. This 
 ## Notes
 
 ### Supported Runtime Layers
-Currently supported runtime layers that can be specified in `required_layer`:
+Currently supported runtime layers that can be specified in `layers_required`:
 - `hotspot` - OpenJDK Hotspot JVM
 - `semeru` - IBM Semeru JVM
 - `quarkus` - Quarkus framework (future runtime metrics)
@@ -271,7 +370,6 @@ Currently supported runtime layers that can be specified in `required_layer`:
     {
       "function": "avg",
       "query": "avg by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{...}[$MEASUREMENT_DURATION_IN_MIN$m]))"
-      // No required_layer field - query always executed (backward compatible)
     }
   ]
 }
@@ -284,25 +382,28 @@ Currently supported runtime layers that can be specified in `required_layer`:
   "datasource": "prometheus",
   "value_type": "double",
   "kubernetes_object": "container",
+  "layers_required": ["hotspot", "semeru"],
   "aggregation_functions": [
     {
       "function": "sum",
-      "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-      "required_layer": ["hotspot", "semeru"]
-      // NEW: Only executed if hotspot OR semeru layer detected
+      "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
     }
   ]
 }
 ```
 
 **Behavior:**
-- If container has Hotspot JVM → `jvmInfo` query is executed
-- If container has Semeru JVM → `jvmInfo` query is executed
-- If container has no JVM runtime → `jvmInfo` query is **skipped**
-- `cpuUsage` query is **always** executed (no layer requirement)
+- If container has Hotspot JVM → All `jvmInfo` queries are executed
+- If container has Semeru JVM → All `jvmInfo` queries are executed  
+- If container has no JVM runtime → All `jvmInfo` queries are **skipped**
+- `cpuUsage` queries are **always** executed (no layer requirement)
+
+**Efficiency Benefit:**
+- Single layer check per metric (not per aggregation function)
+- If metric has 5 aggregation functions, only 1 check is performed instead of 5
 
 ## Decision Date
-2026-04-10
+2026-04-16
 
 ## Decision Makers
 - Kruize Development Team

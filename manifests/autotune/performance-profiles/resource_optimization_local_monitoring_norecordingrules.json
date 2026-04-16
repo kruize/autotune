@@ -455,11 +455,11 @@
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
+        "layers_required": ["hotspot", "semeru"],
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-            "required_layer": ["hotspot", "semeru"]
+            "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
       },
@@ -468,11 +468,11 @@
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
+        "layers_required": ["hotspot", "semeru"],
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})",
-            "required_layer": ["hotspot", "semeru"]
+            "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
       }

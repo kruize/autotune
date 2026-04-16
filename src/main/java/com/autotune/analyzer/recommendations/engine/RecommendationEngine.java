@@ -1570,28 +1570,28 @@ public class RecommendationEngine implements RecommendationEngineService {
                         if (isAcceleratorPartitionMetric && !fetchAcceleratorMetrics)
                             continue;
 
-                        HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
-                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
-                            // Check if this metric requires a specific layer
-                            List<String> requiredLayers = aggregationFunctionsEntry.getValue().getRequiredLayer();
-                            if (requiredLayers != null && !requiredLayers.isEmpty()) {
-                                // Check if any of the required layers are detected
-                                boolean layerDetected = false;
-                                for (String layer : requiredLayers) {
-                                    if (containerData.getLayerMap() != null &&
-                                            containerData.getLayerMap().containsKey(layer)) {
-                                        layerDetected = true;
-                                        break;
-                                    }
-                                }
-                                // Skip this metric if required layer is not detected
-                                if (!layerDetected) {
-                                    LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
-                                            metricEntry.getName(), requiredLayers, containerName);
-                                    continue;
+                        // Check if this metric requires specific layers
+                        List<String> layersRequired = metricEntry.getLayersRequired();
+                        if (layersRequired != null && !layersRequired.isEmpty()) {
+                            // Check if any of the required layers are detected
+                            boolean layerDetected = false;
+                            for (String layer : layersRequired) {
+                                if (containerData.getLayerMap() != null &&
+                                        containerData.getLayerMap().containsKey(layer)) {
+                                    layerDetected = true;
+                                    break;
                                 }
                             }
+                            // Skip this metric entirely if required layer is not detected
+                            if (!layerDetected) {
+                                LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
+                                        metricEntry.getName(), layersRequired, containerName);
+                                continue;
+                            }
+                        }
 
+                        HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
+                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
                             // Determine promQL query on metric type
                             String promQL = aggregationFunctionsEntry.getValue().getQuery();
 

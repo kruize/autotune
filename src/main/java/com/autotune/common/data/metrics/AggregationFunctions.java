@@ -15,14 +15,11 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
-import java.util.List;
-
 public class AggregationFunctions {
 
     private String function;
     private String query;
     private String version;
-    private List<String> requiredLayer;
 
     public AggregationFunctions(String function, String query, String version) {
         this.function = function;
@@ -54,21 +51,12 @@ public class AggregationFunctions {
         this.version = version;
     }
 
-    public List<String> getRequiredLayer() {
-        return requiredLayer;
-    }
-
-    public void setRequiredLayer(List<String> requiredLayer) {
-        this.requiredLayer = requiredLayer;
-    }
-
     @Override
     public String toString() {
         return "AggregationFunctions{" +
                 "function='" + function + '\'' +
                 ", query='" + query + '\'' +
                 ", version='" + version + '\'' +
-                ", requiredLayer='" + requiredLayer + '\'' +
                 '}';
     }
 }
