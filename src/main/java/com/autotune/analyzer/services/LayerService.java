@@ -17,12 +17,12 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeLayer.LayerValidation;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants.APIErrors.ListLayerAPI;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBHelpers;
@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,17 +176,17 @@ public class LayerService extends HttpServlet {
                         error = true;
                         sendErrorResponse(
                                 response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.ListLayerAPI.INVALID_LAYER_NAME_EXCPTN),
+                                new Exception(ListLayerAPI.INVALID_LAYER_NAME_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListLayerAPI.INVALID_LAYER_NAME_MSG, layerName)
+                                String.format(ListLayerAPI.INVALID_LAYER_NAME_MSG, layerName)
                         );
                     } else if (null == layerName && layerEntries.isEmpty()) {
                         error = true;
                         sendErrorResponse(
                                 response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.ListLayerAPI.NO_LAYERS_EXCPTN),
+                                new Exception(ListLayerAPI.NO_LAYERS_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                AnalyzerErrorConstants.APIErrors.ListLayerAPI.NO_LAYERS
+                                ListLayerAPI.NO_LAYERS
                         );
                     }
 
@@ -208,16 +207,15 @@ public class LayerService extends HttpServlet {
                     }
                 } catch (Exception e) {
                     LOGGER.error("Exception while loading layers: {}", e.getMessage());
-                    e.printStackTrace();
                     sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                            String.format(AnalyzerErrorConstants.APIErrors.ListLayerAPI.LOAD_ALL_LAYERS_ERROR, e.getMessage()));
+                            String.format(ListLayerAPI.LOAD_ALL_LAYERS_ERROR, e.getMessage()));
                 }
             } else {
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListLayerAPI.INVALID_QUERY_PARAM),
+                        new Exception(ListLayerAPI.INVALID_QUERY_PARAM),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListLayerAPI.INVALID_QUERY_PARAM, invalidParams)
+                        String.format(ListLayerAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
         } catch (Exception e) {
