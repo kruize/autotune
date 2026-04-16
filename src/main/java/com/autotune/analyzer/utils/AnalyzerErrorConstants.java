@@ -426,7 +426,7 @@ public class AnalyzerErrorConstants {
         }
 
     public static final class ListLayerAPI {
-        public ListLayerAPI() {
+        private ListLayerAPI() {
         }
         public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
         public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";

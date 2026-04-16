@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -75,19 +77,19 @@ public class KruizeSupportedTypes {
     ));
 
     public static final Set<String> UPDATE_METADATA_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-            "name"
+            AnalyzerConstants.LAYER_NAME
     ));
 
     public static final Set<String> LIST_LAYERS_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-            "name"
+            AnalyzerConstants.LAYER_NAME
     ));
 
     public static final Set<String> UPDATE_LAYERS_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-            "name"
+            AnalyzerConstants.LAYER_NAME
     ));
 
     public static final Set<String> DELETE_LAYERS_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
-            "name"
+            AnalyzerConstants.LAYER_NAME
     ));
 
     public static final Set<String> RUNTIMES_SUPPORTED_DATASOURCES = new HashSet<>(Arrays.asList("thanos-querier"));
