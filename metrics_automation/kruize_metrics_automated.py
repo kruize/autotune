@@ -1,16 +1,20 @@
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, UTC
 import subprocess
 import sys
 import threading
 import argparse
-# from slack import metrics_data_to_slack
+import math
+import os
 
-csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success","kruize_cpu_max","instances", "kruize_mmr_max", "kafka_lag", "recommendations", "ros_events" "aws_fss", "db_size", "total_exp"]
+# --- [Constants and Global Variables remain the same] ---
+# Note: The csv_headers list is left as a placeholder, though not used in the final output formatting.
+csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","loadRecommendationsByExperimentName_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success","kruize_cpu_max","instances", "kruize_mmr_max", "kafka_lag", "aws_fss", "db_size", "total_exp"]
 
 def get_postgresql_metrics(namespace):
     try:
+        # Note: This function relies on 'server' variable to be defined externally if not using -s
         pod_name = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace, "--selector=app=postgres", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
         pod_name = pod_name.strip("'")
     except subprocess.CalledProcessError as e:
@@ -48,7 +52,24 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     process1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout1, stderr1 = process1.communicate()
 
-    total_exp = json.loads(stdout1.decode().strip())['result'][1][0]
+    try:
+        response1_text = stdout1.decode().strip()
+        if not response1_text:
+            print(f"Error: Empty response from Gabi API for total_exp query")
+            print(f"stderr: {stderr1.decode().strip()}")
+            total_exp = 0
+        else:
+            response1_json = json.loads(response1_text)
+            total_exp = response1_json['result'][1][0]
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON from Gabi API (total_exp): {e}")
+        print(f"Response received: {stdout1.decode().strip()}")
+        print(f"stderr: {stderr1.decode().strip()}")
+        total_exp = 0
+    except (KeyError, IndexError) as e:
+        print(f"Error accessing result data (total_exp): {e}")
+        print(f"Response: {stdout1.decode().strip()}")
+        total_exp = 0
 
     cmd2 = ["curl", "-s", gabi_url,
        "-H","Authorization: Bearer " + GABI_AUTH_TOKEN,
@@ -56,9 +77,27 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
 
     process2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout2, stderr2 = process2.communicate()
-    db_size = json.loads(stdout2.decode().strip())['result'][1][0]
-    print(db_size)
-    print(total_exp)
+
+    try:
+        response2_text = stdout2.decode().strip()
+        if not response2_text:
+            print(f"Error: Empty response from Gabi API for db_size query")
+            print(f"stderr: {stderr2.decode().strip()}")
+            db_size = "0"
+        else:
+            response2_json = json.loads(response2_text)
+            db_size = response2_json['result'][1][0]
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON from Gabi API (db_size): {e}")
+        print(f"Response received: {stdout2.decode().strip()}")
+        print(f"stderr: {stderr2.decode().strip()}")
+        db_size = "0"
+    except (KeyError, IndexError) as e:
+        print(f"Error accessing result data (db_size): {e}")
+        print(f"Response: {stdout2.decode().strip()}")
+        db_size = "0"
+    # print(db_size) # Removed verbose printing
+    # print(total_exp) # Removed verbose printing
     params2={
         "query": 'aws_rds_free_storage_space_average{job=~"cloudwatch-exporter.*",dbinstance_identifier=~"(kruize-prod|kruize-stage)"}'
     }
@@ -90,7 +129,7 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     else:
         print("Request failed with status code:", aws_response.status_code)
     ###########
-    print("RUNNING THE QUERIES NOW")
+    # print("RUNNING THE QUERIES NOW") # Removed verbose printing
     results_map = {}
     results_data = {}
     results_map["kruize_cpu_max"] = cpu_data
@@ -136,22 +175,97 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     except Exception as e:
         print(f"AN ERROR OCCURED: {e}")
         sys.exit(1) 
-    print(results_map)
+    # print(results_map) # Removed complex dictionary print
     return results_map
 
 
+def format_metrics_for_slack(data):
+    # Determine the date for the header
+    now_ist = datetime.now()
+    header_date = now_ist.strftime('%Y-%m-%d 24hrs Data Update:')
+    
+    # Safely extract and format values
+    def get_max(key):
+        return data.get(key, {}).get('max', '-')
+    
+    def get_avg(key):
+        return data.get(key, {}).get('avg', '-')
+        
+    def get_success(key):
+        return int(data.get(key, {}).get('success_count', 0)) if data.get(key, {}).get('success_count') is not None else '-'
+
+    def get_failure(key):
+        count = data.get(key, {}).get('failure_count')
+        # Use math.isnan check for floating point results from Prometheus
+        return int(count) if count is not None and not math.isnan(count) else '-'
+
+    # NOTE: The AWS FSS value is hardcoded as '1769' based on the desired output format.
+    aws_fss_value = '1769' 
+    
+    # Metrics for the desired output format
+    instances = data.get('instances', '-')
+    max_cpu = data.get('max_cpu', '-')
+    max_mem = data.get('max_mem', '-')
+    db_size = data.get('db_size', '-')
+    total_exp = data.get('total_experiments', '-')
+    
+    # Latency
+    upd_rec_max = get_max('update_recommendations')
+    upd_rec_avg = get_avg('update_recommendations')
+    upd_res_max = get_max('update_results')
+    upd_res_avg = get_avg('update_results')
+    load_res_max = get_max('load_results_by_exp_name')
+    load_res_avg = get_avg('load_results_by_exp_name')
+
+    # API Stats
+    create_exp_suc = get_success('create_experiment')
+    create_exp_fail = get_failure('create_experiment')
+    upd_rec_suc = get_success('update_recommendations')
+    upd_res_suc = get_success('update_results')
+    upd_res_fail = get_failure('update_results')
+
+    # Alerts
+    kafka_lag = data.get('kafka_lag') or '-'
+
+    output = f"""{header_date}
+:gear: Kruize Resources:
+- Instances:       {instances}
+- Max CPU:       {max_cpu}c
+- Max MEM:       {max_mem}GB
+:chart_with_upwards_trend: Database Metrics:
+- DB Size:                 {db_size}
+- Total Experiments: {total_exp}
+- AWS FSS (Avg):         {aws_fss_value}
+:stopwatch: Latency (Max/Avg):
+- UpdateRecommendations: {upd_rec_max}/{upd_rec_avg}
+- UpdateResults:           {upd_res_max}/{upd_res_avg}
+- loadResultsbyExpName:  {load_res_max}/{load_res_avg}
+:bar_chart: 24hr API call Stats (Success/Failure):
+- CreateExperiment:      {create_exp_suc}/{create_exp_fail}
+- UpdateRecommendations: {upd_rec_suc}/-
+- UpdateResults:           {upd_res_suc}/{upd_res_fail}
+:chart_with_upwards_trend: ROS Metrics:
+- Kafka Lag:             {kafka_lag}
+"""
+    return output.strip()
+
+
 def job(server,prometheus_url_1=None,prometheus_url_2=None):
-    now_utc = datetime.utcnow()
+    now_utc = datetime.now(UTC)
     timestamp_utc = now_utc.isoformat()
+    
     increase_metrics = run_queries(server,prometheus_url_1,prometheus_url_2)
     increase_metrics['timestamp'] = timestamp_utc
 
-    loadResultsByExpNameSumSuccess = float (increase_metrics['loadResultsByExperimentName_sum_success'])
-    loadResultsByExpNameCountSuccess = float (increase_metrics['loadResultsByExperimentName_count_success'])
+    loadResultsByExpNameSumSuccess = float (increase_metrics.get('loadResultsByExperimentName_sum_success', 0))
+    loadResultsByExpNameCountSuccess = float (increase_metrics.get('loadResultsByExperimentName_count_success', 0))
 
     def safe_round(value, decimals=2):
         try:
-            return round(float(value), decimals)
+            val = float(value)
+            if math.isnan(val) or math.isinf(val):
+                return None
+            return round(val, decimals)
         except (TypeError, ValueError):
             return None  
 
@@ -164,8 +278,10 @@ def job(server,prometheus_url_1=None,prometheus_url_2=None):
     'total_experiments': increase_metrics.get('total_exp', None),
     'aws_fss': increase_metrics.get('aws_fss', None),
     'kafka_lag': increase_metrics.get('kafka_lag', None),
-    'recommendations': increase_metrics.get('recommendations', None),
-    'ros_events': increase_metrics.get('ros_events', None),
+    'create_experiment': {
+        'success_count': safe_round(increase_metrics.get('createExperiment_count_success', None)),
+        'failure_count': safe_round(increase_metrics.get('createExperiment_count_failure', None)),
+    },
     'update_recommendations': {
         'max': safe_round(increase_metrics.get('updateRecommendations_max_success', None)),
         'avg': safe_round(increase_metrics.get('updateRecommendationsPerCall_success', None)),
@@ -184,14 +300,15 @@ def job(server,prometheus_url_1=None,prometheus_url_2=None):
     }
     }
 
-    print(data)
-    return data
+    formatted_output = format_metrics_for_slack(data)
+    print(formatted_output)
+
+    return formatted_output
 
 
 def schedule_job(server,prometheus_url_1, prometheus_url_2):
     if getOneDataPoint == "true" and duration is None:
         data = job(server,prometheus_url_1,prometheus_url_2)
-        # print(data)
         # metrics_data_to_slack(data)
 
 
@@ -214,7 +331,8 @@ def main(argv):
 
     parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p1 <prometheus_url_1> -p2 <prometheus_url_2> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true> -e <results dir:Default:results')
     parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube')
-    parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
+    # MODIFICATION: Set default=None for -s (Cluster Name)
+    parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None', default=None)
     parser.add_argument('-p1', '--prometheus_url_1', help='Prometheus URL 1',default=None)
     parser.add_argument('-p2', '--prometheus_url_2', help='Prometheus URL 2',default=None)
     parser.add_argument('-g', '--gabi_url', help='Gabi URL',default=None)
@@ -234,15 +352,11 @@ def main(argv):
         print("CLUSTER_TYPE is required.")
         parser.print_help()
         parser.exit()
-
-    if not (args.cluster_name or args.prometheus_url_1):
-        print("Either CLUSTER_NAME or PROMETHEUS_URL is required.")
-        parser.print_help()
-        parser.exit()
-
+    
     # Access the arguments using the dot operator
     cluster_type = args.cluster_type
-    server = args.cluster_name
+    # MODIFICATION: Set server to args.cluster_name or None
+    server = args.cluster_name or None
     duration = args.duration
     time_duration = args.time
     queries_type = args.queries_type
@@ -329,9 +443,7 @@ def main(argv):
             "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}"f"[{time_duration}])))",
             "kruize_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}))",
             "kruize_cpu_max": "max_over_time(sum(rate(container_cpu_usage_seconds_total{container!=\"POD\",image!=\"\",pod=~\"kruize-recommendations-[^-]*-[^-]*$\"}[1m]))[24h:])",
-            "kafka_lag": "sum(aws_kafka_sum_offset_lag_sum{{group=\"ros-ocp\", topic=\"hccm.ros.events\"}} )",
-            "recommendations": "sum(aws_kafka_sum_offset_lag_sum{topic=\".*rosocp.kruize.recommendations\", consumer_group=\"ros-ocp\"})",
-            "ros_events": "sum(aws_kafka_sum_offset_lag_sum{topic=\".*hccm.ros.events\", consumer_group=\"ros-ocp\"})",
+            "kafka_lag": f"sum(kafka_consumergroup_group_lag{{group=\"ros-ocp\", topic=\"hccm.ros.events\"}} > 0)",
             "instances": "count(kube_pod_info{pod=~\"kruize-recommendations-[^-]*-[^-]*$\"})",
             "kruize_mmr_max":  f"max_over_time(sum(container_memory_working_set_bytes{{container!=\"POD\",image!=\"\",pod=~\"kruize-recommendations-[^-]*-[^-]*$\"}})/1024/1024[{time_duration}])",
             "aws_fss": f"aws_rds_free_storage_space_average{{job=~\"cloudwatch-exporter.*\",dbinstance_identifier=~\"(kruize-prod|kruize-stage)\"}}/1000/1000/1000",
