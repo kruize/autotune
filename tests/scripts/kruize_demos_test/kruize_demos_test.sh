@@ -438,7 +438,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:w:r:i:o:a:b:t:fkh gopts
+while getopts c:w:r:i:o:s:a:b:t:fkh gopts
 do
 	case ${gopts} in
 	c)
