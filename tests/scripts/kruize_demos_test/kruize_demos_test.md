@@ -13,8 +13,9 @@ Kruize Demos test validates the behaviour of Kruize APIs by running the Kruize d
      - vpa demo
      - bulk demo
      - runtimes demo (Supported from Kruize release 0.9)
+     - optimizer demo (Supported from Kruize release 0.10)
      
-   - Validates if recommendations are generated 
+   - Validates if recommendations are generated
   
 ## Prerequisites for running the tests:
 - Openshift cluster access
@@ -37,10 +38,10 @@ Usage:
         [ -s ] = Kruize operator git repo branch. Default - mvp_demo"
         [ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
         [ -b ] : Kruize demos git repo branch. Default - main
-        [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes)
+        [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes/optimizer)
         [ -r ] : Kruize results dir path. Default - /tmp/kruize_demos_test_results
         [ -k ] : Disable operator and install kruize using deploy scripts instead
-	[ -f ] : Sets up minikube/kind clusters
+        [ -f ] : Sets up minikube/kind clusters
         [ -w ] : Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default 20s"
 
 ```

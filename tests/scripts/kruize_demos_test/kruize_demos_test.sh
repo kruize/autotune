@@ -48,7 +48,7 @@ function usage() {
 	echo "s = Kruize operator git repo branch. Default - mvp_demo"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
-	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
+	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes/optimizer)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
 	echo "k = Disable operator and install kruize using deploy scripts instead."
 	echo "f = Sets up minikube/kind clusters"
@@ -100,6 +100,12 @@ function runtimes_demo() {
 	run_demo "${demo_name}" "${demo_dir}"
 }
 
+function optimizer_demo() {
+	demo_name="optimizer"
+	demo_dir="local_monitoring/optimizer_demo"
+	run_demo "${demo_name}" "${demo_dir}"
+}
+
 function remote_monitoring_demo() {
 	demo_name="remote_monitoring"
 	demo_dir="remote_monitoring_demo"
@@ -112,6 +118,7 @@ function all_demos() {
 	vpa_demo
 	bulk_demo
 	runtimes_demo
+	optimizer_demo
 	if [ "${KRUIZE_OPERATOR}" == 0 ]; then
 		# Include demos supported with manifests
 		remote_monitoring_demo
@@ -246,6 +253,7 @@ declare -A DEMO_SCRIPT=(
 	[bulk]="./bulk_service_demo.sh"
 	[vpa]="./vpa_demo.sh"
 	[runtimes]="./runtimes_demo.sh"
+	[optimizer]="./optimizer_demo.sh"
 )
 
 # Maps demo name -> image flag used
@@ -255,6 +263,7 @@ declare -A DEMO_IMAGE_FLAG=(
 	[bulk]="-i"
 	[vpa]="-i"
 	[runtimes]="-i"
+	[optimizer]="-i"
 )
 
 # Maps demo name -> list of expected recommendation JSON files
@@ -264,6 +273,7 @@ declare -A DEMO_JSONS=(
 	[bulk]="recommendations_data.json"
 	[vpa]="container_vpa_experiment_sysbench_recommendation.json"
 	[runtimes]="create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_semeru_exp_recommendation.json"
+	[optimizer]="container_sysbench_deployment_sysbench_optimizer_recommendation.json container_tfb-qrh-sample_deployment_tfb-server_optimizer_recommendation.json"
 )
 
 # Maps demo name -> log file name produced by the demo script
@@ -273,6 +283,7 @@ declare -A DEMO_LOG_NAME=(
 	[bulk]="kruize-bulk-demo.log"
 	[vpa]="kruize-demo.log"
 	[runtimes]="kruize-demo.log"
+	[optimizer]="optimizer-demo.log"
 )
 
 # Populates the CMD and JSONS arrays for the given demo name
@@ -525,10 +536,13 @@ case ${demo} in
 	runtimes)
 		runtimes_demo
 		;;
-	*)
-		err_exit "Error: ${demo} is not supported. Valid demos - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes" | tee -a ${LOG}
+	optimizer)
+		optimizer_demo
 		;;
-esac	
+	*)
+		err_exit "Error: ${demo} is not supported. Valid demos - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes/optimizer" | tee -a ${LOG}
+		;;
+esac
 
 cd ../..
 
