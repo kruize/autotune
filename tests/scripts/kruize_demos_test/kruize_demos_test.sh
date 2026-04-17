@@ -312,7 +312,7 @@ function run_demo() {
 
 	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
 		if [ "${KRUIZE_OPERATOR_IMAGE}" != "" ]; then
-			if [[ "${DEMO_NAME}" != "remote_monitoring" && "${DEMO_NAME}" != "bulk" ]]; then
+			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
 				CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
 			fi
 		fi
