@@ -84,7 +84,7 @@ As part of the release testing, following tests will be executed:
 ### RELEASE TESTS RESULTS SUMMARY
 
 All Release tests have been run against the Kruize release 0.10 image and all tests have - :
-- No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+- No regressions seen, runtime recommendations has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
 
 Scalability short -  
 
@@ -100,7 +100,7 @@ Scalability short -
 | 5 | DB Migration test | PASSED | NA | |
 | 6 | Recommendation and box plot values validations | PASSED | PASSED | |
 | 7 | Local Fault tolerant test | PASSED | PASSED | |
-| 8 | Kruize Local Functional tests | TOTAL - 234 , PASSED - 228 / FAILED - 4 / SKIPPED - 2 | TOTAL - 234, PASSED - 227 / FAILED - 4 / SKIPPED - 3 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1763](https://github.com/kruize/autotune/issues/1763), [Issue 1821](https://github.com/kruize/autotune/issues/1821) |
+| 8 | Kruize Local Functional tests | TOTAL - 234 , PASSED - 230 / FAILED - 2 / SKIPPED - 2 | TOTAL - 234, PASSED - 229 / FAILED - 3 / SKIPPED - 2 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1821](https://github.com/kruize/autotune/issues/1821) |
 
 Kruize test result summary:
 
