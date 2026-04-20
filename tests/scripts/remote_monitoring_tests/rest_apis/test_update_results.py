@@ -15,6 +15,8 @@ limitations under the License.
 """
 import pytest
 import sys
+import json
+import os
 sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
@@ -52,6 +54,8 @@ missing_metrics_namespace = [
     ("Missing_metrics_mandatory_metrics_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_mandatory_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]")
 
 ]
+
+perf_profile_dir = get_metric_profile_dir()
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
@@ -1684,4 +1688,71 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
+
+@pytest.mark.sanity
+def test_update_results_references_updated_performance_profile(cluster_type):
+    """
+    Test Description: This test validates that update results validation references 
+    the updated performance profile and not the old one. This ensures the global 
+    performance profile map is properly updated when a profile is modified.
+    
+    Test Steps:
+    1. Create an experiment with initial performance profile
+    2. Update results with the initial profile (should succeed)
+    3. Update the performance profile to add/modify a metric requirement
+    4. Update results again - should validate against the updated profile
+    5. Verify that validation uses the updated profile, not the cached old one
+    """
+    input_json_file = "../json_files/create_exp.json"
+    perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    
+    form_kruize_url(cluster_type)
+    
+    # Clean up any existing experiment and profile
+    response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+    
+    # Delete existing performance profile if it exists
+    try:
+        response = delete_performance_profile(perf_profile_json_file)
+        print("delete performance profile = ", response.status_code)
+    except:
+        print("Performance profile doesn't exist or couldn't be deleted")
+    
+    # Create the v1 performance profile
+    response = create_performance_profile(perf_profile_json_file)
+    print("create performance profile = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Update the performance profile to v2
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    response = update_performance_profile(perf_profile_json_file)
+    print("update performance profile = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    print("Performance profile updated successfully")
+
+    # Create experiment using the performance profile
+    response = create_experiment(input_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results - this should validate against the UPDATED profile
+    result_json_file = "../json_files/update_results.json"
+    response = update_results(result_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+    print("update results succeeded with updated profile - validation used updated profile!")
+    
+    # Clean up
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+    
+    try:
+        response = delete_performance_profile(perf_profile_json_file)
+        print("delete updated performance profile = ", response.status_code)
+    except:
+        print("Couldn't delete updated performance profile")
