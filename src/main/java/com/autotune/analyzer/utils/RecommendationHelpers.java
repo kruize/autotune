@@ -20,8 +20,11 @@ import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricAggregationInfoResultsIntSerializer;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.Config;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.Variation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
@@ -37,6 +40,7 @@ import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -183,7 +187,10 @@ public class RecommendationHelpers {
                 return (field.getDeclaringClass() == Config.class
                         && field.getName().equals(KruizeConstants.JSONKeys.REPLICAS))
                         || (field.getDeclaringClass() == TermRecommendations.class
-                        && field.getName().equals("metricsInfo"));
+                        && field.getName().equals("metricsInfo"))
+                        || ((field.getDeclaringClass() == ContainerRecommendations.class
+                        || field.getDeclaringClass() == NamespaceRecommendations.class)
+                        && field.getName().equals("version"));
             }
 
             @Override
@@ -238,5 +245,27 @@ public class RecommendationHelpers {
 
         response.getWriter().println(gsonStr);
         response.getWriter().close();
+    }
+    /**
+     * Invokes {@link RecommendationEngine#prepareRecommendations(int, String, String)} using the
+     * supplied engine and request context.
+     *
+     * <p>This helper centralizes the common recommendation preparation flow shared by the remote
+     * and local recommendation generation endpoints.
+     *
+     * @param recommendationEngine the initialized recommendation engine to execute
+     * @param requestCount the request counter used by the caller
+     * @param targetCluster the target cluster mode such as local or remote
+     * @param bulkJobId the bulk job identifier for local monitoring flows, or {@code null} when
+     *                  not applicable
+     * @return the prepared {@link KruizeObject} containing validation and recommendation data
+     * @throws FetchMetricsError if recommendation preparation fails
+     */
+    public static KruizeObject prepareRecommendations(
+            RecommendationEngine recommendationEngine,
+            int requestCount,
+            String targetCluster,
+            String bulkJobId) throws FetchMetricsError {
+        return recommendationEngine.prepareRecommendations(requestCount, targetCluster, bulkJobId);
     }
 }

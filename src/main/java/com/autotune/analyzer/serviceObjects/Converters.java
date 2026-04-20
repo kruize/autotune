@@ -186,7 +186,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
+                listRecommendationsAPIObject.setApiVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
