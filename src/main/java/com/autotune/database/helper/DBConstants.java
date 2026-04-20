@@ -11,12 +11,7 @@ public class DBConstants {
         public static final String SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME = "SELECT count(k) FROM KruizeExperimentEntry k WHERE k.performance_profile = :performanceProfile";
         public static final String SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "from KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_BULKJOBS_BY_JOB_ID = "from KruizeBulkJobEntry k WHERE k.jobId = :jobId";
-        public static final String UPDATE_BULKJOB_BY_ID = "UPDATE kruize_bulkjobs " +
-                "SET experiments = jsonb_set(" +
-                "    jsonb_set(experiments, :notificationPath, :newNotification::jsonb, true), " +
-                "    :recommendationPath, :newRecommendation::jsonb, true" +
-                ") " +
-                "WHERE job_id = :jobId";
+        public static final String UPDATE_BULKJOB_BY_ID = "UPDATE public.kruize_bulkjobs SET experiments = jsonb_set(     experiments,     '{experiments}',     (experiments->'experiments' || CAST(:newFragment AS jsonb)) ,     true ) , processed_count= :processed_count , total_count= :total_count WHERE job_id = :jobId";
         public static final String UPDATE_EXPERIMENTS_DATE = "UPDATE kruize_experiments " +
                 "SET update_date = :updateDate WHERE experiment_name IN (:experimentNames) ";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
