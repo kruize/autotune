@@ -15,23 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
-import com.autotune.analyzer.adapters.MetricAggregationInfoResultsIntSerializer;
-import com.autotune.analyzer.adapters.MetricMetadataAdapter;
-import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.metrics.MetricMetadata;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.analyzer.utils.RecommendationHelpers;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -96,6 +85,7 @@ public class UpdateRecommendations extends HttpServlet {
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
 
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
         Timestamp interval_end_time;
         Timestamp interval_start_time = null;
         if (KruizeDeploymentInfo.log_http_req_resp)
@@ -106,7 +96,8 @@ public class UpdateRecommendations extends HttpServlet {
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null);
+                KruizeObject kruizeObject = RecommendationHelpers.prepareRecommendations(
+                        recommendationEngine, calCount, REMOTE, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_SUCCESS_COUNT, calCount));
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
@@ -115,7 +106,7 @@ public class UpdateRecommendations extends HttpServlet {
                     sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
                     LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS, experiment_name,
                             sdf.format(interval_end_time)));
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time, useV1Converter);
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
                     LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
@@ -139,57 +130,50 @@ public class UpdateRecommendations extends HttpServlet {
             }
         }
     }
-
-    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
-        response.setContentType(JSON_CONTENT_TYPE);
-        response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_CREATED);
-        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
-        try {
-            LOGGER.debug(ko.getKubernetes_objects().toString());
-            ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                    convertKruizeObjectToListRecommendationSO(
-                            ko,
-                            false,
-                            false,
-                            interval_end_time);
+private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time, boolean useV1Converter) throws IOException {
+    response.setContentType(JSON_CONTENT_TYPE);
+    response.setCharacterEncoding(CHARACTER_ENCODING);
+    response.setStatus(HttpServletResponse.SC_CREATED);
+    
+    //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
+    LOGGER.debug(ko.getKubernetes_objects().toString());
+    
+    // Use RecommendationHelpers to convert single KruizeObject
+    List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+    try {
+        ListRecommendationsAPIObject listRecommendationsAPIObject =
+                RecommendationHelpers.convertKruizeObjectToRecommendation(
+                        ko,
+                        false,
+                        false,
+                        interval_end_time,
+                        useV1Converter); // useV1Converter = false for standard API
+        if (listRecommendationsAPIObject != null) {
             recommendationList.add(listRecommendationsAPIObject);
-        } catch (Exception e) {
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE,
-                    ko.getExperimentName(), e.getMessage()));
         }
-        ExclusionStrategy strategy = new ExclusionStrategy() {
-            @Override
-            public boolean shouldSkipField(FieldAttributes field) {
-                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
-            }
-
-            @Override
-            public boolean shouldSkipClass(Class<?> clazz) {
-                return false;
-            }
-        };
-        String gsonStr = "[]";
-        if (!recommendationList.isEmpty()) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                    .registerTypeAdapter(MetricAggregationInfoResults.class, new MetricAggregationInfoResultsIntSerializer())
-                    .setExclusionStrategies(strategy)
-                    .create();
-            gsonStr = gsonObj.toJson(recommendationList);
-        }
-        if (KruizeDeploymentInfo.log_http_req_resp)
-            LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_RESPONSE, new Gson().toJson(JsonParser.parseString(gsonStr))));
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
+    } catch (Exception e) {
+        LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE,
+                ko.getExperimentName(), e.getMessage()));
     }
+    
+    // Serialize recommendations using RecommendationHelpers
+    String gsonStr = "[]";
+    if (!recommendationList.isEmpty()) {
+        if (!useV1Converter) {
+            RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false, false);
+            return;
+        }
+        Gson gsonObj = RecommendationHelpers.createGsonObject(true);
+        gsonStr = gsonObj.toJson(recommendationList);
+    }
+    
+    // Log response if configured
+    if (KruizeDeploymentInfo.log_http_req_resp)
+        LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_RESPONSE, new Gson().toJson(JsonParser.parseString(gsonStr))));
+    
+    response.getWriter().println(gsonStr);
+    response.getWriter().close();
+}
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg,
                                   String experiment_name, String intervalEndTimeStr) throws IOException {

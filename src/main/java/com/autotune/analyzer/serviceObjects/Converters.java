@@ -6,9 +6,12 @@ import com.autotune.analyzer.kruizeLayer.*;
 import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -84,19 +87,7 @@ public class Converters {
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                RecommendationSettings recommendationSettings = new RecommendationSettings();
-                RecommendationSettings apiRecommendationSettings = createExperimentAPIObject.getRecommendationSettings();
-                if (apiRecommendationSettings != null) {
-                    if (apiRecommendationSettings.getTermSettings() != null) {
-                        recommendationSettings.setTermSettings(apiRecommendationSettings.getTermSettings());
-                    }
-                    if (apiRecommendationSettings.getModelSettings() != null) {
-                        recommendationSettings.setModelSettings(apiRecommendationSettings.getModelSettings());
-                    }
-                    if (apiRecommendationSettings.getThreshold() != null) {
-                        recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
-                    }
-                }
+                RecommendationSettings recommendationSettings = getRecommendationSettings(createExperimentAPIObject);
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
@@ -118,6 +109,23 @@ public class Converters {
                 kruizeObject = null;
             }
             return kruizeObject;
+        }
+
+        private static RecommendationSettings getRecommendationSettings(CreateExperimentAPIObject createExperimentAPIObject) {
+            RecommendationSettings recommendationSettings = new RecommendationSettings();
+            RecommendationSettings apiRecommendationSettings = createExperimentAPIObject.getRecommendationSettings();
+            if (apiRecommendationSettings != null) {
+                if (apiRecommendationSettings.getTermSettings() != null) {
+                    recommendationSettings.setTermSettings(apiRecommendationSettings.getTermSettings());
+                }
+                if (apiRecommendationSettings.getModelSettings() != null) {
+                    recommendationSettings.setModelSettings(apiRecommendationSettings.getModelSettings());
+                }
+                if (apiRecommendationSettings.getThreshold() != null) {
+                    recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
+                }
+            }
+            return recommendationSettings;
         }
 
         // Generates K8sObject for container type experiments from KubernetesAPIObject
@@ -155,6 +163,22 @@ public class Converters {
         }
 
 
+        /**
+         * Converts a {@link KruizeObject} into the standard list recommendations service object.
+         *
+         * <p>The returned object preserves the legacy recommendation response structure used by
+         * the existing recommendation APIs. Depending on the input flags, the recommendation data
+         * is either reduced to the latest entry or filtered to a specific monitoring end time.
+         *
+         * @param kruizeObject the experiment data to convert
+         * @param getLatest whether only the latest recommendation should be retained when no
+         *                  explicit timestamp filtering is requested
+         * @param checkForTimestamp whether recommendations should be filtered using
+         *                          {@code monitoringEndTime}
+         * @param monitoringEndTime the timestamp to retain when {@code checkForTimestamp} is true
+         * @return the standard {@link ListRecommendationsAPIObject} representation for the
+         *         supplied experiment
+         */
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,
@@ -162,7 +186,7 @@ public class Converters {
                 Timestamp monitoringEndTime) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
-                listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
+                listRecommendationsAPIObject.setApiVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                 listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
@@ -185,6 +209,19 @@ public class Converters {
             return listRecommendationsAPIObject;
         }
 
+        /**
+         * Copies and filters namespace recommendations from a Kubernetes object into its API
+         * representation.
+         *
+         * <p>Namespace recommendation data is cloned before filtering so that response shaping does
+         * not mutate the original in-memory experiment state.
+         *
+         * @param k8sObject the source Kubernetes object
+         * @param kubernetesAPIObject the target API object being populated
+         * @param checkForTimestamp whether recommendations should be filtered to a single timestamp
+         * @param getLatest whether only the latest recommendation should be retained
+         * @param monitoringEndTime the monitoring end time used for timestamp filtering
+         */
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
             NamespaceData clonedNamespaceData = null;
@@ -209,6 +246,19 @@ public class Converters {
             }
         }
 
+        /**
+         * Copies and filters container recommendations from a Kubernetes object into its API
+         * representation.
+         *
+         * <p>Container recommendation data is cloned before filtering so that the response can be
+         * shaped independently of the original experiment object.
+         *
+         * @param k8sObject the source Kubernetes object
+         * @param kubernetesAPIObject the target API object being populated
+         * @param checkForTimestamp whether recommendations should be filtered to a single timestamp
+         * @param getLatest whether only the latest recommendation should be retained
+         * @param monitoringEndTime the monitoring end time used for timestamp filtering
+         */
         private static void processContainerRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
             List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
@@ -243,6 +293,12 @@ public class Converters {
             kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
         }
 
+        /**
+         * Retains only the recommendation entry that matches the requested monitoring end time.
+         *
+         * @param recommendations the recommendation map to filter in place
+         * @param monitoringEndTime the timestamp that should remain in the map
+         */
         private static void filterRecommendationsByTimestamp(HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations,
                                                              Timestamp monitoringEndTime) {
             if (monitoringEndTime != null && recommendations.containsKey(monitoringEndTime)) {
@@ -250,6 +306,11 @@ public class Converters {
             }
         }
 
+        /**
+         * Retains only the most recent recommendation entry in the supplied map.
+         *
+         * @param recommendations the recommendation map to filter in place
+         */
         private static void filterRecommendationsByLatest(HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations) {
             Timestamp latestTimestamp = null;
             List<Timestamp> timestampsToRemove = new ArrayList<>();
@@ -641,16 +702,313 @@ public class Converters {
         }
 
         /**
-         * Converts KruizeObject to ListRecommendationsAPIObject using V1 schema
-         * This method transforms recommendations to the new schema with:
-         * - replicas attribute at current and recommendation levels
-         * - nested resources structure (limits and requests under resources)
-         * - metrics_info with pod_count metrics (avg, max, min)
-         * - variation with replicas
-         * @return ListRecommendationsAPIObject with V1 schema structure
+         * Converts a {@link KruizeObject} into the V1 recommendations response structure.
+         *
+         * <p>The V1 conversion starts from the standard list recommendation conversion and then
+         * normalizes the resulting object graph so it can be serialized in the new schema. The
+         * normalization aligns the payload with the V1 semantics by:
+         * <ul>
+         *     <li>mapping pod count based recommendation data to {@code replicas}</li>
+         *     <li>ensuring nested {@code resources.{requests,limits}} are populated</li>
+         *     <li>populating {@code metrics_info.pod_count} from the existing term metrics</li>
+         *     <li>preparing variation data to expose replicas in the V1 response</li>
+         * </ul>
+         *
+         * @param ko the experiment data to convert
+         * @param getLatest whether only the latest recommendation should be retained when no
+         *                  explicit timestamp filtering is requested
+         * @param checkForTimestamp whether recommendations should be filtered using
+         *                          {@code monitoringEndTime}
+         * @param monitoringEndTime the timestamp to retain when {@code checkForTimestamp} is true
+         * @return the {@link ListRecommendationsAPIObject} prepared for V1 serialization
          */
-        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1() {
-            // TODO: Implement V1 schema conversion
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSOV1(KruizeObject ko,
+                                                                                               boolean getLatest,
+                                                                                               boolean checkForTimestamp,
+                                                                                               Timestamp monitoringEndTime) {
+            /*
+             * NOTE:
+             * The current service object model already contains the core fields required by the
+             * V1 response shape:
+             * - Config / Variation support replicas + nested resources
+             * - TermRecommendations supports metrics_info
+             *
+             * So the V1 conversion here starts from the standard recommendation conversion and
+             * then normalizes the recommendation payload to the V1 semantics:
+             * - pods_count -> replicas
+             * - metrics_info.pod_count populated from the existing term metrics
+             * - nested resources retained under resources.{limits,requests}
+             *
+             * Final JSON shaping is handled by the existing serialization layer and adapters.
+             */
+            ListRecommendationsAPIObject listRecommendationsAPIObject =
+                    convertKruizeObjectToListRecommendationSO(ko, getLatest, checkForTimestamp, monitoringEndTime);
+
+            try {
+                normalizeKubernetesRecommendationsForV1(listRecommendationsAPIObject);
+            } catch (Exception e) {
+                LOGGER.error("Failed to convert recommendations to V1 schema for experiment {} due to {}",
+                        ko.getExperimentName(), e.getMessage());
+            }
+
+            return listRecommendationsAPIObject;
+        }
+
+        /**
+         * Applies V1 normalization to all Kubernetes objects contained in the converted response.
+         *
+         * @param listRecommendationsAPIObject the converted recommendation response to normalize
+         */
+        private static void normalizeKubernetesRecommendationsForV1(ListRecommendationsAPIObject listRecommendationsAPIObject) {
+            if (listRecommendationsAPIObject == null || listRecommendationsAPIObject.getKubernetesObjects() == null) {
+                return;
+            }
+
+            for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
+                normalizeContainerRecommendationsForV1(kubernetesAPIObject);
+                normalizeNamespaceRecommendationsForV1(kubernetesAPIObject);
+            }
+        }
+
+        /**
+         * Applies V1 normalization to all container recommendations for a Kubernetes object.
+         *
+         * @param kubernetesAPIObject the Kubernetes API object whose container recommendations are
+         *                            to be normalized
+         */
+        private static void normalizeContainerRecommendationsForV1(KubernetesAPIObject kubernetesAPIObject) {
+            if (kubernetesAPIObject == null || kubernetesAPIObject.getContainerAPIObjects() == null) {
+                return;
+            }
+
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                if (containerAPIObject != null
+                        && containerAPIObject.getContainerRecommendations() != null
+                        && containerAPIObject.getContainerRecommendations().getData() != null) {
+                    normalizeMappedRecommendationsForV1(containerAPIObject.getContainerRecommendations().getData());
+                }
+            }
+        }
+
+        /**
+         * Applies V1 normalization to namespace recommendations for a Kubernetes object.
+         *
+         * @param kubernetesAPIObject the Kubernetes API object whose namespace recommendations are
+         *                            to be normalized
+         */
+        private static void normalizeNamespaceRecommendationsForV1(KubernetesAPIObject kubernetesAPIObject) {
+            if (kubernetesAPIObject == null
+                    || kubernetesAPIObject.getNamespaceAPIObject() == null
+                    || kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations() == null
+                    || kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations().getData() == null) {
+                return;
+            }
+
+            normalizeMappedRecommendationsForV1(
+                    kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations().getData());
+        }
+
+        /**
+         * Applies V1 normalization to all timestamped recommendation entries in a recommendation
+         * data map.
+         *
+         * @param recommendationDataMap the timestamp keyed recommendation data to normalize
+         */
+        private static void normalizeMappedRecommendationsForV1(
+                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendationDataMap) {
+            if (recommendationDataMap == null) {
+                return;
+            }
+
+            for (MappedRecommendationForTimestamp recommendationForTimestamp : recommendationDataMap.values()) {
+                if (recommendationForTimestamp == null) {
+                    continue;
+                }
+
+                normalizeConfigForV1(recommendationForTimestamp.getCurrentConfig());
+
+                HashMap<String, TermRecommendations> recommendationForTermHashMap =
+                        recommendationForTimestamp.getRecommendationForTermHashMap();
+                if (recommendationForTermHashMap == null) {
+                    continue;
+                }
+
+                for (TermRecommendations termRecommendations : recommendationForTermHashMap.values()) {
+                    normalizeTermRecommendationsForV1(termRecommendations);
+                }
+            }
+        }
+
+        /**
+         * Applies V1 normalization to term-level recommendation data.
+         *
+         * <p>This includes normalizing term metrics information and each model-specific
+         * recommendation entry under the term.
+         *
+         * @param termRecommendations the term recommendation data to normalize
+         */
+        private static void normalizeTermRecommendationsForV1(TermRecommendations termRecommendations) {
+            if (termRecommendations == null) {
+                return;
+            }
+
+            normalizeMetricsInfoForV1(termRecommendations);
+
+            HashMap<String, com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel>
+                    recommendationForModelHashMap = termRecommendations.getRecommendationForModelHashMap();
+            if (recommendationForModelHashMap == null) {
+                return;
+            }
+
+            for (com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel recommendationForModel
+                    : recommendationForModelHashMap.values()) {
+                normalizeModelRecommendationForV1(recommendationForModel);
+            }
+        }
+
+        /**
+         * Applies V1 normalization to a model-specific recommendation entry.
+         *
+         * <p>The model recommendation is updated so that pod count is surfaced as replicas in the
+         * config and variation sections, nested resource structures are ensured, and the legacy
+         * pod count field is cleared from the serialized response path.
+         *
+         * @param recommendationForModel the model recommendation to normalize
+         */
+        private static void normalizeModelRecommendationForV1(
+                com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel recommendationForModel) {
+            if (recommendationForModel == null) {
+                return;
+            }
+
+            int podsCount = recommendationForModel.getPodsCount();
+            if (recommendationForModel.getConfig() != null) {
+                recommendationForModel.getConfig().setReplicas(podsCount);
+                normalizeConfigForV1(recommendationForModel.getConfig());
+            }
+            if (recommendationForModel.getVariation() != null) {
+                recommendationForModel.getVariation().setReplicas(podsCount);
+                normalizeVariationForV1(recommendationForModel.getVariation());
+            }
+
+            recommendationForModel.setPodsCount(0);
+        }
+
+        /**
+         * Ensures that a config object is ready for V1 serialization.
+         *
+         * <p>If nested resources are not already present, they are populated from the legacy
+         * top-level requests and limits maps.
+         *
+         * @param config the config object to normalize
+         */
+        private static void normalizeConfigForV1(Config config) {
+            if (config == null) {
+                return;
+            }
+            populateResourcesIfMissing(config.getResources(), config.getRequests(), config.getLimits(), true, config);
+        }
+
+        /**
+         * Ensures that a variation object is ready for V1 serialization.
+         *
+         * <p>If nested resources are not already present, they are populated from the legacy
+         * top-level requests and limits maps.
+         *
+         * @param variation the variation object to normalize
+         */
+        private static void normalizeVariationForV1(com.autotune.analyzer.recommendations.Variation variation) {
+            if (variation == null) {
+                return;
+            }
+            populateResourcesIfMissing(variation.getResources(), variation.getRequests(), variation.getLimits(), false, variation);
+        }
+
+        /**
+         * Populates nested resources on a config or variation object when they are absent.
+         *
+         * <p>This helper preserves existing nested resources and only derives a new
+         * {@code resources} map from the legacy {@code requests} and {@code limits} fields when
+         * necessary.
+         *
+         * @param existingResources the already populated resources map, if any
+         * @param requests the legacy requests map
+         * @param limits the legacy limits map
+         * @param isConfig whether the target object is a {@link Config}; otherwise it is treated as
+         *                 a {@link com.autotune.analyzer.recommendations.Variation}
+         * @param target the config or variation object to update
+         */
+        private static void populateResourcesIfMissing(
+                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> existingResources,
+                java.util.Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests,
+                java.util.Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits,
+                boolean isConfig,
+                Object target) {
+            if (existingResources != null) {
+                return;
+            }
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources =
+                    new HashMap<>();
+
+            if (requests != null) {
+                resources.put(AnalyzerConstants.ResourceSetting.requests, new HashMap<>(requests));
+            }
+            if (limits != null) {
+                resources.put(AnalyzerConstants.ResourceSetting.limits, new HashMap<>(limits));
+            }
+
+            if (resources.isEmpty()) {
+                return;
+            }
+
+            if (isConfig) {
+                ((Config) target).setResources(resources);
+            } else {
+                ((com.autotune.analyzer.recommendations.Variation) target).setResources(resources);
+            }
+        }
+
+        /**
+         * Ensures that term metrics information exposes the V1 {@code pod_count} metric entry.
+         *
+         * <p>The current term recommendations model stores {@code metricsInfo} internally, so this
+         * method accesses it reflectively and augments it with a {@code pod_count} entry derived
+         * from the existing metrics when available.
+         *
+         * @param termRecommendations the term recommendation whose metrics information is to be
+         *                            normalized
+         */
+        private static void normalizeMetricsInfoForV1(TermRecommendations termRecommendations) {
+            try {
+                java.lang.reflect.Field metricsInfoField =
+                        TermRecommendations.class.getDeclaredField("metricsInfo");
+                metricsInfoField.setAccessible(true);
+
+                HashMap<String, MetricAggregationInfoResults> metricsInfo =
+                        (HashMap<String, MetricAggregationInfoResults>) metricsInfoField.get(termRecommendations);
+
+                if (metricsInfo == null || metricsInfo.isEmpty() || metricsInfo.containsKey("pod_count")) {
+                    return;
+                }
+
+                MetricAggregationInfoResults podMetric = getPodCountMetric(metricsInfo);
+                if (podMetric != null) {
+                    termRecommendations.addMetricsInfo("pod_count", podMetric);
+                }
+            } catch (Exception e) {
+                LOGGER.debug("Unable to normalize metrics_info for V1 schema due to {}", e.getMessage());
+            }
+        }
+
+        private static MetricAggregationInfoResults getPodCountMetric(
+                HashMap<String, MetricAggregationInfoResults> metricsInfo) {
+            if (metricsInfo.containsKey("pods_count")) {
+                return metricsInfo.get("pods_count");
+            }
+            if (metricsInfo.containsKey("replicas")) {
+                return metricsInfo.get("replicas");
+            }
             return null;
         }
     }
