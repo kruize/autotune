@@ -176,7 +176,6 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             // Parse incoming JSON
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile incomingPerfProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
