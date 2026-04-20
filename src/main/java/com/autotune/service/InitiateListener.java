@@ -37,6 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.pod_name;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.pod_namespace;
+
 /**
  * Context Initializer to initialize variables used across modules.
  */
@@ -171,6 +174,8 @@ public class InitiateListener implements ServletContextListener {
                 LOGGER.error("Failed to load metric profile: {} ", e.getMessage());
             }
             sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, metricProfilesMap);
+            PodStartupService startupService = new PodStartupService(pod_name, pod_namespace);
+            startupService.handleStartup();
         }
     }
 
