@@ -20,7 +20,6 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.database.service.ExperimentDBService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -30,8 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
+import static com.autotune.analyzer.services.UpdateResults.performanceProfilesMap;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
@@ -51,16 +50,17 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
         */
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
-                new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
-                UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
+            String performanceProfileName = kruizeObject.getPerformanceProfile();
+            try {
+                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved performance profiles failed: {}", e.getMessage());
+                throw e;
             }
-            PerformanceProfile performanceProfile = null;
-            if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            } else {
-                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
+
+            PerformanceProfile performanceProfile = performanceProfilesMap.get(performanceProfileName);
+            if (performanceProfile == null) {
+                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
             }
 
             // validate the results value present in the updateResultsAPIObject
