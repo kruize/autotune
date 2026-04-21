@@ -1311,4 +1311,36 @@ remove_optional_cr_blocks_for_minikube() {
 
     !skip { print }
   ' "${CR_FILE}" > "${CR_FILE}.tmp" && mv "${CR_FILE}.tmp" "${CR_FILE}"
+###########################################
+#   Benchmarks Install
+###########################################
+function benchmarks_install() {
+	APP_NAMESPACE="${1:-${APP_NAMESPACE}}"
+	BENCHMARK="${2:-tfb}"
+	MANIFESTS="${3:-default_manifests}"
+
+	echo
+	echo "#######################################"
+	pushd benchmarks >/dev/null
+	  if [ ${BENCHMARK} == "tfb" ]; then
+      echo "Installing TechEmpower (Quarkus REST EASY) benchmark into cluster"
+      pushd techempower >/dev/null
+			  kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        check_err "ERROR: TechEmpower app failed to start, exiting"
+      popd >/dev/null
+    fi
+    if [ ${BENCHMARK} == "petclinic" ]; then
+			echo "Installing spring petclinic benchmark into cluster"
+			pushd spring-petclinic >/dev/null
+        if [ "${MANIFESTS}" != "default_manifests" ]; then
+          kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        else
+          kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
+        fi
+        check_err "ERROR: spring petclinic failed to start, exiting"
+			popd >/dev/null
+		fi
+  popd >/dev/null
+	echo "#######################################"
+	echo
 }
