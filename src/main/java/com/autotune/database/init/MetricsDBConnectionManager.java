@@ -263,7 +263,7 @@ public class MetricsDBConnectionManager {
             return Collections.emptyList(); 
         }
 
-        Query query = session.createNativeQuery(sql)
+        NativeQuery query = session.createNativeQuery(sql)
                 .addScalar("interval_start_time", java.sql.Timestamp.class)
                 .addScalar("interval_end_time", java.sql.Timestamp.class);
 

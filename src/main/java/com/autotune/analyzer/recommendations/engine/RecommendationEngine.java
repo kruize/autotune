@@ -1389,6 +1389,8 @@ public class RecommendationEngine implements RecommendationEngineService {
     private void fetchNamespaceMetricsBasedOnProfile(KruizeObject kruizeObject, Timestamp startTime, Timestamp endTime, PerformanceProfile profile) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         String experiment_name = kruizeObject.getExperimentName();
         HashMap<String, String> queryParams = new HashMap<>();
+        LocalDateTime startTimeLocalDateTime = startTime.toLocalDateTime();
+        LocalDateTime endTimeLocalDateTime = endTime.toLocalDateTime();
         queryParams.put("experiment_name", experiment_name);
         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
             String namespace = k8sObject.getNamespace();
