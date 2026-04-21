@@ -1104,3 +1104,184 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
         print("delete exp = ", response.status_code)
         assert response.status_code == SUCCESS_STATUS_CODE
 
+
+
+@pytest.mark.perf_profile
+def test_update_recommendations_with_perf_profile_update_multi_pod_simulation(cluster_type):
+    """
+    Test to replicate production environment with 3 Kruize pods scenario.
+    This test simulates the scenario where:
+    1. Create performance profile with v1 version
+    2. Call updatePerformanceProfile to update it to v2
+    3. Call createExperiment
+    4. Call updateResults and validate that the performance profile validation is not failing
+    5. Call updateRecommendations and validate successful recommendation response
+    
+    This ensures that performance profile updates are properly handled across multiple pods
+    and that validation uses the updated profile version.
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+    perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    perf_profile_dir = Path(__file__).parent.parent / "json_files"
+    perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    
+    form_kruize_url(cluster_type)
+    
+    print("\n" + "="*80)
+    print("Starting Multi-Pod Performance Profile Update Test")
+    print("="*80)
+    
+    # Step 0: Clean up any existing experiment and profile
+    print("\n[Step 0] Cleaning up existing resources...")
+    response = delete_experiment(input_json_file)
+    print(f"Delete experiment response: {response.status_code}")
+    
+    try:
+        response = delete_performance_profile(perf_profile_v1_json_file)
+        print(f"Delete performance profile response: {response.status_code}")
+    except Exception as e:
+        print(f"Performance profile doesn't exist or couldn't be deleted: {e}")
+    
+    # Step 1: Create the v1 performance profile
+    print("\n[Step 1] Creating performance profile v1...")
+    response = create_performance_profile(perf_profile_v1_json_file)
+    print(f"Create performance profile v1 response: {response.status_code}")
+    data = response.json()
+    print(f"Response: {data}")
+    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    assert CREATE_PERF_PROFILE_SUCCESS_MSG % "resource-optimization-openshift" in data.get('message', '')
+    print("✓ Performance profile v1 created successfully")
+    
+    # Step 2: Update the performance profile to v2
+    print("\n[Step 2] Updating performance profile to v2...")
+    response = update_performance_profile(perf_profile_v2_json_file)
+    print(f"Update performance profile v2 response: {response.status_code}")
+    data = response.json()
+    print(f"Response: {data}")
+    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    # Check for the update success message with version 2.0
+    assert "updated successfully to version 2.0" in data.get('message', '') or \
+           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
+    print("✓ Performance profile updated to v2 successfully")
+    
+    # Step 3: Create experiment using the updated performance profile
+    print("\n[Step 3] Creating experiment with updated performance profile...")
+    response = create_experiment(input_json_file)
+    data = response.json()
+    print(f"Create experiment response: {response.status_code}")
+    print(f"Response: {data}")
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+    
+    # Get experiment name for later use
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+    print(f"✓ Experiment '{experiment_name}' created successfully")
+    
+    # Step 4: Update results and validate performance profile validation is not failing
+    print("\n[Step 4] Updating results with performance profile v2 validation...")
+    
+    # Generate multiple result updates to simulate real scenario
+    num_results = 3
+    result_json_arr = []
+    interval_start_time = get_datetime()
+    
+    for i in range(num_results):
+        print(f"\n  [4.{i+1}] Updating result #{i+1}...")
+        update_results_json_file = f"/tmp/update_results_multi_pod_{i}.json"
+        
+        # Read and prepare result JSON
+        result_json = read_json_data_from_file(result_json_file)
+        
+        if i == 0:
+            start_time = interval_start_time
+        else:
+            start_time = end_time
+        
+        result_json[0]['interval_start_time'] = start_time
+        end_time = increment_timestamp_by_given_mins(start_time, 15)
+        result_json[0]['interval_end_time'] = end_time
+        
+        write_json_data_to_file(update_results_json_file, result_json)
+        result_json_arr.append(result_json[0])
+        
+        # Update results - this should validate against the UPDATED v2 profile
+        response = update_results(update_results_json_file, False)
+        data = response.json()
+        print(f"  Update results response: {response.status_code}")
+        
+        # Validate that the update succeeded (performance profile validation passed)
+        assert response.status_code == SUCCESS_STATUS_CODE, \
+            f"Update results failed with status {response.status_code}: {data}"
+        assert data['status'] == SUCCESS_STATUS, \
+            f"Update results status is not SUCCESS: {data}"
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG, \
+            f"Update results message unexpected: {data.get('message')}"
+        print(f"  ✓ Result #{i+1} updated successfully - performance profile v2 validation passed")
+    
+    print("\n✓ All results updated successfully with performance profile v2 validation")
+    
+    # Step 5: Update recommendations and validate successful response
+    print("\n[Step 5] Updating recommendations...")
+    response = update_recommendations(experiment_name, None, end_time)
+    print(f"Update recommendations response: {response.status_code}")
+    data = response.json()
+    print(f"Response summary: experiment_name={data[0].get('experiment_name')}")
+    
+    assert response.status_code == SUCCESS_STATUS_CODE, \
+        f"Update recommendations failed with status {response.status_code}: {data}"
+    assert data[0]['experiment_name'] == experiment_name, \
+        f"Experiment name mismatch: expected {experiment_name}, got {data[0].get('experiment_name')}"
+    
+    # Validate recommendations are available
+    recommendations = data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+    notifications = recommendations.get('notifications', {})
+    assert '111000' in notifications, \
+        f"Recommendations notification code 111000 not found in: {notifications}"
+    assert notifications['111000']['message'] == RECOMMENDATIONS_AVAILABLE, \
+        f"Recommendations message unexpected: {notifications['111000'].get('message')}"
+    
+    print("✓ Recommendations updated successfully")
+    
+    # Verify recommendations with list API
+    print("\n[Step 5.1] Verifying recommendations via listRecommendations...")
+    response = list_recommendations(experiment_name, rm=True)
+    assert response.status_code == SUCCESS_200_STATUS_CODE, \
+        f"List recommendations failed with status {response.status_code}"
+    
+    list_reco_json = response.json()
+    recommendation_section = list_reco_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+    high_level_notifications = recommendation_section["notifications"]
+    
+    # Verify recommendations are available
+    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications, \
+        f"Recommendations available code not found in: {high_level_notifications}"
+    
+    # Verify no errors in short term recommendations
+    data_section = recommendation_section["data"]
+    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+    short_term_notifications = short_term_recommendation["notifications"]
+    
+    for notification_code, notification in short_term_notifications.items():
+        assert notification["type"] != "error", \
+            f"Error notification found: {notification_code} - {notification}"
+    
+    print("✓ Recommendations verified successfully via listRecommendations")
+    
+    # Clean up
+    print("\n[Cleanup] Removing test resources...")
+    response = delete_experiment(input_json_file)
+    print(f"Delete experiment response: {response.status_code}")
+    assert response.status_code == SUCCESS_STATUS_CODE
+    
+    try:
+        response = delete_performance_profile(perf_profile_v2_json_file)
+        print(f"Delete performance profile response: {response.status_code}")
+    except Exception as e:
+        print(f"Couldn't delete performance profile: {e}")
+    
+    print("\n" + "="*80)
+    print("Multi-Pod Performance Profile Update Test Completed Successfully!")
+    print("="*80)
