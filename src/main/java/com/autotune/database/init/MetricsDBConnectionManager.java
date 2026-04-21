@@ -260,7 +260,7 @@ public class MetricsDBConnectionManager {
         session = getSession(metricsDbRef);
         if (session == null) {
             LOGGER.error("Metrics DB '{}' not configured", metricsDbRef);
-            return Collections.emptyList(); // ✅ avoid null
+            return Collections.emptyList(); 
         }
 
         Query query = session.createNativeQuery(sql)
@@ -272,13 +272,14 @@ public class MetricsDBConnectionManager {
         }
 
         if (params != null) {
-            for (String key : params.keySet()) {
-                if (!sql.contains(":" + key)) {
-                    LOGGER.warn("Parameter {} not found in SQL", key);
-                }
-                query.setParameter(key, params.get(key));
+        for (String key : params.keySet()) {
+            if (!sql.contains(":" + key)) {
+                LOGGER.debug("Skipping unused param: {}", key);
+                continue;
             }
+            query.setParameter(key, params.get(key));
         }
+}
 
         List<Object[]> resultList = query.getResultList();
 

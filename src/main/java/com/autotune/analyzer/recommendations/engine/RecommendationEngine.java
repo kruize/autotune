@@ -1423,8 +1423,12 @@ public class RecommendationEngine implements RecommendationEngineService {
                                 queryParams.put("namespace", namespace);
                             else if ("experiment_name".equalsIgnoreCase(param))
                                 queryParams.put("experiment_name", experiment_name);
-                            else if ("start_time".equalsIgnoreCase(param))
-                                queryParams.put("start_time", experiment_name);
+                            else if ("start_time".equalsIgnoreCase(param)) {
+                            queryParams.put(
+                                "start_time",
+                                startTimeLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            );
+                            }
                         }
                         
                         // Execute unified query
@@ -1460,8 +1464,8 @@ public class RecommendationEngine implements RecommendationEngineService {
                             for (String param : queryParamsFromProfile) {
                                 if ("container_name".equalsIgnoreCase(param))
                                     queryParams.put("container_name", container_name);
-                                else if ("namepsace".equalsIgnoreCase(param))
-                                    queryParams.put("namepsace", namespace);
+                                else if ("namespace".equalsIgnoreCase(param))
+                                    queryParams.put("namespace", namespace);
                                 else if ("experiment_name".equalsIgnoreCase(param))
                                     queryParams.put("experiment_name", experiment_name);
                                 else if ("start_time".equalsIgnoreCase(param))
@@ -1561,14 +1565,15 @@ public class RecommendationEngine implements RecommendationEngineService {
                         // Fallback to individual aggregation function queries (backward compatibility)
                         Set<String> aggrFunctions = metric.getAggregationFunctions();
                         for (String function : aggrFunctions) {
+                            queryParams.clear(); 
                             String query = metric.getQuery(function);
                             // Populate query params as defined in profile from standard list
                             List<String> queryParamsFromProfile = metric.getQueryParams(function);
                             for (String param : queryParamsFromProfile) {
                                 if ("container_name".equalsIgnoreCase(param))
                                     queryParams.put("container_name", container_name);
-                                else if ("namepsace".equalsIgnoreCase(param))
-                                    queryParams.put("namepsace", namespace);
+                                else if ("namespace".equalsIgnoreCase(param))
+                                    queryParams.put("namespace", namespace);
                                 else if ("experiment_name".equalsIgnoreCase(param))
                                     queryParams.put("experiment_name", experiment_name);
                                 else if ("start_time".equalsIgnoreCase(param))
@@ -1590,9 +1595,6 @@ public class RecommendationEngine implements RecommendationEngineService {
                                 intervalResults.setIntervalEndTime(interval_end_time);
                                 intervalResults.addMetricResult(metricName, function, value);
                             }
-                        }
-                    }
-                            //LOGGER.error("interval_start_time = {}, interval_end_time = {}, metricName = {}, function = {}, value = {}", interval_start_time, interval_end_time, metricName, function, value);
                         }
                     }
                 }
