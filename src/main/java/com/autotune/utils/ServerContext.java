@@ -47,6 +47,8 @@ public class ServerContext {
     public static final String UPDATE_METADATA_PROFILE = ROOT_CONTEXT + "updateMetadataProfile";
     public static final String CREATE_LAYER = ROOT_CONTEXT + "createLayer";
     public static final String LIST_LAYERS = ROOT_CONTEXT + "listLayers";
+    public static final String UPDATE_LAYER = ROOT_CONTEXT + "updateLayer";
+    public static final String DELETE_LAYER = ROOT_CONTEXT + "deleteLayer";
 
     public static final String KRUIZE_SERVER_URL = "http://localhost:" + KRUIZE_SERVER_PORT;
     public static final String LIST_EXPERIMENTS_END_POINT = KRUIZE_SERVER_URL + LIST_EXPERIMENTS;

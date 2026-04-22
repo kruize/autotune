@@ -28,20 +28,21 @@ from helpers.utils import *
 
 layer_dir = get_layer_dir()
 
-# Layer names to clean up in tests
-CLEANUP_LAYER_NAMES = ['container', 'semeru', 'quarkus', 'hotspot', 'test-layer']
 
+def ensure_layer_deleted(layer_name: str) -> None:
+    """
+    Ensure a layer is deleted via the delete API.
 
-@pytest.fixture(autouse=True)
-def cleanup_test_layers():
-    """Fixture to clean up test layers before and after each test"""
-    # Cleanup before test - clean up all known layer names
-    for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
-    yield
-    # Cleanup after test - clean up all known layer names
-    for layer_name in CLEANUP_LAYER_NAMES:
-        delete_layer_from_db(layer_name)
+    Asserts that the delete response status code is either:
+      * 200 - layer successfully deleted
+      * 404 - layer already absent
+    Any other status code fails the test so cleanup issues surface directly.
+    """
+    response = delete_layer(layer_name)
+    assert response.status_code in (SUCCESS_200_STATUS_CODE, ERROR_404_STATUS_CODE), (
+        f"Failed to delete layer {layer_name!r}: "
+        f"expected status 200 or 404, got {response.status_code}"
+    )
 
 
 @pytest.mark.layers
@@ -68,6 +69,9 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
         input_json = json.load(json_file)
         layer_name = input_json['layer_name']
 
+    # Cleanup before test to ensure clean state
+    ensure_layer_deleted(layer_name)
+
     # Create layer
     response = create_layer(input_json_file)
     data = response.json()
@@ -77,6 +81,9 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
     assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
 
     print(f"✓ Layer '{layer_name}' created successfully")
+
+    # Cleanup: Delete layer
+    ensure_layer_deleted(layer_name)
 
 
 @pytest.mark.layers
@@ -103,6 +110,9 @@ def test_create_layer_with_different_presence_types(cluster_type, layer_file):
         input_json = json.load(json_file)
         layer_name = input_json['layer_name']
 
+    # Cleanup before test to ensure clean state
+    ensure_layer_deleted(layer_name)
+
     # Create layer
     response = create_layer(input_json_file)
     data = response.json()
@@ -113,6 +123,9 @@ def test_create_layer_with_different_presence_types(cluster_type, layer_file):
     assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
 
     print(f"✓ Layer '{layer_name}' created successfully")
+
+    # Cleanup: Delete layer
+    ensure_layer_deleted(layer_name)
 
 
 @pytest.mark.layers
@@ -132,7 +145,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer_from_db(layer_name)
+    ensure_layer_deleted(layer_name)
 
     response = create_layer(input_json_file)
     data = response.json()
@@ -144,7 +157,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     print(f"✓ Layer '{layer_name}' created successfully with minimum required fields")
 
     # Cleanup: Delete layer from database
-    delete_layer_from_db(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 # =============================================================================
@@ -169,7 +182,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', 'null'),
     ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[]'),
 ])
-def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API rejects requests with missing/null/empty mandatory fields
     """
@@ -229,7 +242,7 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
     ("duplicate_tunable_names", LAYER_DUPLICATE_TUNABLE_NAMES_MSG % 'duplicate', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "duplicate", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}, {"name": "duplicate", "value_type": "double", "upper_bound": "50", "lower_bound": "5", "step": 1}]'),
 ])
-def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API rejects requests with invalid/negative/duplicate values
     """
@@ -290,7 +303,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer_from_db(layer_name)
+    ensure_layer_deleted(layer_name)
 
     response1 = create_layer(input_json_file)
 
@@ -305,7 +318,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     print(f"✓ Correctly rejected duplicate layer: {layer_name}")
 
     # Cleanup: Delete the layer that was successfully created
-    delete_layer_from_db(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 # =============================================================================
@@ -329,7 +342,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     ("queries_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("all_three_types", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API rejects invalid layer_presence combinations
     """
@@ -403,7 +416,7 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
     ("tunable_lower_gte_upper", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid bounds; lowerBound (100.0) must be less than upperBound (50.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
     ("tunable_step_greater_than_range", "Validation failed: ERROR: Tunable: Tunable 't1' has invalid step; step (100.0) must be <= (upperBound - lowerBound) (90.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 100}]'),
 ])
-def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API rejects invalid tunable bounds/step configurations
     """
@@ -467,7 +480,7 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
     ("categorical_empty_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": []}]'),
     ("categorical_with_bounds", TUNABLE_MIXED_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": ["opt1", "opt2"], "upper_bound": "100", "lower_bound": "10", "step": 5}]'),
 ])
-def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
+def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
     """
     Test Description: Validates createLayer API rejects invalid categorical tunable configurations
     """
