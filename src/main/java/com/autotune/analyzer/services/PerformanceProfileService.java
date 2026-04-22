@@ -65,7 +65,6 @@ public class PerformanceProfileService extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
-    private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
     private static final Gson gson = new GsonBuilder()
             .disableHtmlEscaping()  // Prevents escaping of quotes
             .setPrettyPrinting()
@@ -74,8 +73,6 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
-                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     /**
@@ -221,6 +218,7 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
         String perfProfileName = req.getParameter(AnalyzerConstants.ServiceConstants.PERF_PROFILE_NAME);
         if (perfProfileName == null || perfProfileName.isBlank()) {
             sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE_NAME);
