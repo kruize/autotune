@@ -1269,9 +1269,3 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     response = delete_experiment(input_json_file)
     print(f"Delete experiment response: {response.status_code}")
     assert response.status_code == SUCCESS_STATUS_CODE
-    
-    try:
-        response = delete_performance_profile(perf_profile_v2_json_file)
-        print(f"Delete performance profile response: {response.status_code}")
-    except Exception as e:
-        print(f"Couldn't delete performance profile: {e}")
