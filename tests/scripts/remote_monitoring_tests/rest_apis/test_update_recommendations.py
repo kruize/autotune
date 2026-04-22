@@ -1107,31 +1107,25 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
 
 
 @pytest.mark.perf_profile
-def test_update_recommendations_with_perf_profile_update_multi_pod_simulation(cluster_type):
+def test_update_recommendations_with_perf_profile_update(cluster_type):
     """
-    Test to replicate production environment with 3 Kruize pods scenario.
-    This test simulates the scenario where:
+    This test simulates the scenario using the below steps:
     1. Create performance profile with v1 version
     2. Call updatePerformanceProfile to update it to v2
     3. Call createExperiment
     4. Call updateResults and validate that the performance profile validation is not failing
     5. Call updateRecommendations and validate successful recommendation response
     
-    This ensures that performance profile updates are properly handled across multiple pods
-    and that validation uses the updated profile version.
+    This ensures that performance profile updates are properly handled and that validation uses the updated profile version.
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
     perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v1.json"
-    perf_profile_dir = Path(__file__).parent.parent / "json_files"
+    perf_profile_dir = get_metric_profile_dir()
     perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     
     form_kruize_url(cluster_type)
-    
-    print("\n" + "="*80)
-    print("Starting Multi-Pod Performance Profile Update Test")
-    print("="*80)
-    
+
     # Step 0: Clean up any existing experiment and profile
     print("\n[Step 0] Cleaning up existing resources...")
     response = delete_experiment(input_json_file)
@@ -1190,7 +1184,7 @@ def test_update_recommendations_with_perf_profile_update_multi_pod_simulation(cl
     
     for i in range(num_results):
         print(f"\n  [4.{i+1}] Updating result #{i+1}...")
-        update_results_json_file = f"/tmp/update_results_multi_pod_{i}.json"
+        update_results_json_file = f"/tmp/update_results_{i}.json"
         
         # Read and prepare result JSON
         result_json = read_json_data_from_file(result_json_file)
@@ -1281,7 +1275,3 @@ def test_update_recommendations_with_perf_profile_update_multi_pod_simulation(cl
         print(f"Delete performance profile response: {response.status_code}")
     except Exception as e:
         print(f"Couldn't delete performance profile: {e}")
-    
-    print("\n" + "="*80)
-    print("Multi-Pod Performance Profile Update Test Completed Successfully!")
-    print("="*80)
