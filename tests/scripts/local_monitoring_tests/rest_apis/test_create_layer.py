@@ -29,6 +29,22 @@ from helpers.utils import *
 layer_dir = get_layer_dir()
 
 
+def ensure_layer_deleted(layer_name: str) -> None:
+    """
+    Ensure a layer is deleted via the delete API.
+
+    Asserts that the delete response status code is either:
+      * 200 - layer successfully deleted
+      * 404 - layer already absent
+    Any other status code fails the test so cleanup issues surface directly.
+    """
+    response = delete_layer(layer_name)
+    assert response.status_code in (SUCCESS_200_STATUS_CODE, ERROR_404_STATUS_CODE), (
+        f"Failed to delete layer {layer_name!r}: "
+        f"expected status 200 or 404, got {response.status_code}"
+    )
+
+
 @pytest.mark.layers
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
@@ -54,7 +70,7 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
     # Create layer
     response = create_layer(input_json_file)
@@ -67,7 +83,7 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
     print(f"✓ Layer '{layer_name}' created successfully")
 
     # Cleanup: Delete layer
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 @pytest.mark.layers
@@ -95,7 +111,7 @@ def test_create_layer_with_different_presence_types(cluster_type, layer_file):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
     # Create layer
     response = create_layer(input_json_file)
@@ -109,7 +125,7 @@ def test_create_layer_with_different_presence_types(cluster_type, layer_file):
     print(f"✓ Layer '{layer_name}' created successfully")
 
     # Cleanup: Delete layer
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 @pytest.mark.layers
@@ -129,7 +145,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
     response = create_layer(input_json_file)
     data = response.json()
@@ -141,7 +157,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     print(f"✓ Layer '{layer_name}' created successfully with minimum required fields")
 
     # Cleanup: Delete layer from database
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 # =============================================================================
@@ -287,7 +303,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
         layer_name = input_json['layer_name']
 
     # Cleanup before test to ensure clean state
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
     response1 = create_layer(input_json_file)
 
@@ -302,7 +318,7 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     print(f"✓ Correctly rejected duplicate layer: {layer_name}")
 
     # Cleanup: Delete the layer that was successfully created
-    delete_layer(layer_name)
+    ensure_layer_deleted(layer_name)
 
 
 # =============================================================================
