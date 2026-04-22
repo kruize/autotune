@@ -255,7 +255,6 @@ function autotune_cleanup() {
 		echo "Cleaning up operator deployment..."
 		OPERATOR_REPO_DIR="${KRUIZE_REPO}/kruize-operator"
 		if [ -d "${OPERATOR_REPO_DIR}" ]; then
-      pushd "${OPERATOR_REPO_DIR}" > /dev/null
 			echo "Running: make undeploy"
 			echo "make undeploy-${cluster_type}"
 			make undeploy-${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
@@ -1311,6 +1310,8 @@ remove_optional_cr_blocks_for_minikube() {
 
     !skip { print }
   ' "${CR_FILE}" > "${CR_FILE}.tmp" && mv "${CR_FILE}.tmp" "${CR_FILE}"
+}
+
 ###########################################
 #   Benchmarks Install
 ###########################################
