@@ -42,7 +42,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended")
+	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "simulate_prod")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -66,14 +66,6 @@ function remote_monitoring_tests() {
 		pushd "${KRUIZE_REPO}" > /dev/null
 			kruize_remote_patch
 			echo "Removing isROSEnabled=false and local=true...done"
-
-			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-				echo "Setting up kruize...Done" | tee -a ${LOG}
-		
-			sleep 60
-
-			# create performance profile
-			create_performance_profile ${perf_profile_json}
 		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
@@ -117,11 +109,61 @@ function remote_monitoring_tests() {
 		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
-		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
+		pushd "${KRUIZE_REPO}" > /dev/null
+			TEMP_KRUIZE_YAML=""
+			ORIGINAL_KRUIZE_YAML_BACKUP=""
+			BASE_KRUIZE_YAML=""
+			if [ "${test}" == "simulate_prod" ]; then
+				echo "Configuring production-like remote monitoring setup with 3 Kruize pods" | tee -a ${LOG}
+				if [ "${cluster_type}" == "openshift" ]; then
+					BASE_KRUIZE_YAML="manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
+				elif [ "${cluster_type}" == "minikube" ] || [ "${cluster_type}" == "kind" ]; then
+					BASE_KRUIZE_YAML="manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
+				else
+					echo "ERROR: simulate_prod is not supported for cluster_type=${cluster_type}" | tee -a ${LOG}
+					exit 1
+				fi
+				TEMP_KRUIZE_YAML="/tmp/$(basename "${BASE_KRUIZE_YAML%.yaml}")-simulate-prod.yaml"
+				ORIGINAL_KRUIZE_YAML_BACKUP="/tmp/$(basename "${BASE_KRUIZE_YAML%.yaml}")-original-backup.yaml"
+				cp "${BASE_KRUIZE_YAML}" "${TEMP_KRUIZE_YAML}"
+				err_exit "ERROR: Failed to create temporary manifest for simulate_prod"
+				cp "${BASE_KRUIZE_YAML}" "${ORIGINAL_KRUIZE_YAML_BACKUP}"
+				err_exit "ERROR: Failed to create backup of original manifest for simulate_prod"
+				sed -i '/kind: Deployment/,/template:/ { /name: kruize$/,/template:/ { s/^\([[:space:]]*replicas:\)[[:space:]]*1$/\1 3/; } }' "${TEMP_KRUIZE_YAML}"
+				err_exit "ERROR: Failed to update Kruize deployment replicas to 3 for the kruize deployment in temporary manifest"
+#				sed -i '/name: kruize-db/,/ports:/ {/^[[:space:]]*resources:/,/^[[:space:]]*ports:/d}' "${TEMP_KRUIZE_YAML}"
+#				err_exit "ERROR: Failed to remove resource requests and limits for kruize-db in temporary manifest"
+#				sed -i '/name: kruize$/,/\(ports:\|#          livenessProbe:\)/ {/^[[:space:]]*resources:/,/\(^[[:space:]]*ports:\|^[[:space:]]*#          livenessProbe:\)/d}' "${TEMP_KRUIZE_YAML}"
+#				err_exit "ERROR: Failed to remove resource requests and limits for kruize in temporary manifest"
+				cp "${TEMP_KRUIZE_YAML}" "${BASE_KRUIZE_YAML}"
+				err_exit "ERROR: Failed to replace original manifest with simulate_prod manifest"
+			fi
+
+			if [ ${skip_setup} -eq 0 ]; then
+				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize...Done" | tee -a ${LOG}
+
+				sleep 60
+
+				# create performance profile
+				create_performance_profile ${perf_profile_json}
+			fi
+		popd > /dev/null
+
+		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
 			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
+		popd > /dev/null
+
+		pushd "${KRUIZE_REPO}" > /dev/null
+			if [ "${test}" == "simulate_prod" ]; then
+				if [ -n "${ORIGINAL_KRUIZE_YAML_BACKUP}" ] && [ -n "${BASE_KRUIZE_YAML}" ]; then
+					cp "${ORIGINAL_KRUIZE_YAML_BACKUP}" "${BASE_KRUIZE_YAML}"
+				fi
+				rm -f "${TEMP_KRUIZE_YAML}" "${ORIGINAL_KRUIZE_YAML_BACKUP}"
+			fi
 		popd > /dev/null
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)

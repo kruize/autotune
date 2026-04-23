@@ -25,6 +25,7 @@ from helpers.utils import *
 from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
 from helpers.long_term_list_reco_json_schema import long_term_namespace_reco_json_schema
 from helpers.medium_term_list_reco_json_schema import medium_term_namespace_reco_json_schema
+from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
 
 namespace_reco_term_input = [
     ("short_term_test_latest_true", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),
@@ -1106,7 +1107,7 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
 
 
 
-@pytest.mark.perf_profile
+@pytest.mark.simulate_prod
 def test_update_recommendations_with_perf_profile_update(cluster_type):
     """
     This test simulates the scenario using the below steps:
@@ -1115,8 +1116,10 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     3. Call createExperiment
     4. Call updateResults and validate that the performance profile validation is not failing
     5. Call updateRecommendations and validate successful recommendation response
-    
-    This ensures that performance profile updates are properly handled and that validation uses the updated profile version.
+
+    This also validates the production-like remote monitoring setup where Kruize
+    is started with 3 pods, ensuring that performance profile updates are properly
+    handled and that validation uses the updated profile version.
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -1132,7 +1135,7 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     print(f"Delete experiment response: {response.status_code}")
     
     try:
-        response = delete_performance_profile(perf_profile_v1_json_file)
+        response = delete_performance_profile(perf_profile_v2_json_file)
         print(f"Delete performance profile response: {response.status_code}")
     except Exception as e:
         print(f"Performance profile doesn't exist or couldn't be deleted: {e}")
@@ -1253,14 +1256,10 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications, \
         f"Recommendations available code not found in: {high_level_notifications}"
     
-    # Verify no errors in short term recommendations
-    data_section = recommendation_section["data"]
-    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
-    short_term_notifications = short_term_recommendation["notifications"]
-    
-    for notification_code, notification in short_term_notifications.items():
-        assert notification["type"] != "error", \
-            f"Error notification found: {notification_code} - {notification}"
+    # Validate recommendations using shared validation helpers
+    validation_output = validate_list_reco_json(list_reco_json, short_term_list_reco_json_schema)
+    assert not validation_output, \
+        f"Recommendation validation failed: {validation_output}"
     
     print("✓ Recommendations verified successfully via listRecommendations")
     
