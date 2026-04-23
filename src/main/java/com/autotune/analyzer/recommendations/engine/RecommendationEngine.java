@@ -1523,9 +1523,6 @@ public class RecommendationEngine implements RecommendationEngineService {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
-                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
-
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.acceleratorCoreUsage.toString(),
                             AnalyzerConstants.MetricName.acceleratorMemoryUsage.toString()
@@ -1534,41 +1531,31 @@ public class RecommendationEngine implements RecommendationEngineService {
                     List<String> acceleratorPartitionFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.toString()
                     );
-                    // Iterate over metrics and aggregation functions
+
+                    // Determine if accelerator metrics should be fetched
+                    boolean fetchAcceleratorMetrics = false;
+                    if (!isROS && null != containerData.getContainerDeviceList()) {
+                        fetchAcceleratorMetrics = containerData.getContainerDeviceList().isAcceleratorDeviceDetected() ||
+                                containerData.getContainerDeviceList().isAcceleratorPartitionDetected();
+                    }
+
+                    // Use the new filtering method to pre-filter metrics based on all criteria
+                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObjectAndLayers(
+                            metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(),
+                            kruizeObject.getExperimentType(),
+                            containerData,
+                            isROS,
+                            fetchAcceleratorMetrics,
+                            acceleratorFunctions,
+                            acceleratorPartitionFunctions
+                    );
+
+                    // Iterate over pre-filtered metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
-
-                        boolean isAcceleratorMetric = false;
-                        boolean fetchAcceleratorMetrics = false;
-                        boolean isAcceleratorPartitionMetric = false;
-
-                        if (acceleratorFunctions.contains(metricEntry.getName())) {
-                            isAcceleratorMetric = true;
-                        }
-
-                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
-                        if (isAcceleratorMetric && !isROS
-                                && null != containerData.getContainerDeviceList()
-                                && containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
-                            fetchAcceleratorMetrics = true;
-                        }
-
-                        if (acceleratorPartitionFunctions.contains(metricEntry.getName())) {
-                            isAcceleratorPartitionMetric = true;
-                        }
-
-                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
-                        if (isAcceleratorPartitionMetric && !isROS
-                                && null != containerData.getContainerDeviceList()
-                                && containerData.getContainerDeviceList().isAcceleratorPartitionDetected()) {
-                            fetchAcceleratorMetrics = true;
-                        }
-
-                        // Skip fetching Accelerator metrics if the workload doesn't use Accelerator
-                        if (isAcceleratorMetric && !fetchAcceleratorMetrics)
-                            continue;
-
-                        if (isAcceleratorPartitionMetric && !fetchAcceleratorMetrics)
-                            continue;
+                        // Determine metric type for this specific metric
+                        boolean isAcceleratorMetric = acceleratorFunctions.contains(metricEntry.getName());
+                        boolean isAcceleratorPartitionMetric = acceleratorPartitionFunctions.contains(metricEntry.getName());
 
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
@@ -1916,6 +1903,88 @@ public class RecommendationEngine implements RecommendationEngineService {
                             (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
                                     (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
                     );
+                })
+                .toList();
+    }
+
+    /**
+     * Filters metrics based on experiment type, kubernetes_object, detected layers, and accelerator support.
+     * This method pre-filters metrics to improve performance by avoiding iteration over irrelevant metrics.
+     *
+     * @param metricProfile                  Metric profile to be used
+     * @param maxDateQuery                   maxDateQuery metric to be filtered out
+     * @param experimentType                 experiment type
+     * @param containerData                  container data containing layer information
+     * @param isROS                          whether ROS is enabled
+     * @param fetchAcceleratorMetrics        whether accelerator metrics should be fetched
+     * @param acceleratorFunctions           list of accelerator metric names
+     * @param acceleratorPartitionFunctions  list of accelerator partition metric names
+     * @return filtered list of metrics
+     */
+    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObjectAndLayers(
+            PerformanceProfile metricProfile,
+            String maxDateQuery,
+            AnalyzerConstants.ExperimentType experimentType,
+            ContainerData containerData,
+            boolean isROS,
+            boolean fetchAcceleratorMetrics,
+            List<String> acceleratorFunctions,
+            List<String> acceleratorPartitionFunctions) {
+
+        String namespace = KruizeConstants.JSONKeys.NAMESPACE;
+        String container = KruizeConstants.JSONKeys.CONTAINER;
+
+        return metricProfile.getSloInfo().getFunctionVariables().stream()
+                .filter(metric -> {
+                    String name = metric.getName();
+                    String kubernetes_object = metric.getKubernetesObject();
+
+                    // Filter out maxDate metric
+                    if (name.equals(maxDateQuery)) {
+                        return false;
+                    }
+
+                    // Filter based on experiment type and kubernetes object
+                    boolean matchesExpType = (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
+                            (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container));
+
+                    if (!matchesExpType) {
+                        return false;
+                    }
+
+                    // Filter accelerator metrics
+                    boolean isAcceleratorMetric = acceleratorFunctions.contains(name);
+                    boolean isAcceleratorPartitionMetric = acceleratorPartitionFunctions.contains(name);
+
+                    if (isAcceleratorMetric && !fetchAcceleratorMetrics) {
+                        return false;
+                    }
+
+                    if (isAcceleratorPartitionMetric && !fetchAcceleratorMetrics) {
+                        return false;
+                    }
+
+                    // Filter based on required layers
+                    List<String> layersRequired = metric.getLayersRequired();
+                    if (layersRequired != null && !layersRequired.isEmpty()) {
+                        // Check if any of the required layers are detected
+                        boolean layerDetected = false;
+                        for (String layer : layersRequired) {
+                            if (containerData.getLayerMap() != null &&
+                                    containerData.getLayerMap().containsKey(layer)) {
+                                layerDetected = true;
+                                break;
+                            }
+                        }
+                        // Skip this metric if required layer is not detected
+                        if (!layerDetected) {
+                            LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
+                                    name, layersRequired, containerData.getContainer_name());
+                            return false;
+                        }
+                    }
+
+                    return true;
                 })
                 .toList();
     }
