@@ -729,10 +729,6 @@ public class AnalyzerConstants {
 
             // LabelBasedPresence log messages
             public static final String NO_LABELS_DEFINED = "No labels defined for layer presence detection";
-            public static final String NULL_LABEL_ENCOUNTERED = "Encountered null label in layer presence labels, skipping";
-            public static final String INVALID_LABEL_NAME = "Invalid or empty label name encountered, skipping";
-            public static final String INVALID_LABEL_VALUE = "Invalid or empty label value encountered, skipping";
-            public static final String EXECUTING_LABEL_QUERY = "Executing layer detection query via kube_pod_labels: {}";
             public static final String LAYER_DETECTED_VIA_LABEL = "Layer detected via label in namespace '{}' with label '{}={}'";
             public static final String ERROR_CHECKING_LABEL = "Error checking layer presence for label '{}={}'";
 
