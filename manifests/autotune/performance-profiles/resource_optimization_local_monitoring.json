@@ -4,7 +4,7 @@
   "metadata": {
     "name": "resource-optimization-local-monitoring"
   },
-  "profile_version": 1,
+  "profile_version": 2,
   "k8s_type": "openshift",
   "slo": {
     "slo_class": "resource_usage",
