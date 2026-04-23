@@ -16,18 +16,27 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.RecommendationHelpers;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.ServiceHelpers;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +87,6 @@ public class ListRecommendations extends HttpServlet {
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         String bulkJobID = request.getParameter(JOB_ID);
-        boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
         Timestamp monitoringEndTimestamp = null;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
 
@@ -200,21 +208,49 @@ public class ListRecommendations extends HttpServlet {
                 }
             }
             if (!error) {
-                // Use RecommendationHelpers to convert and write response
-                List<ListRecommendationsAPIObject> recommendationList =
-                        RecommendationHelpers.convertKruizeObjectsToRecommendations(
-                                kruizeObjectList,
-                                getLatest,
-                                checkForTimestamp,
-                                monitoringEndTimestamp,
-                                useV1Converter); // useV1Converter = false for standard API
-                
-                if (!recommendationList.isEmpty()) {
-                    statusValue = "success";
+                List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+                for (KruizeObject ko : kruizeObjectList) {
+                    try {
+                        ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
+                                convertKruizeObjectToListRecommendationSO(
+                                        ko,
+                                        getLatest,
+                                        checkForTimestamp,
+                                        monitoringEndTimestamp);
+                        recommendationList.add(listRecommendationsAPIObject);
+                        statusValue = "success";
+                    } catch (Exception e) {
+                        LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+                    }
                 }
-                
-                // Write response (logResponse = false)
-                RecommendationHelpers.writeRecommendationsResponse(response, recommendationList, false, useV1Converter);
+
+                ExclusionStrategy strategy = new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes field) {
+                        return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
+                                || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                };
+                String gsonStr = "[]";
+                if (recommendationList.size() > 0) {
+                    Gson gsonObj = new GsonBuilder()
+                            .disableHtmlEscaping()
+                            .setPrettyPrinting()
+                            .enableComplexMapKeySerialization()
+                            .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                            .setExclusionStrategies(strategy)
+                            .create();
+                    gsonStr = gsonObj.toJson(recommendationList);
+                }
+                response.getWriter().println(gsonStr);
+                response.getWriter().close();
             }
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
