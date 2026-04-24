@@ -118,6 +118,10 @@ slo:
     - function: avg
       query: 'avg by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
 
+    # Minimum CPU throttling per container in a deployment
+    - function: min
+      query: 'min by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+
     # Maximum CPU throttling per container in a deployment
     - function: max
       query: 'max by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
