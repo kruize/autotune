@@ -27,6 +27,7 @@ import org.hibernate.query.Query;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Collections;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -34,6 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 
 /**
  * Manages Hibernate sessions for metrics databases (db1, db2) configured in KruizeConfig.
@@ -213,6 +216,10 @@ public class MetricsDBConnectionManager {
     }
 
     public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params) {
+        return getMetricsData(metricsDbRef, sql, params, null);
+    }
+
+    public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params, List<String> resultColumns) {
         Session session = null;
         try {
             session = getSession(metricsDbRef);
@@ -221,10 +228,22 @@ public class MetricsDBConnectionManager {
                 LOGGER.error("Metric DB POC: Connection failed - {}", err);
                 return null;
             }
-            Query query = session.createNativeQuery(sql)
-                    .addScalar("interval_start_time", java.sql.Timestamp.class)
-                    .addScalar("interval_end_time", java.sql.Timestamp.class)
-                    .addScalar("value", String.class);
+            
+            NativeQuery query = session.createNativeQuery(sql);
+            
+            // Dynamically add scalars based on result_columns if provided
+            if (resultColumns != null && !resultColumns.isEmpty()) {
+                for (String columnName : resultColumns) {
+                    if (columnName.contains("time")) {
+                        query.addScalar(columnName, java.sql.Timestamp.class);
+                    } else {
+                        query.addScalar(columnName, String.class);
+                    }
+                }
+            } 
+            // No Fallback is maingto default columns for backward compatibility as the result columns sequence should match the sequence in which query params are defined in query
+                
+            
             LOGGER.error("final query = {}", query.toString());
             if (params != null) {
                 for (String key : params.keySet()) {
@@ -232,11 +251,10 @@ public class MetricsDBConnectionManager {
                 }
             }
 
-
             List<Object[]> resultList = query.getResultList();
             return resultList;
 
-        }  catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("Metric DB POC: Validation failed - {}", e);
             return null;
         } finally {
@@ -249,6 +267,7 @@ public class MetricsDBConnectionManager {
             }
         }
     }
+
 
     /**
      * Checks if a metrics database is configured.
@@ -278,4 +297,5 @@ public class MetricsDBConnectionManager {
         }
         sessionFactoryMap.clear();
     }
+
 }
