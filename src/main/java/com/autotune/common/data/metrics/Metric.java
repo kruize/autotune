@@ -34,6 +34,10 @@ import java.util.*;
 public final class Metric {
     private String name;
     private String query;
+    @SerializedName("query_params")
+    private List<String> queryParams;
+    @SerializedName("result_columns")
+    private List<String> resultColumns;
     private String datasource;
     @SerializedName("value_type")
     private String valueType;
@@ -68,6 +72,22 @@ public final class Metric {
         return query;
     }
 
+    public List<String> getQueryParams() {
+        return queryParams;
+    }
+
+    public void setQueryParams(List<String> queryParams) {
+        this.queryParams = queryParams;
+    }
+// Adding Result columns - unified query change start
+    public List<String> getResultColumns() {
+        return resultColumns;
+    }
+
+    public void setResultColumns(List<String> resultColumns) {
+        this.resultColumns = resultColumns;
+    }
+// Adding Result columns - unified query change end 
     public String getDatasource() {
         return datasource;
     }
@@ -137,37 +157,62 @@ public final class Metric {
         return aggregationFunctions != null ? aggregationFunctions.getQueryParams() : null;
     }
 
+    /**
+     * Get result columns for a specific aggregation function query.
+     * Primary: Returns explicit result_columns from the aggregation function definition.
+     * Fallback: Returns function name as column (for old profiles without result_columns).
+     *
+     * @param function The aggregation function name (e.g., "avg", "sum")
+     * @return List of column names that the query returns, or null if function not found
+     */
+    public List<String> getResultColumns(String function) {
+        if (aggregationFunctionsMap == null) {
+            return null;
+        }
+        AggregationFunctions aggregationFunctions = aggregationFunctionsMap.get(function);
+        if (aggregationFunctions == null) {
+            return null;
+        }
+        
+        // Primary: Use explicit result_columns from profile
+        List<String> funcResultColumns = aggregationFunctions.getResultColumns();
+        if (funcResultColumns != null && !funcResultColumns.isEmpty()) {
+            return funcResultColumns;
+        }
+        
+        // Fallback: For old profiles without result_columns, assume column name = function name
+        // This maintains backward compatibility until all profiles are updated
+        return Collections.singletonList(function);
+    }
+
     public Set<String> getAggregationFunctions() {
         if (aggregationFunctionsMap == null) {
             return Collections.emptySet();
         }
         return aggregationFunctionsMap.keySet();
     }
-// change added 
-    public boolean hasUnifiedQuery() {
-    // Unified query exists if query field is populated at metric level
-    // AND we have aggregation_functions to know what columns to expect
-    return query != null &&
-           !query.isEmpty() &&
-           aggregationFunctionsMap != null &&
-           !aggregationFunctionsMap.isEmpty();
-}
 
-    // Helper to get expected result columns from aggregation_functions
+    /**
+     * Get expected result columns for unified query at metric level.
+     * Primary: Returns explicit result_columns from the metric definition.
+     * Fallback: Derives from aggregation function names (for old profiles without result_columns).
+     *
+     * For unified queries, result_columns explicitly defines what columns the query returns.
+     * Example: ["avg", "sum", "min", "max"] for a query that returns all these aggregates.
+     *
+     * @return List of column names that the unified query returns
+     */
     public List<String> getExpectedResultColumns() {
+        // Primary: Use explicit result_columns from profile (for unified queries)
+        if (resultColumns != null && !resultColumns.isEmpty()) {
+            return resultColumns;
+        }
+        
+        // Fallback: For old profiles without result_columns, derive from aggregation function keys
+        // This maintains backward compatibility until all profiles are updated with result_columns
         if (aggregationFunctionsMap == null) {
             return Collections.emptyList();
         }
         return new ArrayList<>(aggregationFunctionsMap.keySet());
-    }
-
-    // Helper to get query_params from aggregation_functions 
-    public List<String> getUnifiedQueryParams() {
-        if (aggregationFunctionsMap == null || aggregationFunctionsMap.isEmpty()) {
-            return Collections.emptyList();
-        }
-        // Get query_params from first aggregation function
-        AggregationFunctions firstFunc = aggregationFunctionsMap.values().iterator().next();
-        return firstFunc.getQueryParams();
     }
 }

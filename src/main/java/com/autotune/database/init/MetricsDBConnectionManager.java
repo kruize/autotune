@@ -216,6 +216,10 @@ public class MetricsDBConnectionManager {
     }
 
     public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params) {
+        return getMetricsData(metricsDbRef, sql, params, null);
+    }
+
+    public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params, List<String> resultColumns) {
         Session session = null;
         try {
             session = getSession(metricsDbRef);
@@ -224,10 +228,22 @@ public class MetricsDBConnectionManager {
                 LOGGER.error("Metric DB POC: Connection failed - {}", err);
                 return null;
             }
-            Query query = session.createNativeQuery(sql)
-                    .addScalar("interval_start_time", java.sql.Timestamp.class)
-                    .addScalar("interval_end_time", java.sql.Timestamp.class)
-                    .addScalar("value", String.class);
+            
+            NativeQuery query = session.createNativeQuery(sql);
+            
+            // Dynamically add scalars based on result_columns if provided
+            if (resultColumns != null && !resultColumns.isEmpty()) {
+                for (String columnName : resultColumns) {
+                    if (columnName.contains("time")) {
+                        query.addScalar(columnName, java.sql.Timestamp.class);
+                    } else {
+                        query.addScalar(columnName, String.class);
+                    }
+                }
+            } 
+            // No Fallback is maingto default columns for backward compatibility as the result columns sequence should match the sequence in which query params are defined in query
+                
+            
             LOGGER.error("final query = {}", query.toString());
             if (params != null) {
                 for (String key : params.keySet()) {
@@ -235,11 +251,10 @@ public class MetricsDBConnectionManager {
                 }
             }
 
-
             List<Object[]> resultList = query.getResultList();
             return resultList;
 
-        }  catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.error("Metric DB POC: Validation failed - {}", e);
             return null;
         } finally {
@@ -252,56 +267,7 @@ public class MetricsDBConnectionManager {
             }
         }
     }
-// change added getUnifiedMetricsData
-    public List<Object[]> getUnifiedMetricsData(String metricsDbRef,String sql,Map<String, String> params,List<String> expectedFunctions) {
 
-    Session session = null;
-    try {
-        session = getSession(metricsDbRef);
-        if (session == null) {
-            LOGGER.error("Metrics DB '{}' not configured", metricsDbRef);
-            return Collections.emptyList(); 
-        }
-
-        NativeQuery query = session.createNativeQuery(sql)
-                .addScalar("interval_start_time", java.sql.Timestamp.class)
-                .addScalar("interval_end_time", java.sql.Timestamp.class);
-
-        for (String function : expectedFunctions) {
-            query.addScalar(function + "_value", String.class);
-        }
-
-        if (params != null) {
-        for (String key : params.keySet()) {
-            if (!sql.contains(":" + key)) {
-                LOGGER.debug("Skipping unused param: {}", key);
-                continue;
-            }
-            query.setParameter(key, params.get(key));
-        }
-}
-
-        List<Object[]> resultList = query.getResultList();
-
-        if (resultList == null || resultList.isEmpty()) {
-            LOGGER.warn("No results returned for unified query. DB: {}, SQL: {}", metricsDbRef, sql);
-        }
-
-        return resultList;
-
-    } catch (Exception e) {
-        LOGGER.error("Unified query execution failed", e);
-        return Collections.emptyList(); 
-    } finally {
-        if (session != null) {
-            try {
-                session.close();
-            } catch (Exception e) {
-                LOGGER.error("Error closing session", e);
-            }
-        }
-    }
-}
 
     /**
      * Checks if a metrics database is configured.

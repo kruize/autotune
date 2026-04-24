@@ -419,6 +419,27 @@ public class Converters {
                             String valueType = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, null);
                             String kubeObject = functionVarObj.optString(AnalyzerConstants.KUBERNETES_OBJECT, null);
                             Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
+                            
+                            // Extract metric-level query_params
+                            JSONArray metricQueryParamsArray = functionVarObj.optJSONArray(KruizeConstants.JSONKeys.QUERY_PARAMS);
+                            if (metricQueryParamsArray != null) {
+                                List<String> metricQueryParams = new ArrayList<>();
+                                for (Object param : metricQueryParamsArray) {
+                                    metricQueryParams.add((String) param);
+                                }
+                                metric.setQueryParams(metricQueryParams);
+                            }
+                            
+                            // Extract metric-level result_columns (for unified queries)
+                            JSONArray metricResultColumnsArray = functionVarObj.optJSONArray(KruizeConstants.JSONKeys.RESULT_COLUMNS);
+                            if (metricResultColumnsArray != null) {
+                                List<String> metricResultColumns = new ArrayList<>();
+                                for (Object column : metricResultColumnsArray) {
+                                    metricResultColumns.add((String) column);
+                                }
+                                metric.setResultColumns(metricResultColumns);
+                            }
+                            
                             JSONArray aggrFunctionArray = functionVarObj.optJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
                             if (aggrFunctionArray != null) {
                                 HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
@@ -436,6 +457,17 @@ public class Converters {
                                             }
                                         }
                                         AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version, queryParams);
+                                        
+                                        // Extract aggregation function-level result_columns
+                                        JSONArray funcResultColumnsArray = aggrFuncJsonObject.optJSONArray(KruizeConstants.JSONKeys.RESULT_COLUMNS);
+                                        if (funcResultColumnsArray != null) {
+                                            List<String> funcResultColumns = new ArrayList<>();
+                                            for (Object column : funcResultColumnsArray) {
+                                                funcResultColumns.add((String) column);
+                                            }
+                                            aggregationFunctions.setResultColumns(funcResultColumns);
+                                        }
+                                        
                                         aggregationFunctionsMap.put(function, aggregationFunctions);
                                     } catch (Exception e) {
                                         LOGGER.info(e.getMessage());
