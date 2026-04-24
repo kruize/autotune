@@ -1121,12 +1121,19 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     is started with 3 pods, ensuring that performance profile updates are properly
     handled and that validation uses the updated profile version.
     """
-    input_json_file = "../json_files/create_exp.json"
-    result_json_file = "../json_files/update_results.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
+    result_json_file = "../json_files/update_results_namespace.json"
     perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v1.json"
     perf_profile_dir = get_metric_profile_dir()
     perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
-    
+
+    find = []
+    json_data = json.load(open(input_json_file))
+    print("json_data: ", json_data)
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespaces']['namespace'])
+
     form_kruize_url(cluster_type)
 
     # Step 0: Clean up any existing experiment and profile
@@ -1161,110 +1168,108 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     assert "updated successfully to version 2.0" in data.get('message', '') or \
            UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
     print("✓ Performance profile updated to v2 successfully")
-    
-    # Step 3: Create experiment using the updated performance profile
-    print("\n[Step 3] Creating experiment with updated performance profile...")
-    response = create_experiment(input_json_file)
-    data = response.json()
-    print(f"Create experiment response: {response.status_code}")
-    print(f"Response: {data}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_EXP_SUCCESS_MSG
-    
-    # Get experiment name for later use
-    json_data = json.load(open(input_json_file))
-    experiment_name = json_data[0]['experiment_name']
-    print(f"✓ Experiment '{experiment_name}' created successfully")
-    
-    # Step 4: Update results and validate performance profile validation is not failing
-    print("\n[Step 4] Updating results with performance profile v2 validation...")
-    
-    # Generate multiple result updates to simulate real scenario
-    num_results = 3
-    result_json_arr = []
-    interval_start_time = get_datetime()
-    
-    for i in range(num_results):
-        print(f"\n  [4.{i+1}] Updating result #{i+1}...")
-        update_results_json_file = f"/tmp/update_results_{i}.json"
-        
-        # Read and prepare result JSON
-        result_json = read_json_data_from_file(result_json_file)
-        
-        if i == 0:
-            start_time = interval_start_time
-        else:
-            start_time = end_time
-        
-        result_json[0]['interval_start_time'] = start_time
-        end_time = increment_timestamp_by_given_mins(start_time, 15)
-        result_json[0]['interval_end_time'] = end_time
-        
-        write_json_data_to_file(update_results_json_file, result_json)
-        result_json_arr.append(result_json[0])
-        
-        # Update results - this should validate against the UPDATED v2 profile
-        response = update_results(update_results_json_file, False)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 2
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        # Delete the experiment
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        # Create the experiment
+        response = create_experiment(create_exp_json_file)
+
         data = response.json()
-        print(f"  Update results response: {response.status_code}")
-        
-        # Validate that the update succeeded (performance profile validation passed)
-        assert response.status_code == SUCCESS_STATUS_CODE, \
-            f"Update results failed with status {response.status_code}: {data}"
-        assert data['status'] == SUCCESS_STATUS, \
-            f"Update results status is not SUCCESS: {data}"
-        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG, \
-            f"Update results message unexpected: {data.get('message')}"
-        print(f"  ✓ Result #{i+1} updated successfully - performance profile v2 validation passed")
-    
-    print("\n✓ All results updated successfully with performance profile v2 validation")
-    
-    # Step 5: Update recommendations and validate successful response
-    print("\n[Step 5] Updating recommendations...")
-    response = update_recommendations(experiment_name, None, end_time)
-    print(f"Update recommendations response: {response.status_code}")
-    data = response.json()
-    print(f"Response summary: experiment_name={data[0].get('experiment_name')}")
-    
-    assert response.status_code == SUCCESS_STATUS_CODE, \
-        f"Update recommendations failed with status {response.status_code}: {data}"
-    assert data[0]['experiment_name'] == experiment_name, \
-        f"Experiment name mismatch: expected {experiment_name}, got {data[0].get('experiment_name')}"
-    
-    # Validate recommendations are available
-    recommendations = data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
-    notifications = recommendations.get('notifications', {})
-    assert '111000' in notifications, \
-        f"Recommendations notification code 111000 not found in: {notifications}"
-    assert notifications['111000']['message'] == RECOMMENDATIONS_AVAILABLE, \
-        f"Recommendations message unexpected: {notifications['111000'].get('message')}"
-    
-    print("✓ Recommendations updated successfully")
-    
-    # Verify recommendations with list API
-    print("\n[Step 5.1] Verifying recommendations via listRecommendations...")
-    response = list_recommendations(experiment_name, rm=True)
-    assert response.status_code == SUCCESS_200_STATUS_CODE, \
-        f"List recommendations failed with status {response.status_code}"
-    
-    list_reco_json = response.json()
-    recommendation_section = list_reco_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
-    high_level_notifications = recommendation_section["notifications"]
-    
-    # Verify recommendations are available
-    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications, \
-        f"Recommendations available code not found in: {high_level_notifications}"
-    
-    # Validate recommendations using shared validation helpers
-    validation_output = validate_list_reco_json(list_reco_json, short_term_list_reco_json_schema)
-    assert not validation_output, \
-        f"Recommendation validation failed: {validation_output}"
-    
-    print("✓ Recommendations verified successfully via listRecommendations")
-    
-    # Clean up
-    print("\n[Cleanup] Removing test resources...")
-    response = delete_experiment(input_json_file)
-    print(f"Delete experiment response: {response.status_code}")
-    assert response.status_code == SUCCESS_STATUS_CODE
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+        interval_start_time = get_datetime()
+        for j in range(num_res):
+            update_timestamps = True
+            generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            write_json_data_to_file(update_results_json_file, result_json)
+            result_json_arr.append(result_json[0])
+            response = update_results(update_results_json_file, False)
+
+            data = response.json()
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+            # Expecting that we have recommendations
+            if j > 1:
+                response = update_recommendations(experiment_name, None, end_time)
+                data = response.json()
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data[0]['experiment_name'] == experiment_name
+                assert data[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][
+                           INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                           'message'] == RECOMMENDATIONS_AVAILABLE
+                response = list_recommendations(experiment_name, rm=True)
+                if response.status_code == SUCCESS_200_STATUS_CODE:
+                    recommendation_json = response.json()
+                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["namespaces"][
+                        "recommendations"]
+                    high_level_notifications = recommendation_section["notifications"]
+                    # Check if duration
+                    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                    data_section = recommendation_section["data"]
+                    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+                    short_term_notifications = short_term_recommendation["notifications"]
+                    for notification in short_term_notifications.values():
+                        assert notification["type"] != "error"
+
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        assert data[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][
+                   INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                   'message'] == RECOMMENDATIONS_AVAILABLE
+
+        # Invoke list recommendations for the specified experiment
+        response = list_recommendations(experiment_name, rm=True)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
+
+        # Validate the json against the json schema
+        error_msg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
+        assert error_msg == ""
+
+        # Validate the json values
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        update_results_json = [result_json_arr[len(result_json_arr) - 1]]
+
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+    # Delete all the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
