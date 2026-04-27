@@ -112,36 +112,38 @@ function remote_monitoring_tests() {
 		pushd "${KRUIZE_REPO}" > /dev/null
 			TEMP_KRUIZE_YAML=""
 			ORIGINAL_KRUIZE_YAML_BACKUP=""
-			BASE_KRUIZE_YAML=""
-			if [ "${test}" == "simulate_prod" ]; then
-				echo "Configuring production-like remote monitoring setup with 3 Kruize pods" | tee -a ${LOG}
-				if [ "${cluster_type}" == "openshift" ]; then
-					BASE_KRUIZE_YAML="manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
-				elif [ "${cluster_type}" == "minikube" ] || [ "${cluster_type}" == "kind" ]; then
-					BASE_KRUIZE_YAML="manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
-				else
-					echo "ERROR: simulate_prod is not supported for cluster_type=${cluster_type}" | tee -a ${LOG}
-					exit 1
-				fi
-				TEMP_KRUIZE_YAML="/tmp/$(basename "${BASE_KRUIZE_YAML%.yaml}")-simulate-prod.yaml"
-				ORIGINAL_KRUIZE_YAML_BACKUP="/tmp/$(basename "${BASE_KRUIZE_YAML%.yaml}")-original-backup.yaml"
-				cp "${BASE_KRUIZE_YAML}" "${TEMP_KRUIZE_YAML}"
-				err_exit "ERROR: Failed to create temporary manifest for simulate_prod"
-				cp "${BASE_KRUIZE_YAML}" "${ORIGINAL_KRUIZE_YAML_BACKUP}"
-				err_exit "ERROR: Failed to create backup of original manifest for simulate_prod"
-				sed -i '/kind: Deployment/,/template:/ { /name: kruize$/,/template:/ { s/^\([[:space:]]*replicas:\)[[:space:]]*1$/\1 3/; } }' "${TEMP_KRUIZE_YAML}"
-				err_exit "ERROR: Failed to update Kruize deployment replicas to 3 for the kruize deployment in temporary manifest"
-#				sed -i '/name: kruize-db/,/ports:/ {/^[[:space:]]*resources:/,/^[[:space:]]*ports:/d}' "${TEMP_KRUIZE_YAML}"
-#				err_exit "ERROR: Failed to remove resource requests and limits for kruize-db in temporary manifest"
-#				sed -i '/name: kruize$/,/\(ports:\|#          livenessProbe:\)/ {/^[[:space:]]*resources:/,/\(^[[:space:]]*ports:\|^[[:space:]]*#          livenessProbe:\)/d}' "${TEMP_KRUIZE_YAML}"
-#				err_exit "ERROR: Failed to remove resource requests and limits for kruize in temporary manifest"
-				cp "${TEMP_KRUIZE_YAML}" "${BASE_KRUIZE_YAML}"
-				err_exit "ERROR: Failed to replace original manifest with simulate_prod manifest"
-			fi
-
 			if [ ${skip_setup} -eq 0 ]; then
 				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 				echo "Setting up kruize...Done" | tee -a ${LOG}
+
+				# Scale up Kruize deployment to 3 replicas for simulate_prod test
+				if [ "${test}" == "simulate_prod" ]; then
+					# Determine namespace based on cluster type
+					if [ "${cluster_type}" == "openshift" ]; then
+						KRUIZE_NAMESPACE="openshift-tuning"
+					else
+						KRUIZE_NAMESPACE="monitoring"
+					fi
+
+					echo "Scaling Kruize deployment to 3 replicas for production-like setup in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
+					kubectl scale deployment kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+					err_exit "ERROR: Failed to scale Kruize deployment to 3 replicas"
+
+					# Wait for all 3 pods to be ready
+					echo "Waiting for all 3 Kruize pods to be ready..." | tee -a ${LOG}
+					kubectl wait --for=condition=ready pod -l app=kruize -n ${KRUIZE_NAMESPACE} --timeout=300s 2>&1 | tee -a ${LOG}
+					err_exit "ERROR: Kruize pods did not become ready in time"
+
+					# Verify 3 pods are running
+					KRUIZE_POD_COUNT=$(kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize --no-headers 2>/dev/null | wc -l | tr -d ' ')
+					if [ "${KRUIZE_POD_COUNT}" -ne "3" ]; then
+						echo "ERROR: Expected 3 Kruize pods but found ${KRUIZE_POD_COUNT}" | tee -a ${LOG}
+						kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
+						exit 1
+					fi
+					echo "✓ Successfully scaled Kruize deployment to 3 replicas" | tee -a ${LOG}
+					kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
+				fi
 
 				sleep 60
 
@@ -158,11 +160,18 @@ function remote_monitoring_tests() {
 		popd > /dev/null
 
 		pushd "${KRUIZE_REPO}" > /dev/null
+			# Scale down Kruize deployment back to 1 replica after simulate_prod test
 			if [ "${test}" == "simulate_prod" ]; then
-				if [ -n "${ORIGINAL_KRUIZE_YAML_BACKUP}" ] && [ -n "${BASE_KRUIZE_YAML}" ]; then
-					cp "${ORIGINAL_KRUIZE_YAML_BACKUP}" "${BASE_KRUIZE_YAML}"
+				# Determine namespace based on cluster type
+				if [ "${cluster_type}" == "openshift" ]; then
+					KRUIZE_NAMESPACE="openshift-tuning"
+				else
+					KRUIZE_NAMESPACE="monitoring"
 				fi
-				rm -f "${TEMP_KRUIZE_YAML}" "${ORIGINAL_KRUIZE_YAML_BACKUP}"
+				
+				echo "Scaling Kruize deployment back to 1 replica in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
+				kubectl scale deployment kruize --replicas=1 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+				echo "✓ Kruize deployment scaled back to 1 replica" | tee -a ${LOG}
 			fi
 		popd > /dev/null
 
