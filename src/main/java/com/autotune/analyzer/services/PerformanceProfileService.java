@@ -76,7 +76,7 @@ public class PerformanceProfileService extends HttpServlet {
     }
 
     /**
-     * Validate and create new Performance Profile.
+     * Validate and create a new Performance Profile.
      *
      * @param request
      * @param response
@@ -92,8 +92,6 @@ public class PerformanceProfileService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
-                    performanceProfilesMap.put(performanceProfile.getName(), performanceProfile);
-                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());
                     sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getName() + " created successfully.");
@@ -187,8 +185,6 @@ public class PerformanceProfileService extends HttpServlet {
                 if (updatedInDB.isSuccess()) {
                     LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                             profileName, incomingPerfProfile.getProfile_version()));
-                    performanceProfilesMap.put(incomingPerfProfile.getName(), incomingPerfProfile);
-                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     sendSuccessResponse(
                             response,
                             String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
@@ -248,7 +244,6 @@ public class PerformanceProfileService extends HttpServlet {
                 return;
             }
             // remove the profile from the local storage as well
-            performanceProfilesMap.remove(perfProfileName);
             PerformanceProfileCache.remove(perfProfileName);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
