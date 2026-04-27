@@ -185,11 +185,10 @@ public class PerformanceProfileService extends HttpServlet {
                 if (updatedInDB.isSuccess()) {
                     LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                             profileName, incomingPerfProfile.getProfile_version()));
-                    sendSuccessResponse(
-                            response,
-                            String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
-                                    profileName, incomingPerfProfile.getProfile_version())
-                    );
+                    String message = String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
+                                    profileName, incomingPerfProfile.getProfile_version());
+                    message += " View Performance Profiles at /listPerformanceProfiles";
+                    sendJsonResponse(response, message, HttpServletResponse.SC_OK, "SUCCESS");
                 } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, updatedInDB.getMessage());
                 }
@@ -245,7 +244,9 @@ public class PerformanceProfileService extends HttpServlet {
             }
             // remove the profile from the local storage as well
             PerformanceProfileCache.remove(perfProfileName);
-            sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
+            String message = String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName);
+            message += " View Performance Profiles at /listPerformanceProfiles";
+            sendJsonResponse(resp, message, HttpServletResponse.SC_OK, "SUCCESS");
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
             sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
