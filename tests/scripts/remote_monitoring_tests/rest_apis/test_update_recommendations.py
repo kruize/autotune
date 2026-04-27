@@ -1182,7 +1182,7 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     print(f"Create performance profile v1 response: {response.status_code}")
     data = response.json()
     print(f"Response: {data}")
-    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_STATUS_CODE
     assert CREATE_PERF_PROFILE_SUCCESS_MSG % "resource-optimization-openshift" in data.get('message', '')
     print("✓ Performance profile v1 created successfully")
     
@@ -1236,14 +1236,14 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     print("\n[Step 4] listing performance profiles...")
     response = list_performance_profiles()
     print(response.status_code)
-    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     # Step 5: Update the performance profile to v2
     print("\n[Step 5] Updating performance profile to v2...")
     response = update_performance_profile(perf_profile_v2_json_file)
     print(f"Update performance profile v2 response: {response.status_code}")
     data = response.json()
     print(f"Response: {data}")
-    assert response.status_code == SUCCESS_STATUS_CODE or response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     # Check for the update success message with version 2.0
     assert "updated successfully to version 2.0" in data.get('message', '') or \
            UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
