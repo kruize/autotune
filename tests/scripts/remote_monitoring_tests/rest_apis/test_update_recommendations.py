@@ -1232,6 +1232,14 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
     print("✓ Container experiment results updated successfully with v1 profile")
     
+    # Update recommendations for container experiment
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    print(f"Container update recommendations response: {response.status_code}")
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    print("✓ Container experiment recommendations updated successfully")
+    
     # Step 4: check the performance profile in DB
     print("\n[Step 4] listing performance profiles...")
     response = list_performance_profiles()
@@ -1272,6 +1280,14 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
     print("✓ Namespace experiment results updated successfully with v2 profile")
+    
+    # Update recommendations for namespace experiment
+    response = update_recommendations(experiment_name, None, namespace_end_time)
+    data = response.json()
+    print(f"Namespace update recommendations response: {response.status_code}")
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    print("✓ Namespace experiment recommendations updated successfully")
 
     # Step 7: Update results for GPU experiment (with v2 profile)
     print("\n[Step 7] Updating results for GPU experiment (with v2 profile)...")
@@ -1297,6 +1313,15 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
     print("✓ GPU experiment results updated successfully with v2 profile")
+    
+    # Step 8: Update recommendations for GPU experiment
+    print("\n[Step 8] Updating recommendations for GPU experiment...")
+    response = update_recommendations(experiment_name, None, gpu_end_time)
+    data = response.json()
+    print(f"GPU update recommendations response: {response.status_code}")
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    print("✓ GPU experiment recommendations updated successfully")
     
     # Cleanup: Delete all experiments
     print("\n[Cleanup] Deleting all experiments...")
