@@ -1,0 +1,44 @@
+name: kruize-bulk-api-test
+http:
+  host: kruize-api-route-openshift-tuning.apps.cluster-t8nrj.t8nrj.sandbox312.opentlc.com
+  
+phases:
+- main:
+    constantRate:
+      usersPerSec: 1
+      duration: 1s
+      scenario:
+      - bulk-test:
+        # Create bulk job
+        - httpRequest:
+            POST: /bulk
+            headers:
+              Content-Type: application/json
+            body: |
+              {
+                "datasource": "prometheus-1",
+                "metadata_profile": "cluster-metadata-local-monitoring",
+                "measurement_duration": "24h"
+              }
+            handler:
+              status:
+                store: bulk.success
+              body:
+                - json:
+                    query: .job_id
+                    toVar: job.id
+        
+        # Wait a bit before checking status
+        - thinkTime: 3s
+        
+        # Check status once
+        - httpRequest:
+            GET: /bulk?job_id=${job.id}
+            handler:
+              body:
+                - json:
+                    query: .summary.status
+                    toVar: job.status
+                - json:
+                    query: .summary.total_experiments
+                    toVar: total.experiments
