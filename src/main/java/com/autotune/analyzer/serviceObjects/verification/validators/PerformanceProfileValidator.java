@@ -28,8 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
 
@@ -49,7 +50,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
          and then validate the Performance Profile data
         */
         try {
-            ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+            Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
             String performanceProfileName = kruizeObject.getPerformanceProfile();
             try {
