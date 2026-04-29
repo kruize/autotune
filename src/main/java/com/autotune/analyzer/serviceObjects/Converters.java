@@ -8,9 +8,7 @@ import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
-import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
-import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -654,8 +652,7 @@ public class Converters {
              * - Config / Variation support replicas + nested resources
              * - TermRecommendations supports metrics_info
              *
-             * So the V1 conversion here starts from the standard recommendation conversion and
-             * then normalizes the recommendation payload to the V1 semantics:
+             * So the V1 conversion here starts from the standard recommendation conversion
              * - pods_count -> replicas
              * - metrics_info.pod_count populated from the existing term metrics
              * - nested resources retained under resources.{limits,requests}
@@ -673,7 +670,9 @@ public class Converters {
                         for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                             ContainerRecommendations containerRecommendations = containerAPIObject.getContainerRecommendations();
                             for (MappedRecommendationForTimestamp mappedRecommendationForTimestamp : containerRecommendations.getData().values()) {
-                                nullifyRequestsLimitsAndPodCount(mappedRecommendationForTimestamp);
+                                // Nullify requests and limits in current config
+                                mappedRecommendationForTimestamp.getCurrentConfig().setRequests(null);
+                                mappedRecommendationForTimestamp.getCurrentConfig().setLimits(null);
                             }
                         }
                     }
@@ -682,7 +681,9 @@ public class Converters {
                     if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
                         NamespaceRecommendations namespaceRecommendations = kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations();
                         for (MappedRecommendationForTimestamp mappedRecommendationForTimestamp : namespaceRecommendations.getData().values()) {
-                            nullifyRequestsLimitsAndPodCount(mappedRecommendationForTimestamp);
+                            // Nullify requests and limits in current config
+                            mappedRecommendationForTimestamp.getCurrentConfig().setRequests(null);
+                            mappedRecommendationForTimestamp.getCurrentConfig().setLimits(null);
                         }
                     }
                 }
@@ -692,34 +693,6 @@ public class Converters {
             }
 
             return listRecommendationsAPIObject;
-        }
-
-        /**
-         * Helper method to set requests, limits, and pod_count to null in the recommendation structure
-         * to match V1 API structure.
-         *
-         * @param mappedRecommendationForTimestamp The recommendation object to modify
-         */
-        private static void nullifyRequestsLimitsAndPodCount(MappedRecommendationForTimestamp mappedRecommendationForTimestamp) {
-            // Nullify requests and limits in current config
-            mappedRecommendationForTimestamp.getCurrentConfig().setRequests(null);
-            mappedRecommendationForTimestamp.getCurrentConfig().setLimits(null);
-
-            // Traverse through all term recommendations
-            for (TermRecommendations termRecommendations : mappedRecommendationForTimestamp.getRecommendationForTermHashMap().values()) {
-                for (MappedRecommendationForModel mappedRecommendationForModel : termRecommendations.getRecommendationForModelHashMap().values()) {
-                    // Set pod_count to 0
-                    mappedRecommendationForModel.setPodsCount(0);
-
-                    // Nullify requests and limits in config
-                    mappedRecommendationForModel.getConfig().setRequests(null);
-                    mappedRecommendationForModel.getConfig().setLimits(null);
-
-                    // Nullify requests and limits in variation
-                    mappedRecommendationForModel.getVariation().setRequests(null);
-                    mappedRecommendationForModel.getVariation().setLimits(null);
-                }
-            }
         }
 
 

@@ -1059,6 +1059,12 @@ public class RecommendationEngine implements RecommendationEngineService {
             config.setLimits(limitsMap);
         }
 
+        // set the resources map
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        resources.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+        resources.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+        config.setResources(resources);
+
         // Set Config
         recommendationModel.setConfig(config);
 

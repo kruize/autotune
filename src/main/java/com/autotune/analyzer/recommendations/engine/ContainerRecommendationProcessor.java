@@ -169,6 +169,12 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         if (!currentLimitsMap.isEmpty()) {
             currentConfig.setLimits(currentLimitsMap);
         }
+        // set the resources map
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        resources.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+        resources.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+        currentConfig.setResources(resources);
+
         return currentConfig;
     }
 
