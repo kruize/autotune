@@ -754,7 +754,7 @@ This is quick guide instructions to update performance profile using input JSON 
 ```
 {
     "message": "Performance Profile : <name> updated successfully to version <new-version>. View all performance profiles at /listPerformanceProfiles",
-    "httpcode": 201,
+    "httpcode": 200,
     "documentationLink": "",
     "status": "SUCCESS"
 }
@@ -777,7 +777,7 @@ This is quick guide instructions to delete performance profile using input param
 
 `DELETE /deletePerformanceProfile`
 
-`curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/deletePerformanceProfile?name=resource-optimization-openshift`
+`curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/deletePerformanceProfile?name=<name>`
 
 Deletes the specified performance profile, provided it is already created
 
@@ -787,8 +787,8 @@ Deletes the specified performance profile, provided it is already created
 
 ```json
 {
-  "message": "Performance profile resource-optimization-openshift deleted successfully. View Performance Profiles at /listPerformanceProfiles",
-  "httpcode": 201,
+  "message": "Performance profile <name> deleted successfully. View Performance Profiles at /listPerformanceProfiles",
+  "httpcode": 200,
   "documentationLink": "",
   "status": "SUCCESS"
 }
