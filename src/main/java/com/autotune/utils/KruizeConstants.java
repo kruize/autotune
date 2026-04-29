@@ -42,8 +42,7 @@ public class KruizeConstants {
     }
 
     public static enum KRUIZE_RECOMMENDATION_API_VERSION {
-        V1_0("1.0"),
-        LATEST("1.0");
+        LATEST("v1.0");
         private final String versionNumber;
 
         KRUIZE_RECOMMENDATION_API_VERSION(String versionNumber) {
