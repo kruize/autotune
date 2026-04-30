@@ -1110,20 +1110,21 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
 
 
 @pytest.mark.simulate_prod
-def test_update_recommendations_with_perf_profile_update(cluster_type):
+def test_update_recommendations_with_perf_profile_single_pod(cluster_type):
     """
-    This test simulates the scenario using the below steps:
+    Test 1: Single pod test - validates basic performance profile update flow.
+    This test runs with a single Kruize pod and validates:
     1. Create performance profile with v1 version
     2. Create 3 experiments (container, namespace, GPU)
     3. Update results for container experiment (validates with v1 profile)
     4. Update performance profile to v2
-    5. Update results for container experiment again (validates with v2 profile)
-    6. Update results for namespace experiment (validates with v2 profile)
-    7. Update results for GPU experiment (validates with v2 profile)
+    5. Update results for namespace experiment (validates with v2 profile)
+    6. Update results for GPU experiment (validates with v2 profile)
+    7. Cleanup: Delete all experiments
 
     This validates that performance profile updates are properly handled across
     different experiment types and that validation uses the updated profile version.
-    
+
     Experiments created:
     - Container experiment: Monitors individual container resources (CPU, memory)
     - Namespace experiment: Monitors namespace-level aggregated resources
@@ -1136,24 +1137,27 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
             "input_json": "../json_files/create_exp.json",
             "result_json": "../json_files/update_results.json",
             "exp_file": "/tmp/create_exp_container.json",
-            "result_file": "/tmp/update_results_container.json"
+            "result_file": "/tmp/update_results_container.json",
+            "json_schema": short_term_list_reco_json_schema
         },
         {
             "name": "namespace",
             "input_json": "../json_files/create_exp_namespace.json",
             "result_json": "../json_files/update_results_namespace.json",
             "exp_file": "/tmp/create_exp_namespace.json",
-            "result_file": "/tmp/update_results_namespace.json"
+            "result_file": "/tmp/update_results_namespace.json",
+            "json_schema": list_reco_namespace_json_local_monitoring_schema
         },
         {
             "name": "gpu",
             "input_json": "../json_files/create_exp.json",
             "result_json": "../json_files/update_results_accelerator.json",
             "exp_file": "/tmp/create_exp_gpu.json",
-            "result_file": "/tmp/update_results_gpu.json"
+            "result_file": "/tmp/update_results_gpu.json",
+            "json_schema": short_term_list_reco_json_schema
         }
     ]
-    
+
     perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v1.json"
     perf_profile_dir = get_metric_profile_dir()
     perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
@@ -1168,85 +1172,9 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
             print(f"Delete {exp['name']} experiment response: {response.status_code}")
         except Exception as e:
             print(f"Experiment doesn't exist: {e}")
-    
-    try:
-        response = delete_performance_profile(perf_profile_v2_json_file)
-        print(f"Delete performance profile response: {response.status_code}")
-    except Exception as e:
-        print(f"Performance profile doesn't exist or couldn't be deleted: {e}")
-    # sleep for a bit to let the DB operation reflect
-    sleep(5)
-    # Step 1: Create the v1 performance profile
-    print("\n[Step 1] Creating performance profile v1...")
-    response = create_performance_profile(perf_profile_v1_json_file)
-    print(f"Create performance profile v1 response: {response.status_code}")
-    data = response.json()
-    print(f"Response: {data}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert CREATE_PERF_PROFILE_SUCCESS_MSG % "resource-optimization-openshift" in data.get('message', '')
-    print("✓ Performance profile v1 created successfully")
-    
-    # Step 2: Create 3 experiments (container, namespace, GPU)
-    print("\n[Step 2] Creating experiments for container, namespace, and GPU...")
-    for exp in experiments:
-        print(f"\nCreating {exp['name']} experiment...")
-        json_data = json.load(open(exp["input_json"]))
-        
-        # Modify experiment name to be unique
-        json_data[0]['experiment_name'] = f"{json_data[0]['experiment_name']}-{exp['name']}"
-        
-        # Write to temp file
-        with open(exp["exp_file"], 'w') as f:
-            json.dump(json_data, f, indent=2)
-        
-        # Create the experiment
-        response = create_experiment(exp["exp_file"])
-        data = response.json()
-        print(f"{exp['name']} experiment message: {data['message']}")
-        assert response.status_code == SUCCESS_STATUS_CODE
-        assert data['status'] == SUCCESS_STATUS
-        assert data['message'] == CREATE_EXP_SUCCESS_MSG
-        print(f"✓ {exp['name']} experiment created successfully")
-    
-    # Step 3: Update results for container experiment (with v1 profile)
-    print("\n[Step 3] Updating results for container experiment (with v1 profile)...")
-    container_exp = experiments[0]
-    json_data = json.load(open(container_exp["exp_file"]))
-    experiment_name = json_data[0]['experiment_name']
-    
-    result_json = json.load(open(container_exp["result_json"]))
-    result_json[0]['experiment_name'] = experiment_name
-    interval_start_time = get_datetime()
-    result_json[0]['interval_start_time'] = interval_start_time
-    end_time = increment_timestamp_by_given_mins(interval_start_time, 15)
-    result_json[0]['interval_end_time'] = end_time
-    
-    with open(container_exp["result_file"], 'w') as f:
-        json.dump(result_json, f, indent=2)
-    
-    response = update_results(container_exp["result_file"], False)
-    data = response.json()
-    print(f"Container update results message: {data['message']}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    print("✓ Container experiment results updated successfully with v1 profile")
-    
-    # Update recommendations for container experiment
-    response = update_recommendations(experiment_name, None, end_time)
-    data = response.json()
-    print(f"Container update recommendations response: {response.status_code}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data[0]['experiment_name'] == experiment_name
-    print("✓ Container experiment recommendations updated successfully")
-    
-    # Step 4: check the performance profile in DB
-    print("\n[Step 4] listing performance profiles...")
-    response = list_performance_profiles()
-    print(response.status_code)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
-    # Step 5: Update the performance profile to v2
-    print("\n[Step 5] Updating performance profile to v2...")
+
+    # Step 1: Update the performance profile to v2
+    print("\n[Step 4] Updating performance profile to v2...")
     response = update_performance_profile(perf_profile_v2_json_file)
     print(f"Update performance profile v2 response: {response.status_code}")
     data = response.json()
@@ -1257,75 +1185,264 @@ def test_update_recommendations_with_perf_profile_update(cluster_type):
            UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
     print("✓ Performance profile updated to v2 successfully")
 
-    # Step 6: Update results for namespace experiment (with v2 profile)
-    print("\n[Step 6] Updating results for namespace experiment (with v2 profile)...")
-    namespace_exp = experiments[1]
-    json_data = json.load(open(namespace_exp["exp_file"]))
-    experiment_name = json_data[0]['experiment_name']
+    # Step 2: Create 3 experiments (container, namespace, GPU)
+    print("\n[Step 2] Creating experiments for container, namespace, and GPU...")
+    for i in range(len(experiments)):
+        print(f"\nCreating {experiments[i]['name']} experiment...")
+        json_data = json.load(open(experiments[i]["input_json"]))
 
-    result_json = json.load(open(namespace_exp["result_json"]))
-    result_json[0]['experiment_name'] = experiment_name
-    namespace_start_time = get_datetime()
-    namespace_end_time = increment_timestamp_by_given_mins(namespace_start_time, 15)
-    result_json[0]['interval_start_time'] = namespace_start_time
-    result_json[0]['interval_end_time'] = namespace_end_time
+        # Modify experiment name to be unique
+        json_data[0]['experiment_name'] = f"{json_data[0]['experiment_name']}-{experiments[i]['name']}"
 
-    with open(namespace_exp["result_file"], 'w') as f:
-        json.dump(result_json, f, indent=2)
-    
-    response = update_results(namespace_exp["result_file"], False)
-    data = response.json()
-    print(f"Namespace update results message: {data['message']}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    print("✓ Namespace experiment results updated successfully with v2 profile")
-    
-    # Update recommendations for namespace experiment
-    response = update_recommendations(experiment_name, None, namespace_end_time)
-    data = response.json()
-    print(f"Namespace update recommendations response: {response.status_code}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data[0]['experiment_name'] == experiment_name
-    print("✓ Namespace experiment recommendations updated successfully")
+        # Write to temp file
+        with open(experiments[i]["exp_file"], 'w') as f:
+            json.dump(json_data, f, indent=2)
 
-    # Step 7: Update results for GPU experiment (with v2 profile)
-    print("\n[Step 7] Updating results for GPU experiment (with v2 profile)...")
-    gpu_exp = experiments[2]
-    json_data = json.load(open(gpu_exp["exp_file"]))
-    experiment_name = json_data[0]['experiment_name']
-    
-    result_json = json.load(open(gpu_exp["result_json"]))
-    result_json[0]['experiment_name'] = experiment_name
-    # Use fresh 15-minute interval for GPU experiment
-    gpu_start_time = get_datetime()
-    gpu_end_time = increment_timestamp_by_given_mins(gpu_start_time, 15)
-    result_json[0]['interval_start_time'] = gpu_start_time
-    result_json[0]['interval_end_time'] = gpu_end_time
+        # Create the experiment
+        response = create_experiment(experiments[i]["exp_file"])
+        data = response.json()
+        print(f"{experiments[i]['name']} experiment message: {data['message']}")
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+        print(f"✓ {experiments[i]['name']} experiment created successfully")
+        # Step 3: Update results and recommendations
+        print(f"\n[Step 3] Updating results and recommendations for {experiments[i]['name']} experiment (with v1 profile)...")
+        json_data = json.load(open(experiments[i]["exp_file"]))
+        experiment_name = json_data[0]['experiment_name']
 
-    with open(gpu_exp["result_file"], 'w') as f:
-        json.dump(result_json, f, indent=2)
+        # Add multiple results (at least 2) with different timestamps
+        result_json_arr = []
+        interval_start_time = get_datetime()
+        for j in range(2):
+            result_json = json.load(open(experiments[i]["result_json"]))
+            result_json[0]['experiment_name'] = experiment_name
 
-    response = update_results(gpu_exp["result_file"], False)
-    data = response.json()
-    print(f"GPU update results message: {data['message']}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-    print("✓ GPU experiment results updated successfully with v2 profile")
-    
-    # Step 8: Update recommendations for GPU experiment
-    print("\n[Step 8] Updating recommendations for GPU experiment...")
-    response = update_recommendations(experiment_name, None, gpu_end_time)
-    data = response.json()
-    print(f"GPU update recommendations response: {response.status_code}")
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data[0]['experiment_name'] == experiment_name
-    print("✓ GPU experiment recommendations updated successfully")
-    
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            with open(experiments[i]["result_file"], 'w') as f:
+                json.dump(result_json, f, indent=2)
+
+            result_json_arr.append(result_json[0])
+            response = update_results(experiments[i]["result_file"], False)
+            data = response.json()
+            print(f"{experiments[i]['name']} update results (iteration {j + 1}) message: {data['message']}")
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+        print(f"✓ {experiments[i]['name']} experiment results updated successfully with v1 profile")
+
+        # Update recommendations
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        print(f"{experiments[i]['name']} update recommendations response: {response.status_code}")
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        if experiments[i]['name'] == "namespace":
+            assert data[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][
+                       NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+        else:
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                   'message'] == 'Recommendations Are Available'
+
+        # Validate recommendations via list_recommendations
+        response = list_recommendations(experiment_name, rm=True)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
+
+        # Validate the json against the json schema
+        error_msg = validate_list_reco_json(list_reco_json, experiments[i]["json_schema"])
+        assert error_msg == ""
+
+        # Validate the json values
+        create_exp_json = json.load(open(experiments[i]["exp_file"]))
+        update_results_json = []
+        update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+        print(f"✓ {experiments[i]['name']} experiment recommendations validated successfully")
+
     # Cleanup: Delete all experiments
     print("\n[Cleanup] Deleting all experiments...")
     for exp in experiments:
         response = delete_experiment(exp["exp_file"])
         print(f"Delete {exp['name']} experiment: {response.status_code}")
+
+
+@pytest.mark.simulate_prod
+def test_update_recommendations_with_perf_profile_multi_pod(cluster_type):
+    """
+    Test 2: Multi-pod test - simulates the production flow.
+    
+    This test simulates the production scenario where:
+    Kruize is already running at this stage with 3 replicas and v1 performance profile in one replica. Next:
+    3. Create 3 experiments (container, namespace, GPU)
+    4. Update results for container experiment (validates with v1 profile)
+    6. Update performance profile to v2
+    7. Update results for container experiment again (validates with v2 profile)
+    8. Update results for namespace experiment (validates with v2 profile)
+    9. Update results for GPU experiment (validates with v2 profile)
+    
+    Note: This test does NOT delete experiments or performance profile at the end,
+    as it simulates the ROS flow where resources persist across pod restarts.
+    
+    Experiments created:
+    - Container experiment: Monitors individual container resources (CPU, memory)
+    - Namespace experiment: Monitors namespace-level aggregated resources
+    - GPU experiment: Monitors GPU/accelerator resources (core usage, memory, frame buffer)
+    """
+    # Define experiment configurations for different types
+    experiments = [
+        {
+            "name": "container",
+            "input_json": "../json_files/create_exp.json",
+            "result_json": "../json_files/update_results.json",
+            "exp_file": "/tmp/create_exp_container.json",
+            "result_file": "/tmp/update_results_container.json",
+            "json_schema": short_term_list_reco_json_schema
+        },
+        {
+            "name": "namespace",
+            "input_json": "../json_files/create_exp_namespace.json",
+            "result_json": "../json_files/update_results_namespace.json",
+            "exp_file": "/tmp/create_exp_namespace.json",
+            "result_file": "/tmp/update_results_namespace.json",
+            "json_schema": list_reco_namespace_json_local_monitoring_schema
+        },
+        {
+            "name": "gpu",
+            "input_json": "../json_files/create_exp.json",
+            "result_json": "../json_files/update_results_accelerator.json",
+            "exp_file": "/tmp/create_exp_gpu.json",
+            "result_file": "/tmp/update_results_gpu.json",
+            "json_schema": short_term_list_reco_json_schema
+        }
+    ]
+
+    perf_profile_dir = get_metric_profile_dir()
+    perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+
+    form_kruize_url(cluster_type)
+
+    # Step 0: Clean up any existing experiments and profile
+    print("\n[Step 0] Cleaning up existing resources...")
+    for exp in experiments:
+        try:
+            response = delete_experiment(exp["input_json"])
+            print(f"Delete {exp['name']} experiment response: {response.status_code}")
+        except Exception as e:
+            print(f"Experiment doesn't exist: {e}")
+
+    # Step 1: Update the performance profile to v2
+    print("\n[Step 4] Updating performance profile to v2...")
+    response = update_performance_profile(perf_profile_v2_json_file)
+    print(f"Update performance profile v2 response: {response.status_code}")
+    data = response.json()
+    print(f"Response: {data}")
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    # Check for the update success message with version 2.0
+    assert "updated successfully to version 2.0" in data.get('message', '') or \
+           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
+    print("✓ Performance profile updated to v2 successfully")
+
+    # Step 2: Create 3 experiments (container, namespace, GPU)
+    print("\n[Step 2] Creating experiments for container, namespace, and GPU...")
+    for i in range(len(experiments)):
+        print(f"\nCreating {experiments[i]['name']} experiment...")
+        json_data = json.load(open(experiments[i]["input_json"]))
+
+        # Modify experiment name to be unique
+        json_data[0]['experiment_name'] = f"{json_data[0]['experiment_name']}-{experiments[i]['name']}"
+
+        # Write to temp file
+        with open(experiments[i]["exp_file"], 'w') as f:
+            json.dump(json_data, f, indent=2)
+
+        # Create the experiment
+        response = create_experiment(experiments[i]["exp_file"])
+        data = response.json()
+        print(f"{experiments[i]['name']} experiment message: {data['message']}")
         assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+        print(f"✓ {experiments[i]['name']} experiment created successfully")
+        # Step 3: Update results and recommendations
+        print(f"\n[Step 3] Updating results and recommendations for {experiments[i]['name']} experiment")
+        json_data = json.load(open(experiments[i]["exp_file"]))
+        experiment_name = json_data[0]['experiment_name']
+
+        # Add 2 results with different timestamps
+        result_json_arr = []
+        interval_start_time = get_datetime()
+        for j in range(2):
+            result_json = json.load(open(experiments[i]["result_json"]))
+            result_json[0]['experiment_name'] = experiment_name
+
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            with open(experiments[i]["result_file"], 'w') as f:
+                json.dump(result_json, f, indent=2)
+
+            result_json_arr.append(result_json[0])
+            response = update_results(experiments[i]["result_file"], False)
+            data = response.json()
+            print(f"{experiments[i]['name']} update results (iteration {j + 1}) message: {data['message']}")
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+        print(f"✓ {experiments[i]['name']} experiment results updated successfully with v1 profile")
+
+        # Update recommendations
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        print(f"{experiments[i]['name']} update recommendations response: {response.status_code}")
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        if experiments[i]['name'] == "namespace":
+            assert data[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][
+                       NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+        else:
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                       'message'] == 'Recommendations Are Available'
+
+        # Validate recommendations via list_recommendations
+        response = list_recommendations(experiment_name, rm=True)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
+
+        # Validate the json against the json schema
+        error_msg = validate_list_reco_json(list_reco_json, experiments[i]["json_schema"])
+        assert error_msg == ""
+
+        # Validate the json values
+        create_exp_json = json.load(open(experiments[i]["exp_file"]))
+        update_results_json = []
+        update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+        print(f"✓ {experiments[i]['name']} experiment recommendations validated successfully")
+
+    # Cleanup: Delete all experiments
+    print("\n[Cleanup] Deleting all experiments...")
+    for exp in experiments:
+        response = delete_experiment(exp["exp_file"])
+        print(f"Delete {exp['name']} experiment: {response.status_code}")
+

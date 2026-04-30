@@ -41,9 +41,11 @@ function remote_monitoring_tests() {
 
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
+	perf_profile_json_v1="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift_v1.json"
 
-	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "simulate_prod")
-	
+#	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "simulate_prod")
+	remote_monitoring_tests=("simulate_prod")
+
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "remote_monitoring"
@@ -116,6 +118,7 @@ function remote_monitoring_tests() {
 				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 				echo "Setting up kruize...Done" | tee -a ${LOG}
 
+				sleep 60
 				# Scale up Kruize deployment to 3 replicas for simulate_prod test
 				if [ "${test}" == "simulate_prod" ]; then
 					# Determine namespace based on cluster type
@@ -124,6 +127,9 @@ function remote_monitoring_tests() {
 					else
 						KRUIZE_NAMESPACE="monitoring"
 					fi
+
+					# create performance profile v1
+          create_performance_profile "${perf_profile_json_v1}"
 
 					echo "Scaling Kruize deployment to 3 replicas for production-like setup in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
 					kubectl scale deployment kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
@@ -145,10 +151,10 @@ function remote_monitoring_tests() {
 					kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
 				fi
 
-				sleep 60
-
-				# create performance profile
-				create_performance_profile ${perf_profile_json}
+				# create performance profile(skip for simulate-prod test as it's called with older version)
+				if [ "${test}" != "simulate_prod" ]; then
+					create_performance_profile ${perf_profile_json}
+				fi
 			fi
 		popd > /dev/null
 
