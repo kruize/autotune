@@ -41,9 +41,10 @@ function remote_monitoring_tests() {
 
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
+	perf_profile_json_v1="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift_v1.json"
 
-	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended")
-	
+	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "simulate_prod" "simulate_prod_single_pod")
+
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "remote_monitoring"
@@ -66,14 +67,6 @@ function remote_monitoring_tests() {
 		pushd "${KRUIZE_REPO}" > /dev/null
 			kruize_remote_patch
 			echo "Removing isROSEnabled=false and local=true...done"
-
-			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-				echo "Setting up kruize...Done" | tee -a ${LOG}
-		
-			sleep 60
-
-			# create performance profile
-			create_performance_profile ${perf_profile_json}
 		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
@@ -117,11 +110,77 @@ function remote_monitoring_tests() {
 		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
-		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
+		pushd "${KRUIZE_REPO}" > /dev/null
+			TEMP_KRUIZE_YAML=""
+			ORIGINAL_KRUIZE_YAML_BACKUP=""
+			if [ ${skip_setup} -eq 0 ]; then
+				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize...Done" | tee -a ${LOG}
+
+				sleep 60
+				# Scale up Kruize deployment to 3 replicas for simulate_prod test
+				if [ "${test}" == "simulate_prod" ]; then
+					# Determine namespace based on cluster type
+					if [ "${cluster_type}" == "openshift" ]; then
+						KRUIZE_NAMESPACE="openshift-tuning"
+					else
+						KRUIZE_NAMESPACE="monitoring"
+					fi
+
+					# create performance profile v1
+          create_performance_profile "${perf_profile_json_v1}"
+          sleep 5
+					echo "Scaling Kruize deployment to 3 replicas and redeploy..." | tee -a ${LOG}
+
+          kubectl scale deployment/kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+          kubectl rollout restart deployment/kruize -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+          err_exit "ERROR: Failed to scale/restart Kruize deployment"
+
+          # Wait for rollout to COMPLETE
+          echo "Waiting for Kruize rollout to complete..." | tee -a ${LOG}
+          kubectl rollout status deployment/kruize -n ${KRUIZE_NAMESPACE} --timeout=300s 2>&1 | tee -a ${LOG}
+          err_exit "ERROR: Kruize rollout did not complete"
+
+          # check pod count
+          READY=$(kubectl get deployment kruize -n ${KRUIZE_NAMESPACE} -o jsonpath='{.status.readyReplicas}')
+
+          if [ "$READY" -ne 3 ]; then
+            echo "ERROR: Expected 3 ready replicas but got $READY" | tee -a ${LOG}
+            kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize | tee -a ${LOG}
+            exit 1
+          fi
+          echo "✓ Successfully scaled Kruize deployment to 3 replicas" | tee -a ${LOG}
+          kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
+				fi
+
+				# create performance profile(skip for simulate-prod test as it's called with older version)
+				if [ "${test}" != "simulate_prod" ]; then
+					create_performance_profile ${perf_profile_json}
+				fi
+			fi
+		popd > /dev/null
+
+		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
 			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
+		popd > /dev/null
+
+		pushd "${KRUIZE_REPO}" > /dev/null
+			# Scale down Kruize deployment back to 1 replica after simulate_prod test
+			if [ "${test}" == "simulate_prod" ]; then
+				# Determine namespace based on cluster type
+				if [ "${cluster_type}" == "openshift" ]; then
+					KRUIZE_NAMESPACE="openshift-tuning"
+				else
+					KRUIZE_NAMESPACE="monitoring"
+				fi
+				
+				echo "Scaling Kruize deployment back to 1 replica in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
+				kubectl scale deployment kruize --replicas=1 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+				echo "✓ Kruize deployment scaled back to 1 replica" | tee -a ${LOG}
+			fi
 		popd > /dev/null
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)

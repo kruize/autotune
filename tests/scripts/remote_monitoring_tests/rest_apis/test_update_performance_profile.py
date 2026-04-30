@@ -81,7 +81,7 @@ def test_update_performance_profile(cluster_type):
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == SUCCESS_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_PERF_PROFILE_SUCCESS_MSG % (perf_profile_name, perf_profile_version_v2)
 
@@ -138,7 +138,7 @@ def test_update_performance_profile_with_duplicate_data(cluster_type):
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == SUCCESS_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_PERF_PROFILE_SUCCESS_MSG % (perf_profile_name, perf_profile_version_v2)
 
@@ -200,7 +200,7 @@ def test_update_performance_profile_with_duplicate_slo_data(cluster_type):
     data = response.json()
     print(data['message'])
 
-    assert response.status_code == SUCCESS_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_PERF_PROFILE_SUCCESS_MSG % (perf_profile_name, perf_profile_version_v2)
 

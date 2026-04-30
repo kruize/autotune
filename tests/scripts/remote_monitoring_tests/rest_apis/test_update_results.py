@@ -15,6 +15,8 @@ limitations under the License.
 """
 import pytest
 import sys
+import json
+import os
 sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
@@ -52,6 +54,8 @@ missing_metrics_namespace = [
     ("Missing_metrics_mandatory_metrics_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_mandatory_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]")
 
 ]
+
+perf_profile_dir = get_metric_profile_dir()
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
@@ -1684,4 +1688,3 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
-    print("delete exp = ", response.status_code)
