@@ -129,25 +129,28 @@ function remote_monitoring_tests() {
 
 					# create performance profile v1
           create_performance_profile "${perf_profile_json_v1}"
+          sleep 5
+					echo "Scaling Kruize deployment to 3 replicas and redeploy..." | tee -a ${LOG}
 
-					echo "Scaling Kruize deployment to 3 replicas for production-like setup in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
-					kubectl scale deployment kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
-					err_exit "ERROR: Failed to scale Kruize deployment to 3 replicas"
+          kubectl scale deployment/kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+          kubectl rollout restart deployment/kruize -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
+          err_exit "ERROR: Failed to scale/restart Kruize deployment"
 
-					# Wait for all 3 pods to be ready
-					echo "Waiting for all 3 Kruize pods to be ready..." | tee -a ${LOG}
-					kubectl wait --for=condition=ready pod -l app=kruize -n ${KRUIZE_NAMESPACE} --timeout=300s 2>&1 | tee -a ${LOG}
-					err_exit "ERROR: Kruize pods did not become ready in time"
+          # Wait for rollout to COMPLETE
+          echo "Waiting for Kruize rollout to complete..." | tee -a ${LOG}
+          kubectl rollout status deployment/kruize -n ${KRUIZE_NAMESPACE} --timeout=300s 2>&1 | tee -a ${LOG}
+          err_exit "ERROR: Kruize rollout did not complete"
 
-					# Verify 3 pods are running
-					KRUIZE_POD_COUNT=$(kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize --no-headers 2>/dev/null | wc -l | tr -d ' ')
-					if [ "${KRUIZE_POD_COUNT}" -ne "3" ]; then
-						echo "ERROR: Expected 3 Kruize pods but found ${KRUIZE_POD_COUNT}" | tee -a ${LOG}
-						kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
-						exit 1
-					fi
-					echo "✓ Successfully scaled Kruize deployment to 3 replicas" | tee -a ${LOG}
-					kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
+          # check pod count
+          READY=$(kubectl get deployment kruize -n ${KRUIZE_NAMESPACE} -o jsonpath='{.status.readyReplicas}')
+
+          if [ "$READY" -ne 3 ]; then
+            echo "ERROR: Expected 3 ready replicas but got $READY" | tee -a ${LOG}
+            kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize | tee -a ${LOG}
+            exit 1
+          fi
+          echo "✓ Successfully scaled Kruize deployment to 3 replicas" | tee -a ${LOG}
+          kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
 				fi
 
 				# create performance profile(skip for simulate-prod test as it's called with older version)
