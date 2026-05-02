@@ -83,10 +83,11 @@ As part of the release testing, following tests will be executed:
 
 ### RELEASE TESTS RESULTS SUMMARY
 
-All Release tests have been run against the Kruize release 0.10 image and all tests have - :
-- No regressions seen, runtime recommendations has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+All Release tests have been run against the Kruize release 0.10 image and all tests have passed
 
-Scalability short -  
+Scalability short test - We observed an increase in CPU and memory consumption in Kruize v0.10 compared to the v0.9 release. A review of the v0.10 pull requests shows that most changes are localized to the optimizer, with minimal core code modifications. This suggests the resource regression may be due to library upgrades included in this release
+
+Kruize demos - Uncovered an issue with the datasource on openshift with optimizer code, which is now fixed and all demos work as expected
 
 
 ### KRUIZE TEST RESULTS
@@ -104,7 +105,7 @@ Scalability short -
 
 Kruize test result summary:
 
-No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+No new regressions seen
 
 ### SCALE TEST RESULTS
 
@@ -126,27 +127,32 @@ Short Scalability run configuration:
 | **0.8.1** (14 Jan) | 5K container / 72L / 3L | 4h 39m | 0.91 / 0.5 | 0.14 / 0.1 | 0.45 / 0.31 | 21754 | 6.86 | 35.96 |
 | **0.9** (24 Feb) | 5K container / 72L / 3L | 4h 31m | 0.86 / 0.47 | 0.12 / 0.09 | 0.38 / 0.26 | 21756 | 7.36 | 27.83 |
 | **0.9** (16 Apr) | 5K container / 72L / 3L | 4h 37m | 0.9 / 0.5 | 0.14 / 0.1 | 0.44 / 0.3 | 21755 | 7.76 | 37.33 |
-| **0.10** (16 Apr) | 5K container / 72L / 3L | 4h 34m | 0.89 / 0.48 | 0.13 / 0.1 | 0.44 / 0.3 | 21755 | 7.97 | 46.33 |
+| **0.10-rc1** (16 Apr) | 5K container / 72L / 3L | 4h 34m | 0.89 / 0.48 | 0.13 / 0.1 | 0.44 / 0.3 | 21755 | 7.97 | 46.33 |
+| **0.10-rc2** (30 Apr) | 5K container / 72L / 3L | 4h 37m | 0.9 / 0.49 | 0.14 / 0.11 | 0.44 / 0.31 | 21756 | 7.97 | 41.89 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
 | **0.9** (25 Feb) | 5K namespace / 72L / 3L | 2h 58m | 0.54 / 0.3 | 0.11 / 0.08 | 0.29 / 0.19 | 10774 | 5.2 | 23.45 |
 | **0.9** (16 Apr) | 5K namespace / 72L / 3L | 3h 1m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10781 | 7.73 | 23.17 |
-| **0.10** (16 Apr) | 5K namespace / 72L / 3L | 3h 04m | 0.55 / 0.31 | 0.12 / 0.08 | 0.33 / 0.21 | 10776 | 8.96 | 28.95 |
+| **0.10-rc1** (16 Apr) | 5K namespace / 72L / 3L | 3h 04m | 0.55 / 0.31 | 0.12 / 0.08 | 0.33 / 0.21 | 10776 | 8.96 | 28.95 |
+| **0.10-rc2** (1 May) | 5K namespace / 72L / 3L | 3h 09m | 0.56 / 0.31 | 0.12 / 0.09 | 0.34 / 0.22 | 10778 | 8.81 | 28.37 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
 | **0.9** (25 Feb) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
 | **0.9** (16 Apr) | 4.5k container, 500 namespace / 72L / 3L | 4h 27m | 0.84 / 0.48 | 0.13 / 0.1 | 0.39 / 0.28 | 20650 | 7.76 | 33.08 |
-| **0.10** (16 Apr) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.47 | 0.13 / 0.11 | 0.43 / 0.31 | 20649 | 8.5 | 44.39 |
+| **0.10-rc1** (16 Apr) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.47 | 0.13 / 0.11 | 0.43 / 0.31 | 20649 | 8.5 | 44.39 |
+| **0.10-rc2** (1 May) | 4.5k container, 500 namespace / 72L / 3L | 4h 32m | 0.84 / 0.46 | 0.13 / 0.11 | 0.42 / 0.29 | 20648 | 8.53 | 39.34 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
 | **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 43m | 1.58 / 0.86 | 0.21 / 0.19 | 0.69 / 0.52 | 31143 | 10.94 | 34.08 |
-| **0.10** (16 Apr) | 5k gpucontainer / 72L / 3L | 7h 56m | 1.63 / 0.85 | 0.21 / 0.19 | 0.76 / 0.53 | 31141 | 12.77 | 30.29 |
+| **0.9** (16 Apr) | 5k gpucontainer / 72L / 3L | 7h 45m | 1.58 / 0.87 | 0.22 / 0.19 | 0.72 / 0.55 | 31145 | 10.53 | 33.24 |
+| **0.10-rc1** (16 Apr) | 5k gpucontainer / 72L / 3L | 7h 56m | 1.63 / 0.85 | 0.21 / 0.19 | 0.76 / 0.53 | 31141 | 12.77 | 30.29 |
+| **0.10-rc2** (1 May) | 5k gpucontainer / 72L / 3L | 7h 55m | 1.61 / 0.85 | 0.22 / 0.19 | 0.77 / 0.54 | 31206 | 12.67 | 35.94 |
 
 Here exps - Experiments, L - Lakhs
 
 
 Scalability test result summary:
-
+We observed an increase in CPU and memory consumption in Kruize v0.10 compared to the v0.9 release. A review of the v0.10 pull requests shows that most changes are localized to the optimizer, with minimal core code modifications. This suggests the resource regression may be due to library upgrades included in this release
 
 ----
 
@@ -167,15 +173,15 @@ Scalability test result summary:
 | 11 | Kruize vpa demo | Minikube | PASSED | PASSED |  |
 | 12 | Kruize vpa demo | Kind | PASSED | PASSED | |
 | 13 | Kruize runtimes demo | Openshift | PASSED | PASSED | |
-| 14 | Kruize runtimes demo | Minikube | FAILED | PASSED | petclinic - no env |
+| 14 | Kruize runtimes demo | Minikube | PASSED | PASSED | |
 | 15 | Kruize runtimes demo | Kind | PASSED | PASSED | |
-| 16 | Kruize optimizer demo | Openshift |  |  | |
+| 16 | Kruize optimizer demo | Openshift | PASSED | PASSED | |
 | 17 | Kruize optimizer demo | Minikube | PASSED | PASSED | |
 | 18 | Kruize optimizer demo | Kind | PASSED | PASSED | |
 
 Kruize Demos result summary:
 
-
+Uncovered an issue with the datasource on openshift with optimizer code, which is now fixed and all demos work as expected
 
 ---
 
