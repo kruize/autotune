@@ -83,17 +83,14 @@ public class LayerUtils {
 
                 // Use the layer's presence detector
                 if (layer.getLayerPresence() != null && layer.getLayerPresence().getDetector() != null) {
-                    // Skip label-based detection as it's not yet implemented; warn to avoid hiding misconfigurations
-                    if (layer.getLayerPresence().getDetector() instanceof LabelBasedPresence) {
-                        LOGGER.warn(LogMessages.LABEL_BASED_PRESENCE_NOT_IMPLEMENTED,
-                                    layer.getLayerName());
-                        continue; // Skip to next layer
-                    }
-
                     // For query-based detection, pass container name as well
                     if (layer.getLayerPresence().getDetector() instanceof QueryBasedPresence) {
                         QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
                         isDetected = queryDetector.detectPresence(namespace, containerName, datasourceName);
+                    } else if (layer.getLayerPresence().getDetector() instanceof LabelBasedPresence) {
+                        // For label-based detection, pass container name as well
+                        LabelBasedPresence labelDetector = (LabelBasedPresence) layer.getLayerPresence().getDetector();
+                        isDetected = labelDetector.detectPresence(namespace, containerName, datasourceName);
                     } else {
                         // For other detector types (Always)
                         isDetected = layer.getLayerPresence().getDetector()

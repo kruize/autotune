@@ -116,6 +116,7 @@ public class AnalyzerConstants {
     public static final String LM = "lm";
     public static final String VENDOR = "vendor";
     public static final String RUNTIME = "runtime";
+    public static final String LAYER_NAME = "name";
 
     private AnalyzerConstants() {
     }
@@ -713,7 +714,6 @@ public class AnalyzerConstants {
             public static final String LAYER_DETECTED = "Detected layer: '{}' for container '{}'";
             public static final String LAYER_NOT_DETECTED = "Layer '{}' not detected for container '{}'";
             public static final String NO_PRESENCE_DETECTOR = "Layer '{}' has no presence detector configured, skipping";
-            public static final String LABEL_BASED_PRESENCE_NOT_IMPLEMENTED = "Skipping layer '{}' configured with LabelBasedPresence: label-based presence detection is not yet implemented; this layer will not be auto-detected";
             public static final String NO_LAYERS_IN_DB = "No layers found in database";
             public static final String LOADED_LAYERS_FROM_DB = "Loaded {} layers from database";
             public static final String FAILED_TO_LOAD_LAYERS = "Failed to load layers from database";
@@ -726,6 +726,11 @@ public class AnalyzerConstants {
             public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
             public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', container '{}'";
             public static final String ERROR_EXECUTING_QUERY = "Error executing layer presence query for datasource '{}'";
+
+            // LabelBasedPresence log messages
+            public static final String NO_LABELS_DEFINED = "No labels defined for layer presence detection";
+            public static final String LAYER_DETECTED_VIA_LABEL = "Layer detected via label in namespace '{}' with label '{}={}'";
+            public static final String ERROR_CHECKING_LABEL = "Error checking layer presence for label '{}={}'";
 
             // Tunable Spec messages
             public static final String LAYER_NAME_N_TUNABLE_NAME_NOT_NULL = "layerName and tunableName must not be null";

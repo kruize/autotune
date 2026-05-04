@@ -738,63 +738,84 @@ def list_layers(layer_name=None, logging=True):
     return response
 
 
-# Description: This function deletes a layer from the database (temporary workaround until deleteLayer API is implemented)
+# Description: This function deletes a layer using DELETE /deleteLayer API
 # Input Parameters: layer name
-def delete_layer_from_db(layer_name):
+def update_layer(layer_name, input_json_file):
     """
-    Helper function to delete a layer from the database.
-    This is a temporary workaround until deleteLayer API is implemented.
+    Update an existing layer using the UPDATE Layer API.
+
+    Args:
+        layer_name: Name of the layer to update
+        input_json_file: Path to the JSON file containing updated layer configuration
+
+    Returns:
+        Response object from requests.put()
+    """
+    print(f"\nUpdating layer: {layer_name}...")
+
+    query_params = {'name': layer_name}
+    url = URL + "/updateLayer"
+
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+
+    with open(input_json_file, "r") as file:
+        data = json.load(file)
+
+    response = requests.put(url, json=data, params=query_params)
+
+    print("Response status code = ", response.status_code)
+    print(response.text)
+
+    return response
+
+
+def delete_layer(layer_name):
+    """
+    Delete a layer using the DELETE Layer API.
 
     Args:
         layer_name: Name of the layer to delete
 
     Returns:
-        bool: True if deletion succeeded, False otherwise
+        Response object from requests.delete()
     """
-    import subprocess
+    print(f"\nDeleting layer: {layer_name}...")
 
-    # Auto-detect namespace where kruize-db-deployment is running
-    try:
-        namespace_cmd = [
-            "kubectl", "get", "deployment", "-A",
-            "-o", "custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name",
-            "--no-headers"
-        ]
-        namespace_result = subprocess.run(namespace_cmd, capture_output=True, text=True, timeout=5)
-        if namespace_result.returncode != 0:
-            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
-            return False
+    query_params = {'name': layer_name}
+    url = URL + "/deleteLayer"
 
-        # Parse output to find kruize-db-deployment
-        namespace = None
-        for line in namespace_result.stdout.strip().split('\n'):
-            parts = line.split()
-            if len(parts) >= 2 and parts[1] == 'kruize-db-deployment':
-                namespace = parts[0]
-                break
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
 
-        if not namespace:
-            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
-            return False
-    except Exception as e:
-        print(f"  ⚠ Warning: Error detecting namespace: {e}")
-        return False
+    response = requests.delete(url, params=query_params)
 
-    try:
-        cmd = [
-            "kubectl", "exec", "-n", namespace,
-            "deployment/kruize-db-deployment", "--",
-            "psql", "-U", "admin", "-d", "kruizeDB",
-            "-c", f"DELETE FROM kruize_lm_layer WHERE layer_name='{layer_name}';"
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        if result.returncode == 0:
-            print(f"  ✓ Cleaned up layer '{layer_name}' from database")
-            return True
-        else:
-            # Don't fail - just warn
-            print(f"  ⚠ Warning: Could not clean up layer '{layer_name}': {result.stderr}")
-            return False
-    except Exception as e:
-        print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
-        return False
+    print("Response status code = ", response.status_code)
+    print(response.text)
+
+    return response
+
+
+def cleanup_all_layers():
+    """
+    Delete all existing layers from the database.
+    Useful for test cleanup to ensure a clean state.
+
+    Returns:
+        int: Number of layers deleted
+    """
+    response = list_layers(layer_name=None, logging=False)
+    deleted_count = 0
+
+    if response.status_code == 200:
+        existing_layers = response.json()
+        if isinstance(existing_layers, list):
+            for layer in existing_layers:
+                delete_layer(layer['layer_name'])
+                deleted_count += 1
+            if deleted_count > 0:
+                print(f"Cleaned up {deleted_count} existing layers")
+
+    return deleted_count
+
+
