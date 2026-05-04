@@ -76,6 +76,9 @@ public class LabelBasedPresence implements LayerPresenceDetector {
 
             try {
                 // 1. Query kubernetes for pods with label
+                // Note: We check labels at the pod level (not deployment level) because pods can have
+                // multiple containers, and we need to accurately detect which specific containers have
+                // the layer present.
                 List<Pod> matchingPods = kubernetesServices.getPodsBy(namespace, layerLabel.getName(), layerLabel.getValue());
 
                 // 2. Filter for container name
