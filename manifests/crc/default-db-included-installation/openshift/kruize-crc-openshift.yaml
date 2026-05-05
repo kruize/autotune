@@ -538,7 +538,14 @@ metadata:
 data:
   nginx.conf: |
     events {}
+    pid /tmp/nginx.pid;
     http {
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+    
       upstream kruize-api {
         server kruize:8080;
       }
@@ -575,26 +582,35 @@ spec:
   selector:
     app: kruize-ui-nginx
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: kruize-ui-nginx-pod
+  name: kruize-ui-nginx
   namespace: openshift-tuning
-  labels:
-    app: kruize-ui-nginx
 spec:
-  containers:
-    - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.8
-      imagePullPolicy: Always
-      env:
-        - name: KRUIZE_UI_ENV
-          value: "production"
-      volumeMounts:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: kruize-ui-nginx
+  template:
+    metadata:
+      labels:
+        app: kruize-ui-nginx
+    spec:
+      containers:
+        - name: kruize-ui-nginx-container
+          image: quay.io/kruize/kruize-ui:0.0.9
+          imagePullPolicy: Always
+          env:
+            - name: KRUIZE_UI_ENV
+              value: "production"
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
         - name: nginx-config-volume
-          mountPath: /etc/nginx/nginx.conf
-          subPath: nginx.conf
-  volumes:
-    - name: nginx-config-volume
-      configMap:
-        name: nginx-config
+          configMap:
+            name: nginx-config

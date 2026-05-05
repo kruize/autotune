@@ -110,6 +110,23 @@ function local_monitoring_tests() {
 		LOG="${TEST_DIR}/${test}.log"
 
 		if [ "${test}" == "runtimes" ]; then
+		  APP_NAMESPACE="default"
+		  if [ ! -d "benchmarks" ]; then
+        echo -n "🔄 Pulling required repositories... "
+        clone_repos benchmarks
+      fi
+      bench="tfb"
+      bench2="petclinic"
+		  echo -n "🔄 Installing the required benchmarks..."
+		  # Clean up any existing load job so the new one can start fresh
+			echo "Cleaning up any old load jobs..." >> "${LOG}" 2>&1
+			kubectl delete job petclinic-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+			kubectl delete job tfb-qrh-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+
+			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}"
+			benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}"
+			echo "✅ Completed!"
+
 			quarkus_label="com.redhat.component-name=Quarkus"
 			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
 				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)

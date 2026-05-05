@@ -114,7 +114,7 @@ kruize_crc_start() {
 					printf"          %s %s\n", $1, $2;
 				} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {
 					$2=ui_image_name;
-					printf"      %s %s\n", $1, $2;
+					printf"          %s %s\n", $1, $2;
 				} else { print }
 			 }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
 	fi
