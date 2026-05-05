@@ -160,9 +160,9 @@ public class GenericRestApiClient {
             throw new KeyManagementException("Failed to setup SSL context: " + e.getMessage(), e);
         }
         
-        // Use "TLS" to allow protocol version negotiation based on system TLS profile
+        // Pass null for protocols to use system's default TLS configuration, respecting the system TLS profile and avoiding JVM-specific protocol mapping issues
         SSLConnectionSocketFactory sslConnectionSocketFactory =
-                new SSLConnectionSocketFactory(sslContext, new String[]{"TLS"}, null, NoopHostnameVerifier.INSTANCE);
+                new SSLConnectionSocketFactory(sslContext, null, null, NoopHostnameVerifier.INSTANCE);
         return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
     }
 
