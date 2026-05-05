@@ -71,23 +71,36 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             if (errorMsg.isEmpty()) {
                 success = true;
             } else {
-                // Failure could be due to an incorrect version of the profile in the cache. So, clear the cache and try again with profile from the database
-                PerformanceProfileCache.remove(performanceProfileName); // prune cache
-                try {
-                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName); // loads from DB
-                } catch (Exception e) {
-                    LOGGER.error("Loading saved performance profiles failed", e);
-                    throw e;
-                }
-                performanceProfile = performanceProfilesMap.get(performanceProfileName);
-                if (performanceProfile == null) {
-                    throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
-                }
-                // validate the result value present in the updateResultsAPIObject
-                errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
-                if (errorMsg.isEmpty()) {
-                    success = true;
+                // Check if the error is related to invalid metrics
+                boolean hasInvalidMetricsError = errorMsg.stream()
+                        .anyMatch(msg -> msg.contains("Invalid metrics found for experiment"));
+                
+                if (hasInvalidMetricsError) {
+                    // Clear the cache and try again with profile from the database
+                    LOGGER.debug("Invalid metrics error detected. Clearing cache and reloading from DB for profile: {}", performanceProfileName);
+                    PerformanceProfileCache.remove(performanceProfileName); // prune cache
+                    try {
+                        new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName); // loads from DB
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved performance profiles failed", e);
+                        throw e;
+                    }
+                    performanceProfile = performanceProfilesMap.get(performanceProfileName);
+                    if (performanceProfile == null) {
+                        throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
+                    }
+                    // validate the result value present in the updateResultsAPIObject
+                    errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
+                    if (errorMsg.isEmpty()) {
+                        success = true;
+                    } else {
+                        context.disableDefaultConstraintViolation();
+                        context.buildConstraintViolationWithTemplate(errorMsg.toString())
+                                .addPropertyNode("Performance profile")
+                                .addConstraintViolation();
+                    }
                 } else {
+                    // For other validation errors, fail immediately without cache pruning
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate(errorMsg.toString())
                             .addPropertyNode("Performance profile")
