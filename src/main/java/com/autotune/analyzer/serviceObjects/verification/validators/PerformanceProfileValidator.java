@@ -21,6 +21,7 @@ import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -70,10 +71,28 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             if (errorMsg.isEmpty()) {
                 success = true;
             } else {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(errorMsg.toString())
-                        .addPropertyNode("Performance profile")
-                        .addConstraintViolation();
+                // Failure could be due to an incorrect version of the profile in the cache. So, clear the cache and try again with profile from the database
+                PerformanceProfileCache.remove(performanceProfileName); // prune cache
+                try {
+                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName); // loads from DB
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved performance profiles failed: {}", e.getMessage());
+                    throw e;
+                }
+                performanceProfile = performanceProfilesMap.get(performanceProfileName);
+                if (performanceProfile == null) {
+                    throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
+                }
+                // validate the result value present in the updateResultsAPIObject
+                errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
+                if (errorMsg.isEmpty()) {
+                    success = true;
+                } else {
+                    context.disableDefaultConstraintViolation();
+                    context.buildConstraintViolationWithTemplate(errorMsg.toString())
+                            .addPropertyNode("Performance profile")
+                            .addConstraintViolation();
+                }
             }
 
         } catch (Exception e) {
