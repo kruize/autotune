@@ -76,7 +76,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
                 try {
                     new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName); // loads from DB
                 } catch (Exception e) {
-                    LOGGER.error("Loading saved performance profiles failed: {}", e.getMessage());
+                    LOGGER.error("Loading saved performance profiles failed", e);
                     throw e;
                 }
                 performanceProfile = performanceProfilesMap.get(performanceProfileName);
