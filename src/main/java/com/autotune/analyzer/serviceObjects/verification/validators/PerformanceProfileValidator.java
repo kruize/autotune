@@ -38,11 +38,7 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectE
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
-    private final ExperimentDBService experimentDBService;
-
-    public PerformanceProfileValidator() {
-        this.experimentDBService = new ExperimentDBService();
-    }
+    private final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void initialize(PerformanceProfileCheck constraintAnnotation) {
@@ -79,24 +75,24 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             } else {
                 // Check if the error is related to invalid metrics using the constant
                 boolean hasInvalidMetricsError = errorMsg.stream()
-                        .anyMatch(msg -> msg.contains(INVALID_METRICS_ERROR_PREFIX));
+                        .anyMatch(msg -> msg.startsWith(INVALID_METRICS_ERROR_PREFIX));
                 
                 if (hasInvalidMetricsError) {
-                    // Atomically refresh the cache and reload from database
-                    LOGGER.debug("Invalid metrics error detected. Refreshing cache for profile: {}", performanceProfileName);
-                    performanceProfile = PerformanceProfileCache.refresh(performanceProfileName, () -> {
-                        Map<String, PerformanceProfile> tempMap = new HashMap<>();
-                        try {
-                            experimentDBService.loadPerformanceProfileFromDBByName(tempMap, performanceProfileName);
-                        } catch (Exception e) {
-                            LOGGER.error("Loading saved performance profiles failed during refresh", e);
-                            return null;
-                        }
-                        return tempMap.get(performanceProfileName);
-                    });
+                    // Clear the cache and reload from database
+                    LOGGER.debug("Invalid metrics error detected. Clearing cache and reloading from DB for profile: {}", performanceProfileName);
+                    PerformanceProfileCache.remove(performanceProfileName);
+                    try {
+                        experimentDBService.loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName);
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved performance profiles failed during refresh", e);
+                        throw e;
+                    }
+                    
+                    performanceProfile = performanceProfilesMap.get(performanceProfileName);
                     if (performanceProfile == null) {
                         throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
                     }
+                    
                     // validate the result value present in the updateResultsAPIObject
                     errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
                     if (errorMsg.isEmpty()) {
