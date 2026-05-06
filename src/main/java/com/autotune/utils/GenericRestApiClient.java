@@ -59,6 +59,7 @@ import java.security.NoSuchAlgorithmException;
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClient.class);
+    private static volatile boolean tlsConfigLogged = false;
     private String baseURL;
     private BasicAuthentication basicAuthentication;
     private BearerAccessToken bearerAccessToken;
@@ -163,6 +164,14 @@ public class GenericRestApiClient {
         // Pass null for protocols to use system's default TLS configuration, respecting the system TLS profile and avoiding JVM-specific protocol mapping issues
         SSLConnectionSocketFactory sslConnectionSocketFactory =
                 new SSLConnectionSocketFactory(sslContext, null, null, NoopHostnameVerifier.INSTANCE);
+        
+        // Log the actual SSL/TLS configuration once for debugging purposes
+        if (!tlsConfigLogged) {
+            String[] defaultProtocols = sslContext.getDefaultSSLParameters().getProtocols();
+            LOGGER.info("SSL/TLS Configuration - Enabled Protocols: {}", String.join(", ", defaultProtocols));
+            tlsConfigLogged = true;
+        }
+        
         return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
     }
 
