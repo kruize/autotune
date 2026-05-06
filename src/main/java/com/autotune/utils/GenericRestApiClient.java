@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is generic wrapper class used to retrieve RESTAPI response.
@@ -59,7 +60,7 @@ import java.security.NoSuchAlgorithmException;
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClient.class);
-    private static volatile boolean tlsConfigLogged = false;
+    private static final AtomicBoolean tlsConfigLogged = new AtomicBoolean(false);
     private String baseURL;
     private BasicAuthentication basicAuthentication;
     private BearerAccessToken bearerAccessToken;
@@ -162,15 +163,28 @@ public class GenericRestApiClient {
         }
         
         // Pass null for protocols to use system's default TLS configuration, respecting the system TLS profile and avoiding JVM-specific protocol mapping issues
-        SSLConnectionSocketFactory sslConnectionSocketFactory =
-                new SSLConnectionSocketFactory(sslContext, null, null, NoopHostnameVerifier.INSTANCE);
-        
-        // Log the actual SSL/TLS configuration once for debugging purposes
-        if (!tlsConfigLogged) {
-            String[] defaultProtocols = sslContext.getDefaultSSLParameters().getProtocols();
-            LOGGER.info("SSL/TLS Configuration - Enabled Protocols: {}", String.join(", ", defaultProtocols));
-            tlsConfigLogged = true;
-        }
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(
+                sslContext,
+                null,
+                null,
+                NoopHostnameVerifier.INSTANCE) {
+            @Override
+            protected void prepareSocket(javax.net.ssl.SSLSocket socket) throws IOException {
+                super.prepareSocket(socket);
+                // Add handshake listener only to the first socket to log the negotiated protocol
+                if (tlsConfigLogged.compareAndSet(false, true)) {
+                    socket.addHandshakeCompletedListener(event -> {
+                        try {
+                            String protocol = event.getSession().getProtocol();
+                            String cipherSuite = event.getSession().getCipherSuite();
+                            LOGGER.info("TLS Handshake completed - Protocol: {}, Cipher Suite: {}", protocol, cipherSuite);
+                        } catch (Exception e) {
+                            LOGGER.debug("Failed to log TLS handshake details", e);
+                        }
+                    });
+                }
+            }
+        };
         
         return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
     }
