@@ -1,6 +1,7 @@
 name: kruize-bulk-api-test
 http:
-  host: kruize-api-route-openshift-tuning.apps.cluster-t8nrj.t8nrj.sandbox312.opentlc.com
+  #Change host to point to the API route of the cluster where kruize is deployed
+  host: KRUIZE_URL_PLACEHOLDER
   
 phases:
 - main:
