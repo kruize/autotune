@@ -35,38 +35,38 @@ function check_running() {
 		else
 			pod_list=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v "${ignore_ui_pod}" | grep -v "${ignore_db_pod}")
 		fi
-		pod_stat=$(echo "${pod_list}" | awk '{ print $3 }')
 		if [[ -z "${pod_list}" ]]; then
 		  echo "Error: No pods found matching ${check_pod}"
 		  err=-1
 		  break
 		fi
+		pod_stat=$(echo "${pod_list}" | awk '{ print $3 }')
+		not_running_count=$(echo "${pod_list}" | awk '$3 != "Running" {count++} END {print count+0}')
+		error_count=$(echo "${pod_list}" | awk '$3 == "Error" {count++} END {print count+0}')
 
-		case "${pod_stat}" in
-		"Running")
-			echo "Info: ${check_pod} deploy succeeded: ${pod_stat}"
+		if [[ "${not_running_count}" == "0" ]]; then
+			echo "Info: ${check_pod} deploy succeeded:"
+			echo "${pod_list}"
 			err=0
 			break
-			;;
-		"Error")
+		elif [[ "${error_count}" != "0" ]]; then
 			# On Error, wait for 10 seconds before exiting.
 			err_wait=$((err_wait + 1))
 			if [ ${err_wait} -gt 5 ]; then
-				echo "Error: ${check_pod} deploy failed: ${pod_stat}"
+				echo "Error: ${check_pod} deploy failed:"
+				echo "${pod_list}"
 				err=-1
 				break
 			fi
-			;;
-		*)
+		else
 			sleep 2
 			if [ $counter == 200 ]; then
-				${kubectl_cmd} describe pod ${check_pod}
+				${kubectl_cmd} get pods | grep "${check_pod}"
 				echo "ERROR: ${check_pod} Pods failed to come up!"
 				exit -1
 			fi
 			((counter++))
-			;;
-		esac
+		fi
 	done
 
 	${kubectl_cmd} get pods | grep ${check_pod}
