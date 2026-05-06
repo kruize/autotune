@@ -1408,27 +1408,6 @@ private void populateQueryParams(
     }
 }
 
-// Method to validate if result_columns are maintained for a metric
-private void validateResultColumns(List<String> resultColumns,
-                                   String metricName,
-                                   String context) {
-
-    if (resultColumns == null || resultColumns.isEmpty()
-        || resultColumns.contains(null)
-        || resultColumns.stream().anyMatch(String::isBlank)) {
-
-        LOGGER.error("Invalid result_columns for metric {} ({}) : {}",
-                metricName,
-                context,
-                resultColumns);
-
-        throw new IllegalStateException(
-                "Invalid result_columns for metric: " + metricName +
-                " (" + context + ")"
-        );
-    }
-}
-
     private void fetchNamespaceMetricsBasedOnProfile(KruizeObject kruizeObject, Timestamp startTime, Timestamp endTime, PerformanceProfile profile) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         String experiment_name = kruizeObject.getExperimentName();
         HashMap<String, String> queryParams = new HashMap<>();
@@ -1464,8 +1443,6 @@ private void validateResultColumns(List<String> resultColumns,
                         // Get result columns from profile (actual SQL column names)
                         List<String> resultColumns = metric.getResultColumns();
                         
-                        validateResultColumns(resultColumns, metricName, "unified");
-                        
                         // Populate query parameters
                         queryParams.clear();
                         if (queryParamsFromProfile != null && !queryParamsFromProfile.isEmpty()) {
@@ -1479,30 +1456,30 @@ private void validateResultColumns(List<String> resultColumns,
                                 endTimeLocalDateTime
                             );
                         } else {
-                            LOGGER.warn("query_params is null or empty for metric: {} with unified query", metricName);
+                            LOGGER.error("query_params is null or empty for metric: {} with unified query", metricName);
                             continue;
                         }
 
-                        // Execute unified query with result_columns
-                        List<Object[]> unifiedResults = metricsDBConnectionManager.getMetricsData(datasourceName, unifiedQuery, queryParams, resultColumns);
+                        // single-aggregate-query changes: Execute unified query with result_columns
+                        // Returns List<Map<String, Object>> where each map has column names as keys
+                        List<Map<String, Object>> unifiedResults = metricsDBConnectionManager.getMetricsData(datasourceName, unifiedQuery, queryParams, resultColumns);
                         
                         if (unifiedResults != null && !unifiedResults.isEmpty()) {
                             dataFound = true;
                             
-                            // Build column index map once before processing rows
-                            Map<String, Integer> columnIndexMap = buildColumnIndexMap(resultColumns);
-                            
-                            // Process unified results using helper method
-                            for (Object[] row : unifiedResults) {
-                                Timestamp start = (Timestamp) row[columnIndexMap.get("interval_start_time")];
-                                Timestamp end = (Timestamp) row[columnIndexMap.get("interval_end_time")];
+                            // single-aggregate-query changes: Process unified results - no need for columnIndexMap
+                            // Access columns directly by name from the map
+                            for (Map<String, Object> row : unifiedResults) {
+                                Timestamp start = (Timestamp) row.get("interval_start_time");
+                                Timestamp end = (Timestamp) row.get("interval_end_time");
                                 
                                 IntervalResults intervalResults = results.computeIfAbsent(
                                     end, k -> new IntervalResults(start, end));
                                 intervalResults.setIntervalStartTime(start);
                                 intervalResults.setIntervalEndTime(end);
                                 
-                                processResultRow(row, columnIndexMap, resultColumns, metricName, intervalResults);
+                                // single-aggregate-query changes: Pass map directly to processResultRow
+                                processResultRow(row, resultColumns, metricName, intervalResults);
                             }
                         }
                     }
@@ -1524,43 +1501,35 @@ private void validateResultColumns(List<String> resultColumns,
                                     endTimeLocalDateTime
                                 );
                             } else {
-                                LOGGER.warn("query_params is null or empty for metric: {} function: {}", metricName, function);
+                                LOGGER.error("query_params is null or empty for metric: {} function: {}", metricName, function);
                                 continue;
                             }
 
                             // Get result_columns for this function
                             List<String> functionResultColumns = metric.getResultColumns(function);
-
-                            validateResultColumns(functionResultColumns, metricName, function);
-                      
                             
-                            List<Object[]> functionResults = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams, functionResultColumns);
+                            // single-aggregate-query changes: Returns List<Map<String, Object>>
+                            List<Map<String, Object>> functionResults = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams, functionResultColumns);
                             
                             if (functionResults != null && !functionResults.isEmpty()) {
-                                // Build column index map once before processing rows
-                                Map<String, Integer> columnIndexMap = buildColumnIndexMap(functionResultColumns);
-                                
-                                for (Object[] row : functionResults) {
-                                    Timestamp start = (Timestamp) row[columnIndexMap.get("interval_start_time")];
-                                    Timestamp end = (Timestamp) row[columnIndexMap.get("interval_end_time")];
+                                // single-aggregate-query changes: Access columns by name from map
+                                for (Map<String, Object> row : functionResults) {
+                                    Timestamp start = (Timestamp) row.get("interval_start_time");
+                                    Timestamp end = (Timestamp) row.get("interval_end_time");
                                     
                                     IntervalResults intervalResults = results.computeIfAbsent(
                                         end, k -> new IntervalResults(start, end));
                                     intervalResults.setIntervalStartTime(start);
                                     intervalResults.setIntervalEndTime(end);
                                     
-                                    // For fallback queries, we know the function name from the loop
-                                    // Get the value from the "value" column
-                                    Integer valueIndex = columnIndexMap.get("value");
-                                    if (valueIndex != null && valueIndex < row.length) {
-                                        Object valueObj = row[valueIndex];
-                                        if (valueObj != null) {
-                                            try {
-                                                Double value = Double.valueOf(valueObj.toString());
-                                                intervalResults.addMetricResult(metricName, function, value);
-                                            } catch (Exception e) {
-                                                LOGGER.warn("Failed parsing value for function {} in metric {}", function, metricName);
-                                            }
+                                    // single-aggregate-query changes: For fallback queries, get value directly by column name
+                                    Object valueObj = row.get("value");
+                                    if (valueObj != null) {
+                                        try {
+                                            Double value = Double.valueOf(valueObj.toString());
+                                            intervalResults.addMetricResult(metricName, function, value);
+                                        } catch (Exception e) {
+                                            LOGGER.warn("Failed parsing value for function {} in metric {}", function, metricName);
                                         }
                                     }
                                 }
@@ -1606,8 +1575,6 @@ private void validateResultColumns(List<String> resultColumns,
                         // Get result columns from profile (actual SQL column names)
                         List<String> resultColumns = metric.getResultColumns();
                         
-                       validateResultColumns(resultColumns, metricName, "unified");
-                        
                         // Populate query parameters
                         queryParams.clear();
                         if (queryParamsFromProfile != null && !queryParamsFromProfile.isEmpty()) {
@@ -1621,30 +1588,30 @@ private void validateResultColumns(List<String> resultColumns,
                                 endTimeLocalDateTime
                             );
                         } else {
-                            LOGGER.warn("query_params is null or empty for metric: {} with unified query", metricName);
+                            LOGGER.error("query_params is null or empty for metric: {} with unified query", metricName);
                             continue;
                         }
                        
-                        // Execute unified query with result_columns
-                        List<Object[]> unifiedResults = metricsDBConnectionManager.getMetricsData(datasourceName, unifiedQuery, queryParams, resultColumns);
+                        // single-aggregate-query changes: Execute unified query with result_columns
+                        // Returns List<Map<String, Object>> where each map has column names as keys
+                        List<Map<String, Object>> unifiedResults = metricsDBConnectionManager.getMetricsData(datasourceName, unifiedQuery, queryParams, resultColumns);
                         
                         if (unifiedResults != null && !unifiedResults.isEmpty()) {
                             dataFound = true;
                             
-                            // Build column index map once before processing rows
-                            Map<String, Integer> columnIndexMap = buildColumnIndexMap(resultColumns);
-                            
-                            // Process unified results using helper method
-                            for (Object[] row : unifiedResults) {
-                                Timestamp start = (Timestamp) row[columnIndexMap.get("interval_start_time")];
-                                Timestamp end = (Timestamp) row[columnIndexMap.get("interval_end_time")];
+                            // single-aggregate-query changes: Process unified results - no need for columnIndexMap
+                            // Access columns directly by name from the map
+                            for (Map<String, Object> row : unifiedResults) {
+                                Timestamp start = (Timestamp) row.get("interval_start_time");
+                                Timestamp end = (Timestamp) row.get("interval_end_time");
                                 
                                 IntervalResults intervalResults = results.computeIfAbsent(
                                     end, k -> new IntervalResults(start, end));
                                 intervalResults.setIntervalStartTime(start);
                                 intervalResults.setIntervalEndTime(end);
                                 
-                                processResultRow(row, columnIndexMap, resultColumns, metricName, intervalResults);
+                                // single-aggregate-query changes: Pass map directly to processResultRow
+                                processResultRow(row, resultColumns, metricName, intervalResults);
                             }
                         }
                     }
@@ -1667,41 +1634,35 @@ private void validateResultColumns(List<String> resultColumns,
                                     endTimeLocalDateTime
                                 );
                             } else {
-                                LOGGER.warn("query_params is null or empty for metric: {} function: {}", metricName, function);
+                                LOGGER.error("query_params is null or empty for metric: {} function: {}", metricName, function);
                                 continue;
                             }
                             
                             // Get result_columns for this function
                             List<String> functionResultColumns = metric.getResultColumns(function);
-                            validateResultColumns(functionResultColumns, metricName, function);
                             
-                            List<Object[]> functionResults = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams, functionResultColumns);
+                            // single-aggregate-query changes: Returns List<Map<String, Object>>
+                            List<Map<String, Object>> functionResults = metricsDBConnectionManager.getMetricsData(datasourceName, query, queryParams, functionResultColumns);
                             
                             if (functionResults != null && !functionResults.isEmpty()) {
-                                // Build column index map once before processing rows
-                                Map<String, Integer> columnIndexMap = buildColumnIndexMap(functionResultColumns);
-                                
-                                for (Object[] row : functionResults) {
-                                    Timestamp start = (Timestamp) row[columnIndexMap.get("interval_start_time")];
-                                    Timestamp end = (Timestamp) row[columnIndexMap.get("interval_end_time")];
+                                // single-aggregate-query changes: Access columns by name from map
+                                for (Map<String, Object> row : functionResults) {
+                                    Timestamp start = (Timestamp) row.get("interval_start_time");
+                                    Timestamp end = (Timestamp) row.get("interval_end_time");
                                     
                                     IntervalResults intervalResults = results.computeIfAbsent(
                                         end, k -> new IntervalResults(start, end));
                                     intervalResults.setIntervalStartTime(start);
                                     intervalResults.setIntervalEndTime(end);
                                     
-                                    // For fallback queries, we know the function name from the loop
-                                    // Get the value from the "value" column
-                                    Integer valueIndex = columnIndexMap.get("value");
-                                    if (valueIndex != null && valueIndex < row.length) {
-                                        Object valueObj = row[valueIndex];
-                                        if (valueObj != null) {
-                                            try {
-                                                Double value = Double.valueOf(valueObj.toString());
-                                                intervalResults.addMetricResult(metricName, function, value);
-                                            } catch (Exception e) {
-                                                LOGGER.warn("Failed parsing value for function {} in metric {}", function, metricName);
-                                            }
+                                    // single-aggregate-query changes: For fallback queries, get value directly by column name
+                                    Object valueObj = row.get("value");
+                                    if (valueObj != null) {
+                                        try {
+                                            Double value = Double.valueOf(valueObj.toString());
+                                            intervalResults.addMetricResult(metricName, function, value);
+                                        } catch (Exception e) {
+                                            LOGGER.warn("Failed parsing value for function {} in metric {}", function, metricName);
                                         }
                                     }
                                 }
@@ -2276,24 +2237,20 @@ private void validateResultColumns(List<String> resultColumns,
      * @throws NoSuchMethodException if metric result addition fails
      * @throws IllegalAccessException if metric result addition fails
      */
+    // single-aggregate-query changes: Updated to accept Map<String, Object> instead of Object[]
+    // Removed columnIndexMap parameter as we can access columns directly by name
     private void processResultRow(
-            Object[] row,
-            Map<String, Integer> columnIndexMap,
+            Map<String, Object> row,
             List<String> resultColumns,
             String metricName,
             IntervalResults intervalResults) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
-        if (row == null || resultColumns == null || resultColumns.isEmpty()) {
+        if (row == null) {
             LOGGER.warn("Invalid input for metric {}. Skipping row processing.", metricName);
             return;
         }
 
-        if (row.length < resultColumns.size()) {
-            LOGGER.error("Column mismatch for metric {}. Expected at least {}, got {}",
-                    metricName, resultColumns.size(), row.length);
-            return;
-        }
-
+        // single-aggregate-query changes: Iterate through result columns and access values by name
         for (String columnName : resultColumns) {
             // Skip timestamp columns
             if ("interval_start_time".equals(columnName) ||
@@ -2301,14 +2258,12 @@ private void validateResultColumns(List<String> resultColumns,
                 continue;
             }
 
-            Integer columnIndex = columnIndexMap.get(columnName);
-            if (columnIndex == null || columnIndex >= row.length) {
-                LOGGER.warn("Column {} not found for metric {}", columnName, metricName);
+            // single-aggregate-query changes: Direct access by column name from map
+            Object valueObj = row.get(columnName);
+            if (valueObj == null) {
+                LOGGER.debug("Column {} has null value for metric {}", columnName, metricName);
                 continue;
             }
-
-            Object valueObj = row[columnIndex];
-            if (valueObj == null) continue;
 
             Double value;
             try {
@@ -2344,19 +2299,8 @@ private void validateResultColumns(List<String> resultColumns,
         return columnName;
     }
 
-    /**
-     * Build a map of column names to their indices for efficient lookup.
-     *
-     * @param resultColumns List of column names
-     * @return Map of column name to index
-     */
-    private Map<String, Integer> buildColumnIndexMap(List<String> resultColumns) {
-        Map<String, Integer> map = new HashMap<>();
-        for (int i = 0; i < resultColumns.size(); i++) {
-            map.put(resultColumns.get(i), i);
-        }
-        return map;
-    }
+    // single-aggregate-query changes: Removed buildColumnIndexMap method
+    // No longer needed as we access columns directly by name from Map<String, Object>
 
 }
 

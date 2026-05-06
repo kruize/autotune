@@ -215,11 +215,13 @@ public class MetricsDBConnectionManager {
         }
     }
 
-    public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params) {
+    public List<Map<String, Object>> getMetricsData(String metricsDbRef, String sql, Map<String, String> params) {
         return getMetricsData(metricsDbRef, sql, params, null);
     }
 
-    public List<Object[]> getMetricsData(String metricsDbRef, String sql, Map<String, String> params, List<String> resultColumns) {
+    // single-aggregate-query changes: Changed return type from List<Object[]> to List<Map<String, Object>>
+    // This allows column access by name instead of index, making code more maintainable and less error-prone
+    public List<Map<String, Object>> getMetricsData(String metricsDbRef, String sql, Map<String, String> params, List<String> resultColumns) {
         Session session = null;
         try {
             session = getSession(metricsDbRef);
@@ -231,18 +233,20 @@ public class MetricsDBConnectionManager {
             
             NativeQuery query = session.createNativeQuery(sql);
             
-            // Dynamically add scalars based on result_columns if provided
+            // single-aggregate-query changes: Use AliasToEntityMapResultTransformer for automatic column-to-map conversion
+            // Hibernate automatically maps column names to map keys and handles type conversion
+            query.setResultTransformer(org.hibernate.transform.AliasToEntityMapResultTransformer.INSTANCE);
+            
+            // single-aggregate-query changes: Dynamically add scalars for proper type mapping
             if (resultColumns != null && !resultColumns.isEmpty()) {
                 for (String columnName : resultColumns) {
-                    if (columnName.contains("time")) {
+                    if (columnName.toLowerCase().contains("time")) {
                         query.addScalar(columnName, java.sql.Timestamp.class);
                     } else {
                         query.addScalar(columnName, String.class);
                     }
                 }
-            } 
-            // No Fallback is maingto default columns for backward compatibility as the result columns sequence should match the sequence in which query params are defined in query
-                
+            }
             
             LOGGER.error("final query = {}", query.toString());
             if (params != null) {
@@ -251,7 +255,9 @@ public class MetricsDBConnectionManager {
                 }
             }
 
-            List<Object[]> resultList = query.getResultList();
+            // single-aggregate-query changes: Returns List<Map<String, Object>> where each map represents a row
+            // Map key = column name, Map value = column value (Timestamp, String, etc.)
+            List<Map<String, Object>> resultList = query.getResultList();
             return resultList;
 
         } catch (Exception e) {
