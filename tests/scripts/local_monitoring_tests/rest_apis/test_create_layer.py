@@ -614,3 +614,314 @@ def test_create_layer_categorical_tunable_validation(test_name, expected_error_m
         # Cleanup temporary file
         if os.path.exists(tmp_json_file):
             os.remove(tmp_json_file)
+
+
+# =============================================================================
+# POSITIVE TEST CASES - Label-Based Detection Tests
+# =============================================================================
+# This section tests positive scenarios for label-based layer detection.
+# Tests include:
+# - Single label detection
+# - Multiple labels detection
+# - Labels with special characters (K8s-compliant format)
+# - Case-sensitive label matching
+# Expected: API returns 201 status with success message
+
+@pytest.mark.layers
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, layer_name, layer_presence", [
+    ("single_label", "test-layer-single-label", '{"label": [{"name": "runtime", "value": "quarkus"}]}'),
+    ("multiple_labels", "test-layer-multiple-labels", '{"label": [{"name": "runtime", "value": "quarkus"}, {"name": "framework", "value": "micrometer"}]}'),
+    ("label_special_chars", "test-layer-label-special-chars", '{"label": [{"name": "app.kubernetes.io/name", "value": "quarkus-2.0"}]}'),
+    ("label_case_sensitivity", "test-layer-label-case", '{"label": [{"name": "Environment", "value": "Production"}]}'),
+])
+def test_create_layer_with_label_based_detection(test_name, layer_name, layer_presence, cluster_type):
+    """
+    Test Description: Validates createLayer API accepts valid label-based detection configurations
+    Tests single and multiple label scenarios with various naming conventions
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_layer_template.json")
+
+    tunables = '[{"name": "test_tunable", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'
+
+    content = template.render(
+        apiVersion="recommender.com/v1",
+        kind="KruizeLayer",
+        metadata_name=layer_name,
+        layer_name=layer_name,
+        details=f"Test layer for {test_name}",
+        layer_presence=layer_presence,
+        tunables=tunables
+    )
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            f.write(content)
+
+        # Cleanup before test to ensure clean state
+        delete_layer(layer_name)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Expected status {SUCCESS_STATUS_CODE}, got {response.status_code}"
+        assert data['status'] == SUCCESS_STATUS, f"Expected status {SUCCESS_STATUS}, got {data['status']}"
+        assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
+
+        print(f"✓ Layer '{layer_name}' created successfully with {test_name}")
+
+        # Cleanup: Delete layer
+        delete_layer(layer_name)
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+# =============================================================================
+# NEGATIVE TEST CASES - Label Array Validation
+# =============================================================================
+# This section tests validation of label array structure and content.
+# Tests include:
+# - Empty label array
+# - Null element in label array
+# - Multiple labels with same name (duplicate detection)
+# Expected: API returns 400 status with specific error messages
+
+@pytest.mark.layers
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, expected_error_msg, layer_presence", [
+    ("label_empty_array", LAYER_PRESENCE_MISSING_MSG, '{"label": []}'),
+    ("label_null_element", "Validation failed: Label array contains null element", '{"label": [null, {"name": "test", "value": "test"}]}'),
+    ("label_duplicate_names", "Validation failed: Layer presence contains duplicate label names: runtime", '{"label": [{"name": "runtime", "value": "quarkus"}, {"name": "runtime", "value": "hotspot"}]}'),
+])
+def test_create_layer_label_array_validation(test_name, expected_error_msg, layer_presence, cluster_type):
+    """
+    Test Description: Validates createLayer API rejects invalid label array configurations
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_layer_template.json")
+
+    tunables = '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'
+
+    content = template.render(
+        apiVersion="recommender.com/v1",
+        kind="KruizeLayer",
+        metadata_name="test-meta",
+        layer_name="test-layer",
+        details="test layer",
+        layer_presence=layer_presence,
+        tunables=tunables
+    )
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            f.write(content)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+        assert 'message' in data, "Response missing 'message' field"
+        assert data['message'] == expected_error_msg, \
+            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+
+        print(f"✓ Correctly rejected: {test_name}")
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+# =============================================================================
+# NEGATIVE TEST CASES - Label Format Validation
+# =============================================================================
+# This section tests validation of label name/value format constraints.
+# Tests include:
+# - Very long label names (>253 chars per K8s rules)
+# - Very long label values (>63 chars per K8s rules)
+# - Whitespace handling (leading/trailing spaces)
+# Expected: API returns 400 status with specific validation errors
+
+@pytest.mark.layers
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, expected_error_msg, label_name, label_value", [
+    ("label_name_too_long", "Validation failed: Label name exceeds maximum length of 253 characters", "a" * 254, "test"),
+    ("label_value_too_long", "Validation failed: Label value exceeds maximum length of 63 characters", "test", "a" * 64),
+    ("label_name_leading_whitespace", "Validation failed: Label name cannot contain leading or trailing whitespace", " runtime", "quarkus"),
+    ("label_name_trailing_whitespace", "Validation failed: Label name cannot contain leading or trailing whitespace", "runtime ", "quarkus"),
+    ("label_value_leading_whitespace", "Validation failed: Label value cannot contain leading or trailing whitespace", "runtime", " quarkus"),
+    ("label_value_trailing_whitespace", "Validation failed: Label value cannot contain leading or trailing whitespace", "runtime", "quarkus "),
+])
+def test_create_layer_label_format_validation(test_name, expected_error_msg, label_name, label_value, cluster_type):
+    """
+    Test Description: Validates createLayer API rejects labels with invalid format
+    Tests K8s label naming constraints and whitespace handling
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+
+    # Build JSON manually to preserve exact whitespace
+    json_obj = {
+        "apiVersion": "recommender.com/v1",
+        "kind": "KruizeLayer",
+        "metadata": {"name": "test-meta"},
+        "layer_name": "test-layer",
+        "details": "test layer",
+        "layer_presence": {
+            "label": [
+                {"name": label_name, "value": label_value}
+            ]
+        },
+        "tunables": [
+            {"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}
+        ]
+    }
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+        assert 'message' in data, "Response missing 'message' field"
+        assert data['message'] == expected_error_msg, \
+            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+
+        print(f"✓ Correctly rejected: {test_name}")
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+# =============================================================================
+# POSITIVE TEST CASES - Label Name Format Tests
+# =============================================================================
+# This section tests various label name formats that should be accepted.
+# Tests include:
+# - Labels with underscores
+# Expected: API returns 201 status with success message
+
+@pytest.mark.layers
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, layer_name, label_name, label_value", [
+    ("label_with_underscores", "test-layer-underscore", "my_custom_label", "test_value"),
+])
+def test_create_layer_label_name_formats(test_name, layer_name, label_name, label_value, cluster_type):
+    """
+    Test Description: Validates createLayer API accepts labels with underscores and other valid characters
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    
+    json_obj = {
+        "apiVersion": "recommender.com/v1",
+        "kind": "KruizeLayer",
+        "metadata": {"name": layer_name},
+        "layer_name": layer_name,
+        "details": f"Test layer for {test_name}",
+        "layer_presence": {
+            "label": [
+                {"name": label_name, "value": label_value}
+            ]
+        },
+        "tunables": [
+            {"name": "test_tunable", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}
+        ]
+    }
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        # Cleanup before test to ensure clean state
+        delete_layer(layer_name)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Expected status {SUCCESS_STATUS_CODE}, got {response.status_code}"
+        assert data['status'] == SUCCESS_STATUS, f"Expected status {SUCCESS_STATUS}, got {data['status']}"
+        assert data['message'] == CREATE_LAYER_SUCCESS_MSG % layer_name
+
+        print(f"✓ Layer '{layer_name}' created successfully with {test_name}")
+
+        # Cleanup: Delete layer
+        delete_layer(layer_name)
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+# =============================================================================
+# NEGATIVE TEST CASES - Label Value Special Characters (Security)
+# =============================================================================
+# This section tests label values with special characters to prevent PromQL injection
+# and syntax errors. Tests include:
+# - Quotes in value (PromQL injection risk)
+# - Backslashes in value (escape character issues)
+# - Special symbols that could break queries
+# Expected: API returns 400 status with specific validation errors
+
+@pytest.mark.layers
+@pytest.mark.negative
+@pytest.mark.security
+@pytest.mark.parametrize("test_name, expected_error_msg, label_value", [
+    ("label_value_with_quotes", "Validation failed: Label value contains invalid characters: quotes are not allowed", 'value"with"quotes'),
+    ("label_value_with_backslash", "Validation failed: Label value contains invalid characters: backslashes are not allowed", 'value\\with\\backslash'),
+    ("label_value_with_special_symbols", "Validation failed: Label value contains invalid characters", "value@#$%"),
+    ("label_value_with_single_quotes", "Validation failed: Label value contains invalid characters: quotes are not allowed", "value'with'quotes"),
+    ("label_value_with_curly_braces", "Validation failed: Label value contains invalid characters", "value{with}braces"),
+    ("label_value_with_square_brackets", "Validation failed: Label value contains invalid characters", "value[with]brackets"),
+])
+def test_create_layer_label_value_special_chars_security(test_name, expected_error_msg, label_value, cluster_type):
+    """
+    Test Description: Validates createLayer API rejects label values with special characters
+    that could cause PromQL injection or query syntax errors
+    Security test to prevent malicious label values
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    
+    json_obj = {
+        "apiVersion": "recommender.com/v1",
+        "kind": "KruizeLayer",
+        "metadata": {"name": "test-meta"},
+        "layer_name": "test-layer",
+        "details": "test layer",
+        "layer_presence": {
+            "label": [
+                {"name": "runtime", "value": label_value}
+            ]
+        },
+        "tunables": [
+            {"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}
+        ]
+    }
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+        assert 'message' in data, "Response missing 'message' field"
+        assert data['message'] == expected_error_msg, \
+            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+
+        print(f"✓ Correctly rejected (security): {test_name}")
+    finally:
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
