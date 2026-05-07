@@ -21,6 +21,7 @@ import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -32,10 +33,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METRICS_ERROR_PREFIX;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
 
 public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
+    private final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void initialize(PerformanceProfileCheck constraintAnnotation) {
@@ -54,7 +57,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
             String performanceProfileName = kruizeObject.getPerformanceProfile();
             try {
-                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName);
+                experimentDBService.loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName);
             } catch (Exception e) {
                 LOGGER.error("Loading saved performance profiles failed: {}", e.getMessage());
                 throw e;
@@ -70,10 +73,37 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             if (errorMsg.isEmpty()) {
                 success = true;
             } else {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(errorMsg.toString())
-                        .addPropertyNode("Performance profile")
-                        .addConstraintViolation();
+                // Check if the error is related to invalid metrics using the constant
+                boolean hasInvalidMetricsError = errorMsg.stream()
+                        .anyMatch(msg -> msg.startsWith(INVALID_METRICS_ERROR_PREFIX));
+                
+                if (hasInvalidMetricsError) {
+                    // Clear the cache and reload from database
+                    LOGGER.debug("Invalid metrics error detected. Clearing cache and reloading from DB for profile: {}", performanceProfileName);
+                    PerformanceProfileCache.remove(performanceProfileName);
+                    try {
+                        experimentDBService.loadPerformanceProfileFromDBByName(performanceProfilesMap, performanceProfileName);
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved performance profiles failed during refresh", e);
+                        throw e;
+                    }
+                    
+                    performanceProfile = performanceProfilesMap.get(performanceProfileName);
+                    if (performanceProfile == null) {
+                        throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, performanceProfileName));
+                    }
+                    
+                    // validate the result value present in the updateResultsAPIObject
+                    errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
+                    if (errorMsg.isEmpty()) {
+                        success = true;
+                    } else {
+                        addConstraintViolation(context, errorMsg.toString(), "Performance profile");
+                    }
+                } else {
+                    // For other validation errors, fail immediately without cache pruning
+                    addConstraintViolation(context, errorMsg.toString(), "Performance profile");
+                }
             }
 
         } catch (Exception e) {
@@ -84,19 +114,28 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             String stackTrace = sw.toString();
             LOGGER.debug(stackTrace);
             if (null != e.getMessage()) {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(e.getMessage())
-                        .addPropertyNode("")
-                        .addConstraintViolation();
+                addConstraintViolation(context, e.getMessage(), "");
             } else {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("Null value found")
-                        .addPropertyNode("")
-                        .addConstraintViolation();
+                addConstraintViolation(context, "Null value found", "");
             }
 
         }
         LOGGER.debug("PerformanceProfileValidator success : {}", success);
         return success;
+    }
+
+    /**
+     * Helper method to add a constraint violation with a custom message.
+     * Centralizes the logic for disabling default violations and building custom ones.
+     *
+     * @param context the constraint validator context
+     * @param message the error message to include in the violation
+     * @param propertyNode the property node name for the violation
+     */
+    private void addConstraintViolation(ConstraintValidatorContext context, String message, String propertyNode) {
+        context.disableDefaultConstraintViolation();
+        context.buildConstraintViolationWithTemplate(message)
+                .addPropertyNode(propertyNode)
+                .addConstraintViolation();
     }
 }
