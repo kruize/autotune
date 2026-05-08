@@ -18,8 +18,8 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
+METRIC_PROFILE_DIR="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -94,7 +94,7 @@ KRUIZE_SETUP_LOG="${LOG_DIR}/kruize_setup.log"
 
 # Setup kruize
 echo "Setting up kruize..." | tee -a ${LOG}
-pushd ${KRUIZE_REPO} > /dev/null
+pushd ${KRUIZE_REPO_PATH} > /dev/null
 	MANIFESTS_FILE="./manifests/crc/default-db-included-installation/${CLUSTER_TYPE}/kruize-crc-${CLUSTER_TYPE}.yaml"
 	MANIFESTS_FILE_BKUP="./manifests/crc/default-db-included-installation/${CLUSTER_TYPE}/kruize-crc-${CLUSTER_TYPE}.yaml.bkup"
 

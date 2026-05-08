@@ -1,0 +1,11 @@
+{
+  "apiVersion": "{{apiVersion}}",
+  "kind": "{{kind}}",
+  "metadata": {
+    "name": {{metadata_name|tojson}}
+  },
+  "layer_name": {{layer_name|tojson}},
+  "details": "{{details}}",
+  "layer_presence": {{layer_presence}},
+  "tunables": {{tunables}}
+}

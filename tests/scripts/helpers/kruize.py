@@ -692,3 +692,109 @@ def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
     print("Response status code = ", response.status_code)
     print(response.json())
     return response
+
+
+# Description: This function creates a layer using createLayer API
+# Input Parameters: layer input json file
+def create_layer(layer_json_file):
+    json_file = open(layer_json_file, "r")
+    layer_json = json.loads(json_file.read())
+
+    print("\nCreating layer...")
+    print("\n************************************************************")
+    pretty_json_str = json.dumps(layer_json, indent=4)
+    print(pretty_json_str)
+    print("\n************************************************************")
+
+    url = URL + "/createLayer"
+    print("URL = ", url)
+
+    response = requests.post(url, json=layer_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+
+# Description: This function lists layers from Kruize Autotune using GET listLayers API
+# Input Parameters: layer name (optional)
+def list_layers(layer_name=None, logging=True):
+    print("\nListing the layers...")
+
+    query_params = {}
+
+    if layer_name is not None:
+        query_params['name'] = layer_name
+
+    url = URL + "/listLayers"
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url, params=query_params)
+
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response
+
+
+# Description: This function deletes a layer from the database (temporary workaround until deleteLayer API is implemented)
+# Input Parameters: layer name
+def delete_layer_from_db(layer_name):
+    """
+    Helper function to delete a layer from the database.
+    This is a temporary workaround until deleteLayer API is implemented.
+
+    Args:
+        layer_name: Name of the layer to delete
+
+    Returns:
+        bool: True if deletion succeeded, False otherwise
+    """
+    import subprocess
+
+    # Auto-detect namespace where kruize-db-deployment is running
+    try:
+        namespace_cmd = [
+            "kubectl", "get", "deployment", "-A",
+            "-o", "custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name",
+            "--no-headers"
+        ]
+        namespace_result = subprocess.run(namespace_cmd, capture_output=True, text=True, timeout=5)
+        if namespace_result.returncode != 0:
+            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
+            return False
+
+        # Parse output to find kruize-db-deployment
+        namespace = None
+        for line in namespace_result.stdout.strip().split('\n'):
+            parts = line.split()
+            if len(parts) >= 2 and parts[1] == 'kruize-db-deployment':
+                namespace = parts[0]
+                break
+
+        if not namespace:
+            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
+            return False
+    except Exception as e:
+        print(f"  ⚠ Warning: Error detecting namespace: {e}")
+        return False
+
+    try:
+        cmd = [
+            "kubectl", "exec", "-n", namespace,
+            "deployment/kruize-db-deployment", "--",
+            "psql", "-U", "admin", "-d", "kruizeDB",
+            "-c", f"DELETE FROM kruize_lm_layer WHERE layer_name='{layer_name}';"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            print(f"  ✓ Cleaned up layer '{layer_name}' from database")
+            return True
+        else:
+            # Don't fail - just warn
+            print(f"  ⚠ Warning: Could not clean up layer '{layer_name}': {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
+        return False

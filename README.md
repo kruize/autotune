@@ -19,6 +19,8 @@ Recommendations are generated for:
 
 - NVIDIA GPUs – Optimal MIG slice configurations for supported accelerators (e.g., A100, H100)
 
+- Application Runtimes & Frameworks (Alpha) – Optimized configurations for JVMs (e.g., Hotspot, Semeru) and frameworks (e.g., Quarkus). [Learn more](/docs/runtime_recommendations.md).
+
 Kruize supports both predefined terms (short, medium, long) and custom terms, allowing recommendations to align with your desired observation window. You can also choose between performance-optimized or cost-optimized profiles based on your workload priorities.
 
 ## Quick Start

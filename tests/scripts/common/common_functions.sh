@@ -1008,3 +1008,50 @@ function kruize_local_datasource_manifest_patch() {
 		fi
 	fi
 }
+
+#
+# Update kruize cpu/memory resources, PV storage for openshift
+#
+function kruize_local_patch() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+
+	if [ ${cluster_type} == "openshift" ]; then
+		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
+}
+
+###########################################
+#   Benchmarks Install
+###########################################
+function benchmarks_install() {
+	APP_NAMESPACE="${1:-${APP_NAMESPACE}}"
+	BENCHMARK="${2:-tfb}"
+	MANIFESTS="${3:-default_manifests}"
+
+	echo
+	echo "#######################################"
+	pushd benchmarks >/dev/null
+	  if [ ${BENCHMARK} == "tfb" ]; then
+      echo "Installing TechEmpower (Quarkus REST EASY) benchmark into cluster"
+      pushd techempower >/dev/null
+			  kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        check_err "ERROR: TechEmpower app failed to start, exiting"
+      popd >/dev/null
+    fi
+    if [ ${BENCHMARK} == "petclinic" ]; then
+			echo "Installing spring petclinic benchmark into cluster"
+			pushd spring-petclinic >/dev/null
+        if [ "${MANIFESTS}" != "default_manifests" ]; then
+          kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        else
+          kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
+        fi
+        check_err "ERROR: spring petclinic failed to start, exiting"
+			popd >/dev/null
+		fi
+  popd >/dev/null
+	echo "#######################################"
+	echo
+}

@@ -5,6 +5,7 @@ import com.autotune.analyzer.autoscaler.accelerator.utils.AcceleratorAutoscalerU
 import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
@@ -97,16 +98,14 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
 
 
                 TermRecommendations shortTermRec = latestRecommendation.getShortTermRecommendations();
-                HashMap<AnalyzerConstants.ResourceSetting,
-                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> existingMap =
-                        shortTermRec.getCostRecommendations().getConfig();
+                Config existingObj = shortTermRec.getCostRecommendations().getConfig();
 
-                HashMap<AnalyzerConstants.ResourceSetting,
+                HashMap<AnalyzerConstants.ConfigType,
                         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> updatedRec = new HashMap<>();
 
                 // Process requests
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> updatedRequests = new HashMap<>();
-                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingRequests = existingMap.get(AnalyzerConstants.ResourceSetting.requests);
+                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingRequests = existingObj.getRequests();
 
                 for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestMapEntry : existingRequests.entrySet()) {
                     AnalyzerConstants.RecommendationItem recommendationItem = requestMapEntry.getKey();
@@ -122,7 +121,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                 }
 
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> updatedLimits = new HashMap<>();
-                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingLimits = existingMap.get(AnalyzerConstants.ResourceSetting.limits);
+                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingLimits = existingObj.getLimits();
 
                 for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMapEntry : existingLimits.entrySet()) {
                     AnalyzerConstants.RecommendationItem recommendationItem = limitsMapEntry.getKey();
@@ -138,10 +137,10 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                 }
 
                 if (!updatedRequests.isEmpty())
-                    updatedRec.put(AnalyzerConstants.ResourceSetting.requests, updatedRequests);
+                    updatedRec.put(AnalyzerConstants.ConfigType.REQUESTS, updatedRequests);
 
                 if (!updatedLimits.isEmpty())
-                    updatedRec.put(AnalyzerConstants.ResourceSetting.limits, updatedLimits);
+                    updatedRec.put(AnalyzerConstants.ConfigType.LIMITS, updatedLimits);
 
                 updateOrRevertResources(containerName, namespace, workloadName, AnalyzerConstants.K8sObjectConstants.Types.JOB,
                         updatedRec);
@@ -188,7 +187,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                                                String namespace,
                                                String workloadName,
                                                String koType,
-                                               HashMap<AnalyzerConstants.ResourceSetting,
+                                               HashMap<AnalyzerConstants.ConfigType,
                                                        HashMap<AnalyzerConstants.RecommendationItem,
                                                                RecommendationConfigItem>> recommendations )  {
 

@@ -72,8 +72,9 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
         public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
         public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
-        public static final String PERFORMANCE_PROFILE_UPDATE_SUCCESS = "Performance Profile '%s' updated successfully to version %.1f.";
-        public static final String PERF_PROFILE_DELETION_SUCCESS = "Performance profile %s deleted successfully.";
+        public static final String PERFORMANCE_PROFILE_CREATE_SUCCESS = "Performance Profile : %s created successfully. View Performance Profiles at /listPerformanceProfiles";
+        public static final String PERFORMANCE_PROFILE_UPDATE_SUCCESS = "Performance Profile '%s' updated successfully to version %.1f. View Performance Profiles at /listPerformanceProfiles";
+        public static final String PERF_PROFILE_DELETION_SUCCESS = "Performance profile %s deleted successfully. View Performance Profiles at /listPerformanceProfiles";
     }
 
     public static class MetricProfileAPIMessages {
@@ -214,6 +215,7 @@ public class KruizeConstants {
         public static final String TEMPLATE = "template";
         public static final String JAVA_OPTIONS = "JAVA_OPTIONS";
         public static final String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
+        public static final String QUARKUS_THREAD_POOL_CORE_THREADS = "QUARKUS_THREAD_POOL_CORE_THREADS";
         public static final String ENV = "ENV";
         public static final String TRIAL_RUNNING = "--Trial Running--";
         public static final String RESULT_VALUE = "result_value";
@@ -914,13 +916,28 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_CLIENT_ID = "clientId";
         public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
         public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String AUTHENTICATION_CLIENT_CERT_PATH = "clientCertPath";
+        public static final String AUTHENTICATION_CLIENT_KEY_PATH = "clientKeyPath";
+        public static final String AUTHENTICATION_CA_CERT_PATH = "caCertPath";
+        public static final String AUTHENTICATION_KEY_PASSWORD = "keyPassword";
         public static final String NONE = "none";
         public static final String BASIC = "basic";
         public static final String BEARER = "bearer";
         public static final String API_KEY = "apikey";
         public static final String OAUTH2 = "oauth2";
+        public static final String MTLS = "mtls";
         public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
         public static final String AUTHORIZATION = "Authorization";
+            // PEM format markers for certificate parsing
+        public static final String PEM_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----";
+        public static final String PEM_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----";
+        public static final String PEM_RSA_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";
+        public static final String PEM_RSA_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----";
+        public static final String PEM_EC_PRIVATE_KEY_HEADER = "-----BEGIN EC PRIVATE KEY-----";
+        public static final String PEM_EC_PRIVATE_KEY_FOOTER = "-----END EC PRIVATE KEY-----";
+        public static final String EMPTY_STRING = "";
+        public static final String WHITESPACE_REGEX = "\\s";
+
 
     }
 
@@ -1116,6 +1133,17 @@ public class KruizeConstants {
         public static final String UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
+        }
+    }
+
+    public static final class LayerAPIMessages {
+        public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
+        public static final String ADD_LAYER_TO_DB = "Added Layer : {} into the DB";
+        public static final String LOAD_LAYER_FAILURE = "Failed to load layer data: {}";
+        public static final String LOAD_ALL_LAYERS_FAILURE = "Failed to load all layers: {}";
+
+        private LayerAPIMessages() {
         }
     }
 
