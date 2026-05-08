@@ -101,7 +101,7 @@ Same as in the createPerformanceProfile. You can refer [here](/design/Performanc
     ```
     {
         "message": "Performance Profile <name> updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles",
-        "httpcode": 201,
+        "httpcode": 200,
         "documentationLink": "",
         "status": "SUCCESS"
     }
