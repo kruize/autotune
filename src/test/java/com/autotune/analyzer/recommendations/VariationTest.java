@@ -191,8 +191,8 @@ public class VariationTest {
     @Test
     public void testSetAndGetResources() {
         // Given
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
         RecommendationConfigItem cpuItem = new RecommendationConfigItem(2.0, "cores");
         requests.put(AnalyzerConstants.RecommendationItem.CPU, cpuItem);
         resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
@@ -209,15 +209,15 @@ public class VariationTest {
     @Test
     public void testSetAndGetResourcesWithRequestsAndLimits() {
         // Given
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
         
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
         RecommendationConfigItem cpuRequestItem = new RecommendationConfigItem(2.0, "cores");
         RecommendationConfigItem memoryRequestItem = new RecommendationConfigItem(4096.0, "MiB");
         requests.put(AnalyzerConstants.RecommendationItem.CPU, cpuRequestItem);
         requests.put(AnalyzerConstants.RecommendationItem.MEMORY, memoryRequestItem);
         
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = new HashMap<>();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = new HashMap<>();
         RecommendationConfigItem cpuLimitItem = new RecommendationConfigItem(4.0, "cores");
         RecommendationConfigItem memoryLimitItem = new RecommendationConfigItem(8192.0, "MiB");
         limits.put(AnalyzerConstants.RecommendationItem.CPU, cpuLimitItem);
@@ -253,8 +253,8 @@ public class VariationTest {
     @Test
     public void testSetAndGetResourcesWithGPU() {
         // Given
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
         RecommendationConfigItem gpuItem = new RecommendationConfigItem(1.0, "gpu");
         requests.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU, gpuItem);
         resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
@@ -281,7 +281,7 @@ public class VariationTest {
         limits.put(AnalyzerConstants.RecommendationItem.CPU, new RecommendationConfigItem(4.0, "cores"));
         limits.put(AnalyzerConstants.RecommendationItem.MEMORY, new RecommendationConfigItem(8192.0, "MiB"));
         
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
         resources.put(AnalyzerConstants.ResourceSetting.requests, new HashMap<>(requests));
         resources.put(AnalyzerConstants.ResourceSetting.limits, new HashMap<>(limits));
 
@@ -319,8 +319,8 @@ public class VariationTest {
     @Test
     public void testJsonSerializationWithResources() {
         // Given
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources = new HashMap<>();
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = new HashMap<>();
         requests.put(AnalyzerConstants.RecommendationItem.CPU, new RecommendationConfigItem(2.0, "cores"));
         resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
         variation.setResources(resources);
