@@ -97,7 +97,6 @@ public class GenerateRecommendations extends HttpServlet {
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
             String bulkJobID = request.getParameter(JOB_ID);
-            boolean useV1Converter = Boolean.parseBoolean(request.getParameter("useV1Converter"));
             Timestamp interval_end_time, interval_start_time;
 
             // create recommendation engine object
@@ -110,7 +109,7 @@ public class GenerateRecommendations extends HttpServlet {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
-                    sendSuccessResponse(response, kruizeObject, interval_end_time, useV1Converter);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
                     LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
@@ -134,30 +133,20 @@ public class GenerateRecommendations extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time, boolean useV1Converter) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
         LOGGER.debug("sendSuccessResponse");
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
-            ListRecommendationsAPIObject listRecommendationsAPIObject;
-
-            if(useV1Converter) {
-                listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                        convertKruizeObjectToListRecommendationSOV1(
-                                ko,
-                                false,
-                                false,
-                                interval_end_time);
-            } else {
-                listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                        convertKruizeObjectToListRecommendationSO(
-                                ko,
-                                false,
-                                false,
-                                interval_end_time);
-            }
+            //LOGGER.debug(ko.getKubernetes_objects().toString());
+            ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
+                    convertKruizeObjectToListRecommendationSO(
+                            ko,
+                            false,
+                            false,
+                            interval_end_time);
             recommendationList.add(listRecommendationsAPIObject);
         } catch (Exception e) {
             LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());

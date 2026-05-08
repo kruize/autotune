@@ -23,9 +23,18 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.NamespaceRecommendations;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.Variation;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -64,12 +73,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.REMOTE;
@@ -197,9 +201,7 @@ public class RecommendationsResource extends HttpServlet {
                                         response,
                                         new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
                                         HttpServletResponse.SC_BAD_REQUEST,
-                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime),
-                                        null,
-                                        null
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
                                 );
                             }
                         } else {
@@ -208,9 +210,7 @@ public class RecommendationsResource extends HttpServlet {
                                     response,
                                     new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime),
-                                    null,
-                                    null
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
                             );
                         }
                     }
@@ -221,9 +221,7 @@ public class RecommendationsResource extends HttpServlet {
                             response,
                             new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName),
-                            null,
-                            null
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
                     );
                 }
             } else {
@@ -256,9 +254,7 @@ public class RecommendationsResource extends HttpServlet {
                                     response,
                                     new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime),
-                                    null,
-                                    null
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
                             );
                         }
                     } else {
@@ -267,9 +263,7 @@ public class RecommendationsResource extends HttpServlet {
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime),
-                                null,
-                                null
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
                         );
                     }
                 } else {
@@ -284,7 +278,7 @@ public class RecommendationsResource extends HttpServlet {
         } catch (Exception e) {
             LOGGER.error("Exception in RecommendationsResource GET: {}", e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), null, null);
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             if (null != timerListRec) {
                 MetricsConfig.timerListRec = MetricsConfig.timerBListRec.tag("status", statusValue)
@@ -379,10 +373,10 @@ public class RecommendationsResource extends HttpServlet {
                         statusValue = KruizeConstants.APIMessages.SUCCESS;
                     } else {
                         sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
-                                kruizeObject.getValidation_data().getMessage(), experimentName, intervalEndTimeStr);
+                                kruizeObject.getValidation_data().getMessage());
                     }
                 } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, experimentName, intervalEndTimeStr);
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
                 }
             } else if (AnalyzerConstants.LOCAL.equals(target)) {
                 String bulkJobID = request.getParameter(JOB_ID);
@@ -398,25 +392,25 @@ public class RecommendationsResource extends HttpServlet {
                         statusValue = KruizeConstants.APIMessages.SUCCESS;
                     } else {
                         sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
-                                kruizeObject.getValidation_data().getMessage(), null, null);
+                                kruizeObject.getValidation_data().getMessage());
                     }
                 } else {
                     LOGGER.error("Validation failed: {}", validationMessage);
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, null, null);
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
                 }
             } else {
                 // Invalid target value
                 String errorMsg = String.format("Invalid target cluster: '%s'. Valid values are 'remote' or 'local'.", target);
                 LOGGER.error(errorMsg);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, errorMsg, null, null);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, errorMsg);
             }
         } catch (FetchMetricsError e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.ERROR_FETCHING_METRICS);
-            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), null, null);
+            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Exception in RecommendationsResource POST - count: {}", calCount);
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), null, null);
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             LOGGER.debug("RecommendationsResource POST completed - count: {}", calCount);
             if (null != timerBUpdateRecommendations) {
@@ -441,11 +435,32 @@ public class RecommendationsResource extends HttpServlet {
         for (KruizeObject ko : kruizeObjectList) {
             try {
                 ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters
-                        .convertKruizeObjectToListRecommendationSOV1(
+                        .convertKruizeObjectToListRecommendationSO(
                                 ko,
                                 getLatest,
                                 checkForTimestamp,
                                 monitoringEndTimestamp);
+                // Traverse Kubernetes objects
+                for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
+
+                    // Handle container recommendations
+                    if (kubernetesAPIObject.getContainerAPIObjects() != null) {
+                        for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                            ContainerRecommendations recommendations =
+                                    containerAPIObject.getContainerRecommendations();
+
+                            processRecommendations(recommendations.getData().values());
+                        }
+                    }
+
+                    // Handle namespace recommendations
+                    if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
+                        NamespaceRecommendations recommendations =
+                                kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations();
+
+                        processRecommendations(recommendations.getData().values());
+                    }
+                }
                 listRecommendationsAPIObject.setApiVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                 recommendationList.add(listRecommendationsAPIObject);
             } catch (Exception e) {
@@ -494,8 +509,126 @@ public class RecommendationsResource extends HttpServlet {
         response.getWriter().close();
     }
 
-    private void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg,
-                                   String experimentName, String intervalEndTimeStr) throws IOException {
+    /**
+     * Processes recommendation timestamps by:
+     * 1. Moving requests/limits into the resources map for currentConfig
+     * 2. Moving requests/limits into the resources map for config and variation
+     * 3. Nullifying old fields
+     */
+    private void processRecommendations(Collection<MappedRecommendationForTimestamp> recommendations) {
+
+        if (recommendations == null || recommendations.isEmpty()) {
+            return;
+        }
+
+        for (MappedRecommendationForTimestamp recommendation : recommendations) {
+
+            if (recommendation == null) {
+                continue;
+            }
+
+            // Process current config
+            updateConfigObject(recommendation.getCurrentConfig());
+
+            // Process recommendation terms
+            Map<String, TermRecommendations> termRecommendationsMap =
+                    recommendation.getRecommendationForTermHashMap();
+
+            if (termRecommendationsMap == null || termRecommendationsMap.isEmpty()) {
+                continue;
+            }
+
+            for (TermRecommendations termRecommendations : termRecommendationsMap.values()) {
+
+                if (termRecommendations == null) {
+                    continue;
+                }
+
+                Map<String, MappedRecommendationForModel> engineMap =
+                        termRecommendations.getRecommendationForModelHashMap();
+
+                if (engineMap == null || engineMap.isEmpty()) {
+                    continue;
+                }
+
+                for (MappedRecommendationForModel modelRecommendation : engineMap.values()) {
+
+                    if (modelRecommendation == null) {
+                        continue;
+                    }
+
+                    updateConfigObject(modelRecommendation.getConfig());
+                    updateVariationObject(modelRecommendation.getVariation());
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates a Config object by moving requests/limits into resources map
+     */
+    private void updateConfigObject(Config config) {
+
+        if (config == null) {
+            return;
+        }
+
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+                resources = buildResourcesMap(config.getRequests(), config.getLimits());
+
+        if (resources.isEmpty()) {
+            return;
+        }
+
+        config.setResources(resources);
+
+        // Nullify old fields
+        config.setRequests(null);
+        config.setLimits(null);
+    }
+
+    /**
+     * Updates a Variation object by moving requests/limits into the resources map
+     */
+    private void updateVariationObject(Variation variation) {
+
+        if (variation == null) {
+            return;
+        }
+
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+                resources = buildResourcesMap(variation.getRequests(), variation.getLimits());
+
+        if (resources.isEmpty()) {
+            return;
+        }
+
+        variation.setResources(resources);
+
+        // Nullify old fields
+        variation.setRequests(null);
+        variation.setLimits(null);
+    }
+
+    private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+    buildResourcesMap(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests,
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
+
+        Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+                resources = new EnumMap<>(AnalyzerConstants.ResourceSetting.class);
+
+        if (requests != null && !requests.isEmpty()) {
+            resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
+        }
+
+        if (limits != null && !limits.isEmpty()) {
+            resources.put(AnalyzerConstants.ResourceSetting.limits, limits);
+        }
+
+        return resources;
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
         if (null != e) {
             LOGGER.error(e.toString());
             e.printStackTrace();
