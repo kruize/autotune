@@ -27,7 +27,7 @@ jobs:
         run: echo "Comment :${{ github.event.comment.body }}"
 
      
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v9
         id: get-pr
         with:
           script: |
@@ -103,7 +103,7 @@ jobs:
     if: failure()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
@@ -124,7 +124,7 @@ jobs:
     if: cancelled()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
@@ -145,7 +145,7 @@ jobs:
     if: success()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
