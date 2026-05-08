@@ -39,6 +39,10 @@ This document describes the test plan for Kruize release 0.10
 ## BUG FIXES TO BE TESTED
 
 * Permission updates to fix Kruize UI deployment crash
+* Fix performance profile local map issue
+* Fix performance profile cache inconsistency issue
+* Enable TLS protocol negotiation
+
 
 ---
 
@@ -58,6 +62,8 @@ This document describes the test plan for Kruize release 0.10
 | 1 | Unit tests added for Kruize optimizer | Added new testcases | [8](https://github.com/kruize/kruize-optimizer/pull/8) | PASSED | |
 | 2 | Runtime recommendations test | Added new test for runtime recommendations | [1824](https://github.com/kruize/autotune/pull/1824) | PASSED | |
 | 3 | Optimizer demo   | Tested manually | [180](https://github.com/kruize/kruize-demos/pull/180) | PASSED  | |
+| 4 | Test updates to validate performance profile issues   | Added new tests | [1886](https://github.com/kruize/autotune/pull/1886) | PASSED  | Tested manually on Ephemeral env |
+| 5 | Enable TLS negotiation | Tested manually |  | PASSED  | |
 
 ---
 
@@ -94,7 +100,7 @@ Kruize demos - Uncovered an issue with the datasource on openshift with optimize
 
 | # | TEST SUITE | OPENSHIFT RESULTS | MINIKUBE RESULTS | COMMENTS |
 |:---|:---|:---|:---|:---|
-| 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 741, PASSED - 696 / FAILED - 42 / SKIPPED - 1 | TOTAL - 741, PASSED - 695 / FAILED - 43 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
 | 2 | Fault tolerant test | PASSED | PASSED | |
 | 3 | Stress test | PASSED | PASSED | |
 | 4 | Scalability test (short run) |  | NA | |
@@ -129,18 +135,21 @@ Short Scalability run configuration:
 | **0.9** (16 Apr) | 5K container / 72L / 3L | 4h 37m | 0.9 / 0.5 | 0.14 / 0.1 | 0.44 / 0.3 | 21755 | 7.76 | 37.33 |
 | **0.10-rc1** (16 Apr) | 5K container / 72L / 3L | 4h 34m | 0.89 / 0.48 | 0.13 / 0.1 | 0.44 / 0.3 | 21755 | 7.97 | 46.33 |
 | **0.10-rc2** (30 Apr) | 5K container / 72L / 3L | 4h 37m | 0.9 / 0.49 | 0.14 / 0.11 | 0.44 / 0.31 | 21756 | 7.97 | 41.89 |
+| **0.10-rc3** (7 May) | 5K container / 72L / 3L | 4h 37m | 0.9 / 0.49 | 0.13 / 0.11 | 0.44 / 0.3 | 21757 | 8.38 | 41.73 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
 | **0.9** (25 Feb) | 5K namespace / 72L / 3L | 2h 58m | 0.54 / 0.3 | 0.11 / 0.08 | 0.29 / 0.19 | 10774 | 5.2 | 23.45 |
 | **0.9** (16 Apr) | 5K namespace / 72L / 3L | 3h 1m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10781 | 7.73 | 23.17 |
 | **0.10-rc1** (16 Apr) | 5K namespace / 72L / 3L | 3h 04m | 0.55 / 0.31 | 0.12 / 0.08 | 0.33 / 0.21 | 10776 | 8.96 | 28.95 |
 | **0.10-rc2** (1 May) | 5K namespace / 72L / 3L | 3h 09m | 0.56 / 0.31 | 0.12 / 0.09 | 0.34 / 0.22 | 10778 | 8.81 | 28.37 |
+| **0.10-rc3** (8 May) | 5K namespace / 72L / 3L | 3h 12m | 0.57 / 0.31 | 0.13 / 0.09 | 0.35 / 0.22 | 10779 | 9.05 | 25.37 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
 | **0.9** (25 Feb) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
 | **0.9** (16 Apr) | 4.5k container, 500 namespace / 72L / 3L | 4h 27m | 0.84 / 0.48 | 0.13 / 0.1 | 0.39 / 0.28 | 20650 | 7.76 | 33.08 |
 | **0.10-rc1** (16 Apr) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.47 | 0.13 / 0.11 | 0.43 / 0.31 | 20649 | 8.5 | 44.39 |
 | **0.10-rc2** (1 May) | 4.5k container, 500 namespace / 72L / 3L | 4h 32m | 0.84 / 0.46 | 0.13 / 0.11 | 0.42 / 0.29 | 20648 | 8.53 | 39.34 |
+| **0.10-rc3** (8 May) | 4.5k container, 500 namespace / 72L / 3L | 4h 35m | 0.85 / 0.47 | 0.13 / 0.11 | 0.43 / 0.3 | 20649 | 8.69 | 38.45 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **0.8.1** (15 Jan) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
 | **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 43m | 1.58 / 0.86 | 0.21 / 0.19 | 0.69 / 0.52 | 31143 | 10.94 | 34.08 |
