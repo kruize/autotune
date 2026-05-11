@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.data.metrics;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class AggregationFunctions {
@@ -22,6 +24,8 @@ public class AggregationFunctions {
     private String function;
     private String query;
     private List<String> queryParams;
+    @SerializedName("result_columns")
+    private List<String> resultColumns;
     private String version;
 
     public AggregationFunctions(String function, String query, String version, List<String> query_params) {
@@ -38,7 +42,15 @@ public class AggregationFunctions {
     public void setQueryParams(List<String> queryParams) {
         this.queryParams = queryParams;
     }
+// to support fetching result columns from profile creation payload start 
+    public List<String> getResultColumns() {
+        return resultColumns;
+    }
 
+    public void setResultColumns(List<String> resultColumns) {
+        this.resultColumns = resultColumns;
+    }
+// to support fetching result columns from profile creation payload end 
     public String getFunction() {
         return function;
     }

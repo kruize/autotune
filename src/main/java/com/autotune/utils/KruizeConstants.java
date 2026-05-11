@@ -205,6 +205,7 @@ public class KruizeConstants {
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String QUERY_PARAMS = "query_params";
+        public static final String RESULT_COLUMNS = "result_columns";
         public static final String DATASOURCE = "datasource";
         public static final String CPU = "cpu";
         public static final String MEMORY = "memory";
