@@ -258,6 +258,16 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.ACCELERATOR_NOT_SUPPORTED,
                 RecommendationConstants.RecommendationNotificationTypes.NOTICE
         ),
+        NOTICE_POD_COUNT_DERIVED_FROM_CPU(
+                NotificationCodes.NOTICE_POD_COUNT_DERIVED_FROM_CPU,
+                RecommendationNotificationMsgConstant.POD_COUNT_DERIVED_FROM_CPU,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        NOTICE_POD_COUNT_DERIVED_FROM_MEMORY(
+                NotificationCodes.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY,
+                RecommendationNotificationMsgConstant.POD_COUNT_DERIVED_FROM_MEMORY,
+                RecommendationNotificationTypes.NOTICE
+        ),
         CRITICAL_CPU_REQUEST_NOT_SET(
                 RecommendationConstants.NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
                 RecommendationConstants.RecommendationNotificationMsgConstant.CPU_REQUEST_NOT_SET,
@@ -436,6 +446,9 @@ public class RecommendationConstants {
         public static final int SECTION_NOTICE_SUBSECTION_DATA_END = 329999;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 321000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 322999;
+        // Pod count derivation notifications (321001-321002): Notifications when pod count is derived from other metrics
+        public static final int NOTICE_POD_COUNT_DERIVED_FROM_CPU = 321001;      // Pod count derived from CPU usage metrics
+        public static final int NOTICE_POD_COUNT_DERIVED_FROM_MEMORY = 321002;   // Pod count derived from Memory usage metrics
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 323000;
         public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
         public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
@@ -715,6 +728,8 @@ public class RecommendationConstants {
         public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
         public static final String ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "Accelerator Recommendations are available";
         public static final String ACCELERATOR_NOT_SUPPORTED = "Accelerator is not supported by kruize";
+        public static final String POD_COUNT_DERIVED_FROM_CPU = "Pod count is derived from CPU usage metrics (sum/avg) as actual pod count metric is not available";
+        public static final String POD_COUNT_DERIVED_FROM_MEMORY = "Pod count is derived from Memory usage metrics (sum/avg) as actual pod count metric is not available";
 
         private RecommendationNotificationMsgConstant() {
 

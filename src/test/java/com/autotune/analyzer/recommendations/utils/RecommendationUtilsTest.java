@@ -174,7 +174,9 @@ public class RecommendationUtilsTest {
         // Then
         assertNotNull(result);
         assertEquals(3.0, result.getAmount()); // ceil(6.0/2.0) = ceil(3.0) = 3.0
-        assertTrue(notifications.isEmpty());
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU,
+                notifications.get(0), "Should have CPU derivation notification");
     }
 
     @Test
@@ -201,7 +203,9 @@ public class RecommendationUtilsTest {
         // Then
         assertNotNull(result);
         assertEquals(4.0, result.getAmount()); // ceil(2048.0/512.0) = ceil(4.0) = 4.0
-        assertTrue(notifications.isEmpty());
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY,
+                notifications.get(0), "Should have Memory derivation notification");
     }
 
     @Test
@@ -597,5 +601,362 @@ public class RecommendationUtilsTest {
         assertEquals(100000.0, result.getAmount());
         assertEquals("MiB", result.getFormat());
         assertTrue(notifications.isEmpty());
+    }
+
+    // ==================== Additional Notification Behavior Tests ====================
+
+    @Test
+    public void testGetCurrentValue_NotificationCodeAndMessage_CpuRequest() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuRequest, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(523001, notification.getCode(), "Should have correct notification code");
+        assertEquals("CPU Request Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.CRITICAL, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_NotificationCodeAndMessage_MemoryRequest() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryRequest, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(524001, notification.getCode(), "Should have correct notification code");
+        assertEquals("Memory Request Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.CRITICAL, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_NotificationCodeAndMessage_CpuLimit() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuLimit, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(423001, notification.getCode(), "Should have correct notification code");
+        assertEquals("CPU Limit Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.WARNING, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_NotificationCodeAndMessage_MemoryLimit() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryLimit, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(524002, notification.getCode(), "Should have correct notification code");
+        assertEquals("Memory Limit Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.CRITICAL, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_PodCountDerivedFromCpu_NotificationDetails() {
+        // Given - No podCount metric, but cpuUsage available
+        IntervalResults intervalResults = new IntervalResults();
+        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
+        
+        MetricResults cpuMetric = new MetricResults();
+        MetricAggregationInfoResults cpuAggInfo = new MetricAggregationInfoResults();
+        cpuAggInfo.setAvg(2.0);
+        cpuAggInfo.setSum(6.0);
+        cpuMetric.setAggregationInfoResult(cpuAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.cpuUsage, cpuMetric);
+        
+        intervalResults.setMetricResultsMap(metricResultsMap);
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.podCount, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(321001, notification.getCode(), "Should have correct notification code");
+        assertEquals("Pod count is derived from CPU usage metrics (sum/avg) as actual pod count metric is not available", 
+                notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.NOTICE, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_PodCountDerivedFromMemory_NotificationDetails() {
+        // Given - No podCount or cpuUsage, but memoryUsage available
+        IntervalResults intervalResults = new IntervalResults();
+        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
+        
+        MetricResults memMetric = new MetricResults();
+        MetricAggregationInfoResults memAggInfo = new MetricAggregationInfoResults();
+        memAggInfo.setAvg(512.0);
+        memAggInfo.setSum(2048.0);
+        memMetric.setAggregationInfoResult(memAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.memoryUsage, memMetric);
+        
+        intervalResults.setMetricResultsMap(metricResultsMap);
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.podCount, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(321002, notification.getCode(), "Should have correct notification code");
+        assertEquals("Pod count is derived from Memory usage metrics (sum/avg) as actual pod count metric is not available", 
+                notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.NOTICE, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_MultipleNotifications_Accumulation() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When - Multiple calls with same notification list
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuRequest, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryRequest, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuLimit, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryLimit, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertEquals(4, notifications.size(), "Should accumulate notifications from multiple calls");
+        // Verify all expected notifications are present
+        long cpuRequestCount = notifications.stream()
+                .filter(n -> n.equals(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET))
+                .count();
+        long memRequestCount = notifications.stream()
+                .filter(n -> n.equals(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET))
+                .count();
+        long cpuLimitCount = notifications.stream()
+                .filter(n -> n.equals(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET))
+                .count();
+        long memLimitCount = notifications.stream()
+                .filter(n -> n.equals(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET))
+                .count();
+        assertEquals(1, cpuRequestCount, "Should have CPU request notification");
+        assertEquals(1, memRequestCount, "Should have memory request notification");
+        assertEquals(1, cpuLimitCount, "Should have CPU limit notification");
+        assertEquals(1, memLimitCount, "Should have memory limit notification");
+    }
+
+    @Test
+    public void testGetCurrentValue_NoNotificationOnSuccess_AllMetrics() {
+        // Given - Complete set of metrics
+        IntervalResults intervalResults = new IntervalResults();
+        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
+        
+        // Add CPU request
+        MetricResults cpuReqMetric = new MetricResults();
+        MetricAggregationInfoResults cpuReqAggInfo = new MetricAggregationInfoResults();
+        cpuReqAggInfo.setAvg(2.0);
+        cpuReqAggInfo.setFormat("cores");
+        cpuReqMetric.setAggregationInfoResult(cpuReqAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.cpuRequest, cpuReqMetric);
+        
+        // Add memory request
+        MetricResults memReqMetric = new MetricResults();
+        MetricAggregationInfoResults memReqAggInfo = new MetricAggregationInfoResults();
+        memReqAggInfo.setAvg(4096.0);
+        memReqAggInfo.setFormat("MiB");
+        memReqMetric.setAggregationInfoResult(memReqAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.memoryRequest, memReqMetric);
+        
+        // Add CPU limit
+        MetricResults cpuLimitMetric = new MetricResults();
+        MetricAggregationInfoResults cpuLimitAggInfo = new MetricAggregationInfoResults();
+        cpuLimitAggInfo.setAvg(4.0);
+        cpuLimitAggInfo.setFormat("cores");
+        cpuLimitMetric.setAggregationInfoResult(cpuLimitAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.cpuLimit, cpuLimitMetric);
+        
+        // Add memory limit
+        MetricResults memLimitMetric = new MetricResults();
+        MetricAggregationInfoResults memLimitAggInfo = new MetricAggregationInfoResults();
+        memLimitAggInfo.setAvg(8192.0);
+        memLimitAggInfo.setFormat("MiB");
+        memLimitMetric.setAggregationInfoResult(memLimitAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.memoryLimit, memLimitMetric);
+        
+        intervalResults.setMetricResultsMap(metricResultsMap);
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When - Check all metrics
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuRequest, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryRequest, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuLimit, filteredResultsMap, testTimestamp, notifications);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.memoryLimit, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertTrue(notifications.isEmpty(), "Should have no notifications when all metrics are available");
+    }
+
+    @Test
+    public void testGetCurrentValueForNamespace_NotificationCodeAndMessage_CpuRequest() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValueForNamespace(
+                AnalyzerConstants.MetricName.namespaceCpuRequest, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(523001, notification.getCode(), "Should have correct notification code");
+        assertEquals("CPU Request Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.CRITICAL, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValueForNamespace_NotificationCodeAndMessage_MemoryLimit() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValueForNamespace(
+                AnalyzerConstants.MetricName.namespaceMemoryLimit, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNull(result);
+        assertEquals(1, notifications.size());
+        RecommendationConstants.RecommendationNotification notification = notifications.get(0);
+        assertEquals(524002, notification.getCode(), "Should have correct notification code");
+        assertEquals("Memory Limit Not Set", notification.getMessage(), "Should have correct message");
+        assertEquals(RecommendationConstants.RecommendationNotificationTypes.CRITICAL, notification.getType());
+    }
+
+    @Test
+    public void testGetCurrentValue_NotificationSeverityLevels() {
+        // Given - Empty interval results
+        IntervalResults intervalResults = new IntervalResults();
+        intervalResults.setMetricResultsMap(new HashMap<>());
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When - Get different types of notifications
+        ArrayList<RecommendationConstants.RecommendationNotification> cpuRequestNotifs = new ArrayList<>();
+        ArrayList<RecommendationConstants.RecommendationNotification> cpuLimitNotifs = new ArrayList<>();
+        
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuRequest, filteredResultsMap, testTimestamp, cpuRequestNotifs);
+        RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.cpuLimit, filteredResultsMap, testTimestamp, cpuLimitNotifs);
+
+        // Then - Verify severity levels
+        assertEquals(5, cpuRequestNotifs.get(0).getType().getSeverity(), 
+                "CPU request notification should have CRITICAL severity (5)");
+        assertEquals(4, cpuLimitNotifs.get(0).getType().getSeverity(), 
+                "CPU limit notification should have WARNING severity (4)");
+    }
+
+    @Test
+    public void testGetCurrentValue_PodCountFallback_PrefersCpuOverMemory() {
+        // Given - Both cpuUsage and memoryUsage available (no podCount)
+        IntervalResults intervalResults = new IntervalResults();
+        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
+        
+        // Add CPU usage
+        MetricResults cpuMetric = new MetricResults();
+        MetricAggregationInfoResults cpuAggInfo = new MetricAggregationInfoResults();
+        cpuAggInfo.setAvg(2.0);
+        cpuAggInfo.setSum(8.0);
+        cpuMetric.setAggregationInfoResult(cpuAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.cpuUsage, cpuMetric);
+        
+        // Add memory usage
+        MetricResults memMetric = new MetricResults();
+        MetricAggregationInfoResults memAggInfo = new MetricAggregationInfoResults();
+        memAggInfo.setAvg(512.0);
+        memAggInfo.setSum(2048.0);
+        memMetric.setAggregationInfoResult(memAggInfo);
+        metricResultsMap.put(AnalyzerConstants.MetricName.memoryUsage, memMetric);
+        
+        intervalResults.setMetricResultsMap(metricResultsMap);
+        filteredResultsMap.put(testTimestamp, intervalResults);
+
+        // When
+        RecommendationConfigItem result = RecommendationUtils.getCurrentValue(
+                AnalyzerConstants.MetricName.podCount, filteredResultsMap, testTimestamp, notifications);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(4.0, result.getAmount(), "Pod count should be calculated from CPU usage (8.0/2.0)");
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU,
+                notifications.get(0), "Should prefer CPU notification over memory");
+    }
+
+    @Test
+    public void testGetCurrentValue_NotificationTypes_AllTypes() {
+        // Verify all notification types have correct properties
+        RecommendationConstants.RecommendationNotification cpuRequestNotif = 
+                RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET;
+        RecommendationConstants.RecommendationNotification cpuLimitNotif = 
+                RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET;
+        RecommendationConstants.RecommendationNotification podCountCpuNotif = 
+                RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU;
+
+        // Verify types
+        assertEquals("critical", cpuRequestNotif.getType().getName());
+        assertEquals("warning", cpuLimitNotif.getType().getName());
+        assertEquals("notice", podCountCpuNotif.getType().getName());
+
+        // Verify severity ordering
+        assertTrue(cpuRequestNotif.getType().getSeverity() > cpuLimitNotif.getType().getSeverity(),
+                "CRITICAL should have higher severity than WARNING");
+        assertTrue(cpuLimitNotif.getType().getSeverity() > podCountCpuNotif.getType().getSeverity(),
+                "WARNING should have higher severity than NOTICE");
     }
 }

@@ -16,15 +16,20 @@
 
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,13 +39,20 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ContainerRecommendationProcessorTest {
 
+    private ArrayList<RecommendationNotification> notifications;
+
+    @BeforeEach
+    public void setUp() {
+        notifications = new ArrayList<>();
+    }
+
     /**
      * Helper method to invoke the private static getPodCountAggrInfo method using reflection
      */
     private MetricAggregationInfoResults invokePodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) throws Exception {
-        Method method = ContainerRecommendationProcessor.class.getDeclaredMethod("getPodCountAggrInfo", Map.class);
+        Method method = ContainerRecommendationProcessor.class.getDeclaredMethod("getPodCountAggrInfo", Map.class, ArrayList.class);
         method.setAccessible(true);
-        return (MetricAggregationInfoResults) method.invoke(null, filteredResultsMap);
+        return (MetricAggregationInfoResults) method.invoke(null, filteredResultsMap, notifications);
     }
 
     /**
@@ -85,6 +97,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(4.0, result.getAvg()); // ceil((3+4+5)/3) = ceil(4.0) = 4.0
         assertEquals(2.0, result.getMin()); // ceil(min(2,3,4)) = ceil(2.0) = 2.0
         assertEquals(6.0, result.getMax()); // ceil(max(4,5,6)) = ceil(6.0) = 6.0
+        // Verify no notification added when using actual podCount metric
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -102,6 +116,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(4.0, result.getAvg()); // ceil(3.5) = 4.0
         assertEquals(3.0, result.getMin()); // ceil(3.0) = 3.0
         assertEquals(4.0, result.getMax()); // ceil(4.0) = 4.0
+        // Verify no notification added when using actual podCount metric
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -124,6 +140,12 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(4.0, result.getAvg()); // ceil((3.0+4.0)/2) = ceil(3.5) = 4.0
         assertEquals(3.0, result.getMin()); // ceil(min(3.0, 4.0)) = ceil(3.0) = 3.0
         assertEquals(4.0, result.getMax()); // ceil(max(3.0, 4.0)) = ceil(4.0) = 4.0
+        // Verify notification added when podCount is derived from CPU usage
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU.getCode(),
+                     notifications.get(0).getCode());
+        assertEquals("Pod count is derived from CPU usage metrics (sum/avg) as actual pod count metric is not available",
+                     notifications.get(0).getMessage());
     }
 
     @Test
@@ -146,6 +168,12 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(3.0, result.getAvg()); // ceil((2.0+4.0)/2) = ceil(3.0) = 3.0
         assertEquals(2.0, result.getMin()); // ceil(min(2.0, 4.0)) = ceil(2.0) = 2.0
         assertEquals(4.0, result.getMax()); // ceil(max(2.0, 4.0)) = ceil(4.0) = 4.0
+        // Verify notification added when podCount is derived from Memory usage
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY.getCode(),
+                     notifications.get(0).getCode());
+        assertEquals("Pod count is derived from Memory usage metrics (sum/avg) as actual pod count metric is not available",
+                     notifications.get(0).getMessage());
     }
 
     @Test
@@ -158,6 +186,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when no data available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -174,6 +204,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when no data available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -196,6 +228,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when no valid data available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -220,6 +254,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when no valid data available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -234,6 +270,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when derivation fails
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -248,6 +286,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when derivation fails
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -287,6 +327,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(5.0, result.getAvg());
         assertEquals(4.0, result.getMin());
         assertEquals(6.0, result.getMax());
+        // Verify no notification added when actual podCount metric is available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -323,6 +365,10 @@ public class ContainerRecommendationProcessorTest {
         // Then - Should use CPU, not memory
         assertNotNull(result);
         assertEquals(4.0, result.getAvg());
+        // Verify CPU notification added (not memory) when CPU takes precedence
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU.getCode(),
+                     notifications.get(0).getCode());
     }
 
     @Test
@@ -340,6 +386,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(4.0, result.getAvg()); // ceil(3.7) = 4.0
         assertEquals(3.0, result.getMin()); // ceil(2.3) = 3.0
         assertEquals(5.0, result.getMax()); // ceil(4.9) = 5.0
+        // Verify no notification added when using actual podCount metric
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -361,6 +409,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(4.0, result.getAvg()); // ceil((3.0+3.5+4.0+4.5+5.0)/5) = ceil(4.0) = 4.0
         assertEquals(3.0, result.getMin()); // ceil(min(2.5, 3.0, 3.5, 4.0, 4.5)) = ceil(2.5) = 3.0
         assertEquals(6.0, result.getMax()); // ceil(max(3.5, 4.0, 4.5, 5.0, 5.5)) = ceil(5.5) = 6.0
+        // Verify no notification added when using actual podCount metric
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -385,6 +435,10 @@ public class ContainerRecommendationProcessorTest {
         // Then - Should only use valid data points
         assertNotNull(result);
         assertEquals(4.0, result.getAvg()); // ceil((3.0+4.0)/2) = ceil(3.5) = 4.0
+        // Verify CPU notification added when podCount is derived from CPU
+        assertEquals(1, notifications.size());
+        assertEquals(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU.getCode(),
+                     notifications.get(0).getCode());
     }
 
     @Test
@@ -402,6 +456,8 @@ public class ContainerRecommendationProcessorTest {
         assertEquals(101.0, result.getAvg()); // ceil(100.5) = 101.0
         assertEquals(51.0, result.getMin()); // ceil(50.2) = 51.0
         assertEquals(151.0, result.getMax()); // ceil(150.8) = 151.0
+        // Verify no notification added when using actual podCount metric
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -416,6 +472,8 @@ public class ContainerRecommendationProcessorTest {
 
         // Then
         assertNull(result);
+        // Verify no notification added when no relevant metrics available
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -441,5 +499,7 @@ public class ContainerRecommendationProcessorTest {
 
         // Then - Should return null as avg is 0
         assertNull(result);
+        // Verify no notification added when derivation results in zero
+        assertEquals(0, notifications.size());
     }
 }

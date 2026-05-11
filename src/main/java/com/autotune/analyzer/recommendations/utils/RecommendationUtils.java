@@ -55,6 +55,8 @@ public class RecommendationUtils {
         Double currentValue = null;
         String format = null;
         IntervalResults intervalResults = filteredResultsMap.get(timestampToExtract);
+        boolean derivedFromCPUUsage = false;
+        boolean derivedFromMemoryUsage = false;
         if (null != intervalResults) {
             if (metricName == AnalyzerConstants.MetricName.podCount) { // replicas
                 // Determine current replicas from metric 'podCount'
@@ -74,6 +76,7 @@ public class RecommendationUtils {
                         MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
                         if (null != metricAggregationInfoResults && metricAggregationInfoResults.getSum() != null && metricAggregationInfoResults.getAvg() != null && metricAggregationInfoResults.getAvg() != 0.0) {
                             currentValue = metricAggregationInfoResults.getSum() / metricAggregationInfoResults.getAvg();
+                            derivedFromCPUUsage = true;
                         }
                         LOGGER.debug("current replicas from metric 'cpuUsage' is {}", currentValue);
                     }
@@ -86,6 +89,7 @@ public class RecommendationUtils {
                         MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
                         if (null != metricAggregationInfoResults && metricAggregationInfoResults.getSum() != null && metricAggregationInfoResults.getAvg() != null && metricAggregationInfoResults.getAvg() != 0.0) {
                             currentValue = metricAggregationInfoResults.getSum() / metricAggregationInfoResults.getAvg();
+                            derivedFromMemoryUsage = true;
                         }
                         LOGGER.debug("current replicas from metric 'memoryUsage' is {}", currentValue);
                     }
@@ -93,6 +97,11 @@ public class RecommendationUtils {
 
                 // if podCount is determined to be 0, return null.
                 if (currentValue != null && currentValue > 0.0) {
+                    if (derivedFromMemoryUsage)
+                        notifications.add(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY);
+                    else if (derivedFromCPUUsage)
+                        notifications.add(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU);
+
                     return new RecommendationConfigItem(Math.ceil(currentValue), format);
                 }
             } else { // limits & requests
