@@ -388,7 +388,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 metricAggregationInfoResults.setMin(Math.ceil(min));
                 metricAggregationInfoResults.setMax(Math.ceil(max));
                 LOGGER.info("Pod Count Aggregation Info calculated using cpuUsage metric : avg = {} min={}, max={}", avg, min, max);
-                notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU));
+                if (notifications != null)
+                    notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU));
                 return metricAggregationInfoResults;
             }
         }
@@ -416,7 +417,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 metricAggregationInfoResults.setMin(Math.ceil(min));
                 metricAggregationInfoResults.setMax(Math.ceil(max));
                 LOGGER.info("Pod Count Aggregation Info calculated using memoryUsage metric : avg = {} min={}, max={}", avg, min, max);
-                notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY));
+                if (notifications != null)
+                    notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY));
                 return metricAggregationInfoResults;
             }
         }
