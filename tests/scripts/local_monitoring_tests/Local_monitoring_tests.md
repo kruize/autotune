@@ -226,37 +226,69 @@ Here are the test scenarios:
 
 ### Runtime Recommendations Test:
 
-Kruize supports Runtime Recommendations for JVM workloads (OpenJDK/Hotspot and Semeru/OpenJ9). The recommendations provide GC policy and related JVM options (e.g., `-XX:+UseG1GC`) as `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` environment variables.
+Kruize supports Runtime Recommendations for JVM workloads (OpenJDK/Hotspot and Semeru/OpenJ9). The recommendations provide GC policy and related JVM options (e.g., `-XX:+UseG1GC`) as `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` environment variables, as well as Quarkus-specific tunables like `QUARKUS_THREAD_POOL_CORE_THREADS`.
 
-The test `test_generate_recommendation.py::test_runtime_recommendation` validates that runtime recommendations are generated for JVM workloads when the necessary metrics and layers are available.
+The runtime recommendation tests in `test_generate_recommendation.py` validate that runtime recommendations are generated correctly for JVM workloads when the necessary metrics and layers are available, and that they are conditionally executed based on layer detection.
 
 #### Prerequisites to run the test:
 
 In addition to the pre-requisites mentioned above:
 
 - A JVM workload (e.g., TechEmpower Quarkus `tfb-qrh-sample` or Spring Petclinic) must be running and exposing `jvm_info` (and optionally `jvm_memory_max_bytes`) Prometheus metrics
-- Kruize layers (hotspot, semeru) must be loaded via createLayer API
-- The performance profile must include `jvmInfo`, `jvmInfoTotal` and `jvmMemoryMaxBytes` metrics (as in `resource_optimization_local_monitoring.json`)
+- Kruize layers (hotspot, semeru, quarkus, container) must be loaded via createLayer API
+- The performance profile must include `jvmInfo`, `jvmInfoTotal` and `jvmMemoryMaxBytes` metrics with `required_layers` field (as in `resource_optimization_local_monitoring.json`)
 
 #### Test scenarios for runtime recommendations:
 
-- Hotspot GC policy (OpenJDK/Hotspot): JVM workload with OpenJDK or Hotspot runtime and layer `hotspot` present. 
+**1. Basic Runtime Recommendations (`test_runtime_recommendation`)**
+- Hotspot GC policy (OpenJDK/Hotspot): JVM workload with OpenJDK or Hotspot runtime and layer `hotspot` present.
   - **Expected**: `JDK_JAVA_OPTIONS` or `JAVA_OPTIONS` contains appropriate GC flags (e.g., `-XX:+UseG1GC` for G1)
-- Semeru GC policy (Semeru/OpenJ9): JVM workload with Semeru or OpenJ9 runtime and layer `semeru` present. 
-  - **Expected**: `JAVA_OPTIONS` contains `-Xgcpolicy:gencon`, `-Xgcpolicy:balanced`, or `-Xgcpolicy:optthruput`
-- Missing JVM metadata: Workload without `jvm_info` metrics or layer presence. 
-  - **Expected**: Runtime recommendations; `env` is still present.
-- Missing JVM version: `jvm_info` present but version label missing. 
-  - **Expected**: GC flags present in runtime env 
-- Layer vs runtime mismatch: Layer name does not match effective runtime (e.g., hotspot layer for OpenJ9 workload). 
-  - **Expected**: No recommendation for mismatched layer
-- Non-runtime datasource: Datasource that does not support runtime recommendations. 
-  - **Expected**: API succeeds; server logs `RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE`
-- No JVM layers are detected,no JVM runtime recommendations should be generated. 
-  - **Expected**: No JVM runtime env entries (JDK_JAVA_OPTIONS/JAVA_OPTIONS/QUARKUS_THREAD_POOL_CORE_THREADS)
-    should be present
+  - **Expected**: `QUARKUS_THREAD_POOL_CORE_THREADS` present for Quarkus workloads
 
-Note: The test will skip or may not assert runtime recommendations if the workload does not expose JVM metrics or layers are not configured. Adjust workload name and namespace to match your JVM deployment.
+**2. Semeru GC Policy (`test_semeru_gc_policy_when_layer_present`)**
+- Semeru GC policy (Semeru/OpenJ9): JVM workload with Semeru or OpenJ9 runtime and layer `semeru` present.
+  - **Expected**: `JAVA_OPTIONS` contains `-Xgcpolicy:gencon`, `-Xgcpolicy:balanced`, or `-Xgcpolicy:optthruput`
+
+**3. Missing JVM Metadata (`test_runtime_recommendations_when_jvm_metadata_missing`)**
+- Workload without `jvm_info` metrics in the metric profile.
+  - **Expected**: Runtime recommendations are still generated; `env` with GC flags is present
+
+**4. Missing JVM Version (`test_gc_recommendation_when_jvm_version_missing`)**
+- `jvm_info` present but version label missing from the query.
+  - **Expected**: GC flags present in runtime env
+
+**5. Layer vs Runtime Mismatch (`test_no_recommendation_for_layer_runtime_mismatch`)**
+- Layer name does not match effective runtime (e.g., hotspot layer for OpenJ9 workload or semeru layer for Hotspot workload).
+  - **Expected**: No env object should be present in config when there's a layer/runtime mismatch
+
+**6. No JVM Layers Detected (`test_no_runtime_recommendations_when_no_layers_detected`)**
+- No JVM layers are detected (all JVM layers filtered out).
+  - **Expected**: No JVM runtime env entries (`JDK_JAVA_OPTIONS`/`JAVA_OPTIONS`/`QUARKUS_THREAD_POOL_CORE_THREADS`) should be present
+
+**7. Conditional Query Execution with Required Layers (`test_conditional_query_execution_with_required_layers`)**
+- **NEW**: Validates runtime-specific queries with `required_layers` are conditionally executed based on detected layers
+- **Positive scenario**: With JVM layers (hotspot/quarkus) detected
+  - **Expected**: Runtime recommendations present with GC flags in `JAVA_OPTIONS`/`JDK_JAVA_OPTIONS`
+- **Negative scenario**: Without JVM layers (only container layer)
+  - **Expected**: Runtime recommendations absent, no JVM-specific env variables generated
+- **Validates**:
+  - `AggregationFunctions.java`: `requiredLayers` field
+  - `Metric.java`: `requiredLayers` field
+  - `RuntimeRecommendationProcessor.java`: `areRequiredLayersDetected()` method
+  - `RecommendationEngine.java`: conditional query execution logic
+
+**8. Non-runtime Datasource (`test_non_runtime_supported_datasource_logs_message`)**
+- Datasource that does not support runtime recommendations.
+  - **Expected**: API succeeds; server logs `RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE`
+
+#### Key Features Validated:
+
+- **Conditional Query Execution**: Metrics with `required_layers` (e.g., `jvmInfo` with `required_layers: ["hotspot", "semeru"]`) are only queried when at least one of the required layers is detected
+- **Performance Optimization**: Eliminates unnecessary queries for non-applicable metrics when runtime layers are not present
+- **Layer Detection**: Validates that layer detection correctly identifies runtime layers (hotspot, semeru, quarkus) and conditionally executes queries
+- **Backward Compatibility**: Ensures existing metrics without `required_layers` continue to work as before
+
+Note: The tests will skip or may not assert runtime recommendations if the workload does not expose JVM metrics or layers are not configured. Adjust workload name and namespace to match your JVM deployment.
 
 
 ## Prerequisites for running the tests:
