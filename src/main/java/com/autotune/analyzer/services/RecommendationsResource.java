@@ -76,6 +76,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.LOCAL;
 import static com.autotune.analyzer.utils.AnalyzerConstants.REMOTE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -333,7 +334,7 @@ public class RecommendationsResource extends HttpServlet {
         int calCount = ++requestCount;
         LOGGER.info("RecommendationsResource POST request received - count: {}", calCount);
         String statusValue = KruizeConstants.APIMessages.FAILURE;
-        Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerBRecommendationResource = Timer.start(MetricsConfig.meterRegistry());
         
         try {
             // Get the target parameter (default to "remote" if not specified)
@@ -351,58 +352,41 @@ public class RecommendationsResource extends HttpServlet {
             String experimentName = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+            String bulkJobID = request.getParameter(JOB_ID);
 
+            if (KruizeDeploymentInfo.log_http_req_resp) {
+                LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_INPUT_PARAMS,
+                        experimentName, intervalStartTimeStr, intervalEndTimeStr));
+            }
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
+            String validationMessage;
             if (REMOTE.equals(target)) {
-                if (KruizeDeploymentInfo.log_http_req_resp) {
-                    LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_INPUT_PARAMS,
-                            experimentName, intervalStartTimeStr, intervalEndTimeStr));
-                }
-                RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
-                String validationMessage = recommendationEngine.validate();
-                if (validationMessage.isEmpty()) {
-                    KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null);
-                    if (kruizeObject.getValidation_data().isSuccess()) {
-                        Timestamp intervalEndTime = Utils.DateUtils.getTimeStampFrom(
-                                KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                                intervalEndTimeStr);
-                        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
-                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-                        LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
-                                experimentName, sdf.format(intervalEndTime)));
-                        sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true);
-                        statusValue = KruizeConstants.APIMessages.SUCCESS;
-                    } else {
-                        sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
-                                kruizeObject.getValidation_data().getMessage());
-                    }
-                } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
-                }
-            } else if (AnalyzerConstants.LOCAL.equals(target)) {
-                String bulkJobID = request.getParameter(JOB_ID);
-                RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
-                String validationMessage = recommendationEngine.validate_local();
-                if (validationMessage.isEmpty()) {
-                    KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, AnalyzerConstants.LOCAL, bulkJobID);
-                    if (kruizeObject.getValidation_data().isSuccess()) {
-                        Timestamp intervalEndTime = Utils.DateUtils.getTimeStampFrom(
-                                KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                                intervalEndTimeStr);
-                        sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, false);
-                        statusValue = KruizeConstants.APIMessages.SUCCESS;
-                    } else {
-                        sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
-                                kruizeObject.getValidation_data().getMessage());
-                    }
-                } else {
-                    LOGGER.error("Validation failed: {}", validationMessage);
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
-                }
+                validationMessage = recommendationEngine.validate();
+            } else if (LOCAL.equals(target)) {
+                validationMessage = recommendationEngine.validate_local();
             } else {
                 // Invalid target value
-                String errorMsg = String.format("Invalid target cluster: '%s'. Valid values are 'remote' or 'local'.", target);
-                LOGGER.error(errorMsg);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, errorMsg);
+                validationMessage = String.format("Invalid target cluster: '%s'. Valid values are 'remote' or 'local'.", target);
+                LOGGER.error(validationMessage);
+            }
+            if (validationMessage.isEmpty()) {
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, target, bulkJobID);
+                if (kruizeObject.getValidation_data().isSuccess()) {
+                    Timestamp intervalEndTime = Utils.DateUtils.getTimeStampFrom(
+                            KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                            intervalEndTimeStr);
+                    SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                    LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
+                            experimentName, sdf.format(intervalEndTime)));
+                    sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true);
+                    statusValue = KruizeConstants.APIMessages.SUCCESS;
+                } else {
+                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
+                            kruizeObject.getValidation_data().getMessage());
+                }
+            } else {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
             }
         } catch (FetchMetricsError e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.ERROR_FETCHING_METRICS);
@@ -413,11 +397,11 @@ public class RecommendationsResource extends HttpServlet {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             LOGGER.debug("RecommendationsResource POST completed - count: {}", calCount);
-            if (null != timerBUpdateRecommendations) {
-                MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations
+            if (null != timerBRecommendationResource) {
+                MetricsConfig.timerRecomendationResource = MetricsConfig.timerBRecomendationResource
                         .tag(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS, statusValue)
                         .register(MetricsConfig.meterRegistry());
-                timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
+                timerBRecommendationResource.stop(MetricsConfig.timerRecomendationResource);
             }
         }
     }
