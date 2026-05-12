@@ -14,21 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import csv
-import json
 import os
 import re
-import subprocess
 import time
-import math
-import docker
-from helpers.kruize import *
 from datetime import datetime, timedelta
-from kubernetes import client, config
 from pathlib import Path
-from helpers.kruize import get_bulk_job_status
+
+import docker
+from kubernetes import client, config
+
 from helpers.import_metadata_json_validate import *
-from helpers.list_metadata_json_validate import *
+from helpers.kruize import *
+from helpers.kruize import get_bulk_job_status
 from helpers.list_metadata_json_schema import *
+from helpers.list_metadata_json_validate import *
 from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
@@ -703,9 +702,11 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type)
 
-def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None, test_name=None):
+def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None,
+                                        test_name=None, v1=False):
     # Validate experiment
-    assert create_exp_json["version"] == list_reco_json["version"]
+    if not v1:
+        assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
@@ -714,7 +715,7 @@ def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expecte
     list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
     experiment_type = create_exp_json.get("experiment_type")
     validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj, expected_duration_in_hours,
-                                             test_name, experiment_type)
+                                             test_name, experiment_type, v1)
 
 def validate_list_exp_results_count(expected_results_count, list_exp_json):
 
@@ -789,8 +790,8 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                     validate_container(update_results_container, update_results_json, list_reco_container,
                                        expected_duration_in_hours, test_name, experiment_type)
 
-def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
-                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
+def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj,
+                                             expected_duration_in_hours, test_name, experiment_type, v1):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
         assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
@@ -815,7 +816,7 @@ def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                         create_exp_kubernetes_obj["containers"][i]["container_name"]:
                     list_reco_container = list_reco_kubernetes_obj["containers"][j]
                     create_exp_container = create_exp_kubernetes_obj["containers"][i]
-                    validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
+                    validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name, v1)
 
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
                        test_name, experiment_type):
@@ -1021,7 +1022,8 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
 
-def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
+def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours,
+                                        test_name, v1):
     # Validate container image name and container name
     if create_exp_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
@@ -1096,7 +1098,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"])
+                            validate_config_local_monitoring(engine_obj["config"], v1)
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
@@ -1180,7 +1182,7 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"])
+                            validate_config_local_monitoring(engine_obj["config"], v1)
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
@@ -1261,9 +1263,14 @@ def validate_config(reco_config, metrics, experiment_type):
         assert reco_config[usage]["memory"][
                    "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
-def validate_config_local_monitoring(reco_config):
+def validate_config_local_monitoring(reco_config, v1):
     cpu_format_type = "cores"
     memory_format_type = "bytes"
+    resource_key = None
+    if v1:
+        resource_key = "resources"
+
+    reco_config = reco_config[resource_key] if resource_key else reco_config
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:

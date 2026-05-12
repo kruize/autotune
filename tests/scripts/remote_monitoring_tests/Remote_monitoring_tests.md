@@ -142,6 +142,70 @@ Negative Tests
 Extended Tests
 - Update recommendations with valid recommendations for namespace experiments for all the terms for multiple experiments posted using different json files.
 
+### **RecommendationResource API tests**
+
+The new `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
+
+#### **GET /recommendations API tests**
+
+Sanity Tests:
+- List recommendations with new schema for a single experiment
+- List recommendations with new schema for multiple experiments
+- List recommendations with new schema specifying experiment_name parameter
+- List recommendations with new schema specifying interval_end_time parameter
+- List recommendations with new schema for both container and namespace experiments
+- Validate the presence of replicas field in current config
+- Validate the presence of replicas field in recommendation config
+- Validate the presence of replicas field in variation
+- Validate nested resources structure (requests and limits under resources map)
+- Validate pod_count metric in metrics_info for container experiments
+- Validate pod_count metric in metrics_info for namespace experiments
+- List recommendations without any parameters (all experiments)
+- List recommendations with latest=true parameter
+- List recommendations with latest=false parameter
+
+Negative Tests:
+- List recommendations with invalid experiment_name
+- List recommendations with invalid interval_end_time format
+- List recommendations with non-existing interval_end_time
+- List recommendations for experiment without results
+- List recommendations for experiment without recommendations generated
+
+#### **POST /recommendations API tests**
+
+Sanity Tests:
+- Generate recommendations with target=remote (default behavior)
+- Generate recommendations with target=local
+- Generate recommendations without target parameter (should default to remote)
+- Generate recommendations with valid experiment_name and interval_end_time
+- Generate recommendations with valid experiment_name, interval_start_time and interval_end_time
+- Validate replicas field is populated in the response
+- Validate nested resources structure in the response
+- Validate pod_count metrics are included in metrics_info
+- Generate recommendations for container experiments with pod_count data
+- Generate recommendations for namespace experiments with pod_count data
+- Generate recommendations and verify variation includes replicas
+- Generate recommendations and verify config includes replicas
+
+Negative Tests:
+- Generate recommendations with invalid target parameter (not 'remote' or 'local')
+- Generate recommendations with target=remote without experiment_name
+- Generate recommendations with target=remote without interval_end_time
+- Generate recommendations with target=local without experiment_name
+- Generate recommendations with invalid interval_end_time format
+- Generate recommendations with interval_start_time after interval_end_time
+- Generate recommendations for non-existing experiment
+- Generate recommendations with target=remote for experiment without results
+- Generate recommendations with empty target parameter (should default to remote)
+- Generate recommendations with whitespace-only target parameter (should default to remote)
+
+Extended Tests:
+- Generate recommendations for multiple experiments with different target values
+- Generate recommendations with all terms (short, medium, long) and validate replicas in each
+- Generate recommendations and validate pod_count aggregation (min, max, avg, sum)
+- Generate recommendations with varying pod counts and validate replica recommendations
+- Generate recommendations for experiments with accelerators and validate pod_count metrics
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
