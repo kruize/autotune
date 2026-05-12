@@ -199,12 +199,12 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
+                ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 // Determine min, max, avg pod count for a given term
-                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
+                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap, termLevelNotifications);
                 LOGGER.info("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
                 mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
-                ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(model, containerData, filteredResultsMap, kruizeObject, currentConfig, termsEntry);
 
@@ -326,9 +326,10 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
      * To avoid issues with formulae, results are filtered to chose datapoints whose sum, avg is not null and avg is not 0.0.
      *
      * @param filteredResultsMap
+     * @param notifications
      * @return aggregated results like min, max, avg of pods from the results supplied.
      */
-    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
+    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
         Double avg = 0.0, min = 0.0, max = 0.0;
         LOGGER.info("filteredResultsMap: size = {}", filteredResultsMap.size());
@@ -387,6 +388,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 metricAggregationInfoResults.setMin(Math.ceil(min));
                 metricAggregationInfoResults.setMax(Math.ceil(max));
                 LOGGER.info("Pod Count Aggregation Info calculated using cpuUsage metric : avg = {} min={}, max={}", avg, min, max);
+                if (notifications != null)
+                    notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU));
                 return metricAggregationInfoResults;
             }
         }
@@ -414,6 +417,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 metricAggregationInfoResults.setMin(Math.ceil(min));
                 metricAggregationInfoResults.setMax(Math.ceil(max));
                 LOGGER.info("Pod Count Aggregation Info calculated using memoryUsage metric : avg = {} min={}, max={}", avg, min, max);
+                if (notifications != null)
+                    notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY));
                 return metricAggregationInfoResults;
             }
         }
