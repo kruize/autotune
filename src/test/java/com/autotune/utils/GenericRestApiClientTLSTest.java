@@ -15,9 +15,6 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.ssl.SSLContexts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,56 +39,34 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Reject TLS 1.1 connections (via system defaults)
  * - Reject TLS 1.0 connections (via system defaults)
  *
- * The tests verify that GenericRestApiClient's setupHttpClient() can be invoked successfully,
- * then test the same TLS configuration pattern (null protocols parameter) that the client uses
+ * The tests verify the TLS configuration pattern (null protocols parameter) that the client uses
  * to ensure system defaults provide the expected security posture.
  *
  * Test Principles:
- * 1. Verify GenericRestApiClient.setupHttpClient() executes without errors
- * 2. Test the same SSLConnectionSocketFactory configuration pattern used by the client
- * 3. Verify that passing null for protocols (as the client does) results in secure defaults
- * 4. Assert that system defaults reject legacy TLS versions (1.0, 1.1)
- * 5. Confirm system defaults accept modern TLS versions (1.2, 1.3)
+ * 1. Test the same SSLConnectionSocketFactory configuration pattern used by the client
+ * 2. Verify that passing null for protocols (as the client does) results in secure defaults
+ * 3. Assert that system defaults reject legacy TLS versions (1.0, 1.1) when supported by JDK
+ * 4. Confirm system defaults accept modern TLS versions (1.2, 1.3)
+ * 5. Focus on public TLS behavior rather than private implementation details
  */
 class GenericRestApiClientTLSTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClientTLSTest.class);
+    
+    // TLS Protocol Version Constants
+    private static final String TLS_1_0 = "TLSv1";
+    private static final String TLS_1_1 = "TLSv1.1";
+    private static final String TLS_1_2 = "TLSv1.2";
+    private static final String TLS_1_3 = "TLSv1.3";
+    private static final String SSL_V2 = "SSLv2";
+    private static final String SSL_V3 = "SSLv3";
+    
     private GenericRestApiClient client;
 
     @BeforeEach
     void setUp() {
         client = new GenericRestApiClient();
         client.setBaseURL("https://test.example.com");
-    }
-
-    /**
-     * Helper method to create an SSLConnectionSocketFactory using the same configuration
-     * pattern as GenericRestApiClient: passing null for protocols to delegate to system defaults.
-     * This allows us to verify that the configuration approach used by the client results in
-     * secure TLS settings.
-     */
-    private SSLConnectionSocketFactory createTestFactory(SSLContext sslContext) {
-        return new SSLConnectionSocketFactory(
-                sslContext,
-                null,  // protocols - null delegates to system defaults (as GenericRestApiClient does)
-                null,  // cipher suites
-                NoopHostnameVerifier.INSTANCE
-        );
-    }
-
-    /**
-     * Helper method to verify GenericRestApiClient.setupHttpClient() works correctly.
-     * Uses reflection to access the private setupHttpClient method.
-     *
-     * @return The CloseableHttpClient created by GenericRestApiClient
-     * @throws Exception if reflection or client setup fails
-     */
-    private CloseableHttpClient setupAndVerifyHttpClient() throws Exception {
-        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
-        setupMethod.setAccessible(true);
-        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
-        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
-        return httpClient;
     }
 
     /**
@@ -117,6 +91,21 @@ class GenericRestApiClientTLSTest {
      */
     private SSLSocket createSocketWithSystemDefaults(SSLContext sslContext) throws Exception {
         return (SSLSocket) sslContext.getSocketFactory().createSocket();
+    }
+
+    /**
+     * Helper method to get supported protocols from the JDK.
+     * This returns all protocols that the JDK supports, regardless of whether they're enabled by default.
+     *
+     * @param sslContext The SSLContext to use
+     * @return Array of supported protocol names
+     * @throws Exception if socket creation fails
+     */
+    private String[] getSupportedProtocols(SSLContext sslContext) throws Exception {
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
+        String[] supported = socket.getSupportedProtocols();
+        socket.close();
+        return supported;
     }
 
     /**
@@ -151,152 +140,142 @@ class GenericRestApiClientTLSTest {
         return false;
     }
 
-    @Test
-    @DisplayName("Should reject TLS 1.1 handshake with SSLHandshakeException")
-    void shouldRejectTLS11HandshakeWithException() throws Exception {
-        LOGGER.info("=== Testing TLS 1.1 Handshake Rejection with SSLHandshakeException ===");
+    /**
+     * Helper method to test legacy TLS protocol rejection with handshake validation.
+     * This method consolidates common logic for testing TLS 1.0 and TLS 1.1 rejection.
+     *
+     * @param protocol The legacy TLS protocol to test (e.g., TLS_1_0, TLS_1_1)
+     * @param protocolDisplayName Human-readable protocol name for logging
+     * @throws Exception if socket creation or validation fails
+     */
+    private void testLegacyTLSRejection(String protocol, String protocolDisplayName) throws Exception {
+        LOGGER.info("=== Testing {} Handshake Rejection with SSLHandshakeException ===", protocolDisplayName);
         
         // Given: Create server and client contexts
         SSLContext serverContext = createTrustAllSSLContext();
         SSLContext clientContext = createTrustAllSSLContext();
         
+        // Get supported protocols to check if the protocol is available in this JDK
+        String[] supportedProtocols = getSupportedProtocols(serverContext);
+        List<String> supportedList = Arrays.asList(supportedProtocols);
+        
+        LOGGER.info("JDK supported protocols: {}", Arrays.toString(supportedProtocols));
+        
+        // Only run this test if the protocol is supported by the JDK
+        if (!supportedList.contains(protocol)) {
+            LOGGER.info("{} not supported by JDK - skipping test as it's already disabled at JDK level",
+                    protocolDisplayName);
+            return;
+        }
+        
         // Server socket with system defaults (modern TLS only)
         SSLSocket serverSocket = createSocketWithSystemDefaults(serverContext);
         String[] serverProtocols = serverSocket.getEnabledProtocols();
         
-        // Client socket configured to only use TLS 1.1
-        SSLSocket clientSocket = createSocketWithProtocol(clientContext, "TLSv1.1");
+        // Client socket configured to only use the legacy protocol
+        SSLSocket clientSocket = createSocketWithProtocol(clientContext, protocol);
         String[] clientProtocols = clientSocket.getEnabledProtocols();
         
         LOGGER.info("Server (system defaults) protocols: {}", Arrays.toString(serverProtocols));
-        LOGGER.info("Client (TLS 1.1 only) protocols: {}", Arrays.toString(clientProtocols));
+        LOGGER.info("Client ({} only) protocols: {}", protocolDisplayName, Arrays.toString(clientProtocols));
         
         // Then: Verify handshake would fail due to protocol mismatch
         List<String> serverList = Arrays.asList(serverProtocols);
         
-        // Assert that TLS 1.1 is not in server's enabled protocols
-        assertFalse(serverList.contains("TLSv1.1"),
-                "TLS 1.1 should not be in system defaults - handshake will fail with SSLHandshakeException");
+        // Assert that the legacy protocol is not in server's enabled protocols
+        assertFalse(serverList.contains(protocol),
+                protocolDisplayName + " should not be in system defaults - handshake will fail with SSLHandshakeException");
         
-        // Assert that client only has TLS 1.1
+        // Assert that client only has the legacy protocol
         assertEquals(1, clientProtocols.length, "Client should have exactly one protocol");
-        assertEquals("TLSv1.1", clientProtocols[0], "Client should only support TLS 1.1");
+        assertEquals(protocol, clientProtocols[0], "Client should only support " + protocolDisplayName);
         
         // Verify no common protocol exists between client and server
         assertFalse(hasCommonProtocol(clientProtocols, serverProtocols),
-                "No common TLS protocol between client (TLS 1.1) and server (system defaults) - " +
+                "No common TLS protocol between client (" + protocolDisplayName + ") and server (system defaults) - " +
                 "handshake would fail with SSLHandshakeException: 'No appropriate protocol'");
         
-        LOGGER.info("Verified: TLS 1.1 handshake would fail with SSLHandshakeException");
+        LOGGER.info("Verified: {} handshake would fail with SSLHandshakeException", protocolDisplayName);
         LOGGER.info("Reason: No common protocol between client and server");
         LOGGER.info("Expected exception message: 'No appropriate protocol' or 'protocol version'");
         
         clientSocket.close();
         serverSocket.close();
+    }
+
+    @Test
+    @DisplayName("Should reject TLS 1.1 handshake with SSLHandshakeException")
+    void shouldRejectTLS11HandshakeWithException() throws Exception {
+        testLegacyTLSRejection(TLS_1_1, "TLS 1.1");
     }
 
     @Test
     @DisplayName("Should reject TLS 1.0 handshake with SSLHandshakeException")
     void shouldRejectTLS10HandshakeWithException() throws Exception {
-        LOGGER.info("=== Testing TLS 1.0 Handshake Rejection with SSLHandshakeException ===");
-        
-        // Given: Create server and client contexts
-        SSLContext serverContext = createTrustAllSSLContext();
-        SSLContext clientContext = createTrustAllSSLContext();
-        
-        // Server socket with system defaults (modern TLS only)
-        SSLSocket serverSocket = createSocketWithSystemDefaults(serverContext);
-        String[] serverProtocols = serverSocket.getEnabledProtocols();
-        
-        // Client socket configured to only use TLS 1.0
-        SSLSocket clientSocket = createSocketWithProtocol(clientContext, "TLSv1");
-        String[] clientProtocols = clientSocket.getEnabledProtocols();
-        
-        LOGGER.info("Server (system defaults) protocols: {}", Arrays.toString(serverProtocols));
-        LOGGER.info("Client (TLS 1.0 only) protocols: {}", Arrays.toString(clientProtocols));
-        
-        // Then: Verify handshake would fail due to protocol mismatch
-        List<String> serverList = Arrays.asList(serverProtocols);
-        
-        // Assert that TLS 1.0 is not in server's enabled protocols
-        assertFalse(serverList.contains("TLSv1"),
-                "TLS 1.0 should not be in system defaults - handshake will fail with SSLHandshakeException");
-        
-        // Assert that client only has TLS 1.0
-        assertEquals(1, clientProtocols.length, "Client should have exactly one protocol");
-        assertEquals("TLSv1", clientProtocols[0], "Client should only support TLS 1.0");
-        
-        // Verify no common protocol exists between client and server
-        assertFalse(hasCommonProtocol(clientProtocols, serverProtocols),
-                "No common TLS protocol between client (TLS 1.0) and server (system defaults) - " +
-                "handshake would fail with SSLHandshakeException: 'No appropriate protocol'");
-        
-        LOGGER.info("Verified: TLS 1.0 handshake would fail with SSLHandshakeException");
-        LOGGER.info("Reason: No common protocol between client and server");
-        LOGGER.info("Expected exception message: 'No appropriate protocol' or 'protocol version'");
-        
-        clientSocket.close();
-        serverSocket.close();
+        testLegacyTLSRejection(TLS_1_0, "TLS 1.0");
     }
 
-    @Test
-    @DisplayName("Should accept TLS 1.3 connections using GenericRestApiClient's configuration pattern")
-    void shouldAcceptTLS13ThroughClientConfiguration() throws Exception {
-        LOGGER.info("=== Testing TLS 1.3 Acceptance via Client Configuration Pattern ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
+    /**
+     * Helper method to verify system defaults enable modern TLS and exclude legacy protocols.
+     * This method consolidates common validation logic for TLS acceptance tests.
+     *
+     * @param requiredProtocol The modern TLS protocol that must be enabled (e.g., TLS_1_2, TLS_1_3)
+     * @param protocolDisplayName Human-readable protocol name for logging
+     * @throws Exception if socket creation or validation fails
+     */
+    private void verifyModernTLSAcceptance(String requiredProtocol, String protocolDisplayName) throws Exception {
+        LOGGER.info("=== Testing {} Acceptance via System Default Configuration ===", protocolDisplayName);
         
         // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
         SSLContext sslContext = createTrustAllSSLContext();
-        
-        // Create a socket using the same SSLContext to verify system defaults
         SSLSocket socket = createSocketWithSystemDefaults(sslContext);
         
         // Then: Verify system defaults provide secure TLS configuration
         String[] enabledProtocols = socket.getEnabledProtocols();
+        String[] supportedProtocols = socket.getSupportedProtocols();
         
         LOGGER.info("System defaults with null protocols - Enabled: {}", Arrays.toString(enabledProtocols));
+        LOGGER.info("JDK supported protocols: {}", Arrays.toString(supportedProtocols));
         
         assertNotNull(enabledProtocols);
-        List<String> protocolList = Arrays.asList(enabledProtocols);
-        assertTrue(protocolList.contains("TLSv1.3") || protocolList.contains("TLSv1.2"),
-                "Modern TLS (1.3 or 1.2) should be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1.1"),
-                "TLS 1.1 should not be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1"),
-                "TLS 1.0 should not be enabled by system defaults");
+        assertTrue(enabledProtocols.length >= 1, "Should have at least one protocol enabled");
+        
+        List<String> enabledList = Arrays.asList(enabledProtocols);
+        List<String> supportedList = Arrays.asList(supportedProtocols);
+        
+        // Verify the required modern TLS protocol is enabled
+        if (requiredProtocol.equals(TLS_1_3)) {
+            // For TLS 1.3, accept either 1.3 or 1.2 as modern TLS
+            assertTrue(enabledList.contains(TLS_1_3) || enabledList.contains(TLS_1_2),
+                    "Modern TLS (1.3 or 1.2) should be enabled by system defaults");
+        } else {
+            assertTrue(enabledList.contains(requiredProtocol),
+                    protocolDisplayName + " should be enabled by system defaults");
+        }
+        
+        // Only assert legacy protocol exclusion if the JDK supports them
+        if (supportedList.contains(TLS_1_1)) {
+            assertFalse(enabledList.contains(TLS_1_1),
+                    "TLS 1.1 should not be enabled by system defaults");
+        }
+        if (supportedList.contains(TLS_1_0)) {
+            assertFalse(enabledList.contains(TLS_1_0),
+                    "TLS 1.0 should not be enabled by system defaults");
+        }
         
         socket.close();
-        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should accept TLS 1.2 connections using GenericRestApiClient's configuration pattern")
+    @DisplayName("Should accept TLS 1.3 connections using system default configuration pattern")
+    void shouldAcceptTLS13ThroughClientConfiguration() throws Exception {
+        verifyModernTLSAcceptance(TLS_1_3, "TLS 1.3");
+    }
+
+    @Test
+    @DisplayName("Should accept TLS 1.2 connections using system default configuration pattern")
     void shouldAcceptTLS12ThroughClientConfiguration() throws Exception {
-        LOGGER.info("=== Testing TLS 1.2 Acceptance via Client Configuration Pattern ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
-        
-        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
-        SSLContext sslContext = createTrustAllSSLContext();
-        SSLSocket socket = createSocketWithSystemDefaults(sslContext);
-        String[] enabledProtocols = socket.getEnabledProtocols();
-        
-        LOGGER.info("System defaults with null protocols - Enabled: {}", Arrays.toString(enabledProtocols));
-        
-        assertNotNull(enabledProtocols);
-        List<String> protocolList = Arrays.asList(enabledProtocols);
-        assertTrue(protocolList.contains("TLSv1.2"),
-                "TLS 1.2 should be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1.1"),
-                "TLS 1.1 should not be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1"),
-                "TLS 1.0 should not be enabled by system defaults");
-        
-        socket.close();
-        httpClient.close();
+        verifyModernTLSAcceptance(TLS_1_2, "TLS 1.2");
     }
 
     @Test
@@ -304,9 +283,6 @@ class GenericRestApiClientTLSTest {
     void shouldRejectTLS11ThroughSystemDefaults() throws Exception {
         LOGGER.info("=== Testing TLS 1.1 Rejection via System Defaults with Handshake Validation ===");
         
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
-        
         // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
         SSLContext sslContext = createTrustAllSSLContext();
         
@@ -314,30 +290,41 @@ class GenericRestApiClientTLSTest {
         SSLSocket systemDefaultSocket = createSocketWithSystemDefaults(sslContext);
         String[] enabledProtocols = systemDefaultSocket.getEnabledProtocols();
         
+        String[] supportedProtocols = systemDefaultSocket.getSupportedProtocols();
+        
         LOGGER.info("System defaults - Enabled protocols: {}", Arrays.toString(enabledProtocols));
+        LOGGER.info("JDK supported protocols: {}", Arrays.toString(supportedProtocols));
         
-        // Then: Verify TLS 1.1 is not in system defaults
+        // Then: Verify basic non-emptiness
         assertNotNull(enabledProtocols);
-        List<String> protocolList = Arrays.asList(enabledProtocols);
-        assertFalse(protocolList.contains("TLSv1.1"),
-                "TLS 1.1 should not be enabled by system defaults");
+        assertTrue(enabledProtocols.length >= 1, "Should have at least one protocol enabled");
         
-        // Additionally: Simulate handshake scenario to verify rejection behavior
-        // Create a client socket that only supports TLS 1.1
-        SSLSocket tls11ClientSocket = createSocketWithProtocol(sslContext, "TLSv1.1");
-        String[] clientProtocols = tls11ClientSocket.getEnabledProtocols();
+        List<String> enabledList = Arrays.asList(enabledProtocols);
+        List<String> supportedList = Arrays.asList(supportedProtocols);
         
-        // Verify no protocol overlap exists (handshake would fail)
-        assertFalse(hasCommonProtocol(clientProtocols, enabledProtocols),
-                "No common protocol between TLS 1.1 client and system defaults - " +
-                "handshake would fail with SSLHandshakeException");
-        
-        LOGGER.info("Security validation: Legacy TLS 1.1 protocol properly blocked by system defaults");
-        LOGGER.info("Handshake validation: TLS 1.1 client would receive SSLHandshakeException");
-        
-        tls11ClientSocket.close();
+        // Only assert TLS 1.1 exclusion if the JDK supports it
+        if (supportedList.contains("TLSv1.1")) {
+            assertFalse(enabledList.contains("TLSv1.1"),
+                    "TLS 1.1 should not be enabled by system defaults");
+            
+            // Additionally: Simulate handshake scenario to verify rejection behavior
+            // Create a client socket that only supports TLS 1.1
+            SSLSocket tls11ClientSocket = createSocketWithProtocol(sslContext, "TLSv1.1");
+            String[] clientProtocols = tls11ClientSocket.getEnabledProtocols();
+            
+            // Verify no protocol overlap exists (handshake would fail)
+            assertFalse(hasCommonProtocol(clientProtocols, enabledProtocols),
+                    "No common protocol between TLS 1.1 client and system defaults - " +
+                    "handshake would fail with SSLHandshakeException");
+            
+            LOGGER.info("Security validation: Legacy TLS 1.1 protocol properly blocked by system defaults");
+            LOGGER.info("Handshake validation: TLS 1.1 client would receive SSLHandshakeException");
+            
+            tls11ClientSocket.close();
+        } else {
+            LOGGER.info("TLS 1.1 not supported by JDK - already disabled at JDK level");
+        }
         systemDefaultSocket.close();
-        httpClient.close();
     }
 
     @Test
@@ -345,9 +332,6 @@ class GenericRestApiClientTLSTest {
     void shouldRejectTLS10ThroughSystemDefaults() throws Exception {
         LOGGER.info("=== Testing TLS 1.0 Rejection via System Defaults with Handshake Validation ===");
         
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
-        
         // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
         SSLContext sslContext = createTrustAllSSLContext();
         
@@ -355,100 +339,47 @@ class GenericRestApiClientTLSTest {
         SSLSocket systemDefaultSocket = createSocketWithSystemDefaults(sslContext);
         String[] enabledProtocols = systemDefaultSocket.getEnabledProtocols();
         
+        String[] supportedProtocols = systemDefaultSocket.getSupportedProtocols();
+        
         LOGGER.info("System defaults - Enabled protocols: {}", Arrays.toString(enabledProtocols));
+        LOGGER.info("JDK supported protocols: {}", Arrays.toString(supportedProtocols));
         
-        // Then: Verify TLS 1.0 is not in system defaults
+        // Then: Verify basic non-emptiness
         assertNotNull(enabledProtocols);
-        List<String> protocolList = Arrays.asList(enabledProtocols);
-        assertFalse(protocolList.contains("TLSv1"),
-                "TLS 1.0 should not be enabled by system defaults");
+        assertTrue(enabledProtocols.length >= 1, "Should have at least one protocol enabled");
         
-        // Additionally: Simulate handshake scenario to verify rejection behavior
-        // Create a client socket that only supports TLS 1.0
-        SSLSocket tls10ClientSocket = createSocketWithProtocol(sslContext, "TLSv1");
-        String[] clientProtocols = tls10ClientSocket.getEnabledProtocols();
+        List<String> enabledList = Arrays.asList(enabledProtocols);
+        List<String> supportedList = Arrays.asList(supportedProtocols);
         
-        // Verify no protocol overlap exists (handshake would fail)
-        assertFalse(hasCommonProtocol(clientProtocols, enabledProtocols),
-                "No common protocol between TLS 1.0 client and system defaults - " +
-                "handshake would fail with SSLHandshakeException");
-        
-        LOGGER.info("Security validation: Legacy TLS 1.0 protocol properly blocked by system defaults");
-        LOGGER.info("Handshake validation: TLS 1.0 client would receive SSLHandshakeException");
-        
-        tls10ClientSocket.close();
-        systemDefaultSocket.close();
-        httpClient.close();
-    }
-
-    @Test
-    @DisplayName("Should use system default TLS protocols (as GenericRestApiClient does)")
-    void shouldUseSystemDefaultProtocolsInClient() throws Exception {
-        LOGGER.info("=== Testing System Default Protocol Configuration ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
-        
-        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
-        SSLContext sslContext = createTrustAllSSLContext();
-        SSLSocket socket = createSocketWithSystemDefaults(sslContext);
-        String[] protocols = socket.getEnabledProtocols();
-        
-        LOGGER.info("System default protocols: {}", Arrays.toString(protocols));
-        
-        // Then: Only modern TLS versions should be enabled
-        assertNotNull(protocols);
-        assertTrue(protocols.length >= 1, "Should have at least 1 protocol enabled");
-        
-        List<String> protocolList = Arrays.asList(protocols);
-        assertTrue(protocolList.contains("TLSv1.3") || protocolList.contains("TLSv1.2"),
-                "Modern TLS (1.3 or 1.2) should be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1.1"),
-                "TLS 1.1 should not be enabled by system defaults");
-        assertFalse(protocolList.contains("TLSv1"),
-                "TLS 1.0 should not be enabled by system defaults");
-        
-        socket.close();
-        httpClient.close();
-    }
-
-    @Test
-    @DisplayName("Should verify client's configuration pattern creates proper TLS configuration")
-    void shouldVerifyClientSetupHttpClientTLSConfiguration() throws Exception {
-        LOGGER.info("=== Verifying Client Configuration Pattern TLS Settings ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
-        
-        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
-        SSLContext sslContext = createTrustAllSSLContext();
-        SSLSocket socket = createSocketWithSystemDefaults(sslContext);
-        String[] protocols = socket.getEnabledProtocols();
-        
-        assertNotNull(protocols);
-        assertTrue(protocols.length >= 1, "Should have at least one protocol enabled");
-        
-        // Verify no legacy protocols
-        for (String protocol : protocols) {
-            assertFalse(protocol.equals("TLSv1.1") || protocol.equals("TLSv1") ||
-                       protocol.equals("SSLv3") || protocol.equals("SSLv2"),
-                    "Legacy protocol " + protocol + " should not be enabled by system defaults");
+        // Only assert TLS 1.0 exclusion if the JDK supports it
+        if (supportedList.contains("TLSv1")) {
+            assertFalse(enabledList.contains("TLSv1"),
+                    "TLS 1.0 should not be enabled by system defaults");
+            
+            // Additionally: Simulate handshake scenario to verify rejection behavior
+            // Create a client socket that only supports TLS 1.0
+            SSLSocket tls10ClientSocket = createSocketWithProtocol(sslContext, "TLSv1");
+            String[] clientProtocols = tls10ClientSocket.getEnabledProtocols();
+            
+            // Verify no protocol overlap exists (handshake would fail)
+            assertFalse(hasCommonProtocol(clientProtocols, enabledProtocols),
+                    "No common protocol between TLS 1.0 client and system defaults - " +
+                    "handshake would fail with SSLHandshakeException");
+            
+            LOGGER.info("Security validation: Legacy TLS 1.0 protocol properly blocked by system defaults");
+            LOGGER.info("Handshake validation: TLS 1.0 client would receive SSLHandshakeException");
+            
+            tls10ClientSocket.close();
+        } else {
+            LOGGER.info("TLS 1.0 not supported by JDK - already disabled at JDK level");
         }
-        
-        LOGGER.info("Verified: null protocols parameter correctly delegates to secure system TLS defaults");
-        LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
-        
-        socket.close();
-        httpClient.close();
+        systemDefaultSocket.close();
     }
 
     @Test
     @DisplayName("Should verify TLS 1.3 is preferred by system defaults when available")
     void shouldPreferTLS13OverTLS12InClient() throws Exception {
         LOGGER.info("=== Testing TLS Version Preference in System Defaults ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
         
         // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
         SSLContext sslContext = createTrustAllSSLContext();
@@ -471,16 +402,12 @@ class GenericRestApiClientTLSTest {
         LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
         
         socket.close();
-        httpClient.close();
     }
 
     @Test
     @DisplayName("Should not include SSLv3 or SSLv2 in system defaults")
     void shouldNotSupportLegacySSLVersionsInClient() throws Exception {
         LOGGER.info("=== Testing Legacy SSL Version Exclusion in System Defaults ===");
-        
-        // Given: Verify GenericRestApiClient.setupHttpClient() works
-        CloseableHttpClient httpClient = setupAndVerifyHttpClient();
         
         // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
         SSLContext sslContext = createTrustAllSSLContext();
@@ -499,7 +426,6 @@ class GenericRestApiClientTLSTest {
         LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
         
         socket.close();
-        httpClient.close();
     }
 
     @Test
@@ -518,21 +444,30 @@ class GenericRestApiClientTLSTest {
         SSLContext clientContext = createTrustAllSSLContext();
         
         // Test TLS 1.0 client
-        SSLSocket tls10Client = createSocketWithProtocol(clientContext, "TLSv1");
+        SSLSocket tls10Client = createSocketWithProtocol(clientContext, TLS_1_0);
         
         // Test TLS 1.1 client
-        SSLSocket tls11Client = createSocketWithProtocol(clientContext, "TLSv1.1");
+        SSLSocket tls11Client = createSocketWithProtocol(clientContext, TLS_1_1);
+        
+        // Get supported protocols to check what the JDK supports
+        String[] supportedProtocols = serverSocket.getSupportedProtocols();
+        List<String> supportedList = Arrays.asList(supportedProtocols);
+        
+        LOGGER.info("JDK supported protocols: {}", Arrays.toString(supportedProtocols));
         
         // Then: Verify that protocol version mismatch would occur
         List<String> serverList = Arrays.asList(serverProtocols);
         
-        // Verify TLS 1.0 would cause protocol_version error
-        assertFalse(serverList.contains("TLSv1"),
-                "TLS 1.0 not supported by server - would cause 'protocol_version' alert");
+        // Only assert legacy protocol exclusion if the JDK supports them
+        if (supportedList.contains(TLS_1_0)) {
+            assertFalse(serverList.contains(TLS_1_0),
+                    "TLS 1.0 not supported by server - would cause 'protocol_version' alert");
+        }
         
-        // Verify TLS 1.1 would cause protocol_version error
-        assertFalse(serverList.contains("TLSv1.1"),
-                "TLS 1.1 not supported by server - would cause 'protocol_version' alert");
+        if (supportedList.contains(TLS_1_1)) {
+            assertFalse(serverList.contains(TLS_1_1),
+                    "TLS 1.1 not supported by server - would cause 'protocol_version' alert");
+        }
         
         // Verify the expected error message pattern
         String expectedErrorPattern = "protocol_version";
@@ -540,7 +475,7 @@ class GenericRestApiClientTLSTest {
         LOGGER.info("This error occurs when client and server have no common TLS protocol version");
         
         // Verify that modern TLS is supported
-        assertTrue(serverList.contains("TLSv1.2") || serverList.contains("TLSv1.3"),
+        assertTrue(serverList.contains(TLS_1_2) || serverList.contains(TLS_1_3),
                 "Server should support modern TLS (1.2 or 1.3)");
         
         LOGGER.info("Verified: Legacy TLS clients would receive 'protocol_version' fatal alert");
