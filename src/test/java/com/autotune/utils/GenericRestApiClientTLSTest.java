@@ -417,9 +417,9 @@ class GenericRestApiClientTLSTest {
         // Then: SSLv3 and SSLv2 should not be present
         assertNotNull(protocols);
         List<String> protocolList = Arrays.asList(protocols);
-        assertFalse(protocolList.contains("SSLv3"),
+        assertFalse(protocolList.contains(SSL_V3),
                 "SSLv3 should never be enabled by system defaults");
-        assertFalse(protocolList.contains("SSLv2"),
+        assertFalse(protocolList.contains(SSL_V2),
                 "SSLv2 should never be enabled by system defaults");
         
         LOGGER.info("Verified: No legacy SSL versions enabled in system defaults");
