@@ -84,7 +84,7 @@ class GenericRestApiClientTLSTest {
                     .build();
         } catch (Exception e) {
             LOGGER.error("Failed to create SSLContext: {}", e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
@@ -100,7 +100,7 @@ class GenericRestApiClientTLSTest {
             return (SSLSocket) sslContext.getSocketFactory().createSocket();
         } catch (Exception e) {
             LOGGER.error("Failed to create socket with system defaults: {}", e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
@@ -120,7 +120,7 @@ class GenericRestApiClientTLSTest {
             return supported;
         } catch (Exception e) {
             LOGGER.error("Failed to get supported protocols: {}", e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
@@ -139,7 +139,7 @@ class GenericRestApiClientTLSTest {
             return socket;
         } catch (Exception e) {
             LOGGER.error("Failed to create socket with protocol {}: {}", protocol, e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
@@ -216,7 +216,7 @@ class GenericRestApiClientTLSTest {
             serverSocket.close();
         } catch (Exception e) {
             LOGGER.error("Test failed for {} rejection: {}", protocolDisplayName, e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
@@ -283,7 +283,7 @@ class GenericRestApiClientTLSTest {
             socket.close();
         } catch (Exception e) {
             LOGGER.error("Test failed for {} acceptance: {}", protocolDisplayName, e.getMessage(), e);
-            throw e;
+            throw new Exception(e.getMessage());
         }
     }
 
