@@ -38,6 +38,40 @@ mandatory_fields = [
 ]
 
 
+def verify_layer_update(layer_name, update_data, test_name=None, create_data=None):
+    """Helper function to verify layer updates are persisted"""
+    list_response = list_layers(layer_name, logging=False)
+    assert list_response.status_code == SUCCESS_200_STATUS_CODE
+    layers = list_response.json()
+    assert len(layers) == 1
+    retrieved = layers[0]
+
+    if test_name == "change_presence_type":
+        assert retrieved['layer_presence'] == update_data['layer_presence']
+    elif test_name == "add_queries" or test_name == "modify_queries":
+        assert retrieved['layer_presence']['queries'] == update_data['layer_presence']['queries']
+    elif test_name == "change_details":
+        assert retrieved['details'] == update_data['details']
+    elif test_name == "add_tunable":
+        assert len(retrieved['tunables']) == len(update_data['tunables'])
+        new_tunable = next((t for t in retrieved['tunables'] if t['name'] == "newTunable"), None)
+        expected = next((t for t in update_data['tunables'] if t['name'] == "newTunable"), None)
+        assert new_tunable and expected
+        for key in expected:
+            assert new_tunable[key] == expected[key]
+    elif test_name == "remove_tunable":
+        assert len(retrieved['tunables']) == len(update_data['tunables'])
+        removed = {t['name'] for t in create_data['tunables']} - {t['name'] for t in retrieved['tunables']}
+        assert len(removed) == 1
+    elif test_name == "modify_tunable":
+        assert retrieved['tunables'][0]['units'] == update_data['tunables'][0]['units']
+    else:
+        # Default validation for simple updates
+        for key in ['upper_bound', 'lower_bound', 'step']:
+            if key in update_data['tunables'][0]:
+                assert retrieved['tunables'][0][key] == update_data['tunables'][0][key]
+
+
 @pytest.mark.layers
 @pytest.mark.sanity
 def test_update_layer(cluster_type):
@@ -82,7 +116,9 @@ def test_update_layer(cluster_type):
     assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
 
-    print(f"✓ Successfully updated layer")
+    # Verify updated values are persisted
+    verify_layer_update(layer_name, update_data)
+    print(f"✓ Successfully updated layer and verified updated values")
 
     # Cleanup
     delete_layer(layer_name)
@@ -168,7 +204,9 @@ def test_update_layer_variations(cluster_type, test_name, layer_file):
     data = response.json()
     assert data['status'] == SUCCESS_STATUS
 
-    print(f"✓ Successfully updated layer: {test_name}")
+    # Verify updated values are persisted
+    verify_layer_update(layer_name, update_data, test_name, create_data)
+    print(f"✓ Successfully updated layer: {test_name} and verified updated values")
 
     # Cleanup
     delete_layer(layer_name)
