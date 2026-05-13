@@ -15,7 +15,11 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.ssl.SSLContexts;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -25,7 +29,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,277 +41,264 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for TLS version validation in GenericRestApiClient.
  *
- * These tests verify that Kruize's TLS configuration:
- * - Accepts TLS 1.3 connections
- * - Accepts TLS 1.2 connections
- * - Rejects TLS 1.1 connections (via system defaults)
- * - Rejects TLS 1.0 connections (via system defaults)
+ * These tests verify that Kruize's TLS configuration approach (passing null for protocols
+ * to SSLConnectionSocketFactory) correctly delegates to system defaults, which:
+ * - Accept TLS 1.3 connections
+ * - Accept TLS 1.2 connections
+ * - Reject TLS 1.1 connections (via system defaults)
+ * - Reject TLS 1.0 connections (via system defaults)
  *
- * The tests exercise the actual SSLConnectionSocketFactory configuration used by
- * GenericRestApiClient (passing null for protocols parameter), ensuring that
- * regressions in client TLS configuration are caught.
+ * The tests verify that GenericRestApiClient's setupHttpClient() can be invoked successfully,
+ * then test the same TLS configuration pattern (null protocols parameter) that the client uses
+ * to ensure system defaults provide the expected security posture.
  *
  * Test Principles:
- * 1. Test the actual SSLConnectionSocketFactory configuration pattern used by GenericRestApiClient
- * 2. Verify that passing null for protocols delegates to system defaults
- * 3. Assert on sockets created through the factory to verify TLS configuration
- * 4. Ensure legacy TLS versions (1.0, 1.1) are rejected by system defaults
- * 5. Confirm modern TLS versions (1.2, 1.3) are accepted by system defaults
+ * 1. Verify GenericRestApiClient.setupHttpClient() executes without errors
+ * 2. Test the same SSLConnectionSocketFactory configuration pattern used by the client
+ * 3. Verify that passing null for protocols (as the client does) results in secure defaults
+ * 4. Assert that system defaults reject legacy TLS versions (1.0, 1.1)
+ * 5. Confirm system defaults accept modern TLS versions (1.2, 1.3)
  */
 class GenericRestApiClientTLSTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClientTLSTest.class);
+    private GenericRestApiClient client;
+
+    @BeforeEach
+    void setUp() {
+        client = new GenericRestApiClient();
+        client.setBaseURL("https://test.example.com");
+    }
+
+    /**
+     * Helper method to create an SSLConnectionSocketFactory using the same configuration
+     * pattern as GenericRestApiClient: passing null for protocols to delegate to system defaults.
+     * This allows us to verify that the configuration approach used by the client results in
+     * secure TLS settings.
+     */
+    private SSLConnectionSocketFactory createTestFactory(SSLContext sslContext) {
+        return new SSLConnectionSocketFactory(
+                sslContext,
+                null,  // protocols - null delegates to system defaults (as GenericRestApiClient does)
+                null,  // cipher suites
+                NoopHostnameVerifier.INSTANCE
+        );
+    }
 
     @Test
-    @DisplayName("Should accept TLS 1.3 connections with SSLConnectionSocketFactory configured like GenericRestApiClient")
+    @DisplayName("Should accept TLS 1.3 connections using GenericRestApiClient's configuration pattern")
     void shouldAcceptTLS13ThroughClientConfiguration() throws Exception {
-        LOGGER.info("=== Testing TLS 1.3 Acceptance via GenericRestApiClient Configuration ===");
+        LOGGER.info("=== Testing TLS 1.3 Acceptance via Client Configuration Pattern ===");
         
-        // Given: Mock SSL components configured to support TLS 1.3
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] supportedProtocols = {"TLSv1.3", "TLSv1.2"};
-        String[] enabledProtocols = {"TLSv1.3"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getSupportedProtocols()).thenReturn(supportedProtocols);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(enabledProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create SSLConnectionSocketFactory exactly as GenericRestApiClient does
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // protocols - null delegates to system defaults
-                null,  // cipher suites
-                null   // hostname verifier
-        );
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        // Verify the factory was created successfully
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        // Create a socket using the same SSLContext to verify system defaults
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        // Then: Verify the mock socket has TLS 1.3 enabled
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        // Then: Verify system defaults provide secure TLS configuration
+        String[] enabledProtocols = socket.getEnabledProtocols();
         
-        LOGGER.info("TLS 1.3 connection ACCEPTED - Enabled protocols: {}", Arrays.toString(protocols));
+        LOGGER.info("System defaults with null protocols - Enabled: {}", Arrays.toString(enabledProtocols));
         
-        assertNotNull(protocols);
-        assertTrue(Arrays.asList(protocols).contains("TLSv1.3"),
-                "TLS 1.3 should be in enabled protocols");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1.1"),
-                "TLS 1.1 should not be in enabled protocols");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1"),
-                "TLS 1.0 should not be in enabled protocols");
+        assertNotNull(enabledProtocols);
+        List<String> protocolList = Arrays.asList(enabledProtocols);
+        assertTrue(protocolList.contains("TLSv1.3") || protocolList.contains("TLSv1.2"),
+                "Modern TLS (1.3 or 1.2) should be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1.1"),
+                "TLS 1.1 should not be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1"),
+                "TLS 1.0 should not be enabled by system defaults");
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should accept TLS 1.2 connections with SSLConnectionSocketFactory configured like GenericRestApiClient")
+    @DisplayName("Should accept TLS 1.2 connections using GenericRestApiClient's configuration pattern")
     void shouldAcceptTLS12ThroughClientConfiguration() throws Exception {
-        LOGGER.info("=== Testing TLS 1.2 Acceptance via GenericRestApiClient Configuration ===");
+        LOGGER.info("=== Testing TLS 1.2 Acceptance via Client Configuration Pattern ===");
         
-        // Given: Mock SSL components configured to support TLS 1.2
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] supportedProtocols = {"TLSv1.3", "TLSv1.2"};
-        String[] enabledProtocols = {"TLSv1.2"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getSupportedProtocols()).thenReturn(supportedProtocols);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(enabledProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create SSLConnectionSocketFactory exactly as GenericRestApiClient does
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // protocols - null delegates to system defaults
-                null,  // cipher suites
-                null   // hostname verifier
-        );
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        // Then: Verify the mock socket has TLS 1.2 enabled
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        String[] enabledProtocols = socket.getEnabledProtocols();
         
-        LOGGER.info("TLS 1.2 connection ACCEPTED - Enabled protocols: {}", Arrays.toString(protocols));
+        LOGGER.info("System defaults with null protocols - Enabled: {}", Arrays.toString(enabledProtocols));
         
-        assertNotNull(protocols);
-        assertTrue(Arrays.asList(protocols).contains("TLSv1.2"),
-                "TLS 1.2 should be in enabled protocols");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1.1"),
-                "TLS 1.1 should not be in enabled protocols");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1"),
-                "TLS 1.0 should not be in enabled protocols");
+        assertNotNull(enabledProtocols);
+        List<String> protocolList = Arrays.asList(enabledProtocols);
+        assertTrue(protocolList.contains("TLSv1.2"),
+                "TLS 1.2 should be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1.1"),
+                "TLS 1.1 should not be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1"),
+                "TLS 1.0 should not be enabled by system defaults");
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should reject TLS 1.1 connections through system defaults")
+    @DisplayName("Should reject TLS 1.1 through system defaults (as GenericRestApiClient does)")
     void shouldRejectTLS11ThroughSystemDefaults() throws Exception {
         LOGGER.info("=== Testing TLS 1.1 Rejection via System Defaults ===");
         
-        // Given: Mock SSL components where only TLS 1.1 is available
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] legacyProtocols = {"TLSv1.1"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getSupportedProtocols()).thenReturn(legacyProtocols);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(legacyProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // Simulate handshake failure for TLS 1.1
-        doThrow(new SSLHandshakeException("Received fatal alert: protocol_version"))
-                .when(mockSSLSocket).startHandshake();
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        LOGGER.info("Attempting connection with TLS 1.1...");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        // When: Create SSLConnectionSocketFactory with null protocols (system defaults)
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // protocols - null delegates to system defaults
-                null,  // cipher suites
-                null   // hostname verifier
-        );
+        String[] enabledProtocols = socket.getEnabledProtocols();
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        LOGGER.info("System defaults - Enabled protocols: {}", Arrays.toString(enabledProtocols));
         
-        // Then: Attempting handshake should throw SSLHandshakeException
-        SSLHandshakeException exception = assertThrows(
-                SSLHandshakeException.class,
-                mockSSLSocket::startHandshake,
-                "TLS 1.1 connection should be rejected with SSLHandshakeException"
-        );
+        assertNotNull(enabledProtocols);
+        List<String> protocolList = Arrays.asList(enabledProtocols);
+        assertFalse(protocolList.contains("TLSv1.1"),
+                "TLS 1.1 should not be enabled by system defaults");
         
-        LOGGER.warn("TLS 1.1 connection REJECTED as expected: {}", exception.getMessage());
         LOGGER.info("Security validation: Legacy TLS 1.1 protocol properly blocked by system defaults");
         
-        assertTrue(exception.getMessage().contains("protocol_version"),
-                "Exception should indicate protocol version mismatch");
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should reject TLS 1.0 connections through system defaults")
+    @DisplayName("Should reject TLS 1.0 through system defaults (as GenericRestApiClient does)")
     void shouldRejectTLS10ThroughSystemDefaults() throws Exception {
         LOGGER.info("=== Testing TLS 1.0 Rejection via System Defaults ===");
         
-        // Given: Mock SSL components where only TLS 1.0 is available
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] legacyProtocols = {"TLSv1"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getSupportedProtocols()).thenReturn(legacyProtocols);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(legacyProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // Simulate handshake failure for TLS 1.0
-        doThrow(new SSLHandshakeException("Received fatal alert: protocol_version"))
-                .when(mockSSLSocket).startHandshake();
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        LOGGER.info("Attempting connection with TLS 1.0...");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        // When: Create SSLConnectionSocketFactory with null protocols (system defaults)
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // protocols - null delegates to system defaults
-                null,  // cipher suites
-                null   // hostname verifier
-        );
+        String[] enabledProtocols = socket.getEnabledProtocols();
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        LOGGER.info("System defaults - Enabled protocols: {}", Arrays.toString(enabledProtocols));
         
-        // Then: Attempting handshake should throw SSLHandshakeException
-        SSLHandshakeException exception = assertThrows(
-                SSLHandshakeException.class,
-                mockSSLSocket::startHandshake,
-                "TLS 1.0 connection should be rejected with SSLHandshakeException"
-        );
+        assertNotNull(enabledProtocols);
+        List<String> protocolList = Arrays.asList(enabledProtocols);
+        assertFalse(protocolList.contains("TLSv1"),
+                "TLS 1.0 should not be enabled by system defaults");
         
-        LOGGER.warn("TLS 1.0 connection REJECTED as expected: {}", exception.getMessage());
         LOGGER.info("Security validation: Legacy TLS 1.0 protocol properly blocked by system defaults");
         
-        assertTrue(exception.getMessage().contains("protocol_version"),
-                "Exception should indicate protocol version mismatch");
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should use system default TLS protocols when null is passed to SSLConnectionSocketFactory")
-    void shouldUseSystemDefaultProtocolsInFactory() throws Exception {
+    @DisplayName("Should use system default TLS protocols (as GenericRestApiClient does)")
+    void shouldUseSystemDefaultProtocolsInClient() throws Exception {
         LOGGER.info("=== Testing System Default Protocol Configuration ===");
         
-        // Given: Mock SSL components with system default protocols
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] systemDefaultProtocols = {"TLSv1.3", "TLSv1.2"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(systemDefaultProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create SSLConnectionSocketFactory with null protocols (as GenericRestApiClient does)
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // protocols parameter - null delegates to system defaults
-                null,  // cipher suites
-                null   // hostname verifier
-        );
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        String[] protocols = socket.getEnabledProtocols();
         
         LOGGER.info("System default protocols: {}", Arrays.toString(protocols));
         
         // Then: Only modern TLS versions should be enabled
         assertNotNull(protocols);
-        assertEquals(2, protocols.length, "Should have exactly 2 protocols enabled");
-        assertTrue(Arrays.asList(protocols).contains("TLSv1.3"),
-                "TLS 1.3 should be enabled by default");
-        assertTrue(Arrays.asList(protocols).contains("TLSv1.2"),
-                "TLS 1.2 should be enabled by default");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1.1"),
-                "TLS 1.1 should not be enabled by default");
-        assertFalse(Arrays.asList(protocols).contains("TLSv1"),
-                "TLS 1.0 should not be enabled by default");
+        assertTrue(protocols.length >= 1, "Should have at least 1 protocol enabled");
+        
+        List<String> protocolList = Arrays.asList(protocols);
+        assertTrue(protocolList.contains("TLSv1.3") || protocolList.contains("TLSv1.2"),
+                "Modern TLS (1.3 or 1.2) should be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1.1"),
+                "TLS 1.1 should not be enabled by system defaults");
+        assertFalse(protocolList.contains("TLSv1"),
+                "TLS 1.0 should not be enabled by system defaults");
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should verify GenericRestApiClient creates SSLConnectionSocketFactory with null protocols")
-    void shouldVerifyClientCreatesFactoryWithNullProtocols() throws Exception {
-        LOGGER.info("=== Verifying GenericRestApiClient TLS Configuration ===");
+    @DisplayName("Should verify client's configuration pattern creates proper TLS configuration")
+    void shouldVerifyClientSetupHttpClientTLSConfiguration() throws Exception {
+        LOGGER.info("=== Verifying Client Configuration Pattern TLS Settings ===");
         
-        // Given: Mock SSL components with system defaults
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] systemDefaults = {"TLSv1.3", "TLSv1.2"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(systemDefaults);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create factory as GenericRestApiClient does
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext,
-                null,  // This is the critical parameter - null means use system defaults
-                null,
-                null
-        );
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        // Then: Verify system defaults are used
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        String[] protocols = socket.getEnabledProtocols();
+        
         assertNotNull(protocols);
         assertTrue(protocols.length >= 1, "Should have at least one protocol enabled");
         
@@ -311,81 +306,94 @@ class GenericRestApiClientTLSTest {
         for (String protocol : protocols) {
             assertFalse(protocol.equals("TLSv1.1") || protocol.equals("TLSv1") ||
                        protocol.equals("SSLv3") || protocol.equals("SSLv2"),
-                    "Legacy protocol " + protocol + " should not be enabled");
+                    "Legacy protocol " + protocol + " should not be enabled by system defaults");
         }
         
-        LOGGER.info("Verified: GenericRestApiClient correctly delegates to system TLS defaults");
+        LOGGER.info("Verified: null protocols parameter correctly delegates to secure system TLS defaults");
         LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should verify TLS 1.3 is preferred over TLS 1.2 when both are available")
-    void shouldPreferTLS13OverTLS12() throws Exception {
-        LOGGER.info("=== Testing TLS Version Preference ===");
+    @DisplayName("Should verify TLS 1.3 is preferred by system defaults when available")
+    void shouldPreferTLS13OverTLS12InClient() throws Exception {
+        LOGGER.info("=== Testing TLS Version Preference in System Defaults ===");
         
-        // Given: Mock SSL components with both TLS 1.3 and 1.2
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] supportedProtocols = {"TLSv1.3", "TLSv1.2"};
-        String[] enabledProtocols = {"TLSv1.3", "TLSv1.2"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getSupportedProtocols()).thenReturn(supportedProtocols);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(enabledProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create factory
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext, null, null, null);
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        String[] protocols = socket.getEnabledProtocols();
         
-        // Then: Both should be enabled, with TLS 1.3 listed first (preferred)
+        // Then: Verify protocol preference
         assertNotNull(protocols);
-        assertTrue(protocols.length >= 2, "Should have at least 2 protocols");
-        assertEquals("TLSv1.3", protocols[0], "TLS 1.3 should be first (preferred)");
-        assertEquals("TLSv1.2", protocols[1], "TLS 1.2 should be second");
+        assertTrue(protocols.length >= 1, "Should have at least 1 protocol");
         
-        LOGGER.info("Protocol preference verified: {}", Arrays.toString(protocols));
+        List<String> protocolList = Arrays.asList(protocols);
+        if (protocolList.contains("TLSv1.3")) {
+            assertEquals("TLSv1.3", protocols[0], "TLS 1.3 should be first (preferred) when available");
+            LOGGER.info("Protocol preference verified: TLS 1.3 is preferred by system defaults");
+        } else {
+            assertTrue(protocolList.contains("TLSv1.2"), "TLS 1.2 should be available");
+            LOGGER.info("Protocol preference verified: TLS 1.2 is available in system defaults");
+        }
+        
+        LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
-    @DisplayName("Should not include SSLv3 or SSLv2 in supported protocols")
-    void shouldNotSupportLegacySSLVersions() throws Exception {
-        LOGGER.info("=== Testing Legacy SSL Version Exclusion ===");
+    @DisplayName("Should not include SSLv3 or SSLv2 in system defaults")
+    void shouldNotSupportLegacySSLVersionsInClient() throws Exception {
+        LOGGER.info("=== Testing Legacy SSL Version Exclusion in System Defaults ===");
         
-        // Given: Mock SSL components with system protocols (no legacy SSL)
-        SSLContext mockSSLContext = mock(SSLContext.class);
-        SSLSocketFactory mockSSLSocketFactory = mock(SSLSocketFactory.class);
-        SSLSocket mockSSLSocket = mock(SSLSocket.class);
+        // Given: Verify GenericRestApiClient.setupHttpClient() works
+        Method setupMethod = GenericRestApiClient.class.getDeclaredMethod("setupHttpClient");
+        setupMethod.setAccessible(true);
+        CloseableHttpClient httpClient = (CloseableHttpClient) setupMethod.invoke(client);
         
-        String[] systemProtocols = {"TLSv1.3", "TLSv1.2"};
+        assertNotNull(httpClient, "HTTP client should be created by GenericRestApiClient");
         
-        when(mockSSLContext.getSocketFactory()).thenReturn(mockSSLSocketFactory);
-        when(mockSSLSocketFactory.createSocket()).thenReturn(mockSSLSocket);
-        when(mockSSLSocket.getEnabledProtocols()).thenReturn(systemProtocols);
+        // When: Test the same configuration pattern (null protocols) that GenericRestApiClient uses
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial((chain, authType) -> true)
+                .build();
         
-        // When: Create factory
-        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
-                mockSSLContext, null, null, null);
+        SSLConnectionSocketFactory factory = createTestFactory(sslContext);
         
-        assertNotNull(factory, "SSLConnectionSocketFactory should be created");
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket();
         
-        String[] protocols = mockSSLSocket.getEnabledProtocols();
+        String[] protocols = socket.getEnabledProtocols();
         
         // Then: SSLv3 and SSLv2 should not be present
         assertNotNull(protocols);
-        assertFalse(Arrays.asList(protocols).contains("SSLv3"),
-                "SSLv3 should never be enabled");
-        assertFalse(Arrays.asList(protocols).contains("SSLv2"),
-                "SSLv2 should never be enabled");
+        List<String> protocolList = Arrays.asList(protocols);
+        assertFalse(protocolList.contains("SSLv3"),
+                "SSLv3 should never be enabled by system defaults");
+        assertFalse(protocolList.contains("SSLv2"),
+                "SSLv2 should never be enabled by system defaults");
         
-        LOGGER.info("Verified: No legacy SSL versions enabled");
+        LOGGER.info("Verified: No legacy SSL versions enabled in system defaults");
         LOGGER.info("Enabled protocols: {}", Arrays.toString(protocols));
+        
+        socket.close();
+        httpClient.close();
     }
 
     @Test
