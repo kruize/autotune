@@ -372,13 +372,16 @@ public class RecommendationsResource extends HttpServlet {
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, target, bulkJobID);
                 if (kruizeObject.getValidation_data().isSuccess()) {
-                    Timestamp intervalEndTime = Utils.DateUtils.getTimeStampFrom(
-                            KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                            intervalEndTimeStr);
-                    SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
-                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-                    LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
-                            experimentName, sdf.format(intervalEndTime)));
+                    Timestamp intervalEndTime = null;
+                    if (intervalEndTimeStr != null) {
+                        intervalEndTime = Utils.DateUtils.getTimeStampFrom(
+                                KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                                intervalEndTimeStr);
+                        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                        LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
+                                experimentName, sdf.format(intervalEndTime)));
+                    }
                     sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true);
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
