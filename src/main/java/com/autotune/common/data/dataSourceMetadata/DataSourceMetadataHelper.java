@@ -449,6 +449,57 @@ public class DataSourceMetadataHelper {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.CONTAINER_METADATA_UPDATE_ERROR + e.getMessage());
         }
     }
+
+    public void filterMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
+                                         HashMap<String, DataSourceNamespace> matchedNamespaces,
+                                         HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads) {
+        try {
+            if (dataSourceMetadataInfo == null || dataSourceMetadataInfo.getDataSourceObject(dataSourceName) == null) {
+                return;
+            }
+
+            DataSourceCluster cluster = dataSourceMetadataInfo.getDataSourceObject(dataSourceName)
+                    .getDataSourceClusterObject(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.CLUSTER_NAME);
+
+            if (cluster == null || cluster.getNamespaces() == null) {
+                return;
+            }
+
+            boolean hasNamespaceMatches = matchedNamespaces != null && !matchedNamespaces.isEmpty();
+            boolean hasWorkloadMatches = matchedWorkloads != null && !matchedWorkloads.isEmpty();
+
+            if (!hasNamespaceMatches && !hasWorkloadMatches) {
+                return;
+            }
+
+            cluster.getNamespaces().entrySet().removeIf(namespaceEntry -> {
+                String namespaceName = namespaceEntry.getKey();
+                DataSourceNamespace namespace = namespaceEntry.getValue();
+
+                boolean namespaceMatched = hasNamespaceMatches && matchedNamespaces.containsKey(namespaceName);
+                HashMap<String, DataSourceWorkload> namespaceMatchedWorkloads =
+                        hasWorkloadMatches ? matchedWorkloads.get(namespaceName) : null;
+
+                if (namespaceMatched) {
+                    return false;
+                }
+
+                if (namespaceMatchedWorkloads == null || namespaceMatchedWorkloads.isEmpty()) {
+                    return true;
+                }
+
+                if (namespace.getWorkloads() != null) {
+                    namespace.getWorkloads().entrySet().removeIf(workloadEntry ->
+                            !namespaceMatchedWorkloads.containsKey(workloadEntry.getKey()));
+                }
+
+                return namespace.getWorkloads() == null || namespace.getWorkloads().isEmpty();
+            });
+        } catch (Exception e) {
+            LOGGER.error("Error while filtering datasource metadata info {}", e.getMessage());
+        }
+    }
+
     public String getQueryFromProfile(MetadataProfile metadataProfile, String metricName) {
         List<Metric> metrics = metadataProfile.getQueryVariables();
         for (Metric metric : metrics) {

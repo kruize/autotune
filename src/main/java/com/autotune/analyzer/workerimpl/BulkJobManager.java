@@ -155,9 +155,9 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude());
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -545,19 +545,16 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         String uniqueKey = null;
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
                     includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
+                            includeLabelsBuilder.append(key).append("=").append("\"").append(value).append("\"").append(",")
                     );
-                    // Remove trailing comma
                     if (!includeLabelsBuilder.isEmpty()) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
@@ -572,7 +569,7 @@ public class BulkJobManager implements Runnable {
         return uniqueKey;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
@@ -581,8 +578,38 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            resourceFilters.putAll(buildLabelFilters(filter.getLabels()));
         }
         return resourceFilters;
+    }
+
+    private Map<String, String> buildLabelFilters(Map<String, String> labels) {
+        Map<String, String> labelFilters = new HashMap<>();
+        if (labels == null || labels.isEmpty()) {
+            return labelFilters;
+        }
+
+        StringBuilder podLabelBuilder = new StringBuilder();
+        StringBuilder namespaceLabelBuilder = new StringBuilder();
+
+        labels.forEach((key, value) -> {
+            String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            String matcher = "label_" + normalizedKey + "=\"" + value + "\"";
+            podLabelBuilder.append(matcher).append(",");
+            namespaceLabelBuilder.append(matcher).append(",");
+        });
+
+        if (!podLabelBuilder.isEmpty()) {
+            podLabelBuilder.setLength(podLabelBuilder.length() - 1);
+            labelFilters.put("podLabelFilter", podLabelBuilder.toString());
+        }
+
+        if (!namespaceLabelBuilder.isEmpty()) {
+            namespaceLabelBuilder.setLength(namespaceLabelBuilder.length() - 1);
+            labelFilters.put("namespaceLabelFilter", namespaceLabelBuilder.toString());
+        }
+
+        return labelFilters;
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
