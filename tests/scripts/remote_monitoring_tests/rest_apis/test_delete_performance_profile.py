@@ -75,7 +75,7 @@ def test_delete_performance_profile(cluster_type):
     data = response.json()
     print("delete API status message  = ", data["message"])
 
-    assert response.status_code == SUCCESS_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == DELETE_PERF_PROFILE_SUCCESS_MSG % PERF_PROFILE_NAME
 

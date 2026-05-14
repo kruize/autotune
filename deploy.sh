@@ -63,6 +63,7 @@ HPO_VERSION=0.0.2
 HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}
 
 # source all the helpers scripts
+. "${SCRIPTS_DIR}"/kind-helpers.sh
 . "${SCRIPTS_DIR}"/minikube-helpers.sh
 . "${SCRIPTS_DIR}"/aks-helpers.sh
 . "${SCRIPTS_DIR}"/openshift-helpers.sh
@@ -98,14 +99,14 @@ trap "ctrlc_handler" 1 2 3
 
 function usage() {
 	echo
-	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift|aks]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
+	echo "Usage: $0 [-a] [-k url] [-c [docker|minikube|openshift|aks|kind]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [--timeout=x, x in seconds, for docker only]"
 	echo "       -s = start(default), -t = terminate"
 	echo " -s: Deploy autotune [Default]"
 	echo " -t: Terminate autotune deployment"
 	echo " -c: kubernetes cluster type. At present we support only minikube [Default - minikube]"
 	echo " -i: build with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]"
 	echo " -o: build with specific hpo docker image name [Default - kruize/hpo:0.0.2]"
-	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube]"
+	echo " -n: Namespace to which autotune is deployed [Default - monitoring namespace for cluster type minikube/kind]"
 	echo " -d: Config maps directory [Default - manifests/configmaps]"
 	echo " -m: Target mode selection [autotune | crc]"
 	echo " -b: Test with the kruize docker image in the deployment yaml"
@@ -115,7 +116,7 @@ function usage() {
 # Check if the cluster_type is one of icp or openshift
 function check_cluster_type() {
 	case "${cluster_type}" in
-	docker | minikube | openshift | aks) ;;
+	docker | minikube | openshift | aks | kind) ;;
 
 	*)
 		echo "Error: unsupported cluster type: ${cluster_type}"
@@ -189,11 +190,7 @@ done
 # Call the proper setup function based on the cluster_type
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
-		if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "openshift" ] || [ ${cluster_type} == "aks" ]; then
-			${cluster_type}_crc_start
-		else
-			echo "Unsupported cluster!"
-		fi
+		${cluster_type}_crc_start
 	else
 		${cluster_type}_start
 	fi

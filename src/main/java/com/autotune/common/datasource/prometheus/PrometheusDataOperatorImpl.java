@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -130,46 +131,24 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      *
      * @param dataSource The DataSourceInfo object containing information about the data source
      * @param query      String containing the query to be executed
-     * @return JSONObject for the specified query
+     * @return JSONObject for the specified query, if not null else return null
      */
     @Override
     public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         // Create the client
         GenericRestApiClient apiClient = new GenericRestApiClient(dataSource);
-        LOGGER.debug("url : {}",CommonUtils.getBaseDataSourceUrl(
-                dataSource,
-                KruizeConstants.SupportedDatasources.PROMETHEUS
-        ));
-        apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
-                dataSource,
-                KruizeConstants.SupportedDatasources.PROMETHEUS
-        ));
-
-        if (null == apiClient) {
+        String baseURL = CommonUtils.getBaseDataSourceUrl(dataSource, KruizeConstants.SupportedDatasources.PROMETHEUS);
+        LOGGER.debug("url : {}", baseURL);
+        apiClient.setBaseURL(baseURL);
+        JSONObject jsonObject;
+        try {
+            jsonObject = apiClient.fetchMetricsJson(KruizeConstants.HttpConstants.MethodType.GET, query);
+        } catch (UnknownHostException _) {
             return null;
         }
-
-
-        JSONObject jsonObject = apiClient.fetchMetricsJson(
-                KruizeConstants.HttpConstants.MethodType.GET,
-                query);
-            /*  TODO need to separate it out this logic form here
-            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
-                return null;
-            if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
-                return null;
-            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA))
-                return null;
-            if (!jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT))
-                return null;
-            if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
-                return  null;
-
-             */
+        //  TODO: validate the returned jsonObject data
 
         return jsonObject;
-
-
     }
 
     /**

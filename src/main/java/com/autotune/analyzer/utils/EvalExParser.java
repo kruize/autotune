@@ -19,11 +19,15 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeSupportedTypes;
-import com.udojava.evalex.Expression;
+import com.ezylang.evalex.Expression;
+import com.ezylang.evalex.EvaluationException;
+import com.ezylang.evalex.config.ExpressionConfiguration;
+import com.ezylang.evalex.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
 
@@ -56,16 +60,19 @@ public class EvalExParser implements AlgebraicParser {
             return AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MAP_MISSING;
         }
         List<String> objFunctionMapKeys = new ArrayList<>(objFunctionMap.keySet());
-        Expression expressionEvaluator = new Expression(objFunction);
+        ExpressionConfiguration config = ExpressionConfiguration.builder().mathContext(new MathContext(3, RoundingMode.UP)).build();
+        Expression expressionEvaluator = new Expression(objFunction, config);
 
-        for (String key : objFunctionMapKeys) {
-            expressionEvaluator = expressionEvaluator.and(key, objFunctionMap.get(key));
+        try {
+            for (String key : objFunctionMapKeys) {
+                expressionEvaluator = expressionEvaluator.and(key, objFunctionMap.get(key));
+            }
+            result = expressionEvaluator.evaluate().getNumberValue();
+            return result.toString();
+        } catch (EvaluationException | ParseException e) {
+            LOGGER.error("Error evaluating expression", e);
+            return AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION;
         }
-        result = expressionEvaluator.setPrecision(3)
-                .setRoundingMode(RoundingMode.UP)
-                .eval();
-
-        return result.toString();
     }
 
     /**

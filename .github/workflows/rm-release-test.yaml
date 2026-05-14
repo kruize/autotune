@@ -13,10 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.13.1
+        uses: manusa/actions-setup-minikube@v2.15.0
         with:
-          minikube version: 'v1.31.2'
-          kubernetes version: 'v1.21.6'
+          minikube version: 'v1.38.0'
+          kubernetes version: 'v1.34.4'
       - uses: actions/checkout@v4
         with:
           repository: kruize/autotune

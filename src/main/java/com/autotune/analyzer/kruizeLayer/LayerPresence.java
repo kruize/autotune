@@ -1,0 +1,113 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+
+package com.autotune.analyzer.kruizeLayer;
+
+import com.autotune.analyzer.kruizeLayer.presence.*;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+import java.util.List;
+
+/**
+ * Wrapper class for layer_presence that deserializes from YAML
+ * and provides the appropriate LayerPresenceDetector implementation
+ */
+public class LayerPresence {
+
+    private String presence;
+
+    private List<LayerPresenceQuery> queries;
+
+    private List<LayerPresenceLabel> label;
+
+    public LayerPresence() {}
+
+    /**
+     * Factory method to get the appropriate LayerPresenceDetector implementation
+     * based on what fields are populated
+     *
+     * @return LayerPresenceDetector implementation
+     */
+    public LayerPresenceDetector getDetector() {
+        // Check for default presence
+        if (presence != null && !presence.isEmpty()) {
+            if (LayerConstants.DEFAULT_PRESENCE.equalsIgnoreCase(presence.trim())) {
+                return new PresenceAlways();
+            } else {
+                throw new IllegalArgumentException(
+                        "Invalid presence value: '" + presence + "'. Expected '"
+                                + LayerConstants.DEFAULT_PRESENCE + "'");
+            }
+
+        }
+
+        // Check for query-based presence
+        if (queries != null && !queries.isEmpty()) {
+            return new QueryBasedPresence(queries);
+        }
+
+        // Check for label-based presence
+        if (label != null && !label.isEmpty()) {
+            return new LabelBasedPresence(label);
+        }
+
+        // No valid configuration found
+        throw new IllegalStateException( "Invalid LayerPresence configuration: must specify either presence='always', queries, or label");
+
+    }
+
+    /**
+     * Get the type of presence detector
+     *
+     * @return PresenceType
+     */
+    public PresenceType getType() {
+        return getDetector().getType();
+    }
+
+    public String getPresence() {
+        return presence;
+    }
+
+    public void setPresence(String presence) {
+        this.presence = presence;
+    }
+
+    public List<LayerPresenceQuery> getQueries() {
+        return queries;
+    }
+
+    public void setQueries(List<LayerPresenceQuery> queries) {
+        this.queries = queries;
+    }
+
+    public List<LayerPresenceLabel> getLabel() {
+        return label;
+    }
+
+    public void setLabel(List<LayerPresenceLabel> label) {
+        this.label = label;
+    }
+
+    @Override
+    public String toString() {
+        return "LayerPresence{" +
+                "presence='" + presence + '\'' +
+                ", queries=" + queries +
+                ", label=" + label +
+                '}';
+    }
+}

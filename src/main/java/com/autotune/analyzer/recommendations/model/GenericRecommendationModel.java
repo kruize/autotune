@@ -1,5 +1,8 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -252,6 +255,18 @@ public class GenericRecommendationModel implements RecommendationModel{
         return recommendationConfigItem;
     }
 
+    @Override
+    public RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getCPURequestRecommendation(filteredResultsMap, notifications);
+    }
+
+    @Override
+    public RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getMemoryRequestRecommendation(filteredResultsMap, notifications);
+    }
+
     // helper functions for getMemoryRequestRecommendation
 
     public static JSONObject calculateMemoryUsage(IntervalResults intervalResults) {
@@ -495,6 +510,11 @@ public class GenericRecommendationModel implements RecommendationModel{
     @Override
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
+            setNotification = false;
+        }
 
         List<Double> acceleratorCoreMaxValues = new ArrayList<>();
         List<Double> acceleratorMemoryMaxValues = new ArrayList<>();
@@ -614,6 +634,12 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         if (!isGpuWorkload) {
+            if (!acceleratorCoreMaxValues.isEmpty() || !acceleratorMemoryMaxValues.isEmpty()) {
+                if (setNotification) {
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.NOTICE_ACCELERATOR_NOT_SUPPORTED));
+                }
+            }
             return null;
         }
 
@@ -656,8 +682,37 @@ public class GenericRecommendationModel implements RecommendationModel{
             memoryFraction = 1;
         }
 
-        return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> returnMap = RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+
+        if (null != returnMap && !returnMap.isEmpty()) {
+            // Add notification based on isGpuWorkload and accelerator model name
+            if (setNotification) {
+                if (RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorModel))
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE));
+            }
+        }
+
+        return returnMap;
     }
+
+    /**
+     * @param metricName
+     * @param layerName
+     * @param filteredResultsMap
+     * @param tunableSpecObjectMap
+     * @param notifications
+     * @return
+     */
+    @Override
+    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> tunableSpecObjectMap,
+                                            ArrayList<RecommendationNotification> notifications) {
+        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+        return handler != null ? handler.generateRecommendations(metricName, tunableSpecObjectMap, filteredResultsMap) : null;
+    }
+
+
+
 
     @Override
     public String getModelName() {

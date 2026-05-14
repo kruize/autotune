@@ -1,0 +1,208 @@
+# KRUIZE TEST PLAN RELEASE 0.9
+
+- [INTRODUCTION](#introduction)
+- [FEATURES TO BE TESTED](#features-to-be-tested)
+- [BUG FIXES TO BE TESTED](#bug-fixes-to-be-tested)
+- [TEST ENVIRONMENT](#test-environment)
+- [TEST DELIVERABLES](#test-deliverables)
+    - [New Test Cases Developed](#new-test-cases-developed)
+- [RELEASE TESTING](#release-testing)
+    - [RELEASE TESTS](#release-tests)
+    - [RELEASE TESTS RESULTS SUMMARY](#release-tests-results-summary)
+    - [KRUIZE TEST RESULTS](#kruize-test-results)
+    - [SCALE TEST RESULTS](#scale-test-results)
+    - [KRUIZE DEMOS RESULTS](#kruize-demos-results)
+- [TEST METRICS](#test-metrics)
+- [RISKS AND CONTINGENCIES](#risks-and-contingencies)
+- [APPROVALS](#approvals)
+
+-----
+
+## INTRODUCTION
+
+This document describes the test plan for Kruize release 0.9
+
+----
+
+## FEATURES TO BE TESTED
+
+* Add support for create and list layers API
+* Layer detection support
+* Add support for runtime recommendations
+* Refactor recommendation engine code
+* Create Layer configs for runtimes
+* Kruize Layers documentation update
+* Runtime recommendations Demo
+* Updated dependencies to fix vulnerabilities
+* Updated github workflows to update minikube github action
+* Documentation updates for runtime recommendations
+* Design doc updates for create & list layers APIs
+* Tests for create and list layers
+* Tests for runtime recommendation for hotspot workload
+* Kruize demos test
+
+------
+
+## BUG FIXES TO BE TESTED
+
+* VPA demo forbidden error
+* Refactor demos to update resources and operator name
+
+---
+
+## TEST ENVIRONMENT
+
+* Minikube Cluster
+* Openshift Cluster
+
+---
+
+## TEST DELIVERABLES
+
+### New Test Cases Developed
+
+| # | ISSUE (NEW FEATURE)                                                        | TEST DESCRIPTION                                                       | TEST DELIVERABLES                                    | RESULTS | COMMENTS |
+|---|----------------------------------------------------------------------------|------------------------------------------------------------------------|------------------------------------------------------|---------|----------|
+| 1 | Create and list layers API | Added new testcases | [1781](https://github.com/kruize/autotune/pull/1781) | PASSED | |
+| 2 | Runtime recommendations test | Added new test for hotspot and quarkus recommendations | [1798](https://github.com/kruize/autotune/pull/1798) | PASSED | |
+| 3 | Runtimes recommendation demo   | Tested manually | [150](https://github.com/kruize/kruize-demos/pull/150) | PASSED  | |
+
+---
+
+## RELEASE TESTING
+
+### RELEASE TESTS
+
+As part of the release testing, following tests will be executed:
+- [Kruize Remote monitoring Functional tests](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
+- [Fault tolerant test](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
+- [Stress test](/tests/scripts/remote_monitoring_tests/README.md)
+- [DB Migration test](/tests/scripts/remote_monitoring_tests/db_migration_test.md)
+- [Recommendation and box plot values validation test](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/recommendations_infra_demo/README.md)
+- [Scalability test (On openshift)](/tests/scripts/remote_monitoring_tests/scalability_test.md) - scalability test with 5000 exps / 15 days usage data
+- [Kruize remote monitoring demo](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/README.md)
+- [Kruize local monitoring demo](https://github.com/kruize/kruize-demos/blob/main/monitoring/local_monitoring/ReadMe.md)
+- [Kruize bulk demo](https://github.com/kruize/kruize-demos/blob/main/monitoring/local_monitoring/bulk_demo/README.md)
+- [Kruize vpa demo](https://github.com/kruize/kruize-demos/blob/main/monitoring/local_monitoring/vpa_demo/README.md)
+- [Kruize local monitoring Functional tests](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
+
+
+### RELEASE TESTS RESULTS SUMMARY
+
+All Release tests have been run against the Kruize release 0.9 image and all tests have PASSED except the below:
+- No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+
+Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release. However, in terms of resource usage, I see these observations:
+- Kruize memory usage has reduced from 35.96 GB to 27.83 GB in 5k container exps
+- Cpu usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
+
+
+
+### KRUIZE TEST RESULTS
+
+| # | TEST SUITE | OPENSHIFT RESULTS | MINIKUBE RESULTS | COMMENTS |
+|:---|:---|:---|:---|:---|
+| 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 2 | Fault tolerant test | PASSED | PASSED | |
+| 3 | Stress test | PASSED | PASSED | |
+| 4 | Scalability test (short run) | PASSED | NA | |
+| 5 | DB Migration test | PASSED | NA | |
+| 6 | Recommendation and box plot values validations | PASSED | PASSED | |
+| 7 | Local Fault tolerant test | PASSED | PASSED | |
+| 8 | Kruize Local Functional tests | TOTAL - 228 , PASSED - 222 / FAILED - 4 / SKIPPED - 2 | TOTAL - 228, PASSED - 222 / FAILED - 4 / SKIPPED - 2 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1763](https://github.com/kruize/autotune/issues/1763), [Issue 1821](https://github.com/kruize/autotune/issues/1821) |
+
+Kruize test result summary:
+
+No regressions seen, runtime recommendations introduced in this release has issues with notification code & additional logging enabled in the kruize pod log related to runtime queries [Issue 1821](https://github.com/kruize/autotune/issues/1821)
+
+### SCALE TEST RESULTS
+
+Evaluate Kruize Scalability on OCP, with 5k experiments by uploading resource usage data for 15 days and update recommendations.
+Changes do not have scalability implications. Short scalability test will be run as part of the release testing
+
+Short Scalability run configuration:
+- 5K exps / 15 days of results / 2 containers per exp
+- Kruize replicas - 10
+- OCP - AWS cluster
+- PV/PVC storage - 1Gi
+- Kruize DB resources - requests - 10Gi / 2 cores, limits - 30Gi / 2 cores
+- Kruize resources - requests - 4Gi / 2 cores, limits - 8Gi / 2 cores
+
+
+
+| Kruize Release | Exps / Results / Recos | Execution Time | Latency: UpdateRecos (Max/Avg) | Latency: UpdateResults (Max/Avg) | Latency: LoadResults (Max/Avg) | Postgres DB (MB) | Max CPU | Max Memory (GB) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **0.8.1** (14 Jan) | 5K container / 72L / 3L | 4h 39m | 0.91 / 0.5 | 0.14 / 0.1 | 0.45 / 0.31 | 21754 | 6.86 | 35.96 |
+| **0.9** (24 Feb) | 5K container / 72L / 3L | 4h 31m | 0.86 / 0.47 | 0.12 / 0.09 | 0.38 / 0.26 | 21756 | 7.36 | 27.83 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **0.8.1** (15 Jan) | 5K namespace / 72L / 3L | 2h 59m | 0.54 / 0.3 | 0.1 / 0.07 | 0.3 / 0.19 | 10775 | 7.6 | 23.65 |
+| **0.9** (25 Feb) | 5K namespace / 72L / 3L | 2h 58m | 0.54 / 0.3 | 0.11 / 0.08 | 0.29 / 0.19 | 10774 | 5.2 | 23.45 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **0.8.1** (15 Jan) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.43 / 0.3 | 20648 | 7.3 | 38.14 |
+| **0.9** (25 Feb) | 4.5k container, 500 namespace / 72L / 3L | 4h 33m | 0.85 / 0.49 | 0.13 / 0.1 | 0.42 / 0.3 | 20652 | 7.22 | 41.25 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **0.8.1** (15 Jan) | 5k gpucontainer / 72L / 3L | 7h 46m | 1.58 / 0.87 | 0.22 / 0.19 | 0.74 / 0.56 | 31140 | 10.19 | 35.76 |
+| **0.9** (25 Feb) | 5k gpucontainer / 72L / 3L | 7h 43m | 1.58 / 0.86 | 0.21 / 0.19 | 0.69 / 0.52 | 31143 | 10.94 | 34.08 |
+
+Here exps - Experiments, L - Lakhs
+
+
+Scalability test result summary:
+
+Scalability short run worked fine. No regressions seen in scale test latencies, execution time when compared to the previous release. However, in terms of resource usage, I see these observations:
+- Kruize memory usage has reduced from 35.96 GB to 27.83 GB in 5k container exps
+- CPU usage has reduced from 7.6 to 5.2 cores in 5k namespace exps
+
+
+
+----
+
+### KRUIZE DEMOS RESULTS
+
+| # | KRUIZE DEMO | CLUSTER | OPERATOR MODE RESULTS | NON-OPERATOR MODE RESULTS | COMMENTS |
+|---|:---|:---|:---|:---|:---|
+| 1 | Kruize remote monitoring demo | Openshift | NA | PASSED | |
+| 2 | Kruize remote monitoring demo | Minikube | NA | PASSED | |
+| 3 | Kruize remote monitoring demo | Kind | NA | PASSED | |
+| 4 | Kruize local monitoring demo | Openshift | PASSED | PASSED | |
+| 5 | Kruize local monitoring demo | Minikube | PASSED | PASSED | |
+| 6 | Kruize local monitoring demo | Kind | PASSED | PASSED | |
+| 7 | Kruize bulk demo | Openshift | PASSED | PASSED |  |
+| 8 | Kruize bulk demo | Minikube | PASSED | PASSED | |
+| 9 | Kruize bulk demo | Kind | PASSED | PASSED | |
+| 10 | Kruize vpa demo | Openshift | PASSED | PASSED | |
+| 11 | Kruize vpa demo | Minikube | PASSED | PASSED |  |
+| 12 | Kruize vpa demo | Kind | PASSED | PASSED | |
+| 13 | Kruize runtimes demo | Openshift | PASSED | PASSED | |
+| 14 | Kruize runtimes demo | Minikube | PASSED | PASSED | |
+| 15 | Kruize runtimes demo | Kind | PASSED | PASSED | |
+
+Kruize Demos result summary:
+
+All Demos worked fine as expected, except the below:
+- When demos are run with operator & manifests one after the other, this issue is seen - [Issue 1788](https://github.com/kruize/autotune/issues/1788) 
+
+---
+
+## TEST METRICS
+
+### Test Completion Criteria
+
+* All must_fix defects identified for the release are fixed
+* New features work as expected and tests have been added to validate these
+* No new regressions in the functional tests
+* All non-functional tests work as expected without major issues
+* Documentation updates have been completed
+
+----
+
+## RISKS AND CONTINGENCIES
+
+* None
+
+----
+## APPROVALS
+
+Sign-off
+
+----

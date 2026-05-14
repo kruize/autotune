@@ -285,7 +285,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.7.1
+          image: quay.io/kruize/autotune_operator:0.10
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -358,7 +358,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.7.1
+              image: quay.io/kruize/autotune_operator:0.10
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -447,29 +447,38 @@ spec:
   selector:
     app: kruize-ui-nginx
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: kruize-ui-nginx-pod
+  name: kruize-ui-nginx
   namespace: monitoring
-  labels:
-    app: kruize-ui-nginx
 spec:
-  containers:
-    - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.8
-      imagePullPolicy: Always
-      env:
-        - name: KRUIZE_UI_ENV
-          value: "production"
-      volumeMounts:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: kruize-ui-nginx
+  template:
+    metadata:
+      labels:
+        app: kruize-ui-nginx
+    spec:
+      containers:
+        - name: kruize-ui-nginx-container
+          image: quay.io/kruize/kruize-ui:0.0.9
+          imagePullPolicy: Always
+          env:
+            - name: KRUIZE_UI_ENV
+              value: "production"
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
         - name: nginx-config-volume
-          mountPath: /etc/nginx/nginx.conf
-          subPath: nginx.conf
-  volumes:
-    - name: nginx-config-volume
-      configMap:
-        name: nginx-config
+          configMap:
+            name: nginx-config
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -484,7 +493,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.7.1
+              image: quay.io/kruize/autotune_operator:0.10
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -513,4 +522,24 @@ spec:
               configMap:
                 name: kruizeconfig
           restartPolicy: OnFailure
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kruize-to-prometheus
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kruize
+      ports:
+        - protocol: TCP
+          port: 9090
 ---

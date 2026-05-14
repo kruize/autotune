@@ -1,5 +1,0 @@
-apiVersion: "recommender.com/v1"
-kind: "Autotune"
-metadata:
- name: "incomplete"
-spec: 

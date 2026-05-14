@@ -18,6 +18,8 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
+import com.autotune.common.bulk.BulkServiceValidation;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
@@ -159,8 +161,8 @@ public class BulkService extends HttpServlet {
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
-            // By default cache_job_in_mem set to false , If set it to true it will store in memory
-            if (KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {
+            // By default, cache_job_in_mem set to false , If set it to true it will store in memory
+            if (KruizeDeploymentInfo.test_use_only_cache_job_in_mem) {
                 if (jobStatusMap.isEmpty()) {
                     sendErrorResponse(
                             resp,
@@ -283,9 +285,16 @@ public class BulkService extends HttpServlet {
 
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
+            // validate the input params
+            if (payload != null && !payload.isEmpty()) {
+                ValidationOutputData validationOutputData = BulkServiceValidation.validate(payload, jobID);
+                if (!validationOutputData.isSuccess()) {
+                    throw new Exception(validationOutputData.getMessage());
+                }
+            }
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
 
-            if (KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM)
+            if (KruizeDeploymentInfo.test_use_only_cache_job_in_mem)
                 jobStatusMap.put(jobID, jobStatus);
             else {
                 try {
@@ -303,6 +312,13 @@ public class BulkService extends HttpServlet {
             jsonObject.put(JOB_ID, jobID);
             response.getWriter().write(jsonObject.toString());
             statusValue = "success";
+        } catch (Exception e) {
+            sendErrorResponse(
+                    response,
+                    null,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    e.getMessage()
+            );
         } finally {
             if (null != timerCreateBulkJob) {
                 MetricsConfig.timerCreateBulkJob = MetricsConfig.timerBCreateBulkJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
@@ -320,7 +336,6 @@ public class BulkService extends HttpServlet {
             IOException {
         if (null != e) {
             LOGGER.error(e.toString());
-            e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);

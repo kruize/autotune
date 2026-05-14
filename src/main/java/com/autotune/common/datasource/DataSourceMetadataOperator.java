@@ -196,7 +196,26 @@ public class DataSourceMetadataOperator {
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
             String queryTemplate = getQueryTemplate(field, metadataProfile);
-            queries.put(field, String.format(queryTemplate, filter));
+            String filteredQuery;
+            if (queryTemplate.contains("%s")) {
+                filteredQuery = String.format(queryTemplate, filter);
+
+            } else if (queryTemplate.contains(field + "!=\"\"")) {
+                filteredQuery = queryTemplate.replace(
+                    field + "!=\"\"",
+                    filter.isEmpty() ? field + "!=\"\"" : filter
+                );
+
+            } else {
+                LOGGER.warn(
+                    "No injectable filter placeholder found for field {} in queryTemplate={}",
+                    field,
+                    queryTemplate
+                );
+                filteredQuery = queryTemplate; // fallback
+            }
+
+            queries.put(field, filteredQuery);
         });
 
         String namespaceQuery = queries.get("namespace");

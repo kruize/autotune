@@ -1,0 +1,37 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "container"
+layer_name: container
+details: generic container tunables
+layer_presence:
+  # This layer is assumed to be available by default for all applications.
+  presence: always
+tunables:
+- name: memoryRequest
+  value_type: double
+  upper_bound: '2048'
+  lower_bound: '512'
+  step: 1
+  units: 'Mi'
+
+- name: memoryLimit
+  value_type: double
+  upper_bound: '2048'
+  lower_bound: '512'
+  step: 1
+  units: 'Mi'
+
+- name: cpuRequest
+  value_type: double
+  upper_bound: '3.0'
+  lower_bound: '1.0'
+  step: 0.01
+  units: 'cores'
+
+- name: cpuLimit
+  value_type: double
+  upper_bound: '3.0'
+  lower_bound: '1.0'
+  step: 0.01
+  units: 'cores'

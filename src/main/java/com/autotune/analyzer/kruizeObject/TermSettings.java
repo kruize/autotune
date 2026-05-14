@@ -15,10 +15,21 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Container for term configurations in recommendation settings.
+ * Contains a list of term names and their detailed definitions for custom terms.
+ */
 public class TermSettings {
+    @SerializedName("terms")
     private List<String> terms;
+
+    @SerializedName("terms_definition")
+    private HashMap<String, TermDefinition> termsDefinition;
 
     public TermSettings() {}
 
@@ -30,10 +41,19 @@ public class TermSettings {
         this.terms = terms;
     }
 
+    public HashMap<String, TermDefinition> getTermsDefinition() {
+        return termsDefinition;
+    }
+
+    public void setTermsDefinition(HashMap<String, TermDefinition> termsDefinition) {
+        this.termsDefinition = termsDefinition;
+    }
+
     @Override
     public String toString() {
         return "TermSettings{" +
                 "terms=" + terms +
+                ", termsDefinition=" + termsDefinition +
                 '}';
     }
 }
