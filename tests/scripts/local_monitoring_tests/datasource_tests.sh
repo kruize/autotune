@@ -138,6 +138,13 @@ function datasource_tests() {
 
 	# print the testsuite summary
 	testsuitesummary ${FUNCNAME} "${elapsed_time}" ${FAILED_CASES}
+
+	# Exit with appropriate code: 0 on success, 1 on failure
+	if [ "${TESTS_FAILED}" -ne "0" ]; then
+		exit 1
+	else
+		exit 0
+	fi
 }
 
 run_datasource_scenario() {
