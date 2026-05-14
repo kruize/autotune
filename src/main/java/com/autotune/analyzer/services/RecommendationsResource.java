@@ -352,7 +352,7 @@ public class RecommendationsResource extends HttpServlet {
             }
             RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
             String validationMessage;
-            if (KruizeDeploymentInfo.local) {
+            if (target.equals(LOCAL)) {
                 validationMessage = recommendationEngine.validate_local();
             } else {
                 validationMessage = recommendationEngine.validate();
