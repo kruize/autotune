@@ -284,9 +284,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 } catch (PersistenceException e) {
                     ConstraintViolationException constraintViolationException = null;
                     String message = "";
+                    // Hibernate 6.1 : PSQLException is wrapped in PersistenceException as ConstraintViolationException when partitions are missing
+                    // Hibernate 6.6 : PSQLException is wrapped in PersistenceException when partitions are missing
                     if (null != e.getCause()) {
-                        constraintViolationException = (ConstraintViolationException) e.getCause();
-                        message = constraintViolationException.getCause().getMessage();
+                        if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
+                            constraintViolationException = (ConstraintViolationException) e.getCause();
+                            Throwable cause = constraintViolationException.getCause();
+                            message = (cause != null ? cause.getMessage() : constraintViolationException.getMessage());
+                        } else {
+                            message = e.getCause().getMessage();
+                        }
                     } else {
                         message = e.getMessage();
                     }

@@ -8,6 +8,7 @@ Documentation still in progress stay tuned.
 1. [Resource Analysis Terms and Defaults](#resource-analysis-terms-and-defaults)
 
 - [Terms, Duration & Threshold Table](#terms-duration--threshold-table)
+- [Datasource Configuration Guide](#datasource-guide)
 
 2. [API's](#apis)
 - [List Datasources API](#list-datasources-api)
@@ -150,6 +151,11 @@ or above the 98th percentile, and memory usage is at the 100th percentile.
 |-------------|------------------|---------------------|
 | Cost        | 60 th            | 100 th              |
 | Performance | 98 th            | 100 th              |
+
+
+<a name="datasource-guide"></a>
+
+For detailed information about datasource configuration options, supported authentication methods, and certificate requirements, see the [Kruize Datasource Configuration Guide](./KruizeDatasource.md).
 
 <a name="apis"></a>
 
