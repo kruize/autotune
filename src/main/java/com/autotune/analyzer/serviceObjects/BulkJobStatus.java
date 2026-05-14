@@ -167,6 +167,7 @@ public class BulkJobStatus {
                     getSummary().getStatus(),
                     getSummary().getTotal_experiments(),
                     getSummary().getProcessed_experiments().get(),
+                    getSummary().getExisting_experiments().get(),
                     parseUTCStringToTimestamp(getSummary().getStartTime()),
                     parseUTCStringToTimestamp(getSummary().getEndTime()),
                     new ObjectMapper().writeValueAsString(getWebhook()),
@@ -204,6 +205,7 @@ public class BulkJobStatus {
         private String status;
         private int total_experiments;
         private AtomicInteger processed_experiments;
+        private AtomicInteger existing_experiments;
         @JsonProperty("job_start_time")
         private String startTime; // Change to String to store formatted time
         @JsonProperty("job_end_time")
@@ -218,13 +220,17 @@ public class BulkJobStatus {
             this.input = input;
             setStartTime(startTime);
             this.processed_experiments = new AtomicInteger(0);
+            this.existing_experiments = new AtomicInteger(0);
         }
 
-        public Summary(String jobID, String status, int total_experiments, int processed_experiments, Timestamp startTime, Timestamp endTime, Map<String, Notification> notifications, BulkInput input) {
+        public Summary(String jobID, String status, int total_experiments, int processed_experiments,
+                int existing_experiments, Timestamp startTime, Timestamp endTime,
+                Map<String, Notification> notifications, BulkInput input) {
             this.jobID = jobID;
             this.status = status;
             this.total_experiments = total_experiments;
             this.processed_experiments = new AtomicInteger(processed_experiments);
+            this.existing_experiments = new AtomicInteger(existing_experiments);
             this.startTime = formatInstantAsUTCString(startTime.toInstant());
             this.endTime = (endTime != null) ? formatInstantAsUTCString(endTime.toInstant()) : null;
             this.notifications = notifications;
@@ -296,6 +302,18 @@ public class BulkJobStatus {
 
         public void setProcessed_experiments(int count) {
             this.processed_experiments.set(count);
+        }
+
+        public void incrementExisting_experiments() {
+            this.existing_experiments.incrementAndGet();
+        }
+
+        public AtomicInteger getExisting_experiments() {
+            return existing_experiments;
+        }
+
+        public void setExisting_experiments(int count) {
+            this.existing_experiments.set(count);
         }
 
         public int getTotal_experiments() {
