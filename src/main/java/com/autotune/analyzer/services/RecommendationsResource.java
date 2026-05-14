@@ -337,16 +337,8 @@ public class RecommendationsResource extends HttpServlet {
         Timer.Sample timerBRecommendationResource = Timer.start(MetricsConfig.meterRegistry());
         
         try {
-            // Get the target parameter (default to "remote" if not specified)
-            String target = request.getParameter("target");
-            
-            // Normalize target value: treat null, empty, or blank as "remote"
-            if (target == null || target.trim().isEmpty()) {
-                target = REMOTE;
-            } else {
-                target = target.trim().toLowerCase();
-            }
-            
+            // Get the target from the config
+            String target = KruizeDeploymentInfo.local ? LOCAL : REMOTE;
             LOGGER.info("RecommendationsResource POST - target: {}", target);
 
             String experimentName = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
@@ -360,14 +352,10 @@ public class RecommendationsResource extends HttpServlet {
             }
             RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
             String validationMessage;
-            if (REMOTE.equals(target)) {
-                validationMessage = recommendationEngine.validate();
-            } else if (LOCAL.equals(target)) {
+            if (target.equals(LOCAL)) {
                 validationMessage = recommendationEngine.validate_local();
             } else {
-                // Invalid target value
-                validationMessage = String.format("Invalid target cluster: '%s'. Valid values are 'remote' or 'local'.", target);
-                LOGGER.error(validationMessage);
+                validationMessage = recommendationEngine.validate();
             }
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, target, bulkJobID);
