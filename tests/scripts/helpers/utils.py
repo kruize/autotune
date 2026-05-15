@@ -14,20 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import csv
+import json
 import os
 import re
+import subprocess
 import time
-from datetime import datetime, timedelta
-from pathlib import Path
-
+import math
 import docker
-from kubernetes import client, config
-
-from helpers.import_metadata_json_validate import *
 from helpers.kruize import *
+from datetime import datetime, timedelta
+from kubernetes import client, config
+from pathlib import Path
 from helpers.kruize import get_bulk_job_status
-from helpers.list_metadata_json_schema import *
+from helpers.import_metadata_json_validate import *
 from helpers.list_metadata_json_validate import *
+from helpers.list_metadata_json_schema import *
 from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
@@ -790,13 +791,13 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                     validate_container(update_results_container, update_results_json, list_reco_container,
                                        expected_duration_in_hours, test_name, experiment_type)
 
-def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj,
-                                             expected_duration_in_hours, test_name, experiment_type, v1):
+def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type, v1):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
         assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
         create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
-        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
+        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name, v1)
     else:
         # Validate type, name, namespace
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
@@ -1022,8 +1023,7 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
 
-def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours,
-                                        test_name, v1):
+def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name, v1):
     # Validate container image name and container name
     if create_exp_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
@@ -1114,7 +1114,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
 
-def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
+def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name, v1):
     # Validate namespace name
     if create_exp_namespace != None and list_reco_namespace != None:
         assert create_exp_namespace["namespace"] == list_reco_namespace["namespace"], \

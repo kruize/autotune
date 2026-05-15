@@ -23,7 +23,7 @@ RECOMMENDATION_TEST_DIR="${KRUIZE_REPO}/tests/scripts/recommendation_tests"
 PERF_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
-#. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
+. "${KRUIZE_REPO}"/tests/scripts/common/common_functions.sh
 
 # Test descriptions
 declare -A recommendation_test_description
