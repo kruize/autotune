@@ -154,9 +154,9 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude());
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -544,34 +544,37 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         String uniqueKey = null;
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
-                    );
-                    // Remove trailing comma
+                    LOGGER.info("Processing {} labels for experiment name", includeLabels.size());
+                    
+                    includeLabels.forEach((key, value) -> {
+                        String escapedValue = escapePromQLLabelValue(value);
+                        includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                    });
+                    
                     if (!includeLabelsBuilder.isEmpty()) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
+                    
                     uniqueKey = includeLabelsBuilder.toString();
+                    LOGGER.info("Labels for experiment name: {}", uniqueKey);
                 }
+            } else {
+                LOGGER.debug("No include filter provided for experiment name labels");
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error processing labels for experiment name: {}", e.getMessage(), e);
         }
         return uniqueKey;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
@@ -580,8 +583,88 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            resourceFilters.putAll(buildLabelFilters(filter.getLabels()));
         }
         return resourceFilters;
+    }
+
+    /**
+     * Escapes special characters in PromQL label values to prevent query injection.
+     * Handles backslashes, double quotes, and newlines according to PromQL string literal rules.
+     *
+     * @param value The raw label value from user input
+     * @return Escaped value safe for use in PromQL queries
+     */
+    private String escapePromQLLabelValue(String value) {
+        if (value == null) {
+            LOGGER.debug("Label value is null, returning empty string");
+            return "";
+        }
+        
+        LOGGER.debug("Escaping label value - Original: [{}]", value);
+        
+        // Escape backslashes first (must be done before escaping quotes)
+        String escaped = value.replace("\\", "\\\\");
+        // Escape double quotes
+        escaped = escaped.replace("\"", "\\\"");
+        // Escape newlines
+        escaped = escaped.replace("\n", "\\n");
+        // Escape carriage returns
+        escaped = escaped.replace("\r", "\\r");
+        // Escape tabs
+        escaped = escaped.replace("\t", "\\t");
+        
+        if (!value.equals(escaped)) {
+            LOGGER.info("Label value escaped - Original: [{}], Escaped: [{}]", value, escaped);
+        } else {
+            LOGGER.debug("Label value requires no escaping: [{}]", value);
+        }
+        
+        return escaped;
+    }
+
+    private Map<String, String> buildLabelFilters(Map<String, String> labels) {
+        Map<String, String> labelFilters = new HashMap<>();
+        if (labels == null || labels.isEmpty()) {
+            LOGGER.debug("No labels provided for filtering");
+            return labelFilters;
+        }
+
+        LOGGER.info("Building label filters for {} labels", labels.size());
+        
+        StringBuilder podLabelBuilder = new StringBuilder();
+        StringBuilder namespaceLabelBuilder = new StringBuilder();
+
+        labels.forEach((key, value) -> {
+            String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            if (!key.equals(normalizedKey)) {
+                LOGGER.info("Label key normalized - Original: [{}], Normalized: [{}]", key, normalizedKey);
+            }
+            
+            String escapedValue = escapePromQLLabelValue(value);
+            String matcher = "label_" + normalizedKey + "=\"" + escapedValue + "\"";
+            
+            LOGGER.debug("Built label matcher: {}", matcher);
+            
+            podLabelBuilder.append(matcher).append(",");
+            namespaceLabelBuilder.append(matcher).append(",");
+        });
+
+        if (!podLabelBuilder.isEmpty()) {
+            podLabelBuilder.setLength(podLabelBuilder.length() - 1);
+            String podFilter = podLabelBuilder.toString();
+            labelFilters.put("podLabelFilter", podFilter);
+            LOGGER.info("Pod label filter: {}", podFilter);
+        }
+
+        if (!namespaceLabelBuilder.isEmpty()) {
+            namespaceLabelBuilder.setLength(namespaceLabelBuilder.length() - 1);
+            String namespaceFilter = namespaceLabelBuilder.toString();
+            labelFilters.put("namespaceLabelFilter", namespaceFilter);
+            LOGGER.info("Namespace label filter: {}", namespaceFilter);
+        }
+
+        return labelFilters;
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
