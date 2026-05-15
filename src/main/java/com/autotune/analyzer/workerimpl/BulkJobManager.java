@@ -551,20 +551,25 @@ public class BulkJobManager implements Runnable {
                 StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
+                    LOGGER.info("Processing {} labels for experiment name", includeLabels.size());
+                    
                     includeLabels.forEach((key, value) -> {
                         String escapedValue = escapePromQLLabelValue(value);
                         includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
                     });
+                    
                     if (!includeLabelsBuilder.isEmpty()) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
+                    
                     uniqueKey = includeLabelsBuilder.toString();
+                    LOGGER.info("Labels for experiment name: {}", uniqueKey);
                 }
+            } else {
+                LOGGER.debug("No include filter provided for experiment name labels");
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error processing labels for experiment name: {}", e.getMessage(), e);
         }
         return uniqueKey;
     }
@@ -592,8 +597,12 @@ public class BulkJobManager implements Runnable {
      */
     private String escapePromQLLabelValue(String value) {
         if (value == null) {
+            LOGGER.debug("Label value is null, returning empty string");
             return "";
         }
+        
+        LOGGER.debug("Escaping label value - Original: [{}]", value);
+        
         // Escape backslashes first (must be done before escaping quotes)
         String escaped = value.replace("\\", "\\\\");
         // Escape double quotes
@@ -604,34 +613,55 @@ public class BulkJobManager implements Runnable {
         escaped = escaped.replace("\r", "\\r");
         // Escape tabs
         escaped = escaped.replace("\t", "\\t");
+        
+        if (!value.equals(escaped)) {
+            LOGGER.info("Label value escaped - Original: [{}], Escaped: [{}]", value, escaped);
+        } else {
+            LOGGER.debug("Label value requires no escaping: [{}]", value);
+        }
+        
         return escaped;
     }
 
     private Map<String, String> buildLabelFilters(Map<String, String> labels) {
         Map<String, String> labelFilters = new HashMap<>();
         if (labels == null || labels.isEmpty()) {
+            LOGGER.debug("No labels provided for filtering");
             return labelFilters;
         }
 
+        LOGGER.info("Building label filters for {} labels", labels.size());
+        
         StringBuilder podLabelBuilder = new StringBuilder();
         StringBuilder namespaceLabelBuilder = new StringBuilder();
 
         labels.forEach((key, value) -> {
             String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            if (!key.equals(normalizedKey)) {
+                LOGGER.info("Label key normalized - Original: [{}], Normalized: [{}]", key, normalizedKey);
+            }
+            
             String escapedValue = escapePromQLLabelValue(value);
             String matcher = "label_" + normalizedKey + "=\"" + escapedValue + "\"";
+            
+            LOGGER.debug("Built label matcher: {}", matcher);
+            
             podLabelBuilder.append(matcher).append(",");
             namespaceLabelBuilder.append(matcher).append(",");
         });
 
         if (!podLabelBuilder.isEmpty()) {
             podLabelBuilder.setLength(podLabelBuilder.length() - 1);
-            labelFilters.put("podLabelFilter", podLabelBuilder.toString());
+            String podFilter = podLabelBuilder.toString();
+            labelFilters.put("podLabelFilter", podFilter);
+            LOGGER.info("Pod label filter: {}", podFilter);
         }
 
         if (!namespaceLabelBuilder.isEmpty()) {
             namespaceLabelBuilder.setLength(namespaceLabelBuilder.length() - 1);
-            labelFilters.put("namespaceLabelFilter", namespaceLabelBuilder.toString());
+            String namespaceFilter = namespaceLabelBuilder.toString();
+            labelFilters.put("namespaceLabelFilter", namespaceFilter);
+            LOGGER.info("Namespace label filter: {}", namespaceFilter);
         }
 
         return labelFilters;
