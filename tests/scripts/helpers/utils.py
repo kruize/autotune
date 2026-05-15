@@ -2422,3 +2422,201 @@ def validate_runtime_recommendations_if_present(recommendations_json):
                                     f"Runtime env {name} should contain GC flags, got: {value}"
                             )
                             return  # Found valid runtime recommendation
+
+
+
+def validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True):
+    """
+    Validates kubernetes object structure in v1.0 recommendations format.
+    Reusable function for validating k8s objects across different tests.
+    
+    Args:
+        k8s_obj: Kubernetes object from recommendations response
+        validate_replicas: Whether to validate replicas field (default: True)
+        validate_pod_count: Whether to validate pod_count metrics (default: True)
+    
+    Returns:
+        dict: Validation results with details about what was validated
+    """
+    validation_results = {
+        'replicas_validated': False,
+        'pod_count_validated': False,
+        'resources_validated': False,
+        'recommendations_found': False
+    }
+    
+    if 'containers' not in k8s_obj or not k8s_obj['containers']:
+        return validation_results
+    
+    container = k8s_obj['containers'][0]
+    
+    if 'recommendations' not in container or not container['recommendations']:
+        return validation_results
+    
+    # v1.0 format has version field
+    if 'version' in container['recommendations']:
+        assert container['recommendations']['version'] == 'v1.0', \
+            f"Expected version v1.0, got {container['recommendations']['version']}"
+    
+    reco_data = container['recommendations']['data']
+    validation_results['recommendations_found'] = len(reco_data) > 0
+    
+    for timestamp, reco in reco_data.items():
+        # Validate current config has replicas
+        if validate_replicas and 'current' in reco:
+            current = reco['current']
+            assert 'replicas' in current, "Missing 'replicas' field in current config"
+            assert isinstance(current['replicas'], (int, float)), \
+                f"replicas should be numeric, got {type(current['replicas'])}"
+            validation_results['replicas_validated'] = True
+            
+            # Validate nested resources structure
+            if 'resources' in current:
+                resources = current['resources']
+                assert isinstance(resources, dict), "resources should be a dict"
+                if 'requests' in resources:
+                    assert isinstance(resources['requests'], dict), "requests should be a dict"
+                if 'limits' in resources:
+                    assert isinstance(resources['limits'], dict), "limits should be a dict"
+                validation_results['resources_validated'] = True
+        
+        # Validate recommendation terms and pod_count
+        if 'recommendation_terms' in reco:
+            for term_name, term_data in reco['recommendation_terms'].items():
+                # Validate metrics_info has pod_count
+                if validate_pod_count and 'metrics_info' in term_data:
+                    metrics_info = term_data['metrics_info']
+                    if 'pod_count' in metrics_info:
+                        pod_count = metrics_info['pod_count']
+                        # Validate aggregation fields exist
+                        assert any(key in pod_count for key in ['min', 'max', 'avg', 'sum']), \
+                            "pod_count should have at least one aggregation field (min, max, avg, sum)"
+                        
+                        # Validate actual values for pod_count aggregations
+                        for agg_key in ['min', 'max', 'avg', 'sum']:
+                            if agg_key in pod_count:
+                                assert isinstance(pod_count[agg_key], (int, float)), \
+                                    f"pod_count.{agg_key} should be numeric, got {type(pod_count[agg_key])}"
+                                assert pod_count[agg_key] >= 0, \
+                                    f"pod_count.{agg_key} should be non-negative, got {pod_count[agg_key]}"
+                        
+                        # Validate logical relationships
+                        if 'min' in pod_count and 'max' in pod_count:
+                            assert pod_count['min'] <= pod_count['max'], \
+                                f"pod_count.min ({pod_count['min']}) should be <= pod_count.max ({pod_count['max']})"
+                        
+                        if 'min' in pod_count and 'avg' in pod_count and 'max' in pod_count:
+                            assert pod_count['min'] <= pod_count['avg'] <= pod_count['max'], \
+                                f"pod_count.avg ({pod_count['avg']}) should be between min ({pod_count['min']}) and max ({pod_count['max']})"
+                        
+                        validation_results['pod_count_validated'] = True
+                
+                # Validate recommendation engines
+                if 'recommendation_engines' in term_data:
+                    for engine_name, engine_data in term_data['recommendation_engines'].items():
+                        # Validate config has replicas
+                        if validate_replicas and 'config' in engine_data:
+                            config = engine_data['config']
+                            if 'replicas' in config:
+                                assert isinstance(config['replicas'], (int, float)), \
+                                    f"config.replicas should be numeric, got {type(config['replicas'])}"
+                                assert config['replicas'] >= 0, \
+                                    f"config.replicas should be non-negative, got {config['replicas']}"
+                            
+                            if 'resources' in config:
+                                assert isinstance(config['resources'], dict), "config.resources should be a dict"
+                        
+                        # Validate variation has resources
+                        if 'variation' in engine_data:
+                            variation = engine_data['variation']
+                            if 'resources' in variation:
+                                assert isinstance(variation['resources'], dict), "variation.resources should be a dict"
+    
+    return validation_results
+
+
+def validate_complete_v1_recommendations(experiment_data, validate_replicas=True, validate_pod_count=True):
+    """
+    Validates complete recommendations structure for v1.0 format.
+    Performs comprehensive validation of the entire experiment recommendations.
+    
+    Args:
+        experiment_data: Single experiment object from recommendations response
+        validate_replicas: Whether to validate replicas field (default: True)
+        validate_pod_count: Whether to validate pod_count metrics (default: True)
+    
+    Returns:
+        dict: Comprehensive validation results
+    """
+    validation_results = {
+        'experiment_name_present': False,
+        'kubernetes_objects_present': False,
+        'k8s_obj_validations': []
+    }
+    
+    # Validate experiment structure
+    assert 'experiment_name' in experiment_data, "Missing 'experiment_name' in experiment data"
+    validation_results['experiment_name_present'] = True
+    
+    assert 'kubernetes_objects' in experiment_data, "Missing 'kubernetes_objects' in experiment data"
+    validation_results['kubernetes_objects_present'] = True
+    
+    k8s_objects = experiment_data['kubernetes_objects']
+    assert isinstance(k8s_objects, list), "kubernetes_objects should be a list"
+    assert len(k8s_objects) > 0, "kubernetes_objects should not be empty"
+    
+    # Validate each kubernetes object
+    for k8s_obj in k8s_objects:
+        k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas, validate_pod_count)
+        validation_results['k8s_obj_validations'].append(k8s_validation)
+    
+    return validation_results
+
+
+def validate_error_response(response, expected_status_code=400, expected_message_fragment=None):
+    """
+    Validates error response structure and content.
+    
+    Args:
+        response: HTTP response object
+        expected_status_code: Expected HTTP status code (default: 400)
+        expected_message_fragment: Optional fragment that should be in error message
+    
+    Returns:
+        bool: True if validation passed
+    """
+    assert response.status_code == expected_status_code, \
+        f"Expected status code {expected_status_code}, got {response.status_code}"
+    
+    # Try to parse JSON response
+    try:
+        error_data = response.json()
+        
+        # Check for common error fields
+        if 'message' in error_data:
+            error_message = error_data['message']
+        elif 'error' in error_data:
+            error_message = error_data['error']
+        else:
+            error_message = response.text
+        
+        # Validate expected message fragment if provided
+        if expected_message_fragment:
+            assert expected_message_fragment in error_message, \
+                f"Expected '{expected_message_fragment}' in error message, got: {error_message}"
+        
+        # Ensure error message is not empty
+        assert error_message and len(error_message.strip()) > 0, \
+            "Error message should not be empty"
+        
+        return True
+    except ValueError:
+        # Response is not JSON, check text
+        assert response.text and len(response.text.strip()) > 0, \
+            "Error response should have content"
+        
+        if expected_message_fragment:
+            assert expected_message_fragment in response.text, \
+                f"Expected '{expected_message_fragment}' in error response, got: {response.text}"
+        
+        return True

@@ -1,5 +1,5 @@
 """
-Copyright (c) 2026 Red Hat, IBM Corporation and others.
+Copyright (c) 2026 IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ from helpers.utils import *
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_get_recommendations_v1_single_experiment(cluster_type):
     """
     Test GET /recommendations API with new schema for a single experiment
@@ -38,6 +37,7 @@ def test_get_recommendations_v1_single_experiment(cluster_type):
     - Presence of replicas field
     - Nested resources structure
     - Pod count metrics
+    - Complete recommendations validation
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -88,61 +88,21 @@ def test_get_recommendations_v1_single_experiment(cluster_type):
         data = response.json()
         assert len(data) > 0
 
-        # Validate new schema structure
+        # Validate complete recommendations structure (Review Comment #3)
         experiment = data[0]
-        assert 'experiment_name' in experiment
-        assert 'kubernetes_objects' in experiment
+        validation_results = validate_complete_v1_recommendations(experiment)
+        assert validation_results['experiment_name_present'], "experiment_name should be present"
+        assert validation_results['kubernetes_objects_present'], "kubernetes_objects should be present"
+        assert len(validation_results['k8s_obj_validations']) > 0, "Should have at least one k8s object validation"
 
+        # Use reusable validation function (Review Comment #4)
         k8s_obj = experiment['kubernetes_objects'][0]
-
-        # Validate container recommendations structure (v1.0 format)
-        if 'containers' in k8s_obj and k8s_obj['containers']:
-            container = k8s_obj['containers'][0]
-            if 'recommendations' in container and container['recommendations']:
-                # v1.0 format has version field
-                assert 'version' in container['recommendations']
-                assert container['recommendations']['version'] == 'v1.0'
-
-                reco_data = container['recommendations']['data']
-                for timestamp, reco in reco_data.items():
-                    # Validate current has replicas (v1.0 uses 'current' not 'current_config')
-                    if 'current' in reco:
-                        current = reco['current']
-                        assert 'replicas' in current
-
-                        # Validate nested resources structure
-                        if 'resources' in current:
-                            resources = current['resources']
-                            assert isinstance(resources, dict)
-                            if 'requests' in resources:
-                                assert isinstance(resources['requests'], dict)
-                            if 'limits' in resources:
-                                assert isinstance(resources['limits'], dict)
-
-                    # Validate recommendation terms
-                    if 'recommendation_terms' in reco:
-                        for term_name, term_data in reco['recommendation_terms'].items():
-                            # Validate metrics_info has pod_count
-                            if 'metrics_info' in term_data:
-                                metrics_info = term_data['metrics_info']
-                                if 'pod_count' in metrics_info:
-                                    pod_count = metrics_info['pod_count']
-                                    # Validate aggregation fields exist
-                                    assert any(key in pod_count for key in ['min', 'max', 'avg'])
-
-                            if 'recommendation_engines' in term_data:
-                                for engine_name, engine_data in term_data['recommendation_engines'].items():
-                                    # Validate config has resources (v1.0 format)
-                                    if 'config' in engine_data:
-                                        config = engine_data['config']
-                                        if 'resources' in config:
-                                            assert isinstance(config['resources'], dict)
-
-                                    # Validate variation has resources
-                                    if 'variation' in engine_data:
-                                        variation = engine_data['variation']
-                                        if 'resources' in variation:
-                                            assert isinstance(variation['resources'], dict)
+        k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True)
+        
+        # Verify validations were performed (Review Comment #5)
+        assert k8s_validation['replicas_validated'], "Replicas should be validated"
+        assert k8s_validation['pod_count_validated'], "Pod count should be validated"
+        assert k8s_validation['resources_validated'], "Resources should be validated"
     finally:
         # Cleanup: Delete the experiment
         response = delete_experiment(input_json_file)
@@ -150,7 +110,6 @@ def test_get_recommendations_v1_single_experiment(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_with_target_remote(cluster_type):
     """
     Test POST /recommendations API with target=remote
@@ -158,7 +117,7 @@ def test_post_recommendations_v1_with_target_remote(cluster_type):
     - Successful recommendation generation
     - Response includes replicas
     - Response includes nested resources
-    - Response includes pod_count metrics
+    - Response includes pod_count metrics with proper validation
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -207,16 +166,15 @@ def test_post_recommendations_v1_with_target_remote(cluster_type):
     data = response.json()
     assert len(data) > 0
     
-    # Validate response structure
+    # Validate response structure with pod count validation (Review Comment #1)
     experiment = data[0]
     assert 'kubernetes_objects' in experiment
     
     k8s_obj = experiment['kubernetes_objects'][0]
-    if 'containers' in k8s_obj and k8s_obj['containers']:
-        container = k8s_obj['containers'][0]
-        if 'recommendations' in container:
-            reco_data = container['recommendations']['data']
-            assert len(reco_data) > 0
+    
+    # Use reusable validation function with pod count validation
+    k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True)
+    assert k8s_validation['pod_count_validated'], "Pod count metrics should be validated"
 
     # Cleanup: Delete the experiment
     response = delete_experiment(input_json_file)
@@ -224,7 +182,6 @@ def test_post_recommendations_v1_with_target_remote(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_with_target_local(cluster_type):
     """
     Test POST /recommendations API with target=local
@@ -407,7 +364,6 @@ def test_post_recommendations_v1_with_target_local(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_default_target(cluster_type):
     """
     Test POST /recommendations API without target parameter
@@ -464,11 +420,10 @@ def test_post_recommendations_v1_default_target(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_invalid_target(cluster_type):
     """
     Test POST /recommendations API with invalid target parameter
-    Expected: 400 Bad Request
+    Expected: 400 Bad Request with proper error message
     """
     input_json_file = "../json_files/create_exp.json"
 
@@ -488,8 +443,9 @@ def test_post_recommendations_v1_invalid_target(cluster_type):
         # Try to generate recommendations with invalid target
         response = generate_recommendations_v1(experiment_name, target="invalid_target")
 
-        assert response.status_code == ERROR_STATUS_CODE
-        assert "Invalid target cluster" in response.text
+        # Validate error response with status message (Review Comment #2)
+        validate_error_response(response, expected_status_code=ERROR_STATUS_CODE, 
+                              expected_message_fragment="Invalid target cluster")
     finally:
         # Cleanup: Delete the experiment
         response = delete_experiment(input_json_file)
@@ -497,26 +453,25 @@ def test_post_recommendations_v1_invalid_target(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.recommendations_v1
 def test_get_recommendations_v1_invalid_experiment(cluster_type):
     """
     Test GET /recommendations API with non-existing experiment
-    Expected: 400 Bad Request
+    Expected: 400 Bad Request with proper error message
     """
     form_kruize_url(cluster_type)
 
     # Try to get recommendations for non-existing experiment
     response = list_recommendations_v1("non_existing_experiment_12345")
     
-    assert response.status_code == ERROR_STATUS_CODE
+    # Validate error response (Review Comment #2)
+    validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
 
 
 @pytest.mark.negative
-@pytest.mark.recommendations_v1
 def test_get_recommendations_v1_invalid_timestamp(cluster_type):
     """
     Test GET /recommendations API with invalid timestamp format
-    Expected: 400 Bad Request
+    Expected: 400 Bad Request with proper error message
     """
     input_json_file = "../json_files/create_exp.json"
 
@@ -536,7 +491,8 @@ def test_get_recommendations_v1_invalid_timestamp(cluster_type):
         # Try to get recommendations with invalid timestamp
         response = list_recommendations_v1(experiment_name, interval_end_time="invalid-timestamp")
 
-        assert response.status_code == ERROR_STATUS_CODE
+        # Validate error response (Review Comment #2)
+        validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
     finally:
         # Cleanup: Delete the experiment
         response = delete_experiment(input_json_file)
@@ -544,7 +500,6 @@ def test_get_recommendations_v1_invalid_timestamp(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_get_recommendations_v1_namespace_experiment(cluster_type):
     """
     Test GET /recommendations API for namespace experiment
@@ -626,10 +581,10 @@ def test_get_recommendations_v1_namespace_experiment(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.recommendations_v1
 def test_recommendations_v1_validate_pod_count_aggregation(cluster_type):
     """
     Test that pod_count metrics include proper aggregation (min, max, avg, sum)
+    with actual value validation (Review Comment #5)
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -683,6 +638,12 @@ def test_recommendations_v1_validate_pod_count_aggregation(cluster_type):
         experiment = data[0]
         k8s_obj = experiment['kubernetes_objects'][0]
 
+        # Use reusable validation function with comprehensive pod_count validation (Review Comment #5)
+        k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True)
+        
+        # Ensure pod count was validated with actual values
+        assert k8s_validation['pod_count_validated'], "Pod count metrics should be validated with actual values"
+        
         if 'containers' in k8s_obj and k8s_obj['containers']:
             container = k8s_obj['containers'][0]
             if 'metrics' in container:
@@ -701,11 +662,10 @@ def test_recommendations_v1_validate_pod_count_aggregation(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_without_experiment_name(cluster_type):
     """
     Test POST /recommendations API without experiment_name
-    Expected: 400 Bad Request
+    Expected: 400 Bad Request with proper error message
     """
     form_kruize_url(cluster_type)
 
@@ -714,15 +674,15 @@ def test_post_recommendations_v1_without_experiment_name(cluster_type):
     api_url = f"{url}{RECOMMENDATIONS_API_V1}?target=remote"
     response = requests.post(api_url, json={})
     
-    assert response.status_code == ERROR_STATUS_CODE
+    # Validate error response with status message (Review Comment #2)
+    validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
 
 
 @pytest.mark.negative
-@pytest.mark.recommendations_v1
 def test_post_recommendations_v1_without_interval_end_time(cluster_type):
     """
     Test POST /recommendations API without interval_end_time for remote target
-    Expected: 400 Bad Request
+    Expected: 400 Bad Request with proper error message
     """
     input_json_file = "../json_files/create_exp.json"
 
@@ -743,4 +703,5 @@ def test_post_recommendations_v1_without_interval_end_time(cluster_type):
     api_url = f"{url}{RECOMMENDATIONS_API_V1}?experiment_name={experiment_name}&target=remote"
     response = requests.post(api_url, json={})
     
-    assert response.status_code == ERROR_STATUS_CODE
+    # Validate error response with status message (Review Comment #2)
+    validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2023, 2023 Red Hat, IBM Corporation and others.
+# Copyright (c) 2026 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,24 @@
 # limitations under the License.
 #
 #
-##### Script to perform remote monitoring tests #####
+##### Script to perform recommendation API tests #####
 
 
 # Get the absolute path of current directory
-REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/remote_monitoring_tests"
+RECOMMENDATION_TEST_DIR="${KRUIZE_REPO}/tests/scripts/recommendation_tests"
 PERF_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 #. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
-# Tests to validate Remote monitoring mode in Kruize 
-function remote_monitoring_tests() {
+# Test descriptions
+declare -A recommendation_test_description
+recommendation_test_description["sanity"]="Sanity tests for recommendation API v1.0"
+recommendation_test_description["negative"]="Negative tests for recommendation API v1.0"
+recommendation_test_description["extended"]="Extended tests for recommendation API v1.0"
+
+# Tests to validate Recommendation APIs in Kruize (applicable to both local and remote monitoring)
+function recommendation_tests() {
 	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS_FAILED=0
@@ -41,18 +47,17 @@ function remote_monitoring_tests() {
 
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
-	perf_profile_json_v1="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift_v1.json"
 
-	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "simulate_prod" "simulate_prod_single_pod")
+	recommendation_tests=("sanity" "negative" "extended")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
-		check_test_case "remote_monitoring"
+		check_test_case "recommendation"
 	fi
 	
 	# create the result directory for given testsuite
 	echo ""
-	TEST_SUITE_DIR="${RESULTS}/remote_monitoring_tests"
+	TEST_SUITE_DIR="${RESULTS}/recommendation_tests"
 	KRUIZE_SETUP_LOG="${TEST_SUITE_DIR}/kruize_setup.log"
 	KRUIZE_POD_LOG="${TEST_SUITE_DIR}/kruize_pod.log"
 
@@ -63,28 +68,19 @@ function remote_monitoring_tests() {
 		echo "Setting up kruize..." | tee -a ${LOG}
 		echo "${KRUIZE_SETUP_LOG}"
 
-		# Check if testcase is recommendations_v1 to apply ros_local_patch
-		if [ "${testcase}" == "recommendations_v1" ]; then
-			echo "Enabling isROSEnabled=true and keeping local=true for recommendations_v1 tests"
-			pushd "${KRUIZE_REPO}" > /dev/null
-				kruize_ros_local_patch
-				echo "Enabling isROSEnabled=true and keeping local=true...done"
-			popd > /dev/null
-		else
-			echo "Removing isROSEnabled=false and local=true"
-			pwd
-			pushd "${KRUIZE_REPO}" > /dev/null
-				kruize_remote_patch
-				echo "Removing isROSEnabled=false and local=true...done"
-			popd > /dev/null
-		fi
+		# Enable ROS for recommendation tests
+		echo "Enabling isROSEnabled=true and keeping local=true for recommendation tests"
+		pushd "${KRUIZE_REPO}" > /dev/null
+			kruize_ros_local_patch
+			echo "Enabling isROSEnabled=true and keeping local=true...done"
+		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
-		testtorun=("${remote_monitoring_tests[@]}")
+		testtorun=("${recommendation_tests[@]}")
 	else
 		testtorun=${testcase}
 	fi
@@ -97,8 +93,8 @@ function remote_monitoring_tests() {
 
 	echo ""
 	echo "Installing the required python modules..."
-	echo "python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG}"
-	python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG} 2>&1
+	echo "python3 -m pip install --user -r "${RECOMMENDATION_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG}"
+	python3 -m pip install --user -r "${RECOMMENDATION_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG} 2>&1
 	err_exit "ERROR: Installing python modules for the test run failed!"
 
 	echo ""
@@ -117,7 +113,7 @@ function remote_monitoring_tests() {
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a ${LOG}
 
 		echo " " | tee -a ${LOG}
-		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
+		echo "Test description: ${recommendation_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
 		pushd "${KRUIZE_REPO}" > /dev/null
@@ -128,69 +124,17 @@ function remote_monitoring_tests() {
 				echo "Setting up kruize...Done" | tee -a ${LOG}
 
 				sleep 60
-				# Scale up Kruize deployment to 3 replicas for simulate_prod test
-				if [ "${test}" == "simulate_prod" ]; then
-					# Determine namespace based on cluster type
-					if [ "${cluster_type}" == "openshift" ]; then
-						KRUIZE_NAMESPACE="openshift-tuning"
-					else
-						KRUIZE_NAMESPACE="monitoring"
-					fi
 
-					# create performance profile v1
-          create_performance_profile "${perf_profile_json_v1}"
-          sleep 5
-					echo "Scaling Kruize deployment to 3 replicas and redeploy..." | tee -a ${LOG}
-
-          kubectl scale deployment/kruize --replicas=3 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
-          kubectl rollout restart deployment/kruize -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
-          err_exit "ERROR: Failed to scale/restart Kruize deployment"
-
-          # Wait for rollout to COMPLETE
-          echo "Waiting for Kruize rollout to complete..." | tee -a ${LOG}
-          kubectl rollout status deployment/kruize -n ${KRUIZE_NAMESPACE} --timeout=300s 2>&1 | tee -a ${LOG}
-          err_exit "ERROR: Kruize rollout did not complete"
-
-          # check pod count
-          READY=$(kubectl get deployment kruize -n ${KRUIZE_NAMESPACE} -o jsonpath='{.status.readyReplicas}')
-
-          if [ "$READY" -ne 3 ]; then
-            echo "ERROR: Expected 3 ready replicas but got $READY" | tee -a ${LOG}
-            kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize | tee -a ${LOG}
-            exit 1
-          fi
-          echo "✓ Successfully scaled Kruize deployment to 3 replicas" | tee -a ${LOG}
-          kubectl get pods -n ${KRUIZE_NAMESPACE} -l app=kruize 2>&1 | tee -a ${LOG}
-				fi
-
-				# create performance profile(skip for simulate-prod test as it's called with older version)
-				if [ "${test}" != "simulate_prod" ]; then
-					create_performance_profile ${perf_profile_json}
-				fi
+				# create performance profile
+				create_performance_profile ${perf_profile_json}
 			fi
 		popd > /dev/null
 
-		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null
+		pushd ${RECOMMENDATION_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
 			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
-		popd > /dev/null
-
-		pushd "${KRUIZE_REPO}" > /dev/null
-			# Scale down Kruize deployment back to 1 replica after simulate_prod test
-			if [ "${test}" == "simulate_prod" ]; then
-				# Determine namespace based on cluster type
-				if [ "${cluster_type}" == "openshift" ]; then
-					KRUIZE_NAMESPACE="openshift-tuning"
-				else
-					KRUIZE_NAMESPACE="monitoring"
-				fi
-				
-				echo "Scaling Kruize deployment back to 1 replica in namespace ${KRUIZE_NAMESPACE}..." | tee -a ${LOG}
-				kubectl scale deployment kruize --replicas=1 -n ${KRUIZE_NAMESPACE} 2>&1 | tee -a ${LOG}
-				echo "✓ Kruize deployment scaled back to 1 replica" | tee -a ${LOG}
-			fi
 		popd > /dev/null
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
@@ -230,3 +174,4 @@ function remote_monitoring_tests() {
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES} 
 }
 
+# Made with Bob
