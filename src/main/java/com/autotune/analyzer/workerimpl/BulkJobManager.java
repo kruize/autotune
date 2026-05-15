@@ -551,9 +551,10 @@ public class BulkJobManager implements Runnable {
                 StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"").append(value).append("\"").append(",")
-                    );
+                    includeLabels.forEach((key, value) -> {
+                        String escapedValue = escapePromQLLabelValue(value);
+                        includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                    });
                     if (!includeLabelsBuilder.isEmpty()) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
@@ -582,6 +583,30 @@ public class BulkJobManager implements Runnable {
         return resourceFilters;
     }
 
+    /**
+     * Escapes special characters in PromQL label values to prevent query injection.
+     * Handles backslashes, double quotes, and newlines according to PromQL string literal rules.
+     *
+     * @param value The raw label value from user input
+     * @return Escaped value safe for use in PromQL queries
+     */
+    private String escapePromQLLabelValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        // Escape backslashes first (must be done before escaping quotes)
+        String escaped = value.replace("\\", "\\\\");
+        // Escape double quotes
+        escaped = escaped.replace("\"", "\\\"");
+        // Escape newlines
+        escaped = escaped.replace("\n", "\\n");
+        // Escape carriage returns
+        escaped = escaped.replace("\r", "\\r");
+        // Escape tabs
+        escaped = escaped.replace("\t", "\\t");
+        return escaped;
+    }
+
     private Map<String, String> buildLabelFilters(Map<String, String> labels) {
         Map<String, String> labelFilters = new HashMap<>();
         if (labels == null || labels.isEmpty()) {
@@ -593,7 +618,8 @@ public class BulkJobManager implements Runnable {
 
         labels.forEach((key, value) -> {
             String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
-            String matcher = "label_" + normalizedKey + "=\"" + value + "\"";
+            String escapedValue = escapePromQLLabelValue(value);
+            String matcher = "label_" + normalizedKey + "=\"" + escapedValue + "\"";
             podLabelBuilder.append(matcher).append(",");
             namespaceLabelBuilder.append(matcher).append(",");
         });
