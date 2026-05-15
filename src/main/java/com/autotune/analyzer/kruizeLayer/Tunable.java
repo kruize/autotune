@@ -101,13 +101,13 @@ public class Tunable {
 
         // Check for mixed configuration (both categorical and numeric)
         if (hasCategorical && hasBounds) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_MIXED_CONFIG, name));
         }
 
         // Check for missing configuration (neither categorical nor numeric)
         if (!hasCategorical && !hasBounds) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_MISSING_CONFIG, name));
         }
 
@@ -130,7 +130,7 @@ public class Tunable {
      */
     private void validateBounds() throws InvalidBoundsException {
         if (upperBoundValue == null || lowerBoundValue == null) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_BOUNDS, name));
         }
 
@@ -140,35 +140,35 @@ public class Tunable {
             upper = Double.parseDouble(upperBoundValue);
             lower = Double.parseDouble(lowerBoundValue);
         } catch (NumberFormatException e) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NON_NUMERIC_BOUNDS,
                             name, upperBoundValue, lowerBoundValue));
         }
 
         if (step == null) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_STEP, name));
         }
 
         if (step <= 0) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_INVALID_STEP, name, step));
         }
 
         if (upper < 0 || lower < 0) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NEGATIVE_BOUNDS,
                             name, upper, lower));
         }
 
         if (lower >= upper) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_INVALID_BOUND_RANGE,
                             name, lower, upper));
         }
 
         if (step > (upper - lower)) {
-            throw new InvalidBoundsException("ERROR: Tunable: " +
+            throw new InvalidBoundsException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_STEP_TOO_LARGE,
                             name, step, (upper - lower)));
         }
@@ -179,7 +179,7 @@ public class Tunable {
      */
     private void validateCategorical() {
         if (choices == null || choices.isEmpty()) {
-            throw new IllegalArgumentException("ERROR: Tunable: " +
+            throw new IllegalArgumentException(
                     String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_EMPTY_CHOICES, name));
         }
     }
