@@ -88,18 +88,18 @@ def test_get_recommendations_v1_single_experiment(cluster_type):
         data = response.json()
         assert len(data) > 0
 
-        # Validate complete recommendations structure (Review Comment #3)
+        # Validate complete recommendations structure
         experiment = data[0]
         validation_results = validate_complete_v1_recommendations(experiment)
         assert validation_results['experiment_name_present'], "experiment_name should be present"
         assert validation_results['kubernetes_objects_present'], "kubernetes_objects should be present"
         assert len(validation_results['k8s_obj_validations']) > 0, "Should have at least one k8s object validation"
 
-        # Use reusable validation function (Review Comment #4)
+        # Use reusable validation function
         k8s_obj = experiment['kubernetes_objects'][0]
         k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True)
         
-        # Verify validations were performed (Review Comment #5)
+        # Verify validations were performed
         assert k8s_validation['replicas_validated'], "Replicas should be validated"
         assert k8s_validation['pod_count_validated'], "Pod count should be validated"
         assert k8s_validation['resources_validated'], "Resources should be validated"
@@ -166,7 +166,7 @@ def test_post_recommendations_v1_with_target_remote(cluster_type):
     data = response.json()
     assert len(data) > 0
     
-    # Validate response structure with pod count validation (Review Comment #1)
+    # Validate response structure with pod count validation
     experiment = data[0]
     assert 'kubernetes_objects' in experiment
     
@@ -443,7 +443,7 @@ def test_post_recommendations_v1_invalid_target(cluster_type):
         # Try to generate recommendations with invalid target
         response = generate_recommendations_v1(experiment_name, target="invalid_target")
 
-        # Validate error response with status message (Review Comment #2)
+        # Validate error response with status message
         validate_error_response(response, expected_status_code=ERROR_STATUS_CODE, 
                               expected_message_fragment="Invalid target cluster")
     finally:
@@ -463,7 +463,7 @@ def test_get_recommendations_v1_invalid_experiment(cluster_type):
     # Try to get recommendations for non-existing experiment
     response = list_recommendations_v1("non_existing_experiment_12345")
     
-    # Validate error response (Review Comment #2)
+    # Validate error response
     validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
 
 
@@ -491,7 +491,7 @@ def test_get_recommendations_v1_invalid_timestamp(cluster_type):
         # Try to get recommendations with invalid timestamp
         response = list_recommendations_v1(experiment_name, interval_end_time="invalid-timestamp")
 
-        # Validate error response (Review Comment #2)
+        # Validate error response
         validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
     finally:
         # Cleanup: Delete the experiment
@@ -584,7 +584,7 @@ def test_get_recommendations_v1_namespace_experiment(cluster_type):
 def test_recommendations_v1_validate_pod_count_aggregation(cluster_type):
     """
     Test that pod_count metrics include proper aggregation (min, max, avg, sum)
-    with actual value validation (Review Comment #5)
+    with actual value validation
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -638,7 +638,7 @@ def test_recommendations_v1_validate_pod_count_aggregation(cluster_type):
         experiment = data[0]
         k8s_obj = experiment['kubernetes_objects'][0]
 
-        # Use reusable validation function with comprehensive pod_count validation (Review Comment #5)
+        # Use reusable validation function with comprehensive pod_count validation
         k8s_validation = validate_v1_kubernetes_object(k8s_obj, validate_replicas=True, validate_pod_count=True)
         
         # Ensure pod count was validated with actual values
@@ -674,7 +674,7 @@ def test_post_recommendations_v1_without_experiment_name(cluster_type):
     api_url = f"{url}{RECOMMENDATIONS_API_V1}?target=remote"
     response = requests.post(api_url, json={})
     
-    # Validate error response with status message (Review Comment #2)
+    # Validate error response with status message
     validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
 
 
@@ -703,5 +703,5 @@ def test_post_recommendations_v1_without_interval_end_time(cluster_type):
     api_url = f"{url}{RECOMMENDATIONS_API_V1}?experiment_name={experiment_name}&target=remote"
     response = requests.post(api_url, json={})
     
-    # Validate error response with status message (Review Comment #2)
+    # Validate error response with status message
     validate_error_response(response, expected_status_code=ERROR_STATUS_CODE)
