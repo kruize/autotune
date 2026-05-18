@@ -37,7 +37,10 @@ def test_list_layers_when_no_layers_exist(cluster_type):
     """
     form_kruize_url(cluster_type)
 
-    # List layers when none exist (fixture ensures clean state)
+    # Cleanup: Delete all existing layers to ensure clean state
+    cleanup_all_layers()
+
+    # List layers when none exist
     response = list_layers(layer_name=None, logging=False)
 
     # API should return 400 when no layers exist
@@ -106,6 +109,9 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
     Creates multiple layers and verifies all are returned.
     """
     form_kruize_url(cluster_type)
+
+    # Cleanup all existing layers first to ensure clean state
+    cleanup_all_layers()
 
     # Create multiple layers
     layer_files = [
@@ -313,7 +319,7 @@ def test_list_layer_with_non_existent_name(cluster_type):
 @pytest.mark.parametrize("invalid_param,param_value", [
     pytest.param("invalid_param", "some_value", id="unknown_parameter"),
     pytest.param("verbose", "true", id="unsupported_parameter"),
-    pytest.param("limit", "10", id="unsupported_limit")
+    pytest.param("limit", "10", id="unsupported_limit"),
 ])
 def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, param_value):
     """
@@ -354,7 +360,10 @@ def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, p
     pytest.param("layer/slash", id="slash_in_name"),
     pytest.param("layer\\backslash", id="backslash_in_name"),
     pytest.param("layer?question", id="question_mark"),
-    pytest.param("layer&ampersand", id="ampersand")
+    pytest.param("layer&ampersand", id="ampersand"),
+    # Edge Cases (2 tests) - Unicode and special characters
+    pytest.param("layer_测试_unicode", id="unicode_in_name"),
+    pytest.param("layer!@#$%^&*()", id="multiple_special_chars"),
 ])
 def test_list_layer_with_special_characters_in_name(cluster_type, special_char_name):
     """
@@ -380,3 +389,135 @@ def test_list_layer_with_special_characters_in_name(cluster_type, special_char_n
     assert data['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % special_char_name
 
     print(f"✓ Correctly handled special character in layer name '{special_char_name}': {response.status_code}")
+
+
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_list_layers_case_sensitivity(cluster_type, tmp_path):
+    """
+    Test Description: This test validates if layer name search is case-sensitive.
+    Creates a layer and tries to list it with different case variations.
+    """
+    form_kruize_url(cluster_type)
+
+    # Create a layer with mixed case name
+    layer_name = "TestCaseLayer"
+    # Cleanup before creating to prevent 409 conflicts
+    delete_layer(layer_name)
+
+    tmp_json_file = tmp_path / "create_layer_case_test.json"
+    json_obj = {
+        "apiVersion": "recommender.com/v1",
+        "kind": "KruizeLayer",
+        "metadata": {"name": "case-test-meta"},
+        "layer_name": layer_name,
+        "details": "Case sensitivity test layer",
+        "layer_presence": {"presence": "always"},
+        "tunables": [{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
+    }
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        create_response = create_layer(tmp_json_file)
+        assert create_response.status_code == SUCCESS_STATUS_CODE
+
+        print(f"✓ Created layer: {layer_name}")
+
+        # Try to list with exact case - should succeed
+        response_exact = list_layers(layer_name=layer_name)
+        assert response_exact.status_code == SUCCESS_200_STATUS_CODE
+        layers_exact = response_exact.json()
+        assert len(layers_exact) == 1
+        assert layers_exact[0]['layer_name'] == layer_name
+        print(f"✓ Found layer with exact case: {layer_name}")
+
+        # Try to list with different case - should fail (case-sensitive)
+        response_lower = list_layers(layer_name=layer_name.lower(), logging=False)
+        assert response_lower.status_code == ERROR_STATUS_CODE
+        data_lower = response_lower.json()
+        assert data_lower['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % layer_name.lower()
+        print(f"✓ Correctly rejected lowercase variation: {layer_name.lower()}")
+
+        # Try to list with uppercase - should fail (case-sensitive)
+        response_upper = list_layers(layer_name=layer_name.upper(), logging=False)
+        assert response_upper.status_code == ERROR_STATUS_CODE
+        data_upper = response_upper.json()
+        assert data_upper['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % layer_name.upper()
+        print(f"✓ Correctly rejected uppercase variation: {layer_name.upper()}")
+
+        print("✓ Layer name search is case-sensitive")
+
+    finally:
+        delete_layer(layer_name)
+
+
+@pytest.mark.layers
+@pytest.mark.sanity
+def test_list_layers_sorting_order(cluster_type, tmp_path):
+    """
+    Test Description: This test validates that listLayers API returns layers in creation order.
+    Creates multiple layers and verifies they are returned in the order they were created.
+    """
+    form_kruize_url(cluster_type)
+
+    # Create multiple layers with different names (deliberately not alphabetical)
+    layer_names = ["alpha-layer", "beta-layer", "gamma-layer", "delta-layer"]
+    created_layers = []
+
+    print(f"Creating {len(layer_names)} layers for ordering test...")
+
+    for layer_name in layer_names:
+        # Cleanup before creating to prevent 409 conflicts
+        delete_layer(layer_name)
+        created_layers.append(layer_name)
+        tmp_json_file = tmp_path / f"create_layer_sort_{layer_name}.json"
+        json_obj = {
+            "apiVersion": "recommender.com/v1",
+            "kind": "KruizeLayer",
+            "metadata": {"name": f"sort-meta-{layer_name}"},
+            "layer_name": layer_name,
+            "details": f"Sorting test layer {layer_name}",
+            "layer_presence": {"presence": "always"},
+            "tunables": [{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
+        }
+
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
+
+        response = create_layer(tmp_json_file)
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
+
+    print(f"✓ Created {len(layer_names)} layers successfully")
+
+    # List all layers
+    response = list_layers(layer_name=None)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    layers = response.json()
+    assert isinstance(layers, list)
+    assert len(layers) >= len(layer_names)
+
+    # Extract the names of created layers from response (in the order returned)
+    returned_layer_names = [layer['layer_name'] for layer in layers if layer['layer_name'] in layer_names]
+
+    # Verify all created layers are present
+    assert len(returned_layer_names) == len(layer_names), \
+        f"Expected {len(layer_names)} layers, got {len(returned_layer_names)}"
+
+    print(f"✓ All {len(layer_names)} layers returned")
+    print(f"  Returned order: {returned_layer_names}")
+
+    # Verify layers are returned in creation order
+    assert returned_layer_names == layer_names, \
+        f"Layers are not in creation order. Expected: {layer_names}, Got: {returned_layer_names}"
+
+    print(f"✓ Layers are returned in creation order: {returned_layer_names}")
+
+    # Cleanup: Delete all created layers
+    for layer_name in created_layers:
+        delete_layer(layer_name)
+    
+    print(f"✓ Sorting test completed")
