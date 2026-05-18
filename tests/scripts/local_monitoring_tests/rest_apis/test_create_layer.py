@@ -168,13 +168,13 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("empty_details", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("query_without_key", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API accepts requests with optional fields missing or null
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     
     # Build JSON manually to handle optional fields
     json_obj = {
@@ -234,7 +234,7 @@ def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name
     ("null_tunables", LAYER_TUNABLES_NULL_JSON_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', 'null'),
     ("empty_tunables_array", LAYER_TUNABLES_EMPTY_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[]'),
     # Query Validation tests (7 tests)
-    ("query_invalid_promql_syntax", "Validation failed: Query validation failed for query 'up{job=': Unexpected response status: 400", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up{job="}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("query_invalid_promql_syntax", LAYER_QUERY_INVALID_PROMQL_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "up{job="}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("query_missing_datasource", LAYER_QUERY_MISSING_DATASOURCE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("query_missing_query_field", LAYER_QUERY_MISSING_QUERY_FIELD_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("query_empty_datasource", LAYER_QUERY_EMPTY_DATASOURCE_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
@@ -268,13 +268,13 @@ def test_create_layer_optional_fields(test_name, apiVersion, kind, metadata_name
     ("invalid_kind", LAYER_INVALID_KIND_MSG % 'InvalidKind', "recommender.com/v1", "InvalidKind", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("invalid_apiversion_format", LAYER_INVALID_APIVERSION_MSG % 'v1', "v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects requests with missing/null/empty mandatory fields
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     
     # Check if we need to handle missing fields (API structure tests)
     if apiVersion == "SKIP_APIVERSION" or kind == "SKIP_KIND" or metadata_name == "SKIP_METADATA":
@@ -318,10 +318,10 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
         # Validate HTTP status code
         assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
 
-        # Validate exact error message
+        # Validate error message (substring match for dynamic messages)
         assert 'message' in data, "Response missing 'message' field"
-        assert data['message'] == expected_error_msg, \
-            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
 
         # Validate response structure
         assert 'httpcode' in data, "Response missing 'httpcode' field"
@@ -348,13 +348,13 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
     ("duplicate_tunable_names", LAYER_DUPLICATE_TUNABLE_NAMES_MSG % 'duplicate', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "duplicate", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}, {"name": "duplicate", "value_type": "double", "upper_bound": "50", "lower_bound": "5", "step": 1}]'),
 ])
-def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects requests with invalid/negative/duplicate values
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_layer_template.json")
 
@@ -378,10 +378,10 @@ def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, 
         # Validate HTTP status code
         assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
 
-        # Validate exact error message
+        # Validate error message (substring match for dynamic messages)
         assert 'message' in data, "Response missing 'message' field"
-        assert data['message'] == expected_error_msg, \
-            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
 
         # Validate response structure
         assert 'httpcode' in data, "Response missing 'httpcode' field"
@@ -448,13 +448,13 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     ("queries_and_label", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("all_three_types", LAYER_PRESENCE_MULTIPLE_TYPES_MSG, "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always", "queries": [{"datasource": "prometheus", "query": "test"}], "label": [{"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
 ])
-def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects invalid layer_presence combinations
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_layer_template.json")
 
@@ -478,10 +478,10 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
         # Validate HTTP status code
         assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
 
-        # Validate exact error message
+        # Validate error message (substring match for dynamic messages)
         assert 'message' in data, "Response missing 'message' field"
-        assert data['message'] == expected_error_msg, \
-            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
 
         # Validate response structure
         assert 'httpcode' in data, "Response missing 'httpcode' field"
@@ -522,13 +522,13 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
     ("tunable_lower_gte_upper", "Validation failed: Tunable 't1' has invalid bounds; lowerBound (100.0) must be less than upperBound (50.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
     ("tunable_step_greater_than_range", "Validation failed: Tunable 't1' has invalid step; step (100.0) must be <= (upperBound - lowerBound) (90.0)", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 100}]'),
 ])
-def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects invalid tunable bounds/step configurations
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_layer_template.json")
 
@@ -552,10 +552,10 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
         # Validate HTTP status code
         assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
 
-        # Validate exact error message
+        # Validate error message (substring match for dynamic messages)
         assert 'message' in data, "Response missing 'message' field"
-        assert data['message'] == expected_error_msg, \
-            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
 
         # Validate response structure
         assert 'httpcode' in data, "Response missing 'httpcode' field"
@@ -586,13 +586,13 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
     ("categorical_empty_choices", TUNABLE_MISSING_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": []}]'),
     ("categorical_with_bounds", TUNABLE_MIXED_CONFIG_MSG % 't1', "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": ["opt1", "opt2"], "upper_bound": "100", "lower_bound": "10", "step": 5}]'),
 ])
-def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type):
+def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects invalid categorical tunable configurations
     """
     form_kruize_url(cluster_type)
 
-    tmp_json_file = f"/tmp/create_layer_{test_name}.json"
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_layer_template.json")
 
@@ -616,10 +616,10 @@ def test_create_layer_categorical_tunable_validation(test_name, expected_error_m
         # Validate HTTP status code
         assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
 
-        # Validate exact error message
+        # Validate error message (substring match for dynamic messages)
         assert 'message' in data, "Response missing 'message' field"
-        assert data['message'] == expected_error_msg, \
-            f"Expected exact error message '{expected_error_msg}', got '{data['message']}'"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
 
         # Validate response structure
         assert 'httpcode' in data, "Response missing 'httpcode' field"

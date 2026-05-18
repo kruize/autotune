@@ -394,7 +394,7 @@ def test_list_layer_with_special_characters_in_name(cluster_type, special_char_n
 
 @pytest.mark.layers
 @pytest.mark.sanity
-def test_list_layers_case_sensitivity(cluster_type):
+def test_list_layers_case_sensitivity(cluster_type, tmp_path):
     """
     Test Description: This test validates if layer name search is case-sensitive.
     Creates a layer and tries to list it with different case variations.
@@ -406,7 +406,7 @@ def test_list_layers_case_sensitivity(cluster_type):
     # Cleanup before creating to prevent 409 conflicts
     delete_layer(layer_name)
 
-    tmp_json_file = "/tmp/create_layer_case_test.json"
+    tmp_json_file = tmp_path / "create_layer_case_test.json"
     json_obj = {
         "apiVersion": "recommender.com/v1",
         "kind": "KruizeLayer",
@@ -416,16 +416,16 @@ def test_list_layers_case_sensitivity(cluster_type):
         "layer_presence": {"presence": "always"},
         "tunables": [{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
     }
-    
+
     try:
         with open(tmp_json_file, "w") as f:
             json.dump(json_obj, f)
-        
+
         create_response = create_layer(tmp_json_file)
         assert create_response.status_code == SUCCESS_STATUS_CODE
-        
+
         print(f"✓ Created layer: {layer_name}")
-        
+
         # Try to list with exact case - should succeed
         response_exact = list_layers(layer_name=layer_name)
         assert response_exact.status_code == SUCCESS_200_STATUS_CODE
@@ -433,32 +433,30 @@ def test_list_layers_case_sensitivity(cluster_type):
         assert len(layers_exact) == 1
         assert layers_exact[0]['layer_name'] == layer_name
         print(f"✓ Found layer with exact case: {layer_name}")
-        
+
         # Try to list with different case - should fail (case-sensitive)
         response_lower = list_layers(layer_name=layer_name.lower(), logging=False)
         assert response_lower.status_code == ERROR_STATUS_CODE
         data_lower = response_lower.json()
         assert data_lower['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % layer_name.lower()
         print(f"✓ Correctly rejected lowercase variation: {layer_name.lower()}")
-        
+
         # Try to list with uppercase - should fail (case-sensitive)
         response_upper = list_layers(layer_name=layer_name.upper(), logging=False)
         assert response_upper.status_code == ERROR_STATUS_CODE
         data_upper = response_upper.json()
         assert data_upper['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % layer_name.upper()
         print(f"✓ Correctly rejected uppercase variation: {layer_name.upper()}")
-        
+
         print("✓ Layer name search is case-sensitive")
-        
+
     finally:
-        if os.path.exists(tmp_json_file):
-            os.remove(tmp_json_file)
         delete_layer(layer_name)
 
 
 @pytest.mark.layers
 @pytest.mark.sanity
-def test_list_layers_sorting_order(cluster_type):
+def test_list_layers_sorting_order(cluster_type, tmp_path):
     """
     Test Description: This test validates that listLayers API returns layers in creation order.
     Creates multiple layers and verifies they are returned in the order they were created.
@@ -475,7 +473,7 @@ def test_list_layers_sorting_order(cluster_type):
         # Cleanup before creating to prevent 409 conflicts
         delete_layer(layer_name)
         created_layers.append(layer_name)
-        tmp_json_file = f"/tmp/create_layer_sort_{layer_name}.json"
+        tmp_json_file = tmp_path / f"create_layer_sort_{layer_name}.json"
         json_obj = {
             "apiVersion": "recommender.com/v1",
             "kind": "KruizeLayer",
@@ -486,15 +484,11 @@ def test_list_layers_sorting_order(cluster_type):
             "tunables": [{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
         }
 
-        try:
-            with open(tmp_json_file, "w") as f:
-                json.dump(json_obj, f)
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
 
-            response = create_layer(tmp_json_file)
-            assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
-        finally:
-            if os.path.exists(tmp_json_file):
-                os.remove(tmp_json_file)
+        response = create_layer(tmp_json_file)
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
 
     print(f"✓ Created {len(layer_names)} layers successfully")
 
