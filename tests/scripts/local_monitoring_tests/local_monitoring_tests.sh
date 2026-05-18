@@ -25,6 +25,10 @@ METRIC_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 # Source the common functions scripts
 . ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
+# Operator deployment flag (default: disabled, use deploy scripts)
+USE_OPERATOR=0
+KRUIZE_OPERATOR_IMAGE=""
+
 
 # Tests to validate Local monitoring mode in Kruize
 function local_monitoring_tests() {
@@ -61,16 +65,25 @@ function local_monitoring_tests() {
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		pushd "${KRUIZE_REPO}" > /dev/null
-			# check for 'isROSEnabled' flag
-			kruize_local_ros_patch
-			# check for 'servicename' and 'datasource_namespace' input variables
-			kruize_local_datasource_manifest_patch
-			# increase cpu/memory resources, PV storage for openshift
-			kruize_local_patch
-			echo "Setting up kruize..." | tee -a ${LOG}
-			echo "${KRUIZE_SETUP_LOG}"
-			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+			if [ ${USE_OPERATOR} -eq 1 ]; then
+				# Deploy using operator
+				echo "Setting up kruize using operator..." | tee -a ${LOG}
+				echo "${KRUIZE_SETUP_LOG}"
+				deploy_kruize_operator >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize using operator...Done" | tee -a ${LOG}
+			else
+				# Deploy using deploy scripts (default behavior)
+				# check for 'isROSEnabled' flag
+				kruize_local_ros_patch
+				# check for 'servicename' and 'datasource_namespace' input variables
+				kruize_local_datasource_manifest_patch
+				# increase cpu/memory resources, PV storage for openshift
+				kruize_local_patch
+				echo "Setting up kruize..." | tee -a ${LOG}
+				echo "${KRUIZE_SETUP_LOG}"
+				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 				echo "Setting up kruize...Done" | tee -a ${LOG}
+			fi
 
 			sleep 60
 		popd > /dev/null
@@ -110,6 +123,23 @@ function local_monitoring_tests() {
 		LOG="${TEST_DIR}/${test}.log"
 
 		if [ "${test}" == "runtimes" ]; then
+		  APP_NAMESPACE="default"
+		  if [ ! -d "benchmarks" ]; then
+        echo -n "🔄 Pulling required repositories... "
+        clone_repos benchmarks
+      fi
+      bench="tfb"
+      bench2="petclinic"
+		  echo -n "🔄 Installing the required benchmarks..."
+		  # Clean up any existing load job so the new one can start fresh
+			echo "Cleaning up any old load jobs..." >> "${LOG}" 2>&1
+			kubectl delete job petclinic-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+			kubectl delete job tfb-qrh-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+
+			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}"
+			benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}"
+			echo "✅ Completed!"
+
 			quarkus_label="com.redhat.component-name=Quarkus"
 			if [[ ${cluster_type} == "minikube" ]] || [[ ${cluster_type} == "kind" ]]; then
 				quarkus_pod_name=$(kubectl get pod | grep tfb-qrh | cut -d " " -f1)
