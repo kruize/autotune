@@ -6,7 +6,7 @@ This directory contains a [Hyperfoil](https://hyperfoil.io/) benchmark for load-
 
 | Requirement | Notes |
 |---|---|
-| Hyperfoil CLI / controller | Install from the [Hyperfoil releases page](https://github.com/Hyperfoil/Hyperfoil/releases). Tested with 0.27+. |
+| Hyperfoil CLI / controller | Install with `./install_hyperfoil.sh` in this directory. Tested with 0.27+. |
 | Running Kruize instance | Remote-monitoring mode with a Prometheus datasource named `prometheus-1`. |
 | `cluster-metadata-local-monitoring` metadata profile | Must exist in Kruize before running the test (see note below). |
 
@@ -23,6 +23,12 @@ This directory contains a [Hyperfoil](https://hyperfoil.io/) benchmark for load-
 
 ### 1. Set the Kruize URL
 
+Install Hyperfoil if needed:
+
+```bash
+./install_hyperfoil.sh
+```
+
 Edit `kruize-bulk-hyperfoil.yaml` and replace `KRUIZE_URL_PLACEHOLDER` with your Kruize API route, e.g.:
 
 ```yaml
@@ -36,7 +42,7 @@ http:
 
 ```bash
 # Start the CLI
-hyperfoil.sh cli
+./install_hyperfoil.sh cli
 
 # Inside the CLI:
 [hyperfoil]$ upload /path/to/kruize-bulk-hyperfoil.yaml
@@ -48,7 +54,7 @@ hyperfoil.sh cli
 
 ```bash
 # Start controller in the background
-hyperfoil.sh standalone &
+./install_hyperfoil.sh standalone &
 
 # Upload and run via REST
 curl -s -X POST http://localhost:8090/benchmark \
