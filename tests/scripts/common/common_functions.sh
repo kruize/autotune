@@ -934,8 +934,8 @@ function kruize_local_ros_patch() {
 
 	if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "kind" ]; then
       		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
-      		  	echo "Setting flag 'isROSEnabled' to 'true'"
-        		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+#      		  	echo "Setting flag 'isROSEnabled' to 'true'"
+#        		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
         		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
         		awk '
@@ -951,8 +951,8 @@ function kruize_local_ros_patch() {
       		fi
   	elif [ ${cluster_type} == "openshift" ]; then
   	      if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}; then
-  	        	echo "Setting flag 'isROSEnabled' to 'true'"
-            		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+#  	        	echo "Setting flag 'isROSEnabled' to 'true'"
+#            		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 
             		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
             		awk '

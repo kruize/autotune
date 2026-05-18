@@ -178,6 +178,56 @@ Here are the test scenarios:
 - Delete performance profile with invalid profile name scenarios
 - Delete performance profile with when its associated with existing experiments
 
+# **Kruize Recommendation API Tests**
+
+Kruize Recommendation API tests validate the behavior of the new [Kruize Recommendations API v1.0](./../../../design/MonitoringModeAPI.md)
+using various positive and negative scenarios. These tests are developed using pytest framework and support both
+**Remote Monitoring** and **Local Monitoring** modes with proper test categorization.
+
+## Overview
+
+The Recommendation API v1.0 introduces an enhanced schema that includes:
+- **Replicas field** in current config, recommendation config, and variation
+- **Nested resources structure** with requests and limits under a resources map
+- **Pod count metrics** with aggregation (min, max, avg, sum) in metrics_info
+- Support for both **local** and **remote** monitoring targets
+
+#
+## Tests Description
+
+The `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
+
+
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_get_recommendations_v1_remote_e2e_workflow**:
+- End-to-end workflow for both container and namespace experiments
+- Creates experiments, updates results, generates recommendations
+- Validates complete recommendation structure with new v1.0 schema
+- Validates replicas field presence and values
+- Validates nested resources structure (requests/limits)
+- Validates pod_count metrics with aggregation
+- Tests both container-level and namespace-level experiments
+
+**test_get_recommendations_v1_invalid_experiment**:
+- Request recommendations for non-existing experiment
+- Expected: 400 Bad Request with proper error message
+
+**test_get_recommendations_v1_invalid_timestamp**:
+- Request with malformed interval_end_time parameter
+- Expected: 400 Bad Request with proper error message
+
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_post_recommendations_v1_without_experiment_name**:
+- POST request without experiment_name parameter
+- Expected: 400 Bad Request with proper error message
+
+**test_post_recommendations_v1_without_interval_end_time**:
+- POST request for remote target without interval_end_time
+- Expected: 400 Bad Request with proper error message
+
+
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
