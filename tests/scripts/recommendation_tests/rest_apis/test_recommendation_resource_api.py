@@ -124,7 +124,7 @@ def test_get_recommendations_v1_remote_e2e_workflow(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-        end_time = "2022-01-23T19:25:43.602Z"
+        end_time = "2022-01-24T19:25:43.511Z"
         json_data = json.load(open(input_json_file_namespace))
         namespace_experiment_name = json_data[0]['experiment_name']
         # Generate recommendations for namespace using POST - this returns the recommendations in v1.0 format
@@ -147,7 +147,7 @@ def test_get_recommendations_v1_remote_e2e_workflow(cluster_type):
 
         # Validate the json values
         create_exp_json = read_json_data_from_file(input_json_file_namespace)
-        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
 
         result_json_arr = read_json_data_from_file(result_json_file_namespace)
         update_results_json = [result_json_arr[len(result_json_arr) - 1]]

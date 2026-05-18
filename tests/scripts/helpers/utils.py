@@ -1027,7 +1027,7 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"], metrics, experiment_type)
+                                    validate_config(engine_obj["config"], metrics, experiment_type, v1)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"], v1)
                         # validate Plots data for namespace experiment_type
                         validate_plots(terms_obj, duration_terms, term)

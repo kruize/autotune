@@ -157,7 +157,7 @@ function recommendation_tests() {
 		# Reverse patches applied for this test to ensure next test starts with clean state
 		if [ "${skip_setup}" -eq 0 ]; then
 			pushd "${KRUIZE_REPO}" > /dev/null || exit
-				if [ -n "${test}" ] && [ "${test}" == "remote2" ]; then
+				if [ -n "${test}" ] && [ "${test}" == "remote" ]; then
 					echo "Reversing remote monitoring patch for test ${test}"
 					kruize_remote_patch_reverse
 					echo "Remote monitoring patch reversed...done"
