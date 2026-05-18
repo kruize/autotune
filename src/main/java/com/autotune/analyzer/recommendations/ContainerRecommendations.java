@@ -33,7 +33,6 @@ public class ContainerRecommendations {
     public ContainerRecommendations() {
         this.notificationMap = new HashMap<Integer, RecommendationNotification>();
         this.data = new HashMap<Timestamp, MappedRecommendationForTimestamp>();
-        this.version = KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber();
         RecommendationNotification recommendationNotification = new RecommendationNotification(
                 RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
         );
