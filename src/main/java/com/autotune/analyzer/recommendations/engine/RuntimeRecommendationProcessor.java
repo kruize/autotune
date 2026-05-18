@@ -105,6 +105,28 @@ public final class RuntimeRecommendationProcessor {
             return runtimeRecommList;
         }
 
+        // Filter layers based on recommendation_types settings
+        Map<String, KruizeLayer> filteredLayerMap = new HashMap<>();
+        for (Map.Entry<String, KruizeLayer> entry : layerMap.entrySet()) {
+            String layerName = entry.getKey();
+            // Skip container layer (not a runtime layer)
+            if (AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER.equalsIgnoreCase(layerName)) {
+                continue;
+            }
+            // Check if this runtime layer is enabled in recommendation settings
+            if (kruizeObject.getRecommendation_settings() != null
+                    && !kruizeObject.getRecommendation_settings().isRuntimeLayerEnabled(layerName)) {
+                LOGGER.debug("Skipping runtime layer '{}' as it's not enabled in recommendation_types", layerName);
+                continue;
+            }
+            filteredLayerMap.put(layerName, entry.getValue());
+        }
+
+        if (filteredLayerMap.isEmpty()) {
+            LOGGER.debug("No runtime layers enabled for recommendations");
+            return runtimeRecommList;
+        }
+
         // Pre-populate context with CPU/memory recommendations for tunable processing
         Map<TunableSpec, Object> tunableSpecObjectMap = new HashMap<>();
         String containerLayer = AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER;
@@ -117,7 +139,7 @@ public final class RuntimeRecommendationProcessor {
         tunableSpecObjectMap.put(new TunableSpec(containerLayer, AnalyzerConstants.MetricNameConstants.CPU_LIMIT),
                 recommendationCpuLimits != null ? recommendationCpuLimits.getAmount() : null);
 
-        List<KruizeLayer> kruizeLayers = layerMap.values().stream()
+        List<KruizeLayer> kruizeLayers = filteredLayerMap.values().stream()
                 .filter(layer -> layer.getTunables() != null)
                 .collect(Collectors.toList());
         List<TunableSpec> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
