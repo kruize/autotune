@@ -410,3 +410,45 @@ Prometheus is unreachable and Thanos Querier is reachable.
 Both Prometheus and Thanos Querier datasources are unreachable.
 
 **❌ Expected:** Kruize fails to start and exits with an error.
+
+
+# **Kruize Recommendation API Tests**
+
+Kruize Recommendation API tests validate the behavior of the new [Kruize Recommendations API v1.0](./../../../design/MonitoringModeAPI.md)
+using various positive and negative scenarios. These tests are developed using pytest framework and support both
+**Remote Monitoring** and **Local Monitoring** modes with proper test categorization.
+
+## Overview
+
+The Recommendation API v1.0 introduces an enhanced schema that includes:
+- **Replicas field** in current config, recommendation config, and variation
+- **Nested resources structure** with requests and limits under a resources map
+- **Pod count metrics** with aggregation (min, max, avg, sum) in metrics_info
+- Support for both **local** and **remote** monitoring targets
+
+#
+## Tests Description
+
+The `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
+
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_get_recommendations_v1_local_e2e_workflow**:
+- End-to-end workflow for local monitoring mode
+- Sets up datasources, metadata profiles, and metric profiles
+- Creates both container (sysbench) and namespace experiments
+- Waits for auto-generation of recommendations (5 minutes)
+- Validates complete recommendation structure with v1.0 schema
+- Validates replicas field and nested resources
+- Validates pod_count metrics
+- Tests both container-level and namespace-level experiments
+- Includes proper cleanup of all resources
+
+**test_get_recommendations_v1_invalid_experiment_local**:
+- Request recommendations for non-existing experiment in local mode
+- Expected: 400 Bad Request with proper error message
+
+**test_post_recommendations_v1_without_experiment_name_local**:
+- POST request without experiment_name in local mode
+- Expected: 400 Bad Request with proper error message
+

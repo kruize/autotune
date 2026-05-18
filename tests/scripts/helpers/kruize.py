@@ -18,6 +18,9 @@ import json
 import requests
 import subprocess
 
+# API endpoint constants
+RECOMMENDATIONS_API_V1 = "/kruize/api/v1/recommendations"
+
 def get_kruize_url():
     return URL
 
@@ -798,3 +801,58 @@ def delete_layer_from_db(layer_name):
     except Exception as e:
         print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
         return False
+
+
+def list_recommendations_v1(experiment_name=None, latest=None, interval_end_time=None, rm=False):
+    """
+    Helper function to call GET /kruize/api/v1/recommendations API
+    """
+    params = ""
+    print("\nListing the recommendations...")
+    base_url = get_kruize_url()
+    url = f"{base_url}{RECOMMENDATIONS_API_V1}"
+    if rm:
+        url += "?rm=true"
+    print("URL = ", url)
+
+    if experiment_name is None:
+        if latest is None and interval_end_time is None:
+            params = ""
+        elif latest is not None:
+            params = {'latest': latest}
+        elif interval_end_time is not None:
+            params = {'monitoring_end_time': interval_end_time}
+    else:
+        if latest is None and interval_end_time is None:
+            params = {'experiment_name': experiment_name}
+        elif latest is not None:
+            params = {'experiment_name': experiment_name, 'latest': latest}
+        elif interval_end_time is not None:
+            params = {'experiment_name': experiment_name, 'monitoring_end_time': interval_end_time}
+
+    print("params = ", params)
+    response = requests.get(url=url, params=params)
+
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
+    return response
+
+
+def generate_recommendations_v1(experiment_name, interval_end_time=None, interval_start_time=None):
+    """
+    Helper function to call POST /kruize/api/v1/recommendations API
+    """
+    base_url = get_kruize_url()
+    api_url = f"{base_url}{RECOMMENDATIONS_API_V1}"
+    params = {'experiment_name': experiment_name}
+
+    if interval_end_time:
+        params['interval_end_time'] = interval_end_time
+    if interval_start_time:
+        params['interval_start_time'] = interval_start_time
+
+    response = requests.post(api_url, params=params)
+    return response
+

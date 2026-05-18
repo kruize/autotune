@@ -34,7 +34,8 @@ TESTS=0
 TEST_SUITE_ARRAY=("remote_monitoring_tests"
 "local_monitoring_tests"
 "authentication_tests"
-"datasource_tests")
+"datasource_tests"
+"recommendation_tests")
 
 KRUIZE_DOCKER_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 total_time=0
@@ -933,8 +934,8 @@ function kruize_local_ros_patch() {
 
 	if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "kind" ]; then
       		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
-      		  	echo "Setting flag 'isROSEnabled' to 'true'"
-        		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+#      		  	echo "Setting flag 'isROSEnabled' to 'true'"
+#        		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
         		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
         		awk '
@@ -950,8 +951,8 @@ function kruize_local_ros_patch() {
       		fi
   	elif [ ${cluster_type} == "openshift" ]; then
   	      if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}; then
-  	        	echo "Setting flag 'isROSEnabled' to 'true'"
-            		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+#  	        	echo "Setting flag 'isROSEnabled' to 'true'"
+#            		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 
             		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
             		awk '
@@ -1019,5 +1020,64 @@ function kruize_local_patch() {
 	if [ ${cluster_type} == "openshift" ]; then
 		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
+}
+
+#
+# Reverse the remote monitoring patch to restore original manifest state
+#
+function kruize_remote_patch_reverse() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+	if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "kind" ]; then
+		# Restore the default local monitoring settings
+		sed -i 's/"logging_level": "info"/"logging_level": "info", "local": "true", "isROSEnabled": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+	elif [ ${cluster_type} == "openshift" ]; then
+		# Restore the default local monitoring settings
+		sed -i 's/"logging_level": "info"/"logging_level": "info", "local": "true", "isROSEnabled": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		# Restore original storage and resource values
+		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*1Gi/\1\2 500Mi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*"2Gi"/\1\2 "1Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*"2"/\1\2 "1"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
+}
+
+#
+# Reverse the local datasource manifest patch to restore original values
+#
+function kruize_local_datasource_manifest_patch_reverse() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+	if [ ${cluster_type} == "minikube" ]; then
+		if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+			# Restore default datasource values
+			sed -i 's/"serviceName": "[^"]*"/"serviceName": "prometheus-k8s"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+			sed -i 's/"namespace": "[^"]*"/"namespace": "openshift-monitoring"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+			sed -i 's/"url": ""/"url": "http:\/\/prometheus-k8s.openshift-monitoring.svc.cluster.local:9090"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+		fi
+	elif [ ${cluster_type} == "openshift" ]; then
+		if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+			# Restore default datasource values
+			sed -i 's/"serviceName": "[^"]*"/"serviceName": "prometheus-k8s"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/"namespace": "[^"]*"/"namespace": "openshift-monitoring"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/"url": ""/"url": "http:\/\/prometheus-k8s.openshift-monitoring.svc.cluster.local:9090"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		fi
+	fi
+}
+
+#
+# Reverse the local patch to restore original cpu/memory resources and PV storage
+#
+function kruize_local_patch_reverse() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+
+	if [ ${cluster_type} == "openshift" ]; then
+		# Restore original storage and resource values
+		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*1Gi/\1\2 500Mi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*"2Gi"/\1\2 "1Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*"2"/\1\2 "1"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	fi
 }
