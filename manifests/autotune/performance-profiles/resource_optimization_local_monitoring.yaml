@@ -2,7 +2,7 @@ apiVersion: "recommender.com/v1"
 kind: "KruizePerformanceProfile"
 metadata:
   name: "resource-optimization-local-monitoring"
-profile_version: 1.0
+profile_version: 2.0
 k8s_type: openshift
 
 slo:
@@ -476,6 +476,9 @@ slo:
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
@@ -486,6 +489,9 @@ slo:
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
+    layers_required:
+      - "hotspot"
+      - "semeru"
 
     aggregation_functions:
       - function: sum
