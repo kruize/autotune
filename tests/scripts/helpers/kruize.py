@@ -805,7 +805,7 @@ def delete_layer_from_db(layer_name):
 
 def list_recommendations_v1(experiment_name=None, latest=None, interval_end_time=None, rm=False):
     """
-    Helper function to call GET /recommendations API
+    Helper function to call GET /kruize/api/v1/recommendations API
     """
     params = ""
     print("\nListing the recommendations...")
@@ -840,9 +840,9 @@ def list_recommendations_v1(experiment_name=None, latest=None, interval_end_time
     return response
 
 
-def generate_recommendations_v1(experiment_name, interval_end_time=None, interval_start_time=None, target=None):
+def generate_recommendations_v1(experiment_name, interval_end_time=None, interval_start_time=None):
     """
-    Helper function to call POST /recommendations API
+    Helper function to call POST /kruize/api/v1/recommendations API
     """
     base_url = get_kruize_url()
     api_url = f"{base_url}{RECOMMENDATIONS_API_V1}"
@@ -852,8 +852,6 @@ def generate_recommendations_v1(experiment_name, interval_end_time=None, interva
         params['interval_end_time'] = interval_end_time
     if interval_start_time:
         params['interval_start_time'] = interval_start_time
-    if target:
-        params['target'] = target
 
     response = requests.post(api_url, params=params)
     return response

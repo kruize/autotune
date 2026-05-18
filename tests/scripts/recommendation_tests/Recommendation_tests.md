@@ -1,8 +1,8 @@
 # **Kruize Recommendation API Tests**
 
-Kruize Recommendation API tests validate the behavior of the new [Kruize Recommendations API v1.0](./../../../design/MonitoringModeAPI.md) 
-using various positive and negative scenarios. These tests are developed using pytest framework and are applicable to both 
-local and remote monitoring modes.
+Kruize Recommendation API tests validate the behavior of the new [Kruize Recommendations API v1.0](./../../../design/MonitoringModeAPI.md)
+using various positive and negative scenarios. These tests are developed using pytest framework and support both
+**Remote Monitoring** and **Local Monitoring** modes with proper test categorization.
 
 ## Overview
 
@@ -12,60 +12,72 @@ The Recommendation API v1.0 introduces an enhanced schema that includes:
 - **Pod count metrics** with aggregation (min, max, avg, sum) in metrics_info
 - Support for both **local** and **remote** monitoring targets
 
+## Test Categorization
+
+Tests are organized using pytest markers to support different monitoring modes:
+
+| Marker                  | Description                                |
+|-------------------------|--------------------------------------------|
+| `@pytest.mark.remote`   | Tests for remote monitoring mode (rm=True) |
+| `@pytest.mark.local`    | Tests for local monitoring mode (rm=False) |
+
 ## Tests Description
 
-The new `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
+The `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
 
-### **GET /kruize/api/v1/recommendations API Tests**
+### **Remote Monitoring Tests** (`@pytest.mark.remote`)
 
-The GET endpoint retrieves recommendations for experiments with the new v1.0 schema.
+#### POST /kruize/api/v1/recommendations API Tests
 
-#### Sanity Tests:
-- **Single experiment recommendations**: Validate complete recommendation structure for a single experiment
-- **Multiple experiments recommendations**: List recommendations for multiple experiments
-- **Parameterized queries**: Test various query parameter combinations
-  - `/recommendations?experiment_name=<name>` - Get recommendations for specific experiment
-  - `/recommendations?experiment_name=<name>&interval_end_time=<timestamp>` - Get recommendations for specific time
-  - `/recommendations?latest=true` - Get only latest recommendations
-  - `/recommendations?latest=false` - Get all recommendations
-- **Namespace experiments**: Validate recommendations for namespace-level experiments
-- **Pod count aggregation validation**: Comprehensive validation of pod_count metrics
-  - Verify presence of min, max, avg, sum fields
-  - Validate numeric types and non-negative values
-  - Validate logical relationships (min ≤ avg ≤ max)
-  - Verify actual values are populated correctly
+**test_get_recommendations_v1_remote_e2e_workflow**:
+- End-to-end workflow for both container and namespace experiments
+- Creates experiments, updates results, generates recommendations
+- Validates complete recommendation structure with new v1.0 schema
+- Validates replicas field presence and values
+- Validates nested resources structure (requests/limits)
+- Validates pod_count metrics with aggregation
+- Tests both container-level and namespace-level experiments
 
-#### Negative Tests:
-- **Invalid experiment name**: Request recommendations for non-existing experiment
-- **Invalid timestamp format**: Request with malformed interval_end_time
-- **Non-existing timestamp**: Request with valid format but non-existing timestamp
-- **Experiment without results**: Request recommendations before updating results
+**test_get_recommendations_v1_invalid_experiment**:
+- Request recommendations for non-existing experiment
+- Expected: 400 Bad Request with proper error message
 
-### **POST /kruize/api/v1/recommendations API Tests**
+**test_get_recommendations_v1_invalid_timestamp**:
+- Request with malformed interval_end_time parameter
+- Expected: 400 Bad Request with proper error message
 
-The POST endpoint generates recommendations with support for both local and remote monitoring targets.
+#### POST /kruize/api/v1/recommendations API Tests
 
-#### Sanity Tests:
-- **Generate with target=remote**: Default behavior for remote monitoring
-- **Generate with target=local**: Local monitoring mode support
-- **Default target behavior**: Generate without specifying target parameter
-- **Complete validation**: Use reusable validation functions
-- **Replicas validation**: Comprehensive replicas field validation
-- **Pod count with actual values**: Validate pod_count with real data
+**test_post_recommendations_v1_without_experiment_name**:
+- POST request without experiment_name parameter
+- Expected: 400 Bad Request with proper error message
 
-#### Negative Tests:
-- **Invalid target parameter**: Request with unsupported target value
-- **Missing experiment_name**: POST without experiment_name parameter
-- **Missing interval_end_time**: POST for remote target without interval_end_time
-- **Invalid timestamp format**: POST with malformed interval_end_time
-- **Non-existing experiment**: Generate recommendations for non-existing experiment
+**test_post_recommendations_v1_without_interval_end_time**:
+- POST request for remote target without interval_end_time
+- Expected: 400 Bad Request with proper error message
 
-### **Extended Tests**
+### **Local Monitoring Tests** (`@pytest.mark.local`)
 
-- **Multiple experiments with different targets**: Test mixed local and remote experiments
-- **All terms validation**: Validate replicas and pod_count across short, medium, and long terms
-- **Varying pod counts**: Test with different pod count scenarios and validate replica recommendations
-- **Accelerator workloads**: Validate pod_count metrics for GPU/accelerator workloads
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_get_recommendations_v1_local_e2e_workflow**:
+- End-to-end workflow for local monitoring mode
+- Sets up datasources, metadata profiles, and metric profiles
+- Creates both container (sysbench) and namespace experiments
+- Waits for auto-generation of recommendations (5 minutes)
+- Validates complete recommendation structure with v1.0 schema
+- Validates replicas field and nested resources
+- Validates pod_count metrics
+- Tests both container-level and namespace-level experiments
+- Includes proper cleanup of all resources
+
+**test_get_recommendations_v1_invalid_experiment_local**:
+- Request recommendations for non-existing experiment in local mode
+- Expected: 400 Bad Request with proper error message
+
+**test_post_recommendations_v1_without_experiment_name_local**:
+- POST request without experiment_name in local mode
+- Expected: 400 Bad Request with proper error message
 
 
 ## Prerequisites for Running the Tests
@@ -79,19 +91,21 @@ The POST endpoint generates recommendations with support for both local and remo
 
 ### Using test_autotune.sh (Recommended)
 
+The shell script automatically applies the correct Kruize configuration based on the test category.
+
 Run all recommendation tests:
 ```bash
 <KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --resultsdir=/home/results
 ```
 
-Run only sanity tests:
+Run only remote monitoring tests:
 ```bash
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=sanity --resultsdir=/home/results
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=remote --resultsdir=/home/results
 ```
 
-Run only negative tests:
+Run only local monitoring tests:
 ```bash
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=negative --resultsdir=/home/results
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=local --resultsdir=/home/results
 ```
 
 Run with custom Kruize image:
@@ -101,47 +115,63 @@ Run with custom Kruize image:
 
 Skip Kruize setup (if already deployed):
 ```bash
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=sanity --skipsetup --resultsdir=/home/results
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=recommendation_tests --testcase=remote --skipsetup --resultsdir=/home/results
+```
+
+### Using recommendation_tests.sh Directly
+
+The shell script handles configuration patching automatically:
+
+```bash
+cd <KRUIZE_REPO>/tests/scripts/recommendation_tests
+./recommendation_tests.sh <cluster_type> <testcase>
+```
+
+Examples:
+```bash
+# Run remote monitoring tests (applies remote patch: local=false)
+./recommendation_tests.sh minikube remote
+
+# Run local monitoring tests (uses default config: local=true)
+./recommendation_tests.sh minikube local
 ```
 
 ### Using pytest Directly
 
-Recommendation tests can also be run without using test_autotune.sh:
+**Important:** When running pytest directly, ensure the correct Kruize configuration is applied beforehand.
 
 1. Deploy Kruize using deploy.sh from the Kruize autotune repo
-2. Create the performance profile using the [createPerformanceProfile API](./../../../design/PerformanceProfileAPI.md)
-3. Navigate to test directory:
+2. For remote tests, apply the remote monitoring patch to set `local=false` in config
+3. For local tests, use default configuration with `local=true`
+4. Create the performance profile using the [createPerformanceProfile API](./../../../design/PerformanceProfileAPI.md)
+5. Navigate to test directory:
    ```bash
-   cd <KRUIZE_REPO>/tests/scripts/recommendation_tests
+   cd <KRUIZE_REPO>/tests/scripts/recommendation_tests/rest_apis
    ```
-4. Install Python dependencies:
+6. Install Python dependencies:
    ```bash
-   python3 -m pip install --user -r requirements.txt
+   python3 -m pip install --user -r ../requirements.txt
    ```
-5. Navigate to rest_apis directory:
-   ```bash
-   cd rest_apis
-   ```
-6. Run tests:
+7. Run tests:
 
-   Run all sanity tests:
+   Run all remote monitoring tests:
    ```bash
-   pytest -m sanity --html=<dir>/report.html --cluster_type <minikube|openshift>
+   pytest -m remote --html=<dir>/report.html --cluster_type <minikube|openshift>
    ```
 
-   Run all negative tests:
+   Run all local monitoring tests:
    ```bash
-   pytest -m negative --html=<dir>/report.html --cluster_type <minikube|openshift>
+   pytest -m local --html=<dir>/report.html --cluster_type <minikube|openshift>
    ```
 
-   Run specific test file:
+   Run all tests:
    ```bash
-   pytest --html=<dir>/report.html test_recommendation_resource_api.py --cluster_type <minikube|openshift>
+   pytest --html=<dir>/report.html --cluster_type <minikube|openshift>
    ```
 
    Run specific test:
    ```bash
-   pytest -s test_recommendation_resource_api.py::test_get_recommendations_v1_single_experiment --cluster_type <minikube|openshift>
+   pytest -s test_recommendation_resource_api.py::test_get_recommendations_v1_remote_e2e_workflow --cluster_type <minikube|openshift>
    ```
 
 **Note:** Check the report.html for results as it provides better readability with detailed test execution information.
@@ -150,9 +180,25 @@ Recommendation tests can also be run without using test_autotune.sh:
 
 ```
 tests/scripts/recommendation_tests/
-├── Recommendation_tests.md          # This file
-├── recommendation_tests.sh          # Shell script wrapper for running tests
-├── requirements.txt                 # Python dependencies
+├── Recommendation_tests.md                      # This file
+├── recommendation_tests.sh                      # Shell script wrapper for running tests
+├── requirements.txt                             # Python dependencies
 └── rest_apis/
-    └── test_recommendation_resource_api.py  # Main test file
+    ├── test_recommendation_resource_api.py      # Main test file with remote and local tests
+    └── TEST_CATEGORIZATION_README.md            # Detailed test categorization documentation
 ```
+
+## Configuration Details
+
+The shell script automatically applies the correct Kruize configuration based on test category:
+
+| Test Category | Shell Script Command                        | Patch Applied         | Config local Flag | API rm Parameter |
+|---------------|---------------------------------------------|-----------------------|-------------------|------------------|
+| remote        | `./recommendation_tests.sh minikube remote` | `kruize_remote_patch` | `false`           | `True`           |
+| local         | `./recommendation_tests.sh minikube local`  | None (default)        | `true`            | `False`          |
+
+### How Configuration Patching Works
+
+- **Remote tests**: The script applies `kruize_remote_patch` which sets `local=false` in the Kruize configuration YAML
+- **Local tests**: The script uses the default configuration with `local=true`
+

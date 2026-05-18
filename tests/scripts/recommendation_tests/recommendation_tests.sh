@@ -27,9 +27,8 @@ PERF_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Test descriptions
 declare -A recommendation_test_description
-recommendation_test_description["sanity"]="Sanity tests for recommendation API v1.0"
-recommendation_test_description["negative"]="Negative tests for recommendation API v1.0"
-recommendation_test_description["extended"]="Extended tests for recommendation API v1.0"
+recommendation_test_description["remote"]="remote monitoring tests for recommendation API v1.0"
+recommendation_test_description["local"]="local monitoring tests for recommendation API v1.0"
 
 # Tests to validate Recommendation APIs in Kruize (applicable to both local and remote monitoring)
 function recommendation_tests() {
@@ -39,7 +38,6 @@ function recommendation_tests() {
 	TESTS_PASSED=0
 	TESTS=0
 	failed=0
-	marker_options=""
 	((TOTAL_TEST_SUITES++))
 
 	python3 --version >/dev/null 2>/dev/null
@@ -48,7 +46,7 @@ function recommendation_tests() {
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
-	recommendation_tests=("sanity" "negative" "extended")
+	recommendation_tests=("remote" "local")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -58,36 +56,21 @@ function recommendation_tests() {
 	# create the result directory for given testsuite
 	echo ""
 	TEST_SUITE_DIR="${RESULTS}/recommendation_tests"
-	KRUIZE_SETUP_LOG="${TEST_SUITE_DIR}/kruize_setup.log"
-	KRUIZE_POD_LOG="${TEST_SUITE_DIR}/kruize_pod.log"
+	Kruize_SETUP_LOG="${TEST_SUITE_DIR}/Kruize_setup.log"
+	Kruize_POD_LOG="${TEST_SUITE_DIR}/Kruize_pod.log"
 
-	mkdir -p ${TEST_SUITE_DIR}
-
-	# Setup kruize
-	if [ ${skip_setup} -eq 0 ]; then
-		echo "Setting up kruize..." | tee -a ${LOG}
-		echo "${KRUIZE_SETUP_LOG}"
-
-		# Enable ROS for recommendation tests
-		echo "Enabling isROSEnabled=true and keeping local=true for recommendation tests"
-		pushd "${KRUIZE_REPO}" > /dev/null
-			kruize_ros_local_patch
-			echo "Enabling isROSEnabled=true and keeping local=true...done"
-		popd > /dev/null
-	else
-		echo "Skipping kruize setup..." | tee -a ${LOG}
-	fi
+	mkdir -p "${TEST_SUITE_DIR}"
 
 	# If testcase is not specified run all tests	
 	if [ -z "${testcase}" ]; then
-		testtorun=("${recommendation_tests[@]}")
+		test_to_run=("${recommendation_tests[@]}")
 	else
-		testtorun=${testcase}
+		test_to_run=("${testcase}")
 	fi
 	
 	# create the result directory for given testsuite
 	echo ""
-	mkdir -p ${TEST_SUITE_DIR}
+	mkdir -p "${TEST_SUITE_DIR}"
 
 	PIP_INSTALL_LOG="${TEST_SUITE_DIR}/pip_install.log"
 
@@ -101,48 +84,66 @@ function recommendation_tests() {
 	echo "******************* Executing test suite ${FUNCNAME} ****************"
 	echo ""
 	
-	for test in "${testtorun[@]}"
+	for test in "${test_to_run[@]}"
 	do
 		TEST_DIR="${TEST_SUITE_DIR}/${test}"
-		mkdir ${TEST_DIR}
+		mkdir "${TEST_DIR}"
 		LOG="${TEST_DIR}/${test}.log"
 
+    pushd "${KRUIZE_REPO}" > /dev/null || exit
+      # Setup Kruize
+	    if [ "${skip_setup}" -eq 0 ]; then
+        if [ -n "${test}" ] && [ "${test}" == "remote" ]; then
+            echo "Applying remote monitoring patch (local=false) for remote tests"
+            kruize_remote_patch
+            echo "Remote monitoring patch applied...done"
+          else
+            echo "Using default local monitoring configuration (local=true)"
+            # check for 'servicename' and 'datasource_namespace' input variables
+            kruize_local_datasource_manifest_patch
+            # increase cpu/memory resources, PV storage for openshift
+            kruize_local_patch
+        fi
+
+        setup "${Kruize_POD_LOG}" >> "${Kruize_SETUP_LOG}" 2>&1
+        echo "Setting up Kruize...Done" | tee -a "${LOG}"
+        sleep 60
+
+        if [ "${test}" == "remote" ]; then
+          # create performance profile
+          create_performance_profile "${perf_profile_json}"
+        fi
+      else
+        echo "Skipping Kruize setup..." | tee -a ${LOG}
+      fi
+		popd > /dev/null || exit
+
 		echo ""
-		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a ${LOG}
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" | tee -a "${LOG}"
 		echo "                    Running Test ${test}" | tee -a ${LOG}
-		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a ${LOG}
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a "${LOG}"
 
 		echo " " | tee -a ${LOG}
-		echo "Test description: ${recommendation_test_description[$test]}" | tee -a ${LOG}
-		echo " " | tee -a ${LOG}
-	
-		pushd "${KRUIZE_REPO}" > /dev/null
-			TEMP_KRUIZE_YAML=""
-			ORIGINAL_KRUIZE_YAML_BACKUP=""
-			if [ ${skip_setup} -eq 0 ]; then
-				setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-				echo "Setting up kruize...Done" | tee -a ${LOG}
+		echo "Test description: ${recommendation_test_description[$test]}" | tee -a "${LOG}"
+		echo " " | tee -a "${LOG}"
 
-				sleep 60
-
-				# create performance profile
-				create_performance_profile ${perf_profile_json}
-			fi
-		popd > /dev/null
-
-		pushd ${RECOMMENDATION_TEST_DIR}/rest_apis > /dev/null
+		pushd ${RECOMMENDATION_TEST_DIR}/rest_apis > /dev/null || exit
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
-			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
+			pytest -m "${test}" --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a "${LOG}"
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
-
-		popd > /dev/null
+    popd > /dev/null || exit
 
 		passed=$(grep -o -E '[0-9]+ passed' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
 		failed=$(grep -o -E 'check the boxes to filter the results.*' ${TEST_DIR}/report-${test}.html | grep -o -E '[0-9]+ failed' | cut -d' ' -f1)
 		errors=$(grep -o -E '[0-9]+ errors' ${TEST_DIR}/report-${test}.html | cut -d' ' -f1)
 
-		TESTS_PASSED=$(($TESTS_PASSED + $passed))
-		TESTS_FAILED=$(($TESTS_FAILED + $failed))
+		# Set default values if grep returns empty
+		passed=${passed:-0}
+		failed=${failed:-0}
+		errors=${errors:-0}
+
+		TESTS_PASSED=$((TESTS_PASSED + passed))
+		TESTS_FAILED=$((TESTS_FAILED + failed))
 
 		if [ "${errors}" -ne "0" ]; then
 			echo "Tests did not execute there were errors, check the logs"
@@ -153,9 +154,27 @@ function recommendation_tests() {
 			FAILED_CASES+=(${test})
 		fi
 
+		# Reverse patches applied for this test to ensure next test starts with clean state
+		if [ "${skip_setup}" -eq 0 ]; then
+			pushd "${KRUIZE_REPO}" > /dev/null || exit
+				if [ -n "${test}" ] && [ "${test}" == "remote2" ]; then
+					echo "Reversing remote monitoring patch for test ${test}"
+					kruize_remote_patch_reverse
+					echo "Remote monitoring patch reversed...done"
+				else
+					echo "Reversing local monitoring patches for test ${test}"
+					# Reverse datasource manifest patch if it was applied
+					kruize_local_datasource_manifest_patch_reverse
+					# Reverse local patch (cpu/memory/storage changes)
+					kruize_local_patch_reverse
+					echo "Local monitoring patches reversed...done"
+				fi
+			popd > /dev/null || exit
+		fi
+
 	done
 
-	TESTS=$(($TESTS_PASSED + $TESTS_FAILED))
+	TESTS=$((TESTS_PASSED + TESTS_FAILED))
 	TOTAL_TESTS_FAILED=${TESTS_FAILED}
 	TOTAL_TESTS_PASSED=${TESTS_PASSED}
 	TOTAL_TESTS=${TESTS}
@@ -173,5 +192,3 @@ function recommendation_tests() {
 	# print the testsuite summary
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES} 
 }
-
-# Made with Bob
