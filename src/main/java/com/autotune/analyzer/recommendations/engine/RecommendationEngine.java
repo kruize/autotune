@@ -1545,7 +1545,6 @@ public class RecommendationEngine implements RecommendationEngineService {
                             AnalyzerConstants.MetricName.maxDate.name(),
                             kruizeObject.getExperimentType(),
                             containerData,
-                            isROS,
                             fetchAcceleratorMetrics,
                             acceleratorFunctions,
                             acceleratorPartitionFunctions
@@ -1915,7 +1914,6 @@ public class RecommendationEngine implements RecommendationEngineService {
      * @param maxDateQuery                   maxDateQuery metric to be filtered out
      * @param experimentType                 experiment type
      * @param containerData                  container data containing layer information
-     * @param isROS                          whether ROS is enabled
      * @param fetchAcceleratorMetrics        whether accelerator metrics should be fetched
      * @param acceleratorFunctions           list of accelerator metric names
      * @param acceleratorPartitionFunctions  list of accelerator partition metric names
@@ -1926,7 +1924,6 @@ public class RecommendationEngine implements RecommendationEngineService {
             String maxDateQuery,
             AnalyzerConstants.ExperimentType experimentType,
             ContainerData containerData,
-            boolean isROS,
             boolean fetchAcceleratorMetrics,
             List<String> acceleratorFunctions,
             List<String> acceleratorPartitionFunctions) {
@@ -1970,7 +1967,8 @@ public class RecommendationEngine implements RecommendationEngineService {
                         // Check if any of the required layers are detected
                         boolean layerDetected = false;
                         for (String layer : layersRequired) {
-                            if (containerData.getLayerMap() != null &&
+                            if (containerData != null &&
+                                    containerData.getLayerMap() != null &&
                                     containerData.getLayerMap().containsKey(layer)) {
                                 layerDetected = true;
                                 break;
@@ -1979,7 +1977,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                         // Skip this metric if required layer is not detected
                         if (!layerDetected) {
                             LOGGER.debug("Skipping metric {} - required layer(s) {} not detected for container {}",
-                                    name, layersRequired, containerData.getContainer_name());
+                                    name, layersRequired, containerData != null ? containerData.getContainer_name() : "unknown");
                             return false;
                         }
                     }
