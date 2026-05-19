@@ -174,6 +174,7 @@ Here are the test scenarios:
 
 **F. JSON Parsing and Empty Body Validation**
 - Create layer with empty/whitespace-only request body
+- Create layer with malformed JSON (incomplete object/array, missing values, missing closing braces)
 - Create layer with null elements in queries or label arrays
 
 ### **List Layers API tests**

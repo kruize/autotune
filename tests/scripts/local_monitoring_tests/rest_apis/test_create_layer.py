@@ -706,6 +706,44 @@ def test_create_layer_whitespace_only_body(cluster_type):
 
 @pytest.mark.layers
 @pytest.mark.negative
+@pytest.mark.parametrize("malformed_body", [
+    pytest.param("{", id="incomplete_object"),
+    pytest.param("[", id="incomplete_array"),
+    pytest.param('{"key": }', id="missing_value"),
+    pytest.param('{"key": "value"', id="missing_closing_brace"),
+])
+def test_create_layer_malformed_json_body(cluster_type, malformed_body):
+    """
+    Test Description: Validates createLayer API rejects malformed JSON in request body.
+    This covers cases where the body is non-empty but syntactically invalid,
+    distinct from empty/whitespace bodies.
+    """
+    form_kruize_url(cluster_type)
+
+    url = get_kruize_url() + "/createLayer"
+
+    # Send malformed JSON directly to API
+    response = requests.post(url, data=malformed_body, headers={'Content-Type': 'application/json'})
+
+    # Validate HTTP status code
+    assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+
+    data = response.json()
+
+    # Validate error message
+    assert 'message' in data, "Response missing 'message' field"
+    assert 'Validation failed' in data['message'] or 'Invalid' in data['message'] or 'parse' in data['message'].lower(), \
+        f"Expected error about malformed/invalid JSON, got '{data['message']}'"
+
+    # Validate response structure
+    assert 'httpcode' in data, "Response missing 'httpcode' field"
+    assert data['httpcode'] == ERROR_STATUS_CODE, f"Expected httpcode {ERROR_STATUS_CODE}, got {data['httpcode']}"
+
+    print(f"✓ Correctly rejected malformed JSON: {malformed_body[:20]}...")
+
+
+@pytest.mark.layers
+@pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
     ("null_element_in_queries_array", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [null]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("null_and_valid_in_queries", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [null, {"datasource": "prometheus", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
