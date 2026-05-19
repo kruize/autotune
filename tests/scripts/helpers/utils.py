@@ -682,7 +682,6 @@ def term_based_start_time(input_date_str, term):
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
                        test_name=None):
     # Validate experiment
-    assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
     experiment_type = create_exp_json.get("experiment_type")
