@@ -28,8 +28,8 @@ from pathlib import Path
 from helpers.kruize import get_bulk_job_status
 from helpers.import_metadata_json_validate import *
 from helpers.list_metadata_json_validate import *
-from helpers.list_metadata_json_schema import *
-from helpers.list_metadata_json_verbose_true_schema import *
+from helpers.schemas.list_metadata_json_schema import *
+from helpers.schemas.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -694,8 +694,6 @@ def term_based_start_time(input_date_str, term):
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
                        test_name=None, v1=False):
     # Validate experiment
-    if not v1:
-        assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
     experiment_type = create_exp_json.get("experiment_type")

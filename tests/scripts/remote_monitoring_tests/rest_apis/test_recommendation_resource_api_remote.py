@@ -20,7 +20,7 @@ import pytest
 import requests
 from jinja2 import Environment, FileSystemLoader
 
-from helpers import v1_list_reco_json_local_monitoring_schema
+from helpers.schemas import v1_list_reco_json_local_monitoring_schema
 from helpers.fixtures import *
 from helpers.list_reco_json_validate import validate_list_reco_json
 

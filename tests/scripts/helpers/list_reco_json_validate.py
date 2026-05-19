@@ -17,7 +17,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.list_reco_json_schema import list_reco_json_schema
+from helpers.schemas.list_reco_json_schema import list_reco_json_schema
 
 KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "replicaset", "deploymentConfig", "statefulset", "daemonset", "replicationController", "job")
 

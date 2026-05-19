@@ -25,7 +25,7 @@ sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.short_term_list_reco_json_schema import *
+from helpers.schemas.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.list_datasources_json_validate import *
 from helpers.utils import *
@@ -35,18 +35,18 @@ from helpers.utils import apply_tfb_load
 from helpers.utils import wait_for_container_to_complete
 from helpers.utils import validate_local_monitoring_reco_json
 from helpers.list_metadata_json_validate import *
-from helpers.list_metadata_json_schema import *
-from helpers.list_metadata_json_verbose_true_schema import *
-from helpers.list_metadata_json_cluster_name_without_verbose_schema import *
+from helpers.schemas.list_metadata_json_schema import *
+from helpers.schemas.list_metadata_json_verbose_true_schema import *
+from helpers.schemas.list_metadata_json_cluster_name_without_verbose_schema import *
 from helpers.list_metric_profiles_validate import *
-from helpers.list_metric_profiles_without_parameters_schema import *
-from helpers.short_term_list_reco_json_schema import *
-from helpers.list_reco_json_local_monitoring_schema import *
+from helpers.schemas.list_metric_profiles_without_parameters_schema import *
+from helpers.schemas.short_term_list_reco_json_schema import *
+from helpers.schemas.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 from jinja2 import Environment, FileSystemLoader
 from helpers.list_metadata_profiles_validate import *
-from helpers.list_metadata_profiles_schema import *
+from helpers.schemas.list_metadata_profiles_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 metadata_profile_dir = get_metadata_profile_dir()

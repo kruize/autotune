@@ -24,7 +24,7 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
-from helpers.list_metric_profiles_without_parameters_schema import *
+from helpers.schemas.list_metric_profiles_without_parameters_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 

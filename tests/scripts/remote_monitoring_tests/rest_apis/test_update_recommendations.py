@@ -22,9 +22,9 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.list_reco_json_validate import *
 from helpers.utils import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
-from helpers.long_term_list_reco_json_schema import long_term_namespace_reco_json_schema
-from helpers.medium_term_list_reco_json_schema import medium_term_namespace_reco_json_schema
+from helpers.schemas.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
+from helpers.schemas.long_term_list_reco_json_schema import long_term_namespace_reco_json_schema
+from helpers.schemas.medium_term_list_reco_json_schema import medium_term_namespace_reco_json_schema
 
 namespace_reco_term_input = [
     ("short_term_test_latest_true", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),

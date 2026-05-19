@@ -21,20 +21,20 @@ import sys
 
 sys.path.append("../../")
 
-from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
+from helpers.schemas.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.list_reco_json_schema import *
-from helpers.medium_and_long_term_list_reco_json_schema import medium_and_long_term_list_reco_json_schema
-from helpers.medium_term_list_reco_json_schema import *
-from helpers.long_term_list_reco_json_schema import *
+from helpers.schemas.list_reco_json_schema import *
+from helpers.schemas.medium_and_long_term_list_reco_json_schema import medium_and_long_term_list_reco_json_schema
+from helpers.schemas.medium_term_list_reco_json_schema import *
+from helpers.schemas.long_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
-from helpers.short_and_long_term_list_reco_json_schema import short_and_long_term_list_reco_json_schema
-from helpers.short_and_medium_term_list_reco_json_schema import short_and_medium_term_list_reco_json_schema
-from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
+from helpers.schemas.short_and_long_term_list_reco_json_schema import short_and_long_term_list_reco_json_schema
+from helpers.schemas.short_and_medium_term_list_reco_json_schema import short_and_medium_term_list_reco_json_schema
+from helpers.schemas.short_term_list_reco_json_schema import short_term_list_reco_json_schema
 from helpers.utils import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
+from helpers.schemas.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
 
 reco_term_input = [
     ("short_term_test_latest_true", 1, list_reco_json_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),
