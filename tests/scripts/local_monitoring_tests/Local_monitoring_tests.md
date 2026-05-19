@@ -129,22 +129,24 @@ Here are the test scenarios:
   - queries (query-based detection using Prometheus/datasource queries)
   - label (label-based detection using Kubernetes labels)
 - Create layer with minimum required fields
+- Create layer with optional fields (missing/null/empty details, query without key)
 
 #### Negative Test Scenarios:
 
 **A. Mandatory Fields Missing/NULL/Empty**
-- Create layer with null metadata.name
-- Create layer with empty metadata.name
-- Create layer with null layer_name
-- Create layer with empty layer_name
+- Create layer with null/empty metadata.name
+- Create layer with null/empty layer_name
 - Create layer with null layer_presence
-- Create layer with null tunables
-- Create layer with empty tunables array
+- Create layer with null/empty tunables array
+- Query validation: invalid PromQL, missing/empty/null datasource or query
+- Label validation: missing/empty/null name or value
+- Tunable validation: null/empty/missing name, invalid/null/missing value_type
+- Numeric tunable validation: missing bounds or step
+- API structure validation: missing/invalid apiVersion, kind, metadata
 
 **B. Invalid/Negative/Duplicate Values**
-- Create layer with negative layer_level value
 - Create layer with duplicate tunable names
-- Create layer with duplicate layer name (attempting to create same layer twice)
+- Create layer with duplicate layer name (returns 409 status)
 
 **C. Wrong layer_presence Combinations**
 - Create layer with empty layer_presence (no type specified)
@@ -167,19 +169,28 @@ Here are the test scenarios:
 - Create layer with tunable where step > (upper_bound - lower_bound)
 
 **E. Categorical Tunable Validation**
-- Create layer with categorical tunable having null choices
-- Create layer with categorical tunable having empty choices array
+- Create layer with categorical tunable having null/empty choices
 - Create layer with categorical tunable having both choices and bounds (mixed configuration)
+
+**F. JSON Parsing and Empty Body Validation**
+- Create layer with empty/whitespace-only request body
+- Create layer with null elements in queries or label arrays
 
 ### **List Layers API tests**
 
 Here are the test scenarios:
 
 - List all layers without specifying any query parameters
+- List all layers when multiple layers exist
 - List specific layer by name using query parameter
-- List layers with invalid layer name (non-existing layer)
-- List layers before creating any layers
-- Validate layer response structure and field values
+- Validate layer response structure and field values against JSON schema
+- Validate comprehensive field validation for all layer parameters (apiVersion, kind, metadata, layer_presence, tunables)
+- Test case sensitivity of layer name search
+- Validate layers are returned in creation order
+- [NEGATIVE] List layers when no layers exist (returns 400 with "No layers found!")
+- [NEGATIVE] List layers with non-existent layer name
+- [NEGATIVE] List layers with invalid query parameters
+- [NEGATIVE] List layers with special characters in layer name
 
 ### **Create Experiment API tests**
 
