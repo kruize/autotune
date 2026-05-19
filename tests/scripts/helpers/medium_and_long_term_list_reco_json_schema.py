@@ -23,6 +23,7 @@ medium_and_long_term_list_reco_json_schema = {
                   "recommendations": {
                     "type": "object",
                     "properties": {
+                      "version": { "type": "string" },
                       "notifications": {
                         "type": "object",
                         "items": {
@@ -756,7 +757,7 @@ medium_and_long_term_list_reco_json_schema = {
                         "required": []
                       }
                     },
-                    "required": ["notifications", "data"]
+                    "required": ["version", "notifications", "data"]
                   }
                 },
                 "required": ["container_image_name", "container_name", "recommendations"]
