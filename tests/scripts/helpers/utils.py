@@ -868,7 +868,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
                 # validate current config
-                validate_current(current_config, metrics, experiment_type)
+                validate_current(current_config, metrics, experiment_type, v1)
 
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
                 for term in duration_terms.keys():
@@ -973,7 +973,7 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
                 terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
                 # validate current config
-                validate_current(current_config, metrics, experiment_type)
+                validate_current(current_config, metrics, experiment_type, v1)
 
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
                 for term in duration_terms.keys():
@@ -2479,26 +2479,23 @@ def validate_error_response(response, expected_status_code=400, expected_message
         return True
 
 
-def validate_current(current_config, metrics, experiment_type):
+def validate_current(current_config, metrics, experiment_type, v1=False):
     """
-    Validates current config structure:
+    Validates current config structures:
 
+    v1=False:
+    {
+        "replicas": 3,
+        "requests": {},
+        "limits": {}
+    }
+
+    v1=True:
     {
         "replicas": 3,
         "resources": {
-            "requests": {
-                "cpu": {
-                    "amount": ...,
-                    "format": "cores"
-                },
-                "memory": {
-                    "amount": ...,
-                    "format": "bytes"
-                }
-            },
-            "limits": {
-                ...
-            }
+            "requests": {},
+            "limits": {}
         }
     }
     """
@@ -2537,16 +2534,22 @@ def validate_current(current_config, metrics, experiment_type):
                 metric["results"]["aggregation_info"]["format"]
             )
 
-    # Validate replicas
-    if experiment_type == CONTAINER_EXPERIMENT_TYPE:
-        assert "replicas" in current_config, MISSING_REPLICA_OBJECT
-        assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
-        assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+        # Validate replicas
+        if experiment_type == CONTAINER_EXPERIMENT_TYPE:
+            assert "replicas" in current_config, MISSING_REPLICA_OBJECT
+            assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
+            assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+
+    # Normalize resource config
+    resources = (
+        current_config["resources"]
+        if v1
+        else current_config
+    )
 
     # Validate resources
-    assert "resources" in current_config, MISSING_RESOURCE_OBJECT
-
-    resources = current_config["resources"]
+    if v1:
+        assert "resources" in current_config, MISSING_RESOURCE_OBJECT
 
     for resource_type in ["requests", "limits"]:
         if resource_type not in resources:
