@@ -18,6 +18,7 @@ import pytest
 import json
 import sys
 import os
+import requests
 from jinja2 import Environment, FileSystemLoader
 
 sys.path.append("../../")
@@ -589,6 +590,181 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
 def test_create_layer_categorical_tunable_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
     """
     Test Description: Validates createLayer API rejects invalid categorical tunable configurations
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_layer_template.json")
+
+    content = template.render(
+        apiVersion=apiVersion,
+        kind=kind,
+        metadata_name=metadata_name,
+        layer_name=layer_name,
+        details=details,
+        layer_presence=layer_presence,
+        tunables=tunables
+    )
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            f.write(content)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        # Validate HTTP status code
+        assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+
+        # Validate error message (substring match for dynamic messages)
+        assert 'message' in data, "Response missing 'message' field"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
+
+        # Validate response structure
+        assert 'httpcode' in data, "Response missing 'httpcode' field"
+        assert data['httpcode'] == ERROR_STATUS_CODE, f"Expected httpcode {ERROR_STATUS_CODE}, got {data['httpcode']}"
+
+        print(f"✓ Correctly rejected: {test_name}")
+    finally:
+        # Cleanup temporary file
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+# =============================================================================
+# NEGATIVE TEST CASES - E. JSON Parsing and Empty Body Validation
+# =============================================================================
+# This section tests that the createLayer API properly validates request body
+# and rejects invalid JSON or empty payloads. Tests include:
+# - Empty request body (no content)
+# - Whitespace-only request body
+# - Null elements in queries array
+# - Null elements in label array
+# Expected: API returns 400 status with appropriate error messages
+
+@pytest.mark.layers
+@pytest.mark.negative
+def test_create_layer_empty_request_body(cluster_type):
+    """
+    Test Description: Validates createLayer API rejects empty request body
+    """
+    form_kruize_url(cluster_type)
+
+    url = get_kruize_url() + "/createLayer"
+
+    # Send empty body directly to API
+    response = requests.post(url, data="", headers={'Content-Type': 'application/json'})
+
+    # Validate HTTP status code
+    assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+
+    data = response.json()
+
+    # Validate error message
+    assert 'message' in data, "Response missing 'message' field"
+    assert 'Validation failed' in data['message'] or 'Invalid' in data['message'], \
+        f"Expected error about invalid JSON, got '{data['message']}'"
+
+    # Validate response structure
+    assert 'httpcode' in data, "Response missing 'httpcode' field"
+    assert data['httpcode'] == ERROR_STATUS_CODE, f"Expected httpcode {ERROR_STATUS_CODE}, got {data['httpcode']}"
+
+    print(f"✓ Correctly rejected empty request body")
+
+
+@pytest.mark.layers
+@pytest.mark.negative
+def test_create_layer_whitespace_only_body(cluster_type):
+    """
+    Test Description: Validates createLayer API rejects whitespace-only request body
+    """
+    form_kruize_url(cluster_type)
+
+    url = get_kruize_url() + "/createLayer"
+
+    # Send whitespace-only body directly to API
+    response = requests.post(url, data="   \n\t  ", headers={'Content-Type': 'application/json'})
+
+    # Validate HTTP status code
+    assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+
+    data = response.json()
+
+    # Validate error message
+    assert 'message' in data, "Response missing 'message' field"
+    assert 'Validation failed' in data['message'] or 'Invalid' in data['message'], \
+        f"Expected error about invalid JSON, got '{data['message']}'"
+
+    # Validate response structure
+    assert 'httpcode' in data, "Response missing 'httpcode' field"
+    assert data['httpcode'] == ERROR_STATUS_CODE, f"Expected httpcode {ERROR_STATUS_CODE}, got {data['httpcode']}"
+
+    print(f"✓ Correctly rejected whitespace-only request body")
+
+
+@pytest.mark.layers
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("null_element_in_queries_array", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [null]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_and_valid_in_queries", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"queries": [null, {"datasource": "prometheus", "query": "up"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+])
+def test_create_layer_null_element_in_queries_array(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
+    """
+    Test Description: Validates createLayer API rejects null elements in queries array
+    """
+    form_kruize_url(cluster_type)
+
+    tmp_json_file = tmp_path / f"create_layer_{test_name}.json"
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_layer_template.json")
+
+    content = template.render(
+        apiVersion=apiVersion,
+        kind=kind,
+        metadata_name=metadata_name,
+        layer_name=layer_name,
+        details=details,
+        layer_presence=layer_presence,
+        tunables=tunables
+    )
+
+    try:
+        with open(tmp_json_file, "w") as f:
+            f.write(content)
+
+        response = create_layer(tmp_json_file)
+        data = response.json()
+
+        # Validate HTTP status code
+        assert response.status_code == ERROR_STATUS_CODE, f"Expected status {ERROR_STATUS_CODE}, got {response.status_code}"
+
+        # Validate error message (substring match for dynamic messages)
+        assert 'message' in data, "Response missing 'message' field"
+        assert expected_error_msg in data['message'], \
+            f"Expected error message containing '{expected_error_msg}', got '{data['message']}'"
+
+        # Validate response structure
+        assert 'httpcode' in data, "Response missing 'httpcode' field"
+        assert data['httpcode'] == ERROR_STATUS_CODE, f"Expected httpcode {ERROR_STATUS_CODE}, got {data['httpcode']}"
+
+        print(f"✓ Correctly rejected: {test_name}")
+    finally:
+        # Cleanup temporary file
+        if os.path.exists(tmp_json_file):
+            os.remove(tmp_json_file)
+
+
+@pytest.mark.layers
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables", [
+    ("null_element_in_label_array", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [null]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_and_valid_in_label", "Validation failed", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", "test layer", '{"label": [null, {"name": "test", "value": "test"}]}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+])
+def test_create_layer_null_element_in_label_array(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, details, layer_presence, tunables, cluster_type, tmp_path):
+    """
+    Test Description: Validates createLayer API rejects null elements in label array
     """
     form_kruize_url(cluster_type)
 
