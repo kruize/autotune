@@ -20,7 +20,6 @@ import time
 from pathlib import Path
 
 from helpers.kruize import *
-from helpers.kruize import delete_layer_from_db
 from helpers.list_metadata_json_validate import *
 from helpers.list_reco_json_local_monitoring_schema import list_reco_json_local_monitoring_schema
 from helpers.list_reco_json_validate import validate_list_reco_json
@@ -443,7 +442,7 @@ def _generate_and_list_recommendations_for_tfb(
 
         # Delete created layers to avoid accumulated state
         for layer_name in created_layer_names:
-            delete_layer_from_db(layer_name)
+            delete_layer(layer_name)
             print(f"delete layer '{layer_name}' = done")
 
         # Remove benchmarks directory
@@ -665,7 +664,7 @@ def _generate_and_list_recommendations_for_petclinic(
 
         # Delete created layers to avoid accumulated state
         for layer_name in created_layer_names:
-            delete_layer_from_db(layer_name)
+            delete_layer(layer_name)
             print(f"delete layer '{layer_name}' = done")
 
         # Remove benchmarks directory
