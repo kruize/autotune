@@ -26,7 +26,7 @@ This directory contains a [Hyperfoil](https://hyperfoil.io/) benchmark for load-
 Install Hyperfoil if needed:
 
 ```bash
-./install_hyperfoil.sh
+./install_hyperfoil.sh install-only
 ```
 
 Edit `kruize-bulk-hyperfoil.yaml` and replace `KRUIZE_URL_PLACEHOLDER` with your Kruize API route, e.g.:
@@ -62,6 +62,12 @@ curl -s -X POST http://localhost:8090/benchmark \
      --data-binary @kruize-bulk-hyperfoil.yaml
 
 curl -s -X POST "http://localhost:8090/benchmark/kruize-bulk-api-test/start"
+```
+
+**Run with one command (install + benchmark):**
+
+```bash
+./install_hyperfoil.sh
 ```
 
 ## What the Test Does

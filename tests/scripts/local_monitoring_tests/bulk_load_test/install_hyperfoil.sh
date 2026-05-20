@@ -13,6 +13,7 @@ usage() {
     cat <<EOF
 Usage:
     $(basename "$0") [--force] [install]
+    $(basename "$0") [--force] install-only
     $(basename "$0") [--force] cli [args...]
     $(basename "$0") [--force] standalone [args...]
     $(basename "$0") [--force] run [args...]
@@ -25,7 +26,8 @@ Options:
   -h, --help                Show this help.
 
 Commands:
-    install                   Download/extract Hyperfoil only (default).
+    install                   Download/extract Hyperfoil and run the bulk test (default).
+    install-only              Download/extract Hyperfoil only.
     cli                       Launch Hyperfoil CLI.
     standalone                Launch Hyperfoil standalone controller.
     run                       Execute Hyperfoil run mode.
@@ -36,6 +38,7 @@ Environment variables:
 
 Examples:
   $(basename "$0")
+        $(basename "$0") install-only
     $(basename "$0") cli
     $(basename "$0") standalone
     $(basename "$0") run /path/to/benchmark.yaml
@@ -52,6 +55,19 @@ log() {
 fail() {
     printf 'ERROR: %s\n' "$*" >&2
     exit 1
+}
+
+run_default_bulk_test() {
+    local benchmark_file="${SCRIPT_DIR}/kruize-bulk-hyperfoil.yaml"
+
+    [[ -f "$benchmark_file" ]] || fail "Bulk benchmark file not found: ${benchmark_file}"
+
+    if grep -q "KRUIZE_URL_PLACEHOLDER" "$benchmark_file"; then
+        fail "Set a real Kruize URL in ${benchmark_file} before running the bulk test"
+    fi
+
+    log "Running bulk Hyperfoil benchmark: ${benchmark_file}"
+    exec "${TARGET_DIR}/bin/run.sh" "$benchmark_file"
 }
 
 install_hyperfoil() {
@@ -120,9 +136,13 @@ main() {
     case "$command_name" in
         install)
             log "Installed Hyperfoil ${VERSION} at ${TARGET_DIR}"
+            run_default_bulk_test
+            ;;
+        install-only)
+            log "Installed Hyperfoil ${VERSION} at ${TARGET_DIR}"
             log "Use this script to run commands, e.g.:"
             log "  $(basename "$0") --version"
-            log "  $(basename "$0") cli"
+            log "  $(basename "$0") install"
             ;;
         cli)
             exec "${TARGET_DIR}/bin/cli.sh" "$@"
