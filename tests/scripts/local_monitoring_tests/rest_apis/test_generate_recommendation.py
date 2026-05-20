@@ -263,6 +263,16 @@ def test_conditional_query_execution_with_required_layers(cluster_type):
         f"but not found in: {env_values_with_layers}"
     )
     
+    # Verify Quarkus-specific environment variables are present when Quarkus layer is detected
+    quarkus_envs_with_layers = [
+        env for env in envs_with_layers
+        if env.get("name") == QUARKUS_THREAD_POOL_CORE_THREADS
+    ]
+    assert quarkus_envs_with_layers, (
+        f"Expected {QUARKUS_THREAD_POOL_CORE_THREADS} when JVM layers (including Quarkus) are present, "
+        f"but not found in: {envs_with_layers}"
+    )
+    
     # Scenario 2: Without JVM layers - runtime recommendations should be absent
     list_reco_json_without_layers = _generate_and_list_recommendations_for_tfb(
         cluster_type,
@@ -275,7 +285,8 @@ def test_conditional_query_execution_with_required_layers(cluster_type):
         if env.get("name") in (JDK_JAVA_OPTIONS, JAVA_OPTIONS, QUARKUS_THREAD_POOL_CORE_THREADS)
     ]
     
-    # When no JVM layers are detected, runtime recommendations should be absent
+    # When JVM layers are not detected, JVM-related env vars (including Quarkus thread pool tuning)
+    # should not be present at all.
     assert not jvm_envs_without_layers, (
         f"No JVM runtime recommendations expected when required layers (hotspot/semeru) are not detected, "
         f"but found: {jvm_envs_without_layers}"

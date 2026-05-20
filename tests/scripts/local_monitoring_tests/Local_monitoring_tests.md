@@ -267,8 +267,9 @@ In addition to the pre-requisites mentioned above:
 
 **7. Conditional Query Execution with Required Layers (`test_conditional_query_execution_with_required_layers`)**
 - **NEW**: Validates runtime-specific queries with `required_layers` are conditionally executed based on detected layers
-- **Positive scenario**: With JVM layers (hotspot/quarkus) detected
-  - **Expected**: Runtime recommendations present with GC flags in `JAVA_OPTIONS`/`JDK_JAVA_OPTIONS`
+- **Positive scenario**: With JVM layers (hotspot/semeru/quarkus) detected
+  - **Expected**: Runtime recommendations present with GC flags in `JAVA_OPTIONS`/`JDK_JAVA_OPTIONS` and Quarkus thread 
+  pool tuning in `QUARKUS_THREAD_POOL_CORE_THREADS`
 - **Negative scenario**: Without JVM layers (only container layer)
   - **Expected**: Runtime recommendations absent, no JVM-specific env variables generated
 - **Validates**:
@@ -288,7 +289,9 @@ In addition to the pre-requisites mentioned above:
 - **Layer Detection**: Validates that layer detection correctly identifies runtime layers (hotspot, semeru, quarkus) and conditionally executes queries
 - **Backward Compatibility**: Ensures existing metrics without `required_layers` continue to work as before
 
-Note: The tests will skip or may not assert runtime recommendations if the workload does not expose JVM metrics or layers are not configured. Adjust workload name and namespace to match your JVM deployment.
+**Note**: The tests automatically install the required workloads (TFB for Hotspot/Quarkus, Petclinic for Semeru) as 
+prerequisites and ensure sufficient data points (at least 2) are available before generating recommendations. If 
+workload deployment or metric exposure fails, tests will fail with appropriate error messages rather than skipping validations.
 
 
 ## Prerequisites for running the tests:
