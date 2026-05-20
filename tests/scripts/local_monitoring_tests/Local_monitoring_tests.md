@@ -270,7 +270,7 @@ Note: The test will skip or may not assert runtime recommendations if the worklo
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup]
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [-o [operator image]] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup]
 ```
 
 Where values for test_autotune.sh are:
@@ -278,6 +278,7 @@ Where values for test_autotune.sh are:
 ```
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, openshift. Default - minikube
                         [ -i ] : optional. Kruize docker image to be used for testing, default - kruize/autotune_operator:test
+			[ -o ] : optional. Deploy Kruize in operator mode. Optionally specify operator image, default - quay.io/kruize/kruize-operator:<version>
 			[ -r ] : Location of benchmarks. Not required for local_monitoring_tests
 			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)
 			[ --testmodule ]: Module to be tested. Use testmodule=help, to list the modules to be tested
@@ -302,6 +303,18 @@ To run only the sanity local monitoring tests,
 
 ```
 <KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=local_monitoring_tests --testcase=sanity --resultsdir=/home/results
+```
+
+To run local monitoring tests in operator mode,
+
+```
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -o --testsuite=local_monitoring_tests --resultsdir=/home/results
+```
+
+Or with a specific operator image,
+
+```
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -o quay.io/kruize/kruize-operator:latest --testsuite=local_monitoring_tests --resultsdir=/home/results
 ```
 
 Local monitoring tests can also be run without using the test_autotune.sh. To do this, follow the below steps:

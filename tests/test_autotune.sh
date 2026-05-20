@@ -32,11 +32,13 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 resultsdir="${CURRENT_DIR}"
 
 # usage of the test script
-function usage() { 
+function usage() {
 	echo ""
-	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
+	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] [-i autotune image] [-o [operator image]] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
 	echo ""
 	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --resultsdir=/home/results"
+	echo "Example: $0 -c minikube --testsuite=local_monitoring_tests -o"
+	echo "Example: $0 -c minikube --testsuite=local_monitoring_tests -o quay.io/kruize/kruize_operator:latest"
 	echo ""
 	test_suite_usage
 	echo ""
@@ -93,7 +95,7 @@ function check_testsuite_type() {
 }
 
 # Iterate through the commandline options
-while getopts c:ti:s:-: gopts
+while getopts c:ti:os:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -120,6 +122,9 @@ do
 			cleanup_prometheus)
 				cleanup_prometheus=1
 				;;
+			operator-image=*)
+				KRUIZE_OPERATOR_IMAGE=${OPTARG#*=}
+				;;
 		esac
 		;;
 	c)
@@ -130,6 +135,19 @@ do
 		;;
 	i)
 		KRUIZE_DOCKER_IMAGE="${OPTARG}"
+		;;
+	o)
+		USE_OPERATOR=1
+		# Check if next argument exists and doesn't start with '-'
+		# If so, treat it as the operator image
+		if [ ! -z "${!OPTIND}" ] && [[ "${!OPTIND}" != -* ]]; then
+			KRUIZE_OPERATOR_IMAGE="${!OPTIND}"
+			OPTIND=$((OPTIND + 1))
+		else
+			KRUIZE_OPERATOR_IMAGE=""
+		fi
+		export USE_OPERATOR
+		export KRUIZE_OPERATOR_IMAGE
 		;;
 	s)
 		setup=1
