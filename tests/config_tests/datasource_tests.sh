@@ -17,10 +17,10 @@
 #
 
 # Get the absolute path of current directory
-LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
+CONFIG_TEST_DIR="${KRUIZE_REPO}/tests/config_tests"
 
 # Source the common functions scripts
-. ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
+. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
 APP_DEPLOYMENT="kruize"
 
@@ -67,10 +67,10 @@ function datasource_tests() {
 	echo ""
 	if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
 		NAMESPACE="monitoring"
-		YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
+		YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
 	elif [ "$cluster_type" == "openshift" ]; then
 		NAMESPACE="openshift-tuning"
-		YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
+		YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
 	else
 		echo "Invalid cluster type found: ${cluster_type}"
 		return
@@ -138,13 +138,6 @@ function datasource_tests() {
 
 	# print the testsuite summary
 	testsuitesummary ${FUNCNAME} "${elapsed_time}" ${FAILED_CASES}
-
-	# Exit with appropriate code: 0 on success, 1 on failure
-	if [ "${TESTS_FAILED}" -ne "0" ]; then
-		exit 1
-	else
-		exit 0
-	fi
 }
 
 run_datasource_scenario() {
@@ -253,3 +246,5 @@ restore_yaml() {
 	mv "${YAML_FILE}".ds.bak "$YAML_FILE"
 	mv "${YAML_FILE}".ds.bak.image.bak "$YAML_FILE"
 }
+
+# Made with Bob

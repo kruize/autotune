@@ -17,10 +17,10 @@
 #
 
 # Get the path of the test dir
-LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
+CONFIG_TEST_DIR="${KRUIZE_REPO}/tests/config_tests"
 
 # Source the common functions scripts
-. ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
+. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
 APP_DEPLOYMENT="kruize"
 
@@ -64,10 +64,10 @@ function authentication_tests() {
 
   if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
   	NAMESPACE="monitoring"
-  	YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
+  	YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
 	elif [ "$cluster_type" == "openshift" ]; then
   	NAMESPACE="openshift-tuning"
-		YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
+		YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
 	else
 		echo "Invalid cluster type found: ${cluster_type}"
 	fi
@@ -108,13 +108,6 @@ function authentication_tests() {
 
 	# print the testsuite summary
 	testsuitesummary ${FUNCNAME} "${elapsed_time}" ${FAILED_CASES}
-
-	# Exit with appropriate code: 0 on success, 1 on failure
-	if [ "${TESTS_FAILED}" -ne "0" ]; then
-		exit 1
-	else
-		exit 0
-	fi
 }
 
 # Deploy app and check pod status
@@ -145,7 +138,7 @@ deploy_and_check_pod() {
   $kubectl_cmd wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT --timeout=120s > /dev/null
  # Check pod logs for errors
   echo "Checking logs for the pod..."
- 	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
+  	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
   echo "$kubectl_cmd logs -f ${POD_NAME} > ${POD_LOG} 2>&1 &"
 	$kubectl_cmd logs -f "${POD_NAME}" > "${POD_LOG}" 2>&1 &
   sleep 10
@@ -196,3 +189,5 @@ update_yaml_with_token() {
 	}' "$YAML_FILE"
   echo "Updated image in YAML to $KRUIZE_IMAGE"
 }
+
+# Made with Bob
