@@ -617,7 +617,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
         Config config = new Config();
         // Create Request Map
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requestsMap = new HashMap<>();
         // Recommendation Item checks
         boolean isCpuRequestValid = true;
         boolean isMemoryRequestValid = true;
@@ -668,7 +668,7 @@ public class RecommendationEngine implements RecommendationEngineService {
         }
 
         // Create Limits Map
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limitsMap = new HashMap<>();
         // Recommendation Item checks (adding additional check for limits even though they are same as limits to maintain code to be flexible to add limits in future)
         boolean isCpuLimitValid = true;
         boolean isMemoryLimitValid = true;
@@ -903,7 +903,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     // Alternative - CPU REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+                    RecommendationConfigItem tempAccessedRecCPURequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPURequest) {
                         // Updating it with desired value
                         tempAccessedRecCPURequest.setAmount(currentCpuRequestValue);
@@ -943,7 +943,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     // Alternative - CPU LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+                    RecommendationConfigItem tempAccessedRecCPULimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPULimit) {
                         // Updating it with desired value
                         tempAccessedRecCPULimit.setAmount(currentCpuLimitValue);
@@ -983,7 +983,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     // Alternative - MEMORY REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+                    RecommendationConfigItem tempAccessedRecMemoryRequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryRequest) {
                         // Updating it with desired value
                         tempAccessedRecMemoryRequest.setAmount(currentMemRequestValue);
@@ -1023,7 +1023,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     // Alternative - MEMORY LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+                    RecommendationConfigItem tempAccessedRecMemoryLimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryLimit) {
                         // Updating it with desired value
                         tempAccessedRecMemoryLimit.setAmount(currentMemLimitValue);
