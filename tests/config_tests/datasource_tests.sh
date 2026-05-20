@@ -246,5 +246,3 @@ restore_yaml() {
 	mv "${YAML_FILE}".ds.bak "$YAML_FILE"
 	mv "${YAML_FILE}".ds.bak.image.bak "$YAML_FILE"
 }
-
-# Made with Bob

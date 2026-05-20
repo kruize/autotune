@@ -138,7 +138,7 @@ deploy_and_check_pod() {
   $kubectl_cmd wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT --timeout=120s > /dev/null
  # Check pod logs for errors
   echo "Checking logs for the pod..."
-  	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
+  POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
   echo "$kubectl_cmd logs -f ${POD_NAME} > ${POD_LOG} 2>&1 &"
 	$kubectl_cmd logs -f "${POD_NAME}" > "${POD_LOG}" 2>&1 &
   sleep 10
@@ -189,5 +189,3 @@ update_yaml_with_token() {
 	}' "$YAML_FILE"
   echo "Updated image in YAML to $KRUIZE_IMAGE"
 }
-
-# Made with Bob
