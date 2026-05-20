@@ -23,7 +23,6 @@ long_term_list_reco_json_schema = {
                   "recommendations": {
                     "type": "object",
                     "properties": {
-                      "version": { "type": "string" },
                       "notifications": {
                         "type": "object",
                         "items": {
@@ -466,7 +465,7 @@ long_term_list_reco_json_schema = {
                         "required": []
                       }
                     },
-                    "required": ["version", "notifications", "data"]
+                    "required": ["notifications", "data"]
                   }
                 },
                 "required": ["container_image_name", "container_name", "recommendations"]
@@ -508,9 +507,6 @@ long_term_namespace_reco_json_schema = {
                                 "recommendations": {
                                     "type": "object",
                                     "properties": {
-                                        "version": {
-                                            "type": "string"
-                                        },
                                         "notifications": {
                                             "type": "object",
                                             "items": {
@@ -2312,7 +2308,6 @@ long_term_namespace_reco_json_schema = {
                                         }
                                     },
                                     "required": [
-                                        "version",
                                         "notifications",
                                         "data"
                                     ]

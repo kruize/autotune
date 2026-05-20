@@ -24,7 +24,6 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class ContainerRecommendations {
-    private String version;
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationMap;
     @SerializedName(KruizeConstants.JSONKeys.DATA)
@@ -33,7 +32,6 @@ public class ContainerRecommendations {
     public ContainerRecommendations() {
         this.notificationMap = new HashMap<Integer, RecommendationNotification>();
         this.data = new HashMap<Timestamp, MappedRecommendationForTimestamp>();
-        this.version = KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber();
         RecommendationNotification recommendationNotification = new RecommendationNotification(
                 RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
         );
@@ -53,14 +51,6 @@ public class ContainerRecommendations {
             if (this.notificationMap.containsKey(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA))
                 this.notificationMap.remove(RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA);
         this.data = data;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public void setNotificationMap(HashMap<Integer, RecommendationNotification> notificationMap) {

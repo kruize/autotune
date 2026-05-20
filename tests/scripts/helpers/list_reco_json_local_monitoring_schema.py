@@ -23,7 +23,6 @@ list_reco_json_local_monitoring_schema = {
                                     "recommendations": {
                                         "type": "object",
                                         "properties": {
-                                            "version": { "type": "string" },
                                             "notifications": {
                                                 "type": "object",
                                                 "items": {
@@ -428,7 +427,7 @@ list_reco_json_local_monitoring_schema = {
                                                 "required": []
                                             }
                                         },
-                                        "required": ["version", "notifications", "data"]
+                                        "required": ["notifications", "data"]
                                     }
                                 },
                                 "required": ["container_image_name", "container_name", "recommendations"]
@@ -470,9 +469,6 @@ list_reco_namespace_json_local_monitoring_schema = {
                                 "recommendations": {
                                     "type": "object",
                                     "properties": {
-                                        "version": {
-                                            "type": "string"
-                                        },
                                         "notifications": {
                                             "type": "object",
                                             "items": {
@@ -1172,7 +1168,6 @@ list_reco_namespace_json_local_monitoring_schema = {
                                         }
                                     },
                                     "required": [
-                                        "version",
                                         "notifications",
                                         "data"
                                     ]
