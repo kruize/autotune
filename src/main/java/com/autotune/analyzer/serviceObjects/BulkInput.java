@@ -16,6 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -117,7 +118,7 @@ public class BulkInput {
         private List<String> namespace;
         private List<String> workload;
         private List<String> containers;
-        private Map<String, String> labels;
+        private Map<String, Object> labels = new HashMap<>();  // Initialize to avoid null
 
         // Getters and Setters
         public List<String> getNamespace() {
@@ -144,12 +145,21 @@ public class BulkInput {
             this.containers = containers;
         }
 
-        public Map<String, String> getLabels() {
+        public Map<String, Object> getLabels() {
             return labels;
         }
 
-        public void setLabels(Map<String, String> labels) {
+        public void setLabels(Map<String, Object> labels) {
             this.labels = labels;
+        }
+        
+        // Use @JsonAnySetter to capture labels with original key names (preserving dots, slashes, etc.)
+        @com.fasterxml.jackson.annotation.JsonAnySetter
+        public void setLabel(String key, Object value) {
+            // Only capture keys that aren't already handled by other setters
+            if (!"namespace".equals(key) && !"workload".equals(key) && !"containers".equals(key) && !"labels".equals(key)) {
+                this.labels.put(key, value);
+            }
         }
     }
 

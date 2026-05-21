@@ -242,6 +242,17 @@ public class DataSourceMetadataOperator {
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);
 
+        // OPTIMIZATION: Apply label filters FIRST before fetching all metadata
+        // This reduces the amount of data we need to fetch and process
+        LOGGER.info("Applying label filters first to identify matching resources...");
+        HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
+        HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
+        
+        LOGGER.info("Label filter results - Matched namespaces: {}, Matched workloads: {}",
+                    matchedNamespaces.size(),
+                    matchedWorkloads.values().stream().mapToInt(Map::size).sum());
+
+        // Now fetch full metadata (namespace/workload/container queries)
         JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
         LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
         if (!op.validateResultArray(namespacesDataResultArray)) {
@@ -272,9 +283,7 @@ public class DataSourceMetadataOperator {
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads, datasourceContainers);
 
-            HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
-            HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
-
+            // Apply the label filter results to remove non-matching resources
             dataSourceDetailsHelper.filterMetadataInfoObject(dataSourceName, dataSourceMetadataInfo, matchedNamespaces, matchedWorkloads);
 
             return getDataSourceMetadataInfo(dataSourceInfo);
@@ -345,13 +354,29 @@ public class DataSourceMetadataOperator {
             return matchedNamespaces;
         }
 
-        String namespaceQuery = queryTemplate
-                .replace("LABEL_FILTER", namespaceLabelFilter)
-                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        // Handle multiple labels with OR logic - split by comma and run separate queries
+        String[] labelFilters = namespaceLabelFilter.split(",");
+        LOGGER.info("namespaceLabelFilter has {} label(s): {}", labelFilters.length, namespaceLabelFilter);
+        
+        for (int i = 0; i < labelFilters.length; i++) {
+            String singleLabelFilter = labelFilters[i].trim();
+            String namespaceQuery = queryTemplate
+                    .replace("LABEL_FILTER", singleLabelFilter)
+                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
-        LOGGER.info("namespaceLabelFilterQuery: {}", namespaceQuery);
-        JsonArray namespaceQueryResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
-        return dataSourceDetailsHelper.getActiveNamespaces(namespaceQueryResultArray);
+            LOGGER.info("Executing namespace label filter query {} of {}: {}", i+1, labelFilters.length, namespaceQuery);
+            JsonArray namespaceQueryResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+            LOGGER.info("Query {} returned {} results", i+1, namespaceQueryResultArray != null ? namespaceQueryResultArray.size() : 0);
+            
+            HashMap<String, DataSourceNamespace> currentMatches = dataSourceDetailsHelper.getActiveNamespaces(namespaceQueryResultArray);
+            LOGGER.info("Query {} matched {} namespace(s): {}", i+1, currentMatches.size(), currentMatches.keySet());
+            
+            // Merge results (OR logic - add all matches from each label)
+            matchedNamespaces.putAll(currentMatches);
+        }
+        
+        LOGGER.info("Total matched namespaces after OR logic: {} - {}", matchedNamespaces.size(), matchedNamespaces.keySet());
+        return matchedNamespaces;
     }
 
     /**
@@ -381,17 +406,54 @@ public class DataSourceMetadataOperator {
         String queryTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, "workloadsWithPodLabelFilter");
         
         if (queryTemplate == null) {
-            LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile, skipping pod label filtering");
-            return matchedWorkloads;
+            LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile, using hardcoded query");
+            // Query with 'unless' clause to prevent deployment-managed pods from being treated as static pods
+            // This fixes the duplicate experiment issue while still supporting true static pods
+            queryTemplate = "sum by (namespace, workload, workload_type) ("
+                    + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
+                    + "* on (namespace, pod) group_left(workload, workload_type) "
+                    + "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m])"
+                    + ") or sum by (namespace, workload, workload_type) ("
+                    + "label_replace("
+                    + "label_replace("
+                    + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
+                    + "unless on (namespace, pod) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]), "
+                    + "\"workload\", \"$1\", \"pod\", \"(.*)\")"
+                    + ", \"workload_type\", \"Pod\", \"\", \"\")"
+                    + ")";
         }
 
-        String workloadQuery = queryTemplate
-                .replace("LABEL_FILTER", podLabelFilter)
-                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        // Handle multiple labels with OR logic - split by comma and run separate queries
+        String[] labelFilters = podLabelFilter.split(",");
+        LOGGER.info("podLabelFilter has {} label(s): {}", labelFilters.length, podLabelFilter);
+        
+        for (int i = 0; i < labelFilters.length; i++) {
+            String singleLabelFilter = labelFilters[i].trim();
+            String workloadQuery = queryTemplate
+                    .replace("LABEL_FILTER", singleLabelFilter)
+                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
-        LOGGER.info("podLabelFilterQuery: {}", workloadQuery);
-        JsonArray workloadQueryResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
-        return dataSourceDetailsHelper.getWorkloadInfo(workloadQueryResultArray);
+            LOGGER.info("Executing pod label filter query {} of {}: {}", i+1, labelFilters.length, workloadQuery);
+            JsonArray workloadQueryResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+            LOGGER.info("Query {} returned {} results", i+1, workloadQueryResultArray != null ? workloadQueryResultArray.size() : 0);
+            
+            HashMap<String, HashMap<String, DataSourceWorkload>> currentMatches = dataSourceDetailsHelper.getWorkloadInfo(workloadQueryResultArray);
+            int currentWorkloadCount = currentMatches.values().stream().mapToInt(Map::size).sum();
+            LOGGER.info("Query {} matched {} workload(s)", i+1, currentWorkloadCount);
+            
+            // Merge results (OR logic - add all matches from each label)
+            currentMatches.forEach((namespace, workloads) -> {
+                LOGGER.debug("Merging {} workload(s) from namespace {}: {}", workloads.size(), namespace, workloads.keySet());
+                matchedWorkloads.computeIfAbsent(namespace, k -> new HashMap<>()).putAll(workloads);
+            });
+        }
+        
+        int totalWorkloads = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
+        LOGGER.info("Total matched workloads after OR logic: {}", totalWorkloads);
+        matchedWorkloads.forEach((ns, wls) -> {
+            LOGGER.info("  Namespace {}: {} workload(s) - {}", ns, wls.size(), wls.keySet());
+        });
+        return matchedWorkloads;
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
