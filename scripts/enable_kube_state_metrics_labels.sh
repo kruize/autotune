@@ -17,7 +17,7 @@
 #!/bin/bash
 set -euo pipefail
 
-LABEL_ARG="--metric-labels-allowlist=pods=[app,com.redhat.component-name,version,component]"
+LABEL_ARG="--metric-labels-allowlist=pods=[app,com.redhat.component-name,version]"
 NAMESPACE=""
 DEPLOYMENT=""
 
@@ -74,19 +74,7 @@ jq -r '.spec.template.spec.containers[]
        | .args[]? ' | grep -c "metric-labels-allowlist=.*pods=" || true)
 
 if [ "$EXISTS" -gt 0 ]; then
-  echo " --metric-labels-allowlist already present. Updating to include all required labels..."
-  
-  # Remove old metric-labels-allowlist args and add the new one
-  kubectl -n "$NAMESPACE" get deployment "$DEPLOYMENT" -o json | \
-  jq --arg ARG "$LABEL_ARG" '
-    .spec.template.spec.containers |=
-      map(if .name=="kube-state-metrics"
-          then .args = ([.args[] | select(. | startswith("--metric-labels-allowlist=") | not)] + [$ARG])
-          else .
-          end)
-  ' | kubectl apply -f -
-
-  echo "Done."
+  echo " --metric-labels-allowlist already present. No change needed."
 else
   echo -n "Adding --metric-labels-allowlist argument..."
 
