@@ -617,7 +617,7 @@ public class RecommendationEngine implements RecommendationEngineService {
 
         Config config = new Config();
         // Create Request Map
-        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
         // Recommendation Item checks
         boolean isCpuRequestValid = true;
         boolean isMemoryRequestValid = true;
@@ -668,7 +668,7 @@ public class RecommendationEngine implements RecommendationEngineService {
         }
 
         // Create Limits Map
-        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = new HashMap<>();
         // Recommendation Item checks (adding additional check for limits even though they are same as limits to maintain code to be flexible to add limits in future)
         boolean isCpuLimitValid = true;
         boolean isMemoryLimitValid = true;

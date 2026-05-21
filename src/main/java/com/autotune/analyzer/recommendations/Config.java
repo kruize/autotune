@@ -22,23 +22,23 @@ import java.util.List;
 import java.util.Map;
 
 public class Config {
-    private Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests;
-    private Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits;
+    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
+    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
 
-    public Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> getRequests() {
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
         return requests;
     }
 
-    public void setRequests(Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests) {
+    public void setRequests(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests) {
         this.requests = requests;
     }
 
-    public Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> getLimits() {
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getLimits() {
         return limits;
     }
 
-    public void setLimits(Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits) {
+    public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
         this.limits = limits;
     }
 
