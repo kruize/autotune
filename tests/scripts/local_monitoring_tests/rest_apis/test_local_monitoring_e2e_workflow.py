@@ -58,9 +58,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml")
-
     # list all datasources
     form_kruize_url(cluster_type)
 
@@ -254,9 +251,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
-
-    # Wait for the threshold for short term recommendations
-    time.sleep(300)
 
     # generate recommendations
     json_file = open(container_exp_json_file, "r")

@@ -1064,7 +1064,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
-        validate_config_local_monitoring(current_config, v1)
+        validate_config_local_monitoring(current_config, v1, True, "container")
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
@@ -1122,7 +1122,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"], v1)
+                            validate_config_local_monitoring(engine_obj["config"], v1, False)
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj, v1)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
@@ -1156,7 +1156,7 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
         terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
-        validate_config_local_monitoring(current_config, v1)
+        validate_config_local_monitoring(current_config, v1, False)
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
@@ -1207,7 +1207,7 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"], v1)
+                            validate_config_local_monitoring(engine_obj["config"], v1, False)
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj, v1)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
@@ -1293,7 +1293,7 @@ def validate_config(reco_config, metrics, experiment_type, v1):
         assert reco_config[usage]["memory"][
                    "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
-def validate_config_local_monitoring(reco_config, v1):
+def validate_config_local_monitoring(reco_config, v1, current, exp_type="container"):
     cpu_format_type = "cores"
     memory_format_type = "bytes"
     resource_key = None
@@ -1301,6 +1301,11 @@ def validate_config_local_monitoring(reco_config, v1):
         resource_key = "resources"
 
     reco_config = reco_config[resource_key] if resource_key else reco_config
+    # Validate replicas
+    if exp_type == CONTAINER_EXPERIMENT_TYPE and current:
+        assert "replicas" in reco_config, MISSING_REPLICA_OBJECT
+        assert isinstance(reco_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(reco_config['replicas'])
+        assert reco_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % reco_config['replicas']
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:
@@ -2532,11 +2537,11 @@ def validate_current(current_config, metrics, experiment_type, v1=False):
                 metric["results"]["aggregation_info"]["format"]
             )
 
-        # Validate replicas
-        if experiment_type == CONTAINER_EXPERIMENT_TYPE:
-            assert "replicas" in current_config, MISSING_REPLICA_OBJECT
-            assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
-            assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+    # Validate replicas
+    if experiment_type == CONTAINER_EXPERIMENT_TYPE:
+        assert "replicas" in current_config, MISSING_REPLICA_OBJECT
+        assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
+        assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
 
     # Normalize resource config
     resources = (

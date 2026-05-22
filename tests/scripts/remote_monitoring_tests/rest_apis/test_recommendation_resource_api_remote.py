@@ -29,40 +29,29 @@ from helpers.utils import *
 
 
 @pytest.mark.recommendation
-def test_get_recommendations_v1_remote_e2e_workflow(cluster_type):
+def test_recommendations_v1_remote_e2e_workflow_container(cluster_type):
     """
-    Test POST /kruize/api/v1/recommendations API with new schema for container and namespace experiments
+    Test POST /kruize/api/v1/recommendations API with new schema for container experiments
     follows below steps:
-    - Create container and namespace experiments
-    - Update results for container and namespace experiments
+    - Create container experiment
+    - Update results for container experiment
     - call recommendations API and validates response structure with the new schema
     - validates the presence of replicas field
     - validates nested resources structure
     - validates Pod count metrics
     """
     input_json_file_container = "../json_files/create_exp.json"
-    input_json_file_namespace = "../json_files/create_exp_namespace.json"
     result_json_file_container = "../json_files/multiple_results_single_exp.json"
-    result_json_file_namespace = "../json_files/multiple_results_single_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file_container, rm=True)
     print("delete container exp = ", response.status_code)
-    response = delete_experiment(input_json_file_namespace, rm=True)
-    print("delete namespace exp = ", response.status_code)
 
     try:
         # Create container experiment
         response = create_experiment(input_json_file_container)
         data = response.json()
         print("container exp response = ", data['message'])
-        assert response.status_code == SUCCESS_STATUS_CODE
-        assert data['status'] == SUCCESS_STATUS
-        assert data['message'] == CREATE_EXP_SUCCESS_MSG
-        # Create namespace experiment
-        response = create_experiment(input_json_file_namespace)
-        data = response.json()
-        print("namespace exp response = ", data['message'])
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_EXP_SUCCESS_MSG
@@ -107,7 +96,39 @@ def test_get_recommendations_v1_remote_e2e_workflow(cluster_type):
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json_container[0],
                            expected_duration_in_hours, v1=True)
+    finally:
+        # Cleanup: Delete the experiment
+        response = delete_experiment(input_json_file_container, rm=True)
+        print("delete namespace exp = ", response.status_code)
 
+
+@pytest.mark.recommendation
+def test_recommendations_v1_remote_e2e_workflow_namespace(cluster_type):
+    """
+    Test POST /kruize/api/v1/recommendations API with new schema for namespace experiments
+    follows below steps:
+    - Create namespace experiment
+    - Update results for namespace experiment
+    - call recommendations API and validates response structure with the new schema
+    - validates the presence of replicas field
+    - validates nested resources structure
+    - validates Pod count metrics
+    """
+    input_json_file_namespace = "../json_files/create_exp_namespace.json"
+    result_json_file_namespace = "../json_files/multiple_results_single_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file_namespace, rm=True)
+    print("delete namespace exp = ", response.status_code)
+
+    try:
+        # Create namespace experiment
+        response = create_experiment(input_json_file_namespace)
+        data = response.json()
+        print("namespace exp response = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
         # Update results for the namespace experiment
         response = update_results(result_json_file_namespace, False)
@@ -146,17 +167,15 @@ def test_get_recommendations_v1_remote_e2e_workflow(cluster_type):
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json_namespace[0],
                            expected_duration_in_hours, v1=True)
     finally:
-        # Cleanup: Delete the experiments
-        # response = delete_experiment(input_json_file_container, rm=True)
-        # print("delete container exp = ", response.status_code)
-        # response = delete_experiment(input_json_file_namespace, rm=True)
+        # Cleanup: Delete the experiment
+        response = delete_experiment(input_json_file_namespace, rm=True)
         print("delete namespace exp = ", response.status_code)
 
 
 @pytest.mark.recommendation
-def test_get_recommendations_v1_invalid_experiment(cluster_type):
+def test_recommendations_v1_invalid_experiment(cluster_type):
     """
-    Test GET /kruize/api/v1/recommendations API with non-existing experiment
+    Test POST /kruize/api/v1/recommendations API with non-existing experiment
     Expected: 400 Bad Request with proper error message
     """
     form_kruize_url(cluster_type)
@@ -169,9 +188,9 @@ def test_get_recommendations_v1_invalid_experiment(cluster_type):
 
 
 @pytest.mark.recommendation
-def test_get_recommendations_v1_invalid_timestamp(cluster_type):
+def test_recommendations_v1_invalid_timestamp(cluster_type):
     """
-    Test GET /kruize/api/v1/recommendations API with invalid timestamp format
+    Test POST /kruize/api/v1/recommendations API with invalid timestamp format
     Expected: 400 Bad Request with proper error message
     """
     input_json_file = "../json_files/create_exp.json"
@@ -205,7 +224,7 @@ def test_get_recommendations_v1_invalid_timestamp(cluster_type):
 
 
 @pytest.mark.recommendation
-def test_post_recommendations_v1_without_experiment_name(cluster_type):
+def test_recommendations_v1_without_experiment_name(cluster_type):
     """
     Test POST /kruize/api/v1/recommendations API without experiment_name
     Expected: 400 Bad Request with proper error message
@@ -222,7 +241,7 @@ def test_post_recommendations_v1_without_experiment_name(cluster_type):
 
 
 @pytest.mark.recommendation
-def test_post_recommendations_v1_without_interval_end_time(cluster_type):
+def test_recommendations_v1_without_interval_end_time(cluster_type):
     """
     Test POST /kruize/api/v1/recommendations API without interval_end_time for remote target
     Expected: 400 Bad Request with proper error message

@@ -34,9 +34,9 @@ sys.path.append("../../")
 from helpers.utils import *
 
 @pytest.mark.recommendation
-def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
+def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     """
-    Test GET /kruize/api/v1/recommendations API with new schema for a single experiment (LOCAL MODE)
+    Test POST /kruize/api/v1/recommendations API with new schema for container experiment
     Validates:
     - Response structure with new schema
     - Presence of replicas field
@@ -44,14 +44,7 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     - Pod count metrics
     - Complete recommendations validation
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml")
-
-    input_json_file = "../json_files/create_tfb_exp.json"
-    
     form_kruize_url(cluster_type)
-    response = delete_experiment(input_json_file, rm=False)
-    print("delete exp = ", response.status_code)
 
     # Setup paths
     metric_profile_dir = get_metric_profile_dir()
@@ -139,16 +132,13 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
 
     # Generate a temporary JSON filename
     tmp_container_exp_json_file = "/tmp/create_exp_sysbench" + ".json"
-    tmp_namespace_exp_json_file = "/tmp/create_exp_default_ns" + ".json"
     print("tmp_json_file for container exp = ", tmp_container_exp_json_file)
-    print("tmp_json_file for namespace exp = ", tmp_namespace_exp_json_file)
 
     # Load the Jinja2 template
     environment = Environment(loader=FileSystemLoader("../../local_monitoring_tests/json_files/"))
     template = environment.get_template("create_exp_template.json")
 
     # Render the JSON content from the template
-
     container_exp_content = template.render(
         version="v2.0", experiment_name="monitor-sysbench", cluster_name="default",
         performance_profile="resource-optimization-local-monitoring",
@@ -160,6 +150,217 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
         threshold="0.1"
     )
 
+    # Convert rendered content to a dictionary
+    container_exp_json_content = json.loads(container_exp_content)
+    container_exp_json_content[0]["kubernetes_objects"][0].pop("namespaces")
+
+    # Write the final JSON to the temp file
+    with open(tmp_container_exp_json_file, mode="w", encoding="utf-8") as message:
+        json.dump(container_exp_json_content, message, indent=4)
+
+    # exp json file
+    container_exp_json_file = tmp_container_exp_json_file
+
+    response = delete_experiment(container_exp_json_file, rm=False)
+    print("delete sysbench container exp = ", response.status_code)
+
+    # Install default metric profile
+    if cluster_type == "minikube" or cluster_type == "kind" :
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring_norecordingrules.json'
+
+    elif cluster_type == "openshift":
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    json_file = open(metric_profile_json_file, "r")
+    input_json = json.loads(json_file.read())
+    metric_profile_name = input_json['metadata']['name']
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+    response = list_metric_profiles(name=metric_profile_name, logging=False)
+    metric_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    error_msg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+    assert error_msg == ""
+
+    # Create container experiment using the specified json
+    response = create_experiment(container_exp_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # generate recommendations
+    json_file = open(container_exp_json_file, "r")
+    input_json = json.loads(json_file.read())
+    container_exp_name = input_json[0]['experiment_name']
+
+    response = generate_recommendations_v1(container_exp_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Invoke list recommendations for the specified experiment
+    response = list_recommendations_v1(container_exp_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    list_reco_json = response.json()
+
+    # Validate the json against the json schema
+    error_msg = validate_list_reco_json(list_reco_json, v1_list_reco_json_local_monitoring_schema.v1_list_reco_json_local_monitoring_schema)
+    assert error_msg == ""
+
+    # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
+    sysbench_exp_json = read_json_data_from_file(container_exp_json_file)
+    validate_local_monitoring_reco_json(sysbench_exp_json[0], list_reco_json[0], v1=True)
+
+    response = generate_recommendations_v1(container_exp_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    list_reco_json = response.json()
+
+    # Validate the json against the json schema
+    error_msg = validate_list_reco_json(list_reco_json, v1_list_reco_json_local_monitoring_schema.v1_list_reco_namespace_json_local_monitoring_schema)
+    assert error_msg == ""
+
+    # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
+
+    # Delete container experiment
+    response = delete_experiment(container_exp_json_file, rm=False)
+    print("delete exp = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Delete Metric Profile
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Remove benchmarks directory
+    shutil.rmtree("../../recommendation_tests/rest_apis/benchmarks")
+
+
+@pytest.mark.recommendation
+def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
+    """
+    Test POST /kruize/api/v1/recommendations API with new schema for namespace experiment
+    Validates:
+    - Response structure with new schema
+    - Presence of replicas field
+    - Nested resources structure
+    - Pod count metrics
+    - Complete recommendations validation
+    """
+    form_kruize_url(cluster_type)
+
+    # Setup paths
+    metric_profile_dir = get_metric_profile_dir()
+    metadata_profile_dir = get_metadata_profile_dir()
+
+    # List all datasources
+    datasource_name = None
+    response = list_datasources(datasource_name)
+
+    list_datasource_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    error_msg = validate_list_datasources_json(list_datasource_json, list_datasources_json_schema)
+    assert error_msg == ""
+
+    # Install metadata profile
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+    response = list_metadata_profiles(name=metadata_profile_name, logging=False)
+    metadata_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    error_msg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
+    assert error_msg == ""
+
+    # Import datasource metadata
+    input_json_file = "../json_files/import_metadata.json"
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    error_msg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert error_msg == ""
+
+    # Display metadata from prometheus-1 datasource
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+
+    response = list_metadata(datasource)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    error_msg = validate_list_metadata_json(list_metadata_json, list_metadata_json_schema)
+    assert error_msg == ""
+
+    # Display metadata for default namespace
+    # Currently only default cluster is supported by Kruize
+    cluster_name = "default"
+
+    response = list_metadata(datasource=datasource, cluster_name=cluster_name, verbose="true")
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    error_msg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
+    assert error_msg == ""
+
+    # Generate a temporary JSON filename
+    tmp_namespace_exp_json_file = "/tmp/create_exp_default_ns" + ".json"
+    print("tmp_json_file for namespace exp = ", tmp_namespace_exp_json_file)
+
+    # Load the Jinja2 template
+    environment = Environment(loader=FileSystemLoader("../../local_monitoring_tests/json_files/"))
+    template = environment.get_template("create_exp_template.json")
+
+    # Render the JSON content from the template
     namespace_exp_content = template.render(
         version="v2.0", experiment_name="monitor-ns", cluster_name="default",
         performance_profile="resource-optimization-local-monitoring",
@@ -170,10 +371,6 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     )
 
     # Convert rendered content to a dictionary
-    container_exp_json_content = json.loads(container_exp_content)
-    container_exp_json_content[0]["kubernetes_objects"][0].pop("namespaces")
-
-    # Convert rendered content to a dictionary
     namespace_exp_json_content = json.loads(namespace_exp_content)
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("type")
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("name")
@@ -181,18 +378,11 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("containers")
 
     # Write the final JSON to the temp file
-    with open(tmp_container_exp_json_file, mode="w", encoding="utf-8") as message:
-        json.dump(container_exp_json_content, message, indent=4)
-
     with open(tmp_namespace_exp_json_file, mode="w", encoding="utf-8") as message:
         json.dump(namespace_exp_json_content, message, indent=4)
 
     # exp json file
-    container_exp_json_file = tmp_container_exp_json_file
     namespace_exp_json_file = tmp_namespace_exp_json_file
-
-    response = delete_experiment(container_exp_json_file, rm=False)
-    print("delete sysbench container exp = ", response.status_code)
 
     response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
@@ -230,16 +420,6 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     error_msg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
     assert error_msg == ""
 
-    # Create container experiments using the specified json
-    response = create_experiment(container_exp_json_file)
-
-    data = response.json()
-    print(data['message'])
-
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_EXP_SUCCESS_MSG
-
     # create namespace experiment
     response = create_experiment(namespace_exp_json_file)
 
@@ -250,37 +430,10 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the threshold for short term recommendations
-    time.sleep(300)
-
     # generate recommendations
-    json_file = open(container_exp_json_file, "r")
-    input_json = json.loads(json_file.read())
-    container_exp_name = input_json[0]['experiment_name']
-
     json_file = open(namespace_exp_json_file, "r")
     input_json = json.loads(json_file.read())
     namespace_exp_name = input_json[0]['experiment_name']
-
-    response = generate_recommendations_v1(container_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
-
-    # Invoke list recommendations for the specified experiment
-    response = list_recommendations_v1(container_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
-    list_reco_json = response.json()
-
-    # Validate the json against the json schema
-    error_msg = validate_list_reco_json(list_reco_json, v1_list_reco_json_local_monitoring_schema.v1_list_reco_json_local_monitoring_schema)
-    assert error_msg == ""
-
-    # Validate the json values
-    validate_local_monitoring_recommendation_data_present(list_reco_json)
-    sysbench_exp_json = read_json_data_from_file(container_exp_json_file)
-    validate_local_monitoring_reco_json(sysbench_exp_json[0], list_reco_json[0], v1=True)
-
-    response = generate_recommendations_v1(container_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
 
     response = generate_recommendations_v1(namespace_exp_name)
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -298,10 +451,6 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
     validate_local_monitoring_recommendation_data_present(list_reco_json)
     namespace_exp_json = read_json_data_from_file(namespace_exp_json_file)
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0], v1=True)
-    # Delete sysbench container experiment
-    response = delete_experiment(container_exp_json_file, rm=False)
-    print("delete exp = ", response.status_code)
-    assert response.status_code == SUCCESS_STATUS_CODE
 
     # Delete namespace experiment
     response = delete_experiment(namespace_exp_json_file, rm=False)
@@ -318,9 +467,9 @@ def test_get_recommendations_v1_e2e_workflow_local(cluster_type):
 
 
 @pytest.mark.recommendation
-def test_get_recommendations_v1_invalid_experiment_local(cluster_type):
+def test_recommendations_v1_invalid_experiment_local(cluster_type):
     """
-    Test GET /kruize/api/v1/recommendations API with non-existing experiment (LOCAL MODE)
+    Test POST /kruize/api/v1/recommendations API with non-existing experiment (LOCAL MODE)
     Expected: 400 Bad Request with proper error message
     """
     form_kruize_url(cluster_type)
@@ -333,7 +482,7 @@ def test_get_recommendations_v1_invalid_experiment_local(cluster_type):
 
 
 @pytest.mark.recommendation
-def test_post_recommendations_v1_without_experiment_name_local(cluster_type):
+def test_recommendations_v1_without_experiment_name_local(cluster_type):
     """
     Test POST /kruize/api/v1/recommendations API without experiment_name
     Expected: 400 Bad Request with proper error message

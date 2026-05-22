@@ -58,6 +58,27 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
+	#Install benchmarks
+	if [ ${skip_benchmark_setup} -eq 0 ]; then
+    APP_NAMESPACE="default"
+    if [ ! -d "benchmarks" ]; then
+      echo -n "🔄 Pulling required repositories... "
+      clone_repos benchmarks
+    fi
+    bench="tfb"
+    bench2="petclinic"
+    echo -n "🔄 Installing the required benchmarks..."
+    # Clean up any existing load job so the new one can start fresh
+    echo "Cleaning up any old load jobs..." >> "${LOG}" 2>&1
+    kubectl delete job petclinic-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+    kubectl delete job tfb-qrh-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+
+    benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}"
+    benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}"
+    echo "✅ Completed!"
+    # sleep for 30 mins for data to be available for  recommendations
+    sleep 1800
+  fi
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		pushd "${KRUIZE_REPO}" > /dev/null
@@ -70,7 +91,7 @@ function local_monitoring_tests() {
 			echo "Setting up kruize..." | tee -a ${LOG}
 			echo "${KRUIZE_SETUP_LOG}"
 			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-				echo "Setting up kruize...Done" | tee -a ${LOG}
+      echo "Setting up kruize...Done" | tee -a ${LOG}
 
 			sleep 60
 		popd > /dev/null

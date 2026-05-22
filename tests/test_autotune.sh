@@ -117,6 +117,9 @@ do
 			skipsetup)
 				skip_setup=1
 				;;
+			skipbenchmark)
+				skip_benchmark_setup=1
+				;;
 			cleanup_prometheus)
 				cleanup_prometheus=1
 				;;

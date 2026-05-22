@@ -278,9 +278,6 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the threshold for short term recommendations
-    time.sleep(300)
-
     # generate recommendations
     json_file = open(ns1_exp_json_file, "r")
     input_json = json.loads(json_file.read())

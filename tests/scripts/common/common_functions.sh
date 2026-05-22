@@ -41,6 +41,7 @@ total_time=0
 matched=0
 setup=1
 skip_setup=0
+skip_benchmark_setup=0
 
 cleanup_prometheus=0
 
