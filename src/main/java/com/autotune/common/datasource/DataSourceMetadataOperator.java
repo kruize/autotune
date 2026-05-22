@@ -15,19 +15,6 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
-import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
@@ -38,7 +25,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
+import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
+import com.autotune.utils.GenericRestApiClient;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
@@ -406,21 +411,24 @@ public class DataSourceMetadataOperator {
         String queryTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, "workloadsWithPodLabelFilter");
         
         if (queryTemplate == null) {
-            LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile, using hardcoded query");
-            // Query with 'unless' clause to prevent deployment-managed pods from being treated as static pods
-            // This fixes the duplicate experiment issue while still supporting true static pods
-            queryTemplate = "sum by (namespace, workload, workload_type) ("
-                    + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
-                    + "* on (namespace, pod) group_left(workload, workload_type) "
-                    + "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m])"
-                    + ") or sum by (namespace, workload, workload_type) ("
-                    + "label_replace("
-                    + "label_replace("
-                    + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
-                    + "unless on (namespace, pod) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]), "
-                    + "\"workload\", \"$1\", \"pod\", \"(.*)\")"
-                    + ", \"workload_type\", \"Pod\", \"\", \"\")"
-                    + ")";
+            LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile");
+            // Commented out hardcoded query - now using query from metadata profile only
+            // If query is not found in profile, the filter will be skipped
+            return matchedWorkloads;
+            
+            // ORIGINAL HARDCODED QUERY (commented out):
+            // queryTemplate = "sum by (namespace, workload, workload_type) ("
+            //         + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
+            //         + "* on (namespace, pod) group_left(workload, workload_type) "
+            //         + "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m])"
+            //         + ") or sum by (namespace, workload, workload_type) ("
+            //         + "label_replace("
+            //         + "label_replace("
+            //         + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
+            //         + "unless on (namespace, pod) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]), "
+            //         + "\"workload\", \"$1\", \"pod\", \"(.*)\")"
+            //         + ", \"workload_type\", \"Pod\", \"\", \"\")"
+            //         + ")";
         }
 
         // Handle multiple labels with OR logic - split by comma and run separate queries

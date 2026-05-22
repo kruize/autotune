@@ -60,11 +60,11 @@
       "name": "workloadsWithPodLabelFilter",
       "datasource": "prometheus",
       "value_type": "double",
-      "kubernetes_object": "workload",
+      "kubernetes_object": "container",
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m])) or sum by (namespace, workload, workload_type) (label_replace(label_replace(max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) unless on (namespace, pod) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]), \"workload\", \"$1\", \"pod\", \"(.*)\"), \"workload_type\", \"Pod\", \"\", \"\"))"
         }
       ]
     }
