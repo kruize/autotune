@@ -1,5 +1,11 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -7,11 +13,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Utility class for handling DataSourceMetadataInfo and related metadata.
@@ -550,18 +551,22 @@ public class DataSourceMetadataHelper {
 
     public String getQueryFromProfile(MetadataProfile metadataProfile, String metricName) {
         List<Metric> metrics = metadataProfile.getQueryVariables();
-        LOGGER.debug("Looking for metric '{}' in profile with {} metrics", metricName, metrics != null ? metrics.size() : 0);
+        LOGGER.info("Looking for metric '{}' in profile with {} metrics", metricName, metrics != null ? metrics.size() : 0);
         
         if (metrics == null || metrics.isEmpty()) {
             LOGGER.warn("No metrics found in metadata profile");
             return null;
         }
         
+        // Log all available metric names for debugging
+        LOGGER.info("Available metrics in profile: {}",
+            metrics.stream().map(Metric::getName).collect(java.util.stream.Collectors.joining(", ")));
+        
         for (Metric metric : metrics) {
             String name = metric.getName();
             LOGGER.debug("Checking metric: {}", name);
             if (name.contains(metricName)) {
-                LOGGER.debug("Found matching metric: {}", name);
+                LOGGER.info("Found matching metric: {}", name);
                 if (metric.getAggregationFunctionsMap() == null) {
                     LOGGER.warn("Metric '{}' has null aggregation functions map", name);
                     return null;
@@ -572,11 +577,12 @@ public class DataSourceMetadataHelper {
                     return null;
                 }
                 String query = metric.getAggregationFunctionsMap().get(KruizeConstants.JSONKeys.SUM).getQuery();
-                LOGGER.debug("Retrieved query for metric '{}': {}", name, query);
+                LOGGER.info("Retrieved query for metric '{}': {}", name, query);
                 return query;
             }
         }
-        LOGGER.warn("Metric '{}' not found in profile", metricName);
+        LOGGER.warn("Metric '{}' not found in profile. Available metrics: {}",
+            metricName, metrics.stream().map(Metric::getName).collect(java.util.stream.Collectors.joining(", ")));
         return null;
     }
 }
