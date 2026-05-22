@@ -6800,10 +6800,10 @@ The response will contain a array of JSON object with the recommendations for th
 
 ### Recommendations API
 
-**Note: This API is common for both Local and Remote Monitoring use case.** <br>
-**Note: This API will replace the existing updateRecommendations and generateRecommendations API as a single endpoint** <br>
-Generates the recommendation for a specific experiment based on provided parameters similar to updateRecommendations and generateRecommendations API.
-This can be called based on the mode which user selects in the config.
+**Note: This API is common for both Local and Remote Monitoring use cases.** <br>
+**Note: This API will replace the existing updateRecommendations and generateRecommendations APIs as a single endpoint** <br>
+This API generates recommendations for a specific experiment based on the provided parameters, similar to the `updateRecommendations` and `generateRecommendations` APIs.
+It can be called based on the mode that the user selects in the config.
 
 **Request Parameters**
 
@@ -6813,7 +6813,7 @@ This can be called based on the mode which user selects in the config.
 | interval_end_time   | string | mandatory/optional | The end time of the interval in the format `yyyy-MM-ddTHH:mm:sssZ`. This should be the date on which recommendation needs to be generated. **Mandatory for remote mode** |
 | interval_start_time | string | optional           | The start time of the interval in the format `yyyy-MM-ddTHH:mm:sssZ`.                                                                                                    |
 
-The recommendation API requires only one mandatory field i.e. `experiment_name` in case of local mode and both `experiment_name` and `interval_end_time` in case of remote.
+The recommendation API requires only one mandatory field, i.e., `experiment_name`, in local mode, and both `experiment_name` and `interval_end_time` in remote mode.
 Similarly, `interval_start_time` will be calculated based on `interval_end_time`, if not provided. By utilizing
 these parameters, the API generates recommendations based on short-term, medium-term, and long-term factors. For
 instance, if the long-term setting is configured for `15 days` and the interval_end_time is set to `Jan 15 2023 00:00:
@@ -6838,7 +6838,7 @@ success status code : 201
 
 **Response**
 
-The response will contain a array of JSON object with the recommendations for the specified experiment.
+The response will contain an array of JSON objects with the recommendations for the specified experiment.
 
 <details>
 <summary><b>Example Response Body</b></summary>
