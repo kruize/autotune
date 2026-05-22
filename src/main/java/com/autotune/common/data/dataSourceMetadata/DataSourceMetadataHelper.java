@@ -1,11 +1,5 @@
 package com.autotune.common.data.dataSourceMetadata;
 
-import java.util.HashMap;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -13,6 +7,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Utility class for handling DataSourceMetadataInfo and related metadata.
