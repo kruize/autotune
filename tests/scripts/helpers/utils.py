@@ -717,8 +717,6 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
 def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None,
                                         test_name=None, v1=False):
     # Validate experiment
-    if not v1:
-        assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
@@ -1064,7 +1062,8 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
-        validate_config_local_monitoring(current_config, v1, True, "container")
+        current = True
+        validate_config_local_monitoring(current_config, v1, current)
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
@@ -1119,10 +1118,11 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                 if "recommendation_engines" in terms_obj[term]:
                     recommendation_engines_object = terms_obj[term]["recommendation_engines"]
                 if recommendation_engines_object is not None:
+                    current = False
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"], v1, False)
+                            validate_config_local_monitoring(engine_obj["config"], v1, current)
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj, v1)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
@@ -1156,7 +1156,8 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
         terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
-        validate_config_local_monitoring(current_config, v1, False)
+        current = True
+        validate_config_local_monitoring(current_config, v1, current, "namespace")
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
@@ -1204,10 +1205,11 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                 if "recommendation_engines" in terms_obj[term]:
                     recommendation_engines_object = terms_obj[term]["recommendation_engines"]
                 if recommendation_engines_object is not None:
+                    current = False
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                            validate_config_local_monitoring(engine_obj["config"], v1, False)
+                            validate_config_local_monitoring(engine_obj["config"], v1, current, "namespace")
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj, v1)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)

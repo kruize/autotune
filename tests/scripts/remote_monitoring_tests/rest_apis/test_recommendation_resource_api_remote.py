@@ -110,9 +110,7 @@ def test_recommendations_v1_remote_e2e_workflow_namespace(cluster_type):
     - Create namespace experiment
     - Update results for namespace experiment
     - call recommendations API and validates response structure with the new schema
-    - validates the presence of replicas field
     - validates nested resources structure
-    - validates Pod count metrics
     """
     input_json_file_namespace = "../json_files/create_exp_namespace.json"
     result_json_file_namespace = "../json_files/multiple_results_single_exp_namespace.json"

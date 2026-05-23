@@ -58,27 +58,41 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-	#Install benchmarks
+	# Install benchmarks
 	if [ ${skip_benchmark_setup} -eq 0 ]; then
-    APP_NAMESPACE="default"
-    if [ ! -d "benchmarks" ]; then
-      echo -n "🔄 Pulling required repositories... "
-      clone_repos benchmarks
-    fi
-    bench="tfb"
-    bench2="petclinic"
-    echo -n "🔄 Installing the required benchmarks..."
-    # Clean up any existing load job so the new one can start fresh
-    echo "Cleaning up any old load jobs..." >> "${LOG}" 2>&1
-    kubectl delete job petclinic-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
-    kubectl delete job tfb-qrh-load-generator -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
-
-    benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}"
-    benchmarks_install ${APP_NAMESPACE} ${bench2} "kruize-demos" >> "${LOG}"
-    echo "✅ Completed!"
-    # sleep for 30 mins for data to be available for  recommendations
-    sleep 1800
-  fi
+		APP_NAMESPACE="default"
+		BENCHMARKS=("tfb" "petclinic" "sysbench")
+		LOAD_JOBS=("petclinic-load-generator" "tfb-qrh-load-generator")
+		
+		# Clone benchmarks repository if not present
+		if [ ! -d "benchmarks" ]; then
+			echo -n "🔄 Pulling required repositories... "
+			clone_repos benchmarks
+			echo "✅ Done!"
+		fi
+		
+		# Clean up any existing load jobs
+		echo -n "🔄 Cleaning up old load jobs... "
+		for job in "${LOAD_JOBS[@]}"; do
+			kubectl delete job ${job} -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
+		done
+		echo "✅ Done!"
+		
+		# Install benchmarks in parallel for faster setup
+		echo -n "🔄 Installing benchmarks (${BENCHMARKS[*]})... "
+		for bench in "${BENCHMARKS[@]}"; do
+			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}" 2>&1 &
+		done
+		
+		# Wait for all background jobs to complete
+		wait
+		echo "✅ Completed!"
+		
+		# Wait for data to be available for recommendations (30 mins)
+		echo "⏳ Waiting 30 minutes for metrics data collection..."
+		sleep 1800
+		echo "✅ Data collection period complete!"
+	fi
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		pushd "${KRUIZE_REPO}" > /dev/null

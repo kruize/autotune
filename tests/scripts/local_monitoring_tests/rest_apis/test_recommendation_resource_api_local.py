@@ -251,9 +251,6 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     print("delete metric profile = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
-    # Remove benchmarks directory
-    shutil.rmtree("../../recommendation_tests/rest_apis/benchmarks")
-
 
 @pytest.mark.recommendation
 def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
@@ -261,9 +258,7 @@ def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
     Test POST /kruize/api/v1/recommendations API with new schema for namespace experiment
     Validates:
     - Response structure with new schema
-    - Presence of replicas field
     - Nested resources structure
-    - Pod count metrics
     - Complete recommendations validation
     """
     form_kruize_url(cluster_type)
@@ -461,9 +456,6 @@ def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
-
-    # Remove benchmarks directory
-    shutil.rmtree("../../recommendation_tests/rest_apis/benchmarks")
 
 
 @pytest.mark.recommendation
