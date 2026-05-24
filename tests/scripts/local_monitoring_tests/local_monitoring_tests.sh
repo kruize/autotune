@@ -19,6 +19,9 @@
 
 
 # Get the absolute path of current directory
+# Use BASH_SOURCE to get the correct path when script is sourced
+CURRENT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+KRUIZE_REPO="${CURRENT_DIR}/../../.."
 LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
 METRIC_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
@@ -55,6 +58,7 @@ function local_monitoring_tests() {
 	TEST_SUITE_DIR="${RESULTS}/local_monitoring_tests"
 	KRUIZE_SETUP_LOG="${TEST_SUITE_DIR}/kruize_setup.log"
 	KRUIZE_POD_LOG="${TEST_SUITE_DIR}/kruize_pod.log"
+	LOG="${TEST_SUITE_DIR}/benchmark_setup.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
 
@@ -78,20 +82,19 @@ function local_monitoring_tests() {
 		done
 		echo "✅ Done!"
 		
-		# Install benchmarks in parallel for faster setup
-		echo -n "🔄 Installing benchmarks (${BENCHMARKS[*]})... "
+		# Install benchmarks
+		echo "Installing benchmarks (${BENCHMARKS[*]})..."
 		for bench in "${BENCHMARKS[@]}"; do
-			benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}" 2>&1 &
+			echo -n "  - Installing ${bench}... "
+			# Use kruize-demos for tfb and petclinic, default for sysbench
+			if [ "${bench}" == "sysbench" ]; then
+				benchmarks_install ${APP_NAMESPACE} ${bench} "default_manifests" >> "${LOG}" 2>&1
+			else
+				benchmarks_install ${APP_NAMESPACE} ${bench} "kruize-demos" >> "${LOG}" 2>&1
+			fi
 		done
-		
-		# Wait for all background jobs to complete
-		wait
-		echo "✅ Completed!"
-		
-		# Wait for data to be available for recommendations (30 mins)
-		echo "⏳ Waiting 30 minutes for metrics data collection..."
-		sleep 1800
-		echo "✅ Data collection period complete!"
+		echo "All benchmarks installed!"
+
 	fi
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
@@ -113,7 +116,10 @@ function local_monitoring_tests() {
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
-
+		# Wait for data to be available for recommendations (30 mins)
+		echo "⏳ Waiting approx 30 minutes for metrics data collection..."
+		sleep 1700
+		echo "Data collection period complete!"
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
 		testtorun=("${local_monitoring_tests[@]}")
@@ -212,4 +218,12 @@ function local_monitoring_tests() {
 
 	# print the testsuite summary
 	testsuitesummary ${FUNCNAME} ${elapsed_time} ${FAILED_CASES}
+	
+	# Cleanup benchmarks directory
+	if [ -d "benchmarks" ]; then
+		echo ""
+		echo "🔄 Cleaning up benchmarks directory..."
+		rm -rf benchmarks
+		echo "✅ Benchmarks directory removed"
+	fi
 }

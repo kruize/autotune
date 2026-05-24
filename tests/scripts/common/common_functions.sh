@@ -1051,12 +1051,16 @@ function benchmarks_install() {
         check_err "ERROR: spring petclinic failed to start, exiting"
 			popd >/dev/null
     elif [ ${BENCHMARK} == "sysbench" ]; then
-			echo "Installing sysbench benchmark into cluster"
-			pushd sysbench >/dev/null
-        kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
-        check_err "ERROR: spring petclinic failed to start, exiting"
-			popd >/dev/null
-		fi
+   echo "Installing sysbench benchmark into cluster"
+   pushd sysbench >/dev/null
+        if [ "${MANIFESTS}" != "default_manifests" ]; then
+          kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        else
+          kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
+        fi
+        check_err "ERROR: sysbench failed to start, exiting"
+   popd >/dev/null
+  fi
   popd >/dev/null
 	echo "#######################################"
 	echo
