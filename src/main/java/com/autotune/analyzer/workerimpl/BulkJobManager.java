@@ -15,39 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
-import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
-import com.autotune.analyzer.adapters.RecommendationItemAdapter;
-import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
-import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
-import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.datasource.DataSourceManager;
-import com.autotune.common.k8sObjects.TrialSettings;
-import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.dao.ExperimentDAOImpl;
-import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import io.micrometer.core.instrument.Timer;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -58,7 +25,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,11 +42,69 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.http.conn.ConnectTimeoutException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
+import com.autotune.analyzer.serviceObjects.BulkInput;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import static com.autotune.analyzer.services.BulkService.filterJson;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
+import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
+import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.common.k8sObjects.TrialSettings;
+import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.operator.KruizeDeploymentInfo;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.operator.KruizeDeploymentInfo.job_filter_to_db;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
+import com.autotune.utils.GenericRestApiClient;
+import com.autotune.utils.KruizeConstants;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.COMPLETED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.CREATE_EXPERIMENT_CONFIG_BEAN;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.END_TIME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.FAILED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+import com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_CONNECT_TIMEOUT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_DOWN_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_GATEWAY_TIMEOUT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_NOT_REG_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.EXPERIMENT_FAILED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.LIMIT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.METADATA_PROFILE_NOT_FOUND;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.NOTHING_INFO;
+import com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.START_TIME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.STEPS;
+import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import io.micrometer.core.instrument.Timer;
 
 
 /**
@@ -157,6 +191,9 @@ public class BulkJobManager implements Runnable {
                     labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
                     includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude());
                     excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude());
+                    
+                    LOGGER.info("Filter configuration for job {}: includeResourcesMap={}, excludeResourcesMap={}",
+                               jobID, includeResourcesMap, excludeResourcesMap);
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -594,13 +631,26 @@ public class BulkJobManager implements Runnable {
     private Map<String, String> buildResourceFilters(BulkInput.Filter filter) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
-            resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
-                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "");
-            resourceFilters.put("workloadRegex", filter.getWorkload() != null ?
-                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
-            resourceFilters.put("containerRegex", filter.getContainers() != null ?
-                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
-            resourceFilters.putAll(buildLabelFilters(filter.getLabels()));
+            String namespaceRegex = filter.getNamespace() != null ?
+                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            String workloadRegex = filter.getWorkload() != null ?
+                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            String containerRegex = filter.getContainers() != null ?
+                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            
+            resourceFilters.put("namespaceRegex", namespaceRegex);
+            resourceFilters.put("workloadRegex", workloadRegex);
+            resourceFilters.put("containerRegex", containerRegex);
+            
+            LOGGER.debug("Built resource regex filters - namespace: '{}', workload: '{}', container: '{}'",
+                        namespaceRegex, workloadRegex, containerRegex);
+            
+            Map<String, String> labelFilters = buildLabelFilters(filter.getLabels());
+            resourceFilters.putAll(labelFilters);
+            
+            LOGGER.debug("Combined resource filters: {}", resourceFilters);
+        } else {
+            LOGGER.debug("No filter provided, returning empty resource filters");
         }
         return resourceFilters;
     }
@@ -643,16 +693,19 @@ public class BulkJobManager implements Runnable {
     private Map<String, String> buildLabelFilters(Map<String, Object> labels) {
         Map<String, String> labelFilters = new HashMap<>();
         if (labels == null || labels.isEmpty()) {
+            LOGGER.debug("No labels provided for filtering");
             return labelFilters;
         }
 
+        LOGGER.info("Building label filters from {} label(s)", labels.size());
+        
         // For multiple labels, we need OR logic (match if ANY label matches)
         // Build separate queries for each label and combine with 'or' operator
         List<String> podLabelQueries = new ArrayList<>();
         List<String> namespaceLabelQueries = new ArrayList<>();
 
         labels.forEach((key, value) -> {
-            LOGGER.info("Processing label key: '{}' (original)", key);
+            LOGGER.info("Processing label key: '{}' (original), value: '{}'", key, value);
             
             // kube-state-metrics normalizes label names by replacing special chars with underscores
             // e.g., "pod-template-hash" becomes "label_pod_template_hash"
@@ -682,13 +735,18 @@ public class BulkJobManager implements Runnable {
 
         // Join multiple label conditions with comma (will be used in OR queries)
         if (!podLabelQueries.isEmpty()) {
-            labelFilters.put("podLabelFilter", String.join(",", podLabelQueries));
+            String podFilter = String.join(",", podLabelQueries);
+            labelFilters.put("podLabelFilter", podFilter);
+            LOGGER.info("Built podLabelFilter with {} condition(s): {}", podLabelQueries.size(), podFilter);
         }
 
         if (!namespaceLabelQueries.isEmpty()) {
-            labelFilters.put("namespaceLabelFilter", String.join(",", namespaceLabelQueries));
+            String namespaceFilter = String.join(",", namespaceLabelQueries);
+            labelFilters.put("namespaceLabelFilter", namespaceFilter);
+            LOGGER.info("Built namespaceLabelFilter with {} condition(s): {}", namespaceLabelQueries.size(), namespaceFilter);
         }
 
+        LOGGER.info("Final label filters: {}", labelFilters);
         return labelFilters;
     }
 

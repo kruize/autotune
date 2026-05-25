@@ -1,5 +1,11 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -7,11 +13,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Utility class for handling DataSourceMetadataInfo and related metadata.
@@ -525,19 +526,27 @@ public class DataSourceMetadataHelper {
                 HashMap<String, DataSourceWorkload> namespaceMatchedWorkloads =
                         hasWorkloadMatches ? matchedWorkloads.get(namespaceName) : null;
 
+                // If workload filter is active, always filter workloads regardless of namespace match
+                if (hasWorkloadMatches) {
+                    if (namespace.getWorkloads() != null) {
+                        if (namespaceMatchedWorkloads != null && !namespaceMatchedWorkloads.isEmpty()) {
+                            // Filter to keep only matched workloads
+                            namespace.getWorkloads().entrySet().removeIf(workloadEntry ->
+                                    !namespaceMatchedWorkloads.containsKey(workloadEntry.getKey()));
+                        } else {
+                            // No workload matches in this namespace - remove all workloads
+                            namespace.getWorkloads().clear();
+                        }
+                    }
+                    // Keep namespace only if it has workloads after filtering OR if it matched namespace filter
+                    boolean hasWorkloadsLeft = namespace.getWorkloads() != null && !namespace.getWorkloads().isEmpty();
+                    return !hasWorkloadsLeft && !namespaceMatched;
+                }
+
+                // No workload filter - use namespace filter result
                 // If namespace matched by namespace filter, keep it
                 if (namespaceMatched) {
                     return false;
-                }
-
-                // If workload filter has matches for this namespace, filter workloads and keep namespace
-                if (namespaceMatchedWorkloads != null && !namespaceMatchedWorkloads.isEmpty()) {
-                    if (namespace.getWorkloads() != null) {
-                        namespace.getWorkloads().entrySet().removeIf(workloadEntry ->
-                                !namespaceMatchedWorkloads.containsKey(workloadEntry.getKey()));
-                    }
-                    // Keep namespace if it still has workloads after filtering
-                    return namespace.getWorkloads() == null || namespace.getWorkloads().isEmpty();
                 }
 
                 // No matches from either filter for this namespace - remove it

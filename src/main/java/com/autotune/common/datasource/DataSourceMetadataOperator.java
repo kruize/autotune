@@ -34,6 +34,7 @@ import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
 import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
@@ -249,9 +250,13 @@ public class DataSourceMetadataOperator {
 
         // OPTIMIZATION: Apply label filters FIRST before fetching all metadata
         // This reduces the amount of data we need to fetch and process
+        // However, for exclude-only filters, skip this step and run main queries first
         LOGGER.info("Applying label filters first to identify matching resources...");
-        HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration);
-        HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration);
+        LOGGER.info("Include resources: {}", includeResources);
+        LOGGER.info("Exclude resources: {}", excludeResources);
+        
+        HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration, namespaceQuery, false);
+        HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration, workloadQuery, false);
         
         LOGGER.info("Label filter results - Matched namespaces: {}, Matched workloads: {}",
                     matchedNamespaces.size(),
@@ -288,7 +293,84 @@ public class DataSourceMetadataOperator {
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads, datasourceContainers);
 
+            // For exclude-only label filters, we need to query for resources to exclude now
+            // (after main queries have run) and populate matchedNamespaces/matchedWorkloads
+            if (matchedNamespaces.isEmpty() && matchedWorkloads.isEmpty()) {
+                String excludeNamespaceLabelFilter = excludeResources.getOrDefault("namespaceLabelFilter", "");
+                String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
+                
+                if (!excludeNamespaceLabelFilter.isEmpty() || !excludePodLabelFilter.isEmpty()) {
+                    LOGGER.info("Exclude-only filters detected - querying for resources to exclude after main queries");
+                    // Get all namespaces/workloads from the metadata that was just fetched
+                    DataSourceCluster cluster = dataSourceMetadataInfo.getDataSourceObject(dataSourceName)
+                            .getDataSourceClusterObject(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.CLUSTER_NAME);
+                    
+                    if (cluster != null && cluster.getNamespaces() != null) {
+                        HashMap<String, DataSourceNamespace> allNamespaces = new HashMap<>(cluster.getNamespaces());
+                        HashMap<String, HashMap<String, DataSourceWorkload>> allWorkloads = new HashMap<>();
+                        allNamespaces.forEach((ns, namespace) -> {
+                            if (namespace.getWorkloads() != null) {
+                                allWorkloads.put(ns, new HashMap<>(namespace.getWorkloads()));
+                            }
+                        });
+                        
+                        // Now query for resources to exclude and remove them from all resources
+                        matchedNamespaces.putAll(allNamespaces);
+                        allWorkloads.forEach((ns, wls) -> {
+                            matchedWorkloads.computeIfAbsent(ns, k -> new HashMap<>()).putAll(wls);
+                        });
+                        
+                        // Query for resources to exclude
+                        // Pass exclude filters as INCLUDE filters to actually query for them
+                        Map<String, String> excludeAsInclude = new HashMap<>();
+                        if (!excludeNamespaceLabelFilter.isEmpty()) {
+                            excludeAsInclude.put("namespaceLabelFilter", excludeNamespaceLabelFilter);
+                        }
+                        if (!excludePodLabelFilter.isEmpty()) {
+                            excludeAsInclude.put("podLabelFilter", excludePodLabelFilter);
+                        }
+                        
+                        HashMap<String, DataSourceNamespace> excludedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, excludeAsInclude, new HashMap<>(), startTime, endTime, steps, measurementDuration, namespaceQuery, true);
+                        HashMap<String, HashMap<String, DataSourceWorkload>> excludedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, excludeAsInclude, new HashMap<>(), startTime, endTime, steps, measurementDuration, workloadQuery, true);
+                        
+                        LOGGER.info("Queried for resources to exclude - Namespaces: {}, Workloads: {}",
+                                   excludedNamespaces.size(),
+                                   excludedWorkloads.values().stream().mapToInt(Map::size).sum());
+                        
+                        // Remove excluded resources
+                        LOGGER.info("Removing excluded namespaces: {}", excludedNamespaces.keySet());
+                        excludedNamespaces.keySet().forEach(ns -> {
+                            LOGGER.info("EXCLUDED namespace: {}", ns);
+                            matchedNamespaces.remove(ns);
+                        });
+                        
+                        excludedWorkloads.forEach((ns, wls) -> {
+                            if (matchedWorkloads.containsKey(ns)) {
+                                LOGGER.info("Namespace {} has {} workloads to exclude: {}", ns, wls.size(), wls.keySet());
+                                wls.keySet().forEach(wl -> {
+                                    LOGGER.info("EXCLUDED workload: {} in namespace {}", wl, ns);
+                                    matchedWorkloads.get(ns).remove(wl);
+                                });
+                            } else {
+                                LOGGER.warn("Namespace {} not found in matchedWorkloads, cannot exclude workloads: {}", ns, wls.keySet());
+                            }
+                        });
+                        
+                        LOGGER.info("After exclusions - Matched namespaces: {}, Matched workloads: {}",
+                                   matchedNamespaces.size(),
+                                   matchedWorkloads.values().stream().mapToInt(Map::size).sum());
+                    }
+                }
+            }
+            
             // Apply the label filter results to remove non-matching resources
+            LOGGER.info("Calling filterMetadataInfoObject with matchedNamespaces: {}, matchedWorkloads: {}",
+                       matchedNamespaces.keySet(),
+                       matchedWorkloads.entrySet().stream()
+                           .collect(java.util.stream.Collectors.toMap(
+                               java.util.Map.Entry::getKey,
+                               e -> e.getValue().keySet()
+                           )));
             dataSourceDetailsHelper.filterMetadataInfoObject(dataSourceName, dataSourceMetadataInfo, matchedNamespaces, matchedWorkloads);
 
             return getDataSourceMetadataInfo(dataSourceInfo);
@@ -344,12 +426,16 @@ public class DataSourceMetadataOperator {
      */
     private HashMap<String, DataSourceNamespace> getNamespacesMatchingLabelFilter(DataSourceInfo dataSourceInfo, MetadataProfile metadataProfile,
                                                                                    Map<String, String> includeResources, Map<String, String> excludeResources,
-                                                                                   long startTime, long endTime, int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+                                                                                   long startTime, long endTime, int steps, int measurementDuration, String namespaceQueryForAll, boolean forceQuery) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         HashMap<String, DataSourceNamespace> matchedNamespaces = new HashMap<>();
         String namespaceLabelFilter = includeResources.getOrDefault("namespaceLabelFilter", "");
         String excludeNamespaceLabelFilter = excludeResources.getOrDefault("namespaceLabelFilter", "");
 
+        LOGGER.info("Namespace label filtering - Include filter: '{}', Exclude filter: '{}'",
+                   namespaceLabelFilter, excludeNamespaceLabelFilter);
+
         if (namespaceLabelFilter.isEmpty() && excludeNamespaceLabelFilter.isEmpty()) {
+            LOGGER.info("No namespace label filters provided, skipping namespace label filtering");
             return matchedNamespaces;
         }
 
@@ -359,6 +445,18 @@ public class DataSourceMetadataOperator {
         if (queryTemplate == null) {
             LOGGER.warn("namespacesWithLabelFilter query not found in metadata profile, skipping namespace label filtering");
             return matchedNamespaces;
+        }
+
+        // For exclude-only filters (no include filters), skip UNLESS we're being called to query FOR exclusion (forceQuery=true)
+        if (!forceQuery) {
+            boolean hasOtherIncludeFilters = !includeResources.getOrDefault("namespaceRegex", "").isEmpty() ||
+                                             !includeResources.getOrDefault("workloadRegex", "").isEmpty() ||
+                                             !includeResources.getOrDefault("containerRegex", "").isEmpty();
+            
+            if (namespaceLabelFilter.isEmpty() && !excludeNamespaceLabelFilter.isEmpty() && !hasOtherIncludeFilters) {
+                LOGGER.info("Only exclude label filter provided (no other include filters) - skipping label filter queries, will apply exclusions after main queries");
+                return matchedNamespaces;
+            }
         }
 
         // Process include filters (OR logic)
@@ -388,6 +486,7 @@ public class DataSourceMetadataOperator {
 
         // Process exclude filters (remove matching namespaces)
         if (!excludeNamespaceLabelFilter.isEmpty()) {
+            LOGGER.info("=== PROCESSING EXCLUDE NAMESPACE FILTERS ===");
             HashMap<String, DataSourceNamespace> excludedNamespaces = new HashMap<>();
             String[] excludeLabelFilters = excludeNamespaceLabelFilter.split(",");
             LOGGER.info("Exclude namespaceLabelFilter has {} label(s): {}", excludeLabelFilters.length, excludeNamespaceLabelFilter);
@@ -412,7 +511,18 @@ public class DataSourceMetadataOperator {
             LOGGER.info("Total namespaces to exclude: {} - {}", excludedNamespaces.size(), excludedNamespaces.keySet());
             
             // Remove excluded namespaces from matched namespaces
-            excludedNamespaces.keySet().forEach(matchedNamespaces::remove);
+            int beforeExclusion = matchedNamespaces.size();
+            excludedNamespaces.keySet().forEach(ns -> {
+                if (matchedNamespaces.containsKey(ns)) {
+                    matchedNamespaces.remove(ns);
+                    LOGGER.info("EXCLUDED namespace: {}", ns);
+                } else {
+                    LOGGER.debug("Namespace {} was already not in matched set", ns);
+                }
+            });
+            int afterExclusion = matchedNamespaces.size();
+            LOGGER.info("Namespace exclusion complete - Before: {}, After: {}, Excluded: {}",
+                       beforeExclusion, afterExclusion, (beforeExclusion - afterExclusion));
             LOGGER.info("Final matched namespaces after exclusion: {} - {}", matchedNamespaces.size(), matchedNamespaces.keySet());
         }
         
@@ -435,12 +545,16 @@ public class DataSourceMetadataOperator {
      */
     private HashMap<String, HashMap<String, DataSourceWorkload>> getWorkloadsMatchingPodLabelFilter(DataSourceInfo dataSourceInfo, MetadataProfile metadataProfile,
                                                                                                      Map<String, String> includeResources, Map<String, String> excludeResources,
-                                                                                                     long startTime, long endTime, int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+                                                                                                     long startTime, long endTime, int steps, int measurementDuration, String workloadQueryForAll, boolean forceQuery) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = new HashMap<>();
         String podLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
         String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
 
+        LOGGER.info("Pod label filtering - Include filter: '{}', Exclude filter: '{}'",
+                   podLabelFilter, excludePodLabelFilter);
+
         if (podLabelFilter.isEmpty() && excludePodLabelFilter.isEmpty()) {
+            LOGGER.info("No pod label filters provided, skipping pod label filtering");
             return matchedWorkloads;
         }
 
@@ -452,6 +566,18 @@ public class DataSourceMetadataOperator {
             // If query is not found in profile, the filter will be skipped
             return matchedWorkloads;
             
+        }
+
+        // For exclude-only filters (no include filters), skip UNLESS we're being called to query FOR exclusion (forceQuery=true)
+        if (!forceQuery) {
+            boolean hasOtherIncludeFilters = !includeResources.getOrDefault("namespaceRegex", "").isEmpty() ||
+                                             !includeResources.getOrDefault("workloadRegex", "").isEmpty() ||
+                                             !includeResources.getOrDefault("containerRegex", "").isEmpty();
+            
+            if (podLabelFilter.isEmpty() && !excludePodLabelFilter.isEmpty() && !hasOtherIncludeFilters) {
+                LOGGER.info("Only exclude label filter provided (no other include filters) - skipping label filter queries, will apply exclusions after main queries");
+                return matchedWorkloads;
+            }
         }
 
         // Process include filters (OR logic)
@@ -489,6 +615,7 @@ public class DataSourceMetadataOperator {
 
         // Process exclude filters (remove matching workloads)
         if (!excludePodLabelFilter.isEmpty()) {
+            LOGGER.info("=== PROCESSING EXCLUDE POD LABEL FILTERS ===");
             HashMap<String, HashMap<String, DataSourceWorkload>> excludedWorkloads = new HashMap<>();
             String[] excludeLabelFilters = excludePodLabelFilter.split(",");
             LOGGER.info("Exclude podLabelFilter has {} label(s): {}", excludeLabelFilters.length, excludePodLabelFilter);
@@ -521,20 +648,28 @@ public class DataSourceMetadataOperator {
             });
             
             // Remove excluded workloads from matched workloads
+            int beforeExclusion = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
             excludedWorkloads.forEach((namespace, workloads) -> {
                 if (matchedWorkloads.containsKey(namespace)) {
                     workloads.keySet().forEach(workloadName -> {
-                        matchedWorkloads.get(namespace).remove(workloadName);
-                        LOGGER.debug("Removed workload {} from namespace {}", workloadName, namespace);
+                        if (matchedWorkloads.get(namespace).containsKey(workloadName)) {
+                            matchedWorkloads.get(namespace).remove(workloadName);
+                            LOGGER.info("EXCLUDED workload: {} from namespace: {}", workloadName, namespace);
+                        }
                     });
                     // Remove namespace if no workloads left
                     if (matchedWorkloads.get(namespace).isEmpty()) {
                         matchedWorkloads.remove(namespace);
-                        LOGGER.debug("Removed empty namespace {}", namespace);
+                        LOGGER.info("Removed empty namespace {} after workload exclusion", namespace);
                     }
+                } else {
+                    LOGGER.debug("Namespace {} not in matched workloads, skipping exclusion", namespace);
                 }
             });
             
+            int afterExclusion = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
+            LOGGER.info("Workload exclusion complete - Before: {}, After: {}, Excluded: {}",
+                       beforeExclusion, afterExclusion, (beforeExclusion - afterExclusion));
             int finalWorkloads = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
             LOGGER.info("Final matched workloads after exclusion: {}", finalWorkloads);
             matchedWorkloads.forEach((ns, wls) -> {
