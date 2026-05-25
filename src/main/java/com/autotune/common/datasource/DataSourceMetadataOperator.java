@@ -250,8 +250,8 @@ public class DataSourceMetadataOperator {
         // OPTIMIZATION: Apply label filters FIRST before fetching all metadata
         // This reduces the amount of data we need to fetch and process
         LOGGER.info("Applying label filters first to identify matching resources...");
-        HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
-        HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, startTime, endTime, steps, measurementDuration);
+        HashMap<String, DataSourceNamespace> matchedNamespaces = getNamespacesMatchingLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration);
+        HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = getWorkloadsMatchingPodLabelFilter(dataSourceInfo, metadataProfile, includeResources, excludeResources, startTime, endTime, steps, measurementDuration);
         
         LOGGER.info("Label filter results - Matched namespaces: {}, Matched workloads: {}",
                     matchedNamespaces.size(),
@@ -334,20 +334,22 @@ public class DataSourceMetadataOperator {
      *
      * @param dataSourceInfo The data source information
      * @param metadataProfile The metadata profile containing the query
-     * @param includeResources Map containing the namespaceLabelFilter
+     * @param includeResources Map containing the namespaceLabelFilter for inclusion
+     * @param excludeResources Map containing the namespaceLabelFilter for exclusion
      * @param startTime Start time for the query
      * @param endTime End time for the query
      * @param steps Query step interval
      * @param measurementDuration Measurement duration in minutes
-     * @return HashMap of namespaces matching the label filter
+     * @return HashMap of namespaces matching the include filter and not matching the exclude filter
      */
     private HashMap<String, DataSourceNamespace> getNamespacesMatchingLabelFilter(DataSourceInfo dataSourceInfo, MetadataProfile metadataProfile,
-                                                                                   Map<String, String> includeResources, long startTime, long endTime,
-                                                                                   int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+                                                                                   Map<String, String> includeResources, Map<String, String> excludeResources,
+                                                                                   long startTime, long endTime, int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         HashMap<String, DataSourceNamespace> matchedNamespaces = new HashMap<>();
         String namespaceLabelFilter = includeResources.getOrDefault("namespaceLabelFilter", "");
+        String excludeNamespaceLabelFilter = excludeResources.getOrDefault("namespaceLabelFilter", "");
 
-        if (namespaceLabelFilter.isEmpty()) {
+        if (namespaceLabelFilter.isEmpty() && excludeNamespaceLabelFilter.isEmpty()) {
             return matchedNamespaces;
         }
 
@@ -359,28 +361,61 @@ public class DataSourceMetadataOperator {
             return matchedNamespaces;
         }
 
-        // Handle multiple labels with OR logic - split by comma and run separate queries
-        String[] labelFilters = namespaceLabelFilter.split(",");
-        LOGGER.info("namespaceLabelFilter has {} label(s): {}", labelFilters.length, namespaceLabelFilter);
-        
-        for (int i = 0; i < labelFilters.length; i++) {
-            String singleLabelFilter = labelFilters[i].trim();
-            String namespaceQuery = queryTemplate
-                    .replace("LABEL_FILTER", singleLabelFilter)
-                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        // Process include filters (OR logic)
+        if (!namespaceLabelFilter.isEmpty()) {
+            String[] labelFilters = namespaceLabelFilter.split(",");
+            LOGGER.info("Include namespaceLabelFilter has {} label(s): {}", labelFilters.length, namespaceLabelFilter);
+            
+            for (int i = 0; i < labelFilters.length; i++) {
+                String singleLabelFilter = labelFilters[i].trim();
+                String namespaceQuery = queryTemplate
+                        .replace("LABEL_FILTER", singleLabelFilter)
+                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
-            LOGGER.info("Executing namespace label filter query {} of {}: {}", i+1, labelFilters.length, namespaceQuery);
-            JsonArray namespaceQueryResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
-            LOGGER.info("Query {} returned {} results", i+1, namespaceQueryResultArray != null ? namespaceQueryResultArray.size() : 0);
+                LOGGER.info("Executing include namespace label filter query {} of {}: {}", i+1, labelFilters.length, namespaceQuery);
+                JsonArray namespaceQueryResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+                LOGGER.info("Query {} returned {} results", i+1, namespaceQueryResultArray != null ? namespaceQueryResultArray.size() : 0);
+                
+                HashMap<String, DataSourceNamespace> currentMatches = dataSourceDetailsHelper.getActiveNamespaces(namespaceQueryResultArray);
+                LOGGER.info("Query {} matched {} namespace(s): {}", i+1, currentMatches.size(), currentMatches.keySet());
+                
+                // Merge results (OR logic - add all matches from each label)
+                matchedNamespaces.putAll(currentMatches);
+            }
             
-            HashMap<String, DataSourceNamespace> currentMatches = dataSourceDetailsHelper.getActiveNamespaces(namespaceQueryResultArray);
-            LOGGER.info("Query {} matched {} namespace(s): {}", i+1, currentMatches.size(), currentMatches.keySet());
+            LOGGER.info("Total included namespaces after OR logic: {} - {}", matchedNamespaces.size(), matchedNamespaces.keySet());
+        }
+
+        // Process exclude filters (remove matching namespaces)
+        if (!excludeNamespaceLabelFilter.isEmpty()) {
+            HashMap<String, DataSourceNamespace> excludedNamespaces = new HashMap<>();
+            String[] excludeLabelFilters = excludeNamespaceLabelFilter.split(",");
+            LOGGER.info("Exclude namespaceLabelFilter has {} label(s): {}", excludeLabelFilters.length, excludeNamespaceLabelFilter);
             
-            // Merge results (OR logic - add all matches from each label)
-            matchedNamespaces.putAll(currentMatches);
+            for (int i = 0; i < excludeLabelFilters.length; i++) {
+                String singleLabelFilter = excludeLabelFilters[i].trim();
+                String namespaceQuery = queryTemplate
+                        .replace("LABEL_FILTER", singleLabelFilter)
+                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+
+                LOGGER.info("Executing exclude namespace label filter query {} of {}: {}", i+1, excludeLabelFilters.length, namespaceQuery);
+                JsonArray namespaceQueryResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+                LOGGER.info("Query {} returned {} results", i+1, namespaceQueryResultArray != null ? namespaceQueryResultArray.size() : 0);
+                
+                HashMap<String, DataSourceNamespace> currentExcludes = dataSourceDetailsHelper.getActiveNamespaces(namespaceQueryResultArray);
+                LOGGER.info("Query {} matched {} namespace(s) to exclude: {}", i+1, currentExcludes.size(), currentExcludes.keySet());
+                
+                // Collect all namespaces to exclude (OR logic)
+                excludedNamespaces.putAll(currentExcludes);
+            }
+            
+            LOGGER.info("Total namespaces to exclude: {} - {}", excludedNamespaces.size(), excludedNamespaces.keySet());
+            
+            // Remove excluded namespaces from matched namespaces
+            excludedNamespaces.keySet().forEach(matchedNamespaces::remove);
+            LOGGER.info("Final matched namespaces after exclusion: {} - {}", matchedNamespaces.size(), matchedNamespaces.keySet());
         }
         
-        LOGGER.info("Total matched namespaces after OR logic: {} - {}", matchedNamespaces.size(), matchedNamespaces.keySet());
         return matchedNamespaces;
     }
 
@@ -390,20 +425,22 @@ public class DataSourceMetadataOperator {
      *
      * @param dataSourceInfo The data source information
      * @param metadataProfile The metadata profile containing the query
-     * @param includeResources Map containing the podLabelFilter
+     * @param includeResources Map containing the podLabelFilter for inclusion
+     * @param excludeResources Map containing the podLabelFilter for exclusion
      * @param startTime Start time for the query
      * @param endTime End time for the query
      * @param steps Query step interval
      * @param measurementDuration Measurement duration in minutes
-     * @return HashMap of workloads whose pods match the label filter
+     * @return HashMap of workloads whose pods match the include filter and not matching the exclude filter
      */
     private HashMap<String, HashMap<String, DataSourceWorkload>> getWorkloadsMatchingPodLabelFilter(DataSourceInfo dataSourceInfo, MetadataProfile metadataProfile,
-                                                                                                     Map<String, String> includeResources, long startTime, long endTime,
-                                                                                                     int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+                                                                                                     Map<String, String> includeResources, Map<String, String> excludeResources,
+                                                                                                     long startTime, long endTime, int steps, int measurementDuration) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads = new HashMap<>();
         String podLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
+        String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
 
-        if (podLabelFilter.isEmpty()) {
+        if (podLabelFilter.isEmpty() && excludePodLabelFilter.isEmpty()) {
             return matchedWorkloads;
         }
 
@@ -412,55 +449,99 @@ public class DataSourceMetadataOperator {
         
         if (queryTemplate == null) {
             LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile");
-            // Commented out hardcoded query - now using query from metadata profile only
             // If query is not found in profile, the filter will be skipped
             return matchedWorkloads;
             
-            // ORIGINAL HARDCODED QUERY (commented out):
-            // queryTemplate = "sum by (namespace, workload, workload_type) ("
-            //         + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
-            //         + "* on (namespace, pod) group_left(workload, workload_type) "
-            //         + "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m])"
-            //         + ") or sum by (namespace, workload, workload_type) ("
-            //         + "label_replace("
-            //         + "label_replace("
-            //         + "max_over_time(kube_pod_labels{pod!=\"\",LABEL_FILTER}[$MEASUREMENT_DURATION_IN_MIN$m]) "
-            //         + "unless on (namespace, pod) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]), "
-            //         + "\"workload\", \"$1\", \"pod\", \"(.*)\")"
-            //         + ", \"workload_type\", \"Pod\", \"\", \"\")"
-            //         + ")";
         }
 
-        // Handle multiple labels with OR logic - split by comma and run separate queries
-        String[] labelFilters = podLabelFilter.split(",");
-        LOGGER.info("podLabelFilter has {} label(s): {}", labelFilters.length, podLabelFilter);
-        
-        for (int i = 0; i < labelFilters.length; i++) {
-            String singleLabelFilter = labelFilters[i].trim();
-            String workloadQuery = queryTemplate
-                    .replace("LABEL_FILTER", singleLabelFilter)
-                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        // Process include filters (OR logic)
+        if (!podLabelFilter.isEmpty()) {
+            String[] labelFilters = podLabelFilter.split(",");
+            LOGGER.info("Include podLabelFilter has {} label(s): {}", labelFilters.length, podLabelFilter);
+            
+            for (int i = 0; i < labelFilters.length; i++) {
+                String singleLabelFilter = labelFilters[i].trim();
+                String workloadQuery = queryTemplate
+                        .replace("LABEL_FILTER", singleLabelFilter)
+                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
-            LOGGER.info("Executing pod label filter query {} of {}: {}", i+1, labelFilters.length, workloadQuery);
-            JsonArray workloadQueryResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
-            LOGGER.info("Query {} returned {} results", i+1, workloadQueryResultArray != null ? workloadQueryResultArray.size() : 0);
+                LOGGER.info("Executing include pod label filter query {} of {}: {}", i+1, labelFilters.length, workloadQuery);
+                JsonArray workloadQueryResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+                LOGGER.info("Query {} returned {} results", i+1, workloadQueryResultArray != null ? workloadQueryResultArray.size() : 0);
+                
+                HashMap<String, HashMap<String, DataSourceWorkload>> currentMatches = dataSourceDetailsHelper.getWorkloadInfo(workloadQueryResultArray);
+                int currentWorkloadCount = currentMatches.values().stream().mapToInt(Map::size).sum();
+                LOGGER.info("Query {} matched {} workload(s)", i+1, currentWorkloadCount);
+                
+                // Merge results (OR logic - add all matches from each label)
+                currentMatches.forEach((namespace, workloads) -> {
+                    LOGGER.debug("Merging {} workload(s) from namespace {}: {}", workloads.size(), namespace, workloads.keySet());
+                    matchedWorkloads.computeIfAbsent(namespace, k -> new HashMap<>()).putAll(workloads);
+                });
+            }
             
-            HashMap<String, HashMap<String, DataSourceWorkload>> currentMatches = dataSourceDetailsHelper.getWorkloadInfo(workloadQueryResultArray);
-            int currentWorkloadCount = currentMatches.values().stream().mapToInt(Map::size).sum();
-            LOGGER.info("Query {} matched {} workload(s)", i+1, currentWorkloadCount);
+            int totalWorkloads = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
+            LOGGER.info("Total included workloads after OR logic: {}", totalWorkloads);
+            matchedWorkloads.forEach((ns, wls) -> {
+                LOGGER.info("  Namespace {}: {} workload(s) - {}", ns, wls.size(), wls.keySet());
+            });
+        }
+
+        // Process exclude filters (remove matching workloads)
+        if (!excludePodLabelFilter.isEmpty()) {
+            HashMap<String, HashMap<String, DataSourceWorkload>> excludedWorkloads = new HashMap<>();
+            String[] excludeLabelFilters = excludePodLabelFilter.split(",");
+            LOGGER.info("Exclude podLabelFilter has {} label(s): {}", excludeLabelFilters.length, excludePodLabelFilter);
             
-            // Merge results (OR logic - add all matches from each label)
-            currentMatches.forEach((namespace, workloads) -> {
-                LOGGER.debug("Merging {} workload(s) from namespace {}: {}", workloads.size(), namespace, workloads.keySet());
-                matchedWorkloads.computeIfAbsent(namespace, k -> new HashMap<>()).putAll(workloads);
+            for (int i = 0; i < excludeLabelFilters.length; i++) {
+                String singleLabelFilter = excludeLabelFilters[i].trim();
+                String workloadQuery = queryTemplate
+                        .replace("LABEL_FILTER", singleLabelFilter)
+                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+
+                LOGGER.info("Executing exclude pod label filter query {} of {}: {}", i+1, excludeLabelFilters.length, workloadQuery);
+                JsonArray workloadQueryResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+                LOGGER.info("Query {} returned {} results", i+1, workloadQueryResultArray != null ? workloadQueryResultArray.size() : 0);
+                
+                HashMap<String, HashMap<String, DataSourceWorkload>> currentExcludes = dataSourceDetailsHelper.getWorkloadInfo(workloadQueryResultArray);
+                int currentWorkloadCount = currentExcludes.values().stream().mapToInt(Map::size).sum();
+                LOGGER.info("Query {} matched {} workload(s) to exclude", i+1, currentWorkloadCount);
+                
+                // Collect all workloads to exclude (OR logic)
+                currentExcludes.forEach((namespace, workloads) -> {
+                    LOGGER.debug("Collecting {} workload(s) to exclude from namespace {}: {}", workloads.size(), namespace, workloads.keySet());
+                    excludedWorkloads.computeIfAbsent(namespace, k -> new HashMap<>()).putAll(workloads);
+                });
+            }
+            
+            int totalExcludedWorkloads = excludedWorkloads.values().stream().mapToInt(Map::size).sum();
+            LOGGER.info("Total workloads to exclude: {}", totalExcludedWorkloads);
+            excludedWorkloads.forEach((ns, wls) -> {
+                LOGGER.info("  Namespace {}: {} workload(s) to exclude - {}", ns, wls.size(), wls.keySet());
+            });
+            
+            // Remove excluded workloads from matched workloads
+            excludedWorkloads.forEach((namespace, workloads) -> {
+                if (matchedWorkloads.containsKey(namespace)) {
+                    workloads.keySet().forEach(workloadName -> {
+                        matchedWorkloads.get(namespace).remove(workloadName);
+                        LOGGER.debug("Removed workload {} from namespace {}", workloadName, namespace);
+                    });
+                    // Remove namespace if no workloads left
+                    if (matchedWorkloads.get(namespace).isEmpty()) {
+                        matchedWorkloads.remove(namespace);
+                        LOGGER.debug("Removed empty namespace {}", namespace);
+                    }
+                }
+            });
+            
+            int finalWorkloads = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
+            LOGGER.info("Final matched workloads after exclusion: {}", finalWorkloads);
+            matchedWorkloads.forEach((ns, wls) -> {
+                LOGGER.info("  Namespace {}: {} workload(s) - {}", ns, wls.size(), wls.keySet());
             });
         }
         
-        int totalWorkloads = matchedWorkloads.values().stream().mapToInt(Map::size).sum();
-        LOGGER.info("Total matched workloads after OR logic: {}", totalWorkloads);
-        matchedWorkloads.forEach((ns, wls) -> {
-            LOGGER.info("  Namespace {}: {} workload(s) - {}", ns, wls.size(), wls.keySet());
-        });
         return matchedWorkloads;
     }
 
