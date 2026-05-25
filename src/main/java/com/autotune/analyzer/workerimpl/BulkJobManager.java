@@ -717,6 +717,12 @@ public class BulkJobManager implements Runnable {
                 values.add(value.toString());
             }
             
+            // kube-state-metrics normalizes label names by replacing special chars with underscores
+            // e.g., "pod-template-hash" becomes "label_pod_template_hash"
+            // e.g., "app.kubernetes.io/component" becomes "label_app_kubernetes_io_component"
+            String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            LOGGER.info("Normalized key for PromQL: '{}'", normalizedKey);
+            
             // Create a matcher for each value
             for (String val : values) {
                 String escapedValue = escapePromQLLabelValue(val);
