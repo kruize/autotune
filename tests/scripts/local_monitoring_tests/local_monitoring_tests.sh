@@ -70,17 +70,17 @@ function local_monitoring_tests() {
 		
 		# Clone benchmarks repository if not present
 		if [ ! -d "benchmarks" ]; then
-			echo -n "🔄 Pulling required repositories... "
+			echo -n "Pulling required repositories... "
 			clone_repos benchmarks
-			echo "✅ Done!"
+			echo "Done!"
 		fi
 		
 		# Clean up any existing load jobs
-		echo -n "🔄 Cleaning up old load jobs... "
+		echo -n "Cleaning up old load jobs... "
 		for job in "${LOAD_JOBS[@]}"; do
 			kubectl delete job ${job} -n ${APP_NAMESPACE} --ignore-not-found >> "${LOG}" 2>&1
 		done
-		echo "✅ Done!"
+		echo "Done!"
 		
 		# Install benchmarks
 		echo "Installing benchmarks (${BENCHMARKS[*]})..."
@@ -109,17 +109,29 @@ function local_monitoring_tests() {
 			echo "${KRUIZE_SETUP_LOG}"
 			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
       echo "Setting up kruize...Done" | tee -a ${LOG}
-
-			sleep 60
 		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
 		# Wait for data to be available for recommendations (30 mins)
-		echo "⏳ Waiting approx 30 minutes for metrics data collection..."
-		sleep 1700
-		echo "Data collection period complete!"
+		echo "Waiting for metrics data collection..."
+		echo "This will take 30 minutes. Progress updates every 5 minutes..."
+		
+		# Sleep in smaller intervals with progress updates to avoid appearing stuck
+		total_sleep=1800
+		interval=300  # 5 minutes
+		elapsed=0
+
+		while [ $elapsed -lt $total_sleep ]; do
+			sleep $interval
+			elapsed=$((elapsed + interval))
+			remaining=$((total_sleep - elapsed))
+			minutes_remaining=$((remaining / 60))
+			echo "⏳ Still waiting... approximately $minutes_remaining minutes remaining ($(date))"
+		done
+		
+		echo "Data collection period complete! ($(date))"
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
 		testtorun=("${local_monitoring_tests[@]}")
@@ -222,8 +234,8 @@ function local_monitoring_tests() {
 	# Cleanup benchmarks directory
 	if [ -d "benchmarks" ]; then
 		echo ""
-		echo "🔄 Cleaning up benchmarks directory..."
+		echo "Cleaning up benchmarks directory..."
 		rm -rf benchmarks
-		echo "✅ Benchmarks directory removed"
+		echo "Benchmarks directory removed"
 	fi
 }

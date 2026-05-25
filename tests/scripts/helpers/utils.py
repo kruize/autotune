@@ -1062,6 +1062,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
+        print("current_config: ", current_config)
         current = True
         validate_config_local_monitoring(current_config, v1, current)
 
@@ -1302,12 +1303,14 @@ def validate_config_local_monitoring(reco_config, v1, current, exp_type="contain
     if v1:
         resource_key = "resources"
 
-    reco_config = reco_config[resource_key] if resource_key else reco_config
     # Validate replicas
     if exp_type == CONTAINER_EXPERIMENT_TYPE and current:
         assert "replicas" in reco_config, MISSING_REPLICA_OBJECT
         assert isinstance(reco_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(reco_config['replicas'])
         assert reco_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % reco_config['replicas']
+
+    # Extract resources for v1 schema
+    reco_config = reco_config[resource_key] if resource_key else reco_config
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:

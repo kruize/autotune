@@ -433,22 +433,30 @@ The `/kruize/api/v1/recommendations` endpoint supports the updated recommendatio
 
 #### POST /kruize/api/v1/recommendations API Tests
 
-**test_get_recommendations_v1_local_e2e_workflow**:
-- End-to-end workflow for local monitoring mode
+**test_recommendations_v1_local_e2e_workflow_container**:
+- End-to-end workflow for local monitoring mode for container experiments
 - Sets up datasources, metadata profiles, and metric profiles
-- Creates both container (sysbench) and namespace experiments
-- Waits for auto-generation of recommendations (5 minutes)
+- Create container(tfb) experiments
+- Waits for data to be available to call for recommendations (30 minutes)
 - Validates complete recommendation structure with v1.0 schema
 - Validates replicas field and nested resources
 - Validates pod_count metrics
-- Tests both container-level and namespace-level experiments
 - Includes proper cleanup of all resources
 
-**test_get_recommendations_v1_invalid_experiment_local**:
+**test_recommendations_v1_local_e2e_workflow_namespace**:
+- End-to-end workflow for local monitoring mode for namespace experiments
+- Sets up datasources, metadata profiles, and metric profiles
+- Create namespace(tfb) experiments
+- Waits for data to be available to call for recommendations (30 minutes)
+- Validates complete recommendation structure with v1.0 schema
+- Validates nested resources
+- Includes proper cleanup of all resources
+
+**test_recommendations_v1_invalid_experiment_local**:
 - Request recommendations for non-existing experiment in local mode
 - Expected: 400 Bad Request with proper error message
 
-**test_post_recommendations_v1_without_experiment_name_local**:
+**test_recommendations_v1_without_experiment_name_local**:
 - POST request without experiment_name in local mode
 - Expected: 400 Bad Request with proper error message
 

@@ -108,7 +108,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
 
-    response = list_metadata(datasource)
+    response = list_metadata(datasource, logging=False)
 
     list_metadata_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -121,7 +121,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     # Currently only default cluster is supported by Kruize
     cluster_name = "default"
 
-    response = list_metadata(datasource=datasource, cluster_name=cluster_name, verbose="true")
+    response = list_metadata(datasource=datasource, cluster_name=cluster_name, verbose="true", logging=False)
 
     list_metadata_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -131,7 +131,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     assert error_msg == ""
 
     # Generate a temporary JSON filename
-    tmp_container_exp_json_file = "/tmp/create_exp_sysbench" + ".json"
+    tmp_container_exp_json_file = "/tmp/create_exp_tfb" + ".json"
     print("tmp_json_file for container exp = ", tmp_container_exp_json_file)
 
     # Load the Jinja2 template
@@ -140,13 +140,13 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
 
     # Render the JSON content from the template
     container_exp_content = template.render(
-        version="v2.0", experiment_name="monitor-sysbench", cluster_name="default",
+        version="v2.0", experiment_name="monitor-tfb", cluster_name="default",
         performance_profile="resource-optimization-local-monitoring",
         metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local",
         datasource="prometheus-1",
-        experiment_type="container", kubernetes_obj_type="deployment", name="sysbench", namespace="default",
+        experiment_type="container", kubernetes_obj_type="deployment", name="tfb-qrh-sample", namespace="default",
         namespace_name=None,
-        container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min",
+        container_image_name="quay.io/kruize/tfb-qrh:1.13.2.F_et17", container_name="tfb-server", measurement_duration="2min",
         threshold="0.1"
     )
 
@@ -162,7 +162,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     container_exp_json_file = tmp_container_exp_json_file
 
     response = delete_experiment(container_exp_json_file, rm=False)
-    print("delete sysbench container exp = ", response.status_code)
+    print("delete tfb container exp = ", response.status_code)
 
     # Install default metric profile
     if cluster_type == "minikube" or cluster_type == "kind" :
@@ -226,8 +226,8 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
 
     # Validate the json values
     validate_local_monitoring_recommendation_data_present(list_reco_json)
-    sysbench_exp_json = read_json_data_from_file(container_exp_json_file)
-    validate_local_monitoring_reco_json(sysbench_exp_json[0], list_reco_json[0], v1=True)
+    tfb_exp_json = read_json_data_from_file(container_exp_json_file)
+    validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0], v1=True)
 
     response = generate_recommendations_v1(container_exp_name)
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -235,7 +235,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    error_msg = validate_list_reco_json(list_reco_json, v1_list_reco_json_local_monitoring_schema.v1_list_reco_namespace_json_local_monitoring_schema)
+    error_msg = validate_list_reco_json(list_reco_json, v1_list_reco_json_local_monitoring_schema.v1_list_reco_json_local_monitoring_schema)
     assert error_msg == ""
 
     # Validate the json values
@@ -325,7 +325,7 @@ def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
 
-    response = list_metadata(datasource)
+    response = list_metadata(datasource, logging=False)
 
     list_metadata_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -338,7 +338,7 @@ def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
     # Currently only default cluster is supported by Kruize
     cluster_name = "default"
 
-    response = list_metadata(datasource=datasource, cluster_name=cluster_name, verbose="true")
+    response = list_metadata(datasource=datasource, cluster_name=cluster_name, verbose="true", logging=False)
 
     list_metadata_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE

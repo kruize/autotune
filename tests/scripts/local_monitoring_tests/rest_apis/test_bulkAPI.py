@@ -50,8 +50,8 @@ def base_payload():
 def filtered_payload():
     payload = base_payload()
     payload["filter"]["include"]["namespace"] = ["default"]
-    payload["filter"]["include"]["workload"] = ["sysbench"]
-    payload["filter"]["include"]["containers"] = ["sysbench"]
+    payload["filter"]["include"]["workload"] = ["tfb-qrh-sample"]
+    payload["filter"]["include"]["containers"] = ["tfb-server"]
     return payload
 
 @pytest.mark.test_bulk_api_ros
