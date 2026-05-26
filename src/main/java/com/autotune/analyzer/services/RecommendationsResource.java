@@ -273,6 +273,7 @@ public class RecommendationsResource extends HttpServlet {
             }
 
             if (!error) {
+                response.setStatus(HttpServletResponse.SC_OK);
                 sendRecommendationsResponse(response, kruizeObjectList, getLatest, checkForTimestamp, monitoringEndTimestamp, false);
                 statusValue = KruizeConstants.APIMessages.SUCCESS;
             }
@@ -370,6 +371,7 @@ public class RecommendationsResource extends HttpServlet {
                         LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
                                 experimentName, sdf.format(intervalEndTime)));
                     }
+                    response.setStatus(HttpServletResponse.SC_CREATED);
                     sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true);
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
@@ -402,9 +404,6 @@ public class RecommendationsResource extends HttpServlet {
                                              boolean logResponse) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        if (response.getStatus() != HttpServletResponse.SC_OK) {
-            response.setStatus(HttpServletResponse.SC_CREATED);
-        }
 
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
         for (KruizeObject ko : kruizeObjectList) {
