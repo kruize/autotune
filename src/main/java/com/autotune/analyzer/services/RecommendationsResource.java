@@ -145,8 +145,6 @@ public class RecommendationsResource extends HttpServlet {
 
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_OK);
-        request.setCharacterEncoding(CHARACTER_ENCODING);
 
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
@@ -273,7 +271,7 @@ public class RecommendationsResource extends HttpServlet {
             }
 
             if (!error) {
-                sendRecommendationsResponse(response, kruizeObjectList, getLatest, checkForTimestamp, monitoringEndTimestamp, false);
+                sendRecommendationsResponse(response, kruizeObjectList, getLatest, checkForTimestamp, monitoringEndTimestamp, false, HttpServletResponse.SC_OK);
                 statusValue = KruizeConstants.APIMessages.SUCCESS;
             }
         } catch (Exception e) {
@@ -370,7 +368,7 @@ public class RecommendationsResource extends HttpServlet {
                         LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
                                 experimentName, sdf.format(intervalEndTime)));
                     }
-                    sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true);
+                    sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, true, HttpServletResponse.SC_CREATED);
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
@@ -399,12 +397,10 @@ public class RecommendationsResource extends HttpServlet {
 
     private void sendRecommendationsResponse(HttpServletResponse response, List<KruizeObject> kruizeObjectList,
                                              boolean getLatest, boolean checkForTimestamp, Timestamp monitoringEndTimestamp,
-                                             boolean logResponse) throws IOException {
+                                             boolean logResponse, int httpStatusCode) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        if (response.getStatus() != HttpServletResponse.SC_OK) {
-            response.setStatus(HttpServletResponse.SC_CREATED);
-        }
+        response.setStatus(httpStatusCode);
 
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
         for (KruizeObject ko : kruizeObjectList) {
