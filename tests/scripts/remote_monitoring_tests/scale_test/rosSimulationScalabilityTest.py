@@ -9,6 +9,7 @@ import sys
 sys.path.append("../../")
 
 from helpers.utils import get_metric_profile_dir
+from helpers import kruize
 
 def loadData(exptype):
     if exptype == "container":
@@ -37,10 +38,19 @@ def loadData(exptype):
 
 def updateRecommendation(experiment_name, endDate):
     try:
-        # Send the request with the payload
-        payloadRecommendationURL = "%s?experiment_name=%s&interval_end_time=%s" % (
-            updateRecommendationURL, experiment_name, endDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-4] + 'Z')
-        response = requests.post(payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
+        if kruize.USE_NEW_API:
+            # Use new v1 recommendations API with query parameters
+            params = {
+                "experiment_name": experiment_name,
+                "interval_end_time": endDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-4] + 'Z'
+            }
+            response = requests.post(updateRecommendationURL, params=params, timeout=timeout)
+        else:
+            # Use old updateRecommendations API
+            payloadRecommendationURL = "%s?experiment_name=%s&interval_end_time=%s" % (
+                updateRecommendationURL, experiment_name, endDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-4] + 'Z')
+            response = requests.post(payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
+        
         # Check the response
         if response.status_code == 201:
             #data = response.json()
@@ -49,7 +59,7 @@ def updateRecommendation(experiment_name, endDate):
             pass
         else:
             print(
-                f'{payloadRecommendationURL} Request failed with status code {response.status_code}: {response.text}')
+                f'updateRecommendation Request failed with status code {response.status_code}: {response.text}')
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
     except requests.exceptions.Timeout:
         print('updateRecommendation Timeout occurred while connecting to')
@@ -90,18 +100,29 @@ if __name__ == "__main__":
 
     # parse the arguments from the command line
     args = parser.parse_args()
+    
+    # Print which API is being used
+    if kruize.USE_NEW_API:
+        print("[Using NEW API: /kruize/api/v1/recommendations]")
+    else:
+        print("[Using OLD API: /updateRecommendations]")
+    
     if args.port != 0:
         createExpURL = 'http://%s:%s/createExperiment' % (args.ip, args.port)
         updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
         createProfileURL = 'http://%s:%s/createPerformanceProfile' % (args.ip, args.port)
-        updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
-        updateRecommendationURL = 'http://%s:%s/updateRecommendations' % (args.ip, args.port)
+        if kruize.USE_NEW_API:
+            updateRecommendationURL = 'http://%s:%s/kruize/api/v1/recommendations' % (args.ip, args.port)
+        else:
+            updateRecommendationURL = 'http://%s:%s/updateRecommendations' % (args.ip, args.port)
     else:
         createExpURL = 'http://%s/createExperiment' % (args.ip)
         updateExpURL = 'http://%s/updateResults' % (args.ip)
         createProfileURL = 'http://%s/createPerformanceProfile' % (args.ip)
-        updateExpURL = 'http://%s/updateResults' % (args.ip)
-        updateRecommendationURL = 'http://%s/updateRecommendations' % (args.ip)
+        if kruize.USE_NEW_API:
+            updateRecommendationURL = 'http://%s/kruize/api/v1/recommendations' % (args.ip)
+        else:
+            updateRecommendationURL = 'http://%s/updateRecommendations' % (args.ip)
 
     expnameprfix = args.name
     exptype = args.exptype

@@ -32,11 +32,12 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 resultsdir="${CURRENT_DIR}"
 
 # usage of the test script
-function usage() { 
+function usage() {
 	echo ""
-	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
+	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup] [--api-version=API version to use (v1 or legacy)]"
 	echo ""
 	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --resultsdir=/home/results"
+	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --api-version=legacy"
 	echo ""
 	test_suite_usage
 	echo ""
@@ -114,6 +115,9 @@ do
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
 			skipsetup)
 				skip_setup=1
 				;;
@@ -159,6 +163,28 @@ if [ ! -z "${servicename}" ]; then
 		echo "Error: Do specify the datasource namespace"
 		exit -1
 	fi
+fi
+
+# Set the API version environment variable if specified
+if [ -n "${api_version}" ]; then
+	case "${api_version}" in
+		v1|V1)
+			export USE_NEW_RECOMMENDATION_API=true
+			echo "Using NEW API (v1): /kruize/api/v1/recommendations"
+			;;
+		legacy|LEGACY|old|OLD)
+			export USE_NEW_RECOMMENDATION_API=false
+			echo "Using OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations, /listRecommendations"
+			;;
+		*)
+			echo "Error: Invalid API version '${api_version}'. Valid values are: v1, legacy"
+			exit -1
+			;;
+	esac
+else
+	# Default to new API if not specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default Old/Legacy APIs"
 fi
 
 # Set the root for result directory

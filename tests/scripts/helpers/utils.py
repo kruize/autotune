@@ -1063,8 +1063,9 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
         # validate current config
         print("current_config: ", current_config)
-        current = True
-        validate_config_local_monitoring(current_config, v1, current)
+        if current_config:
+            current = True
+            validate_config_local_monitoring(current_config, v1, current)
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
@@ -1156,9 +1157,10 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
 
         terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
-        # validate current config
-        current = True
-        validate_config_local_monitoring(current_config, v1, current, "namespace")
+        if current_config:
+            # validate current config
+            current = True
+            validate_config_local_monitoring(current_config, v1, current, "namespace")
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):

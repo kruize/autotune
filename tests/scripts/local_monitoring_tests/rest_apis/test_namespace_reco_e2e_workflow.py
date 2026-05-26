@@ -63,9 +63,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     create_namespace("ns2")
     create_namespace("ns3")
 
-    benchmarks_install(name="tfb", manifests="kruize-demos", namespace="ns1")
-    benchmarks_install(name="tfb", manifests="kruize-demos", namespace="ns2")
-    benchmarks_install(name="tfb", manifests="kruize-demos", namespace="ns3")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns1")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns2")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns3")
 
     # list all datasources
     form_kruize_url(cluster_type)

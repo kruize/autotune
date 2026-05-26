@@ -128,7 +128,7 @@ function local_monitoring_tests() {
 			elapsed=$((elapsed + interval))
 			remaining=$((total_sleep - elapsed))
 			minutes_remaining=$((remaining / 60))
-			echo "⏳ Still waiting... approximately $minutes_remaining minutes remaining ($(date))"
+			echo "Still waiting... approximately $minutes_remaining minutes remaining ($(date))"
 		done
 		
 		echo "Data collection period complete! ($(date))"
