@@ -617,10 +617,10 @@ v1_list_reco_namespace_json_local_monitoring_schema = {
                                                                             "required": ["memory", "cpu"]
                                                                         }
                                                                     },
-                                                                    "required": ["requests", "limits"]
+                                                                    "required": []
                                                                 }
                                                             },
-                                                            "required": ["resources"]
+                                                            "required": []
                                                         },
                                                         "recommendation_terms": {
                                                             "type": "object",
