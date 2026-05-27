@@ -20,7 +20,8 @@ def pytest_configure(config):
     Sets the API version based on environment variable.
     """
     # Check for API version from environment variable set by test_autotune.sh
-    use_new_api_env = os.getenv('USE_NEW_RECOMMENDATION_API', 'true')
+    # Default to 'false' (old/legacy APIs) for backward compatibility
+    use_new_api_env = os.getenv('USE_NEW_RECOMMENDATION_API', 'false')
     
     if use_new_api_env.lower() == 'true':
         kruize.USE_NEW_API = True

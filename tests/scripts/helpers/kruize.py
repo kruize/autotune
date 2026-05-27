@@ -24,8 +24,8 @@ RECOMMENDATIONS_API_V1 = "/kruize/api/v1/recommendations"
 # Global variable to control which API to use
 # This is set by conftest.py which reads the USE_NEW_RECOMMENDATION_API environment variable
 # The environment variable is set by test_autotune.sh or remote_monitoring_scale_test_bulk.sh via the --api-version parameter
-# Default to True (use new v1 API)
-USE_NEW_API = True
+# Default to False (use old/legacy APIs for backward compatibility)
+USE_NEW_API = False
 
 def set_api_version(use_new_api):
     """

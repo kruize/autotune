@@ -182,9 +182,9 @@ if [ -n "${api_version}" ]; then
 			;;
 	esac
 else
-	# Default to new API if not specified
+	# Default to old/legacy API if no parameter specified
 	export USE_NEW_RECOMMENDATION_API=false
-	echo "Using default Old/Legacy APIs"
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations, /listRecommendations"
 fi
 
 # Set the root for result directory

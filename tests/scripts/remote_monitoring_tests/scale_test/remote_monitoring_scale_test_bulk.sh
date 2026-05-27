@@ -55,10 +55,16 @@ total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [--api-version=API version to use (v1 or legacy)]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [--api-version=<v1|legacy>]"
 	echo
-	echo "Example: ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7 --api-version=v1"
-	echo "Example: ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7 --api-version=legacy"
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
+	echo
+	echo "Examples:"
+	echo "  ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7                    # Uses legacy API (default)"
+	echo "  ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7 --api-version=v1  # Uses new v1 API"
 	exit -1
 }
 
@@ -174,7 +180,7 @@ do
 	esac
 done
 
-# Set the API version if specified via parameter
+# Set the API version based on parameter
 if [ -n "${api_version}" ]; then
 	case "${api_version}" in
 		v1|V1)
@@ -191,7 +197,9 @@ if [ -n "${api_version}" ]; then
 			;;
 	esac
 else
-  echo "Using OLD/LEGACY APIs"
+	# Default to old/legacy API if no parameter specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations"
 fi
 
 start_time=$(get_date)

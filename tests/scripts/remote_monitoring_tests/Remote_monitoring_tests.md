@@ -240,7 +240,7 @@ The `/kruize/api/v1/recommendations` endpoint supports the updated recommendatio
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup]
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--api-version=<v1|legacy>]
 ```
 
 Where values for test_autotune.sh are:
@@ -256,6 +256,7 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, opensh
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
 			[ --skipsetup ] : optional. Specifying this option skips the Kruize setup and performance profile creation in case of remote_monitoring_tests
+			[ --api-version ] : optional. API version to use for recommendations - 'v1' for new API (/kruize/api/v1/recommendations), 'legacy' for old APIs (updateRecommendations/listRecommendations). Default is 'legacy'
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 Test cases supported are sanity, negative, extended and test_e2e
@@ -272,6 +273,12 @@ To run only the sanity remote monitoring tests,
 
 ```
 <KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --testcase=sanity --resultsdir=/home/results
+```
+
+To run remote monitoring tests with the new Recommendations API v1.0,
+
+```
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --api-version=v1 --resultsdir=/home/results
 ```
 
 Remote monitoring tests can also be run without using the test_autotune.sh. To do this, follow the below steps:
