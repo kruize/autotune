@@ -7,6 +7,12 @@ details: hotspot tunables
 layer_presence:
   queries:
   - datasource: 'prometheus'
+    query: 'jvm_memory_pool_bytes_used{pool=~"Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_pool_bytes_used{pool=~"Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
     query: 'jvm_memory_used_bytes{area="heap",id=~".+Eden.+"}'
     key: pod
   - datasource: 'prometheus'
