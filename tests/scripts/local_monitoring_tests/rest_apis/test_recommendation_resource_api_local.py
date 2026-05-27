@@ -213,7 +213,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     container_exp_name = input_json[0]['experiment_name']
 
     response = generate_recommendations_v1(container_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
     response = list_recommendations_v1(container_exp_name)
@@ -230,7 +230,7 @@ def test_recommendations_v1_e2e_workflow_local_container(cluster_type):
     validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0], v1=True)
 
     response = generate_recommendations_v1(container_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_STATUS_CODE
 
     list_reco_json = response.json()
 
@@ -431,7 +431,7 @@ def test_recommendations_v1_e2e_workflow_local_namespace(cluster_type):
     namespace_exp_name = input_json[0]['experiment_name']
 
     response = generate_recommendations_v1(namespace_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
     response = list_recommendations_v1(namespace_exp_name)

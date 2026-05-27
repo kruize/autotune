@@ -74,7 +74,7 @@ def test_recommendations_v1_remote_e2e_workflow_container(cluster_type):
         response = generate_recommendations_v1(container_experiment_name, interval_end_time=end_time)
         data = response.json()
         print("recommendations response = ", data)
-        assert response.status_code == SUCCESS_200_STATUS_CODE
+        assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == container_experiment_name
         assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
                    NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
@@ -142,7 +142,7 @@ def test_recommendations_v1_remote_e2e_workflow_namespace(cluster_type):
         response = generate_recommendations_v1(namespace_experiment_name, interval_end_time=end_time)
         data = response.json()
         print("recommendations response = ", data)
-        assert response.status_code == SUCCESS_200_STATUS_CODE
+        assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == namespace_experiment_name
         assert data[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][
                    INFO_RECOMMENDATIONS_AVAILABLE_CODE][
