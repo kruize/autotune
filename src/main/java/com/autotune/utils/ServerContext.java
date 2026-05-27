@@ -71,4 +71,7 @@ public class ServerContext {
 
     //Bulk Service
     public static final String BULK_SERVICE = ROOT_CONTEXT + "bulk";
+    
+    //Monitoring Service
+    public static final String ENABLE_MONITORING = ROOT_CONTEXT + "enableMonitoring";
 }
