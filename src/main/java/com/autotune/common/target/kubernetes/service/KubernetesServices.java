@@ -64,6 +64,9 @@ public interface KubernetesServices {
     List<Deployment> getDeploymentsBy(String namespace);
 
     //Restart deployment. Used by EM to restart deployment during warmup/measurements cycle.
+    //Replace deployment with new deployment configuration
+    boolean replaceDeployment(String namespace, String deploymentName, Deployment newDeployment);
+
     boolean restartDeployment(String namespace, String deploymentName);
 
     //Deploy deployment using config
