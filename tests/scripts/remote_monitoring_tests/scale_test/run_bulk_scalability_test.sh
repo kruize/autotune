@@ -316,8 +316,15 @@ db_size_mb=$((db_size / (1024 * 1024) + 1))
 
 echo "Postgres DB size in MB = ${db_size_mb}"
 
-echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}""
-python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}"
+# Determine API version parameter based on USE_NEW_RECOMMENDATION_API
+if [ "${USE_NEW_RECOMMENDATION_API}" = "true" ]; then
+    API_VERSION_PARAM="v1"
+else
+    API_VERSION_PARAM="legacy"
+fi
+
+echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}" --api-version "${API_VERSION_PARAM}""
+python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}" --api-version "${API_VERSION_PARAM}"
 
 echo "###########################################################################"
 echo ""

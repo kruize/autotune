@@ -119,8 +119,8 @@ function local_monitoring_tests() {
 		echo "This will take 30 minutes. Progress updates every 5 minutes..."
 		
 		# Sleep in smaller intervals with progress updates to avoid appearing stuck
-		total_sleep=60
-		interval=10  # 5 minutes
+		total_sleep=1800
+		interval=300  # 5 minutes
 		elapsed=0
 
 		while [ $elapsed -lt $total_sleep ]; do

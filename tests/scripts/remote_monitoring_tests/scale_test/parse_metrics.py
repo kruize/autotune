@@ -89,11 +89,13 @@ def find_file_with_value(directory, column_name, target_value):
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', type=str, help='csv directory path', required=True)
 parser.add_argument('-r', type=str, help='Total results count', required=True)
+parser.add_argument('--api-version', type=str, help='API version (v1/legacy)', default='legacy')
 
 args = parser.parse_args()
 
 directory_path = args.d
 target_value_to_find = args.r
+use_new_api = args.api_version.lower() in ['v1', 'true']
 
 print(f"Directory path - {directory_path}")
 print(f"Results count - {target_value_to_find}")
@@ -109,7 +111,11 @@ else:
 
 csv_file_path = directory_path + '/' + csv_file_path
 
-column_name_to_parse = 'updateRecommendationsPerCall_success'
+# Use appropriate metric name based on API version
+if use_new_api:
+    column_name_to_parse = 'recommendationsPerCall_success'
+else:
+    column_name_to_parse = 'updateRecommendationsPerCall_success'
 
 max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)
 if max_val is not None and avg_val is not None:

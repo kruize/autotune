@@ -617,7 +617,7 @@ v1_list_reco_namespace_json_local_monitoring_schema = {
                                                                             "required": ["memory", "cpu"]
                                                                         }
                                                                     },
-                                                                    "required": []
+                                                                    "required": ["requests", "limits"]
                                                                 }
                                                             },
                                                             "required": []
