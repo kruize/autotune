@@ -21,9 +21,13 @@ phases:
                 "metadata_profile": "cluster-metadata-local-monitoring",
                 "measurement_duration": "24h"
               }
+            sla:
+              - invalidRatio: 0
+              - errorRatio: 0
             handler:
               status:
-                store: bulk.success
+                - range: 200
+                - store: bulk.success
               body:
                 - json:
                     query: .job_id
@@ -35,7 +39,12 @@ phases:
         # Check status once
         - httpRequest:
             GET: /bulk?job_id=${job.id}
+            sla:
+              - invalidRatio: 0
+              - errorRatio: 0
             handler:
+              status:
+                - range: 200
               body:
                 - json:
                     query: .summary.status

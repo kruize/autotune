@@ -70,6 +70,12 @@ curl -s -X POST "http://localhost:8090/benchmark/kruize-bulk-api-test/start"
 ./install_hyperfoil.sh
 ```
 
+**Run and generate a Hyperfoil report output:**
+
+```bash
+./install_hyperfoil.sh --kruize-url http://kruize-route.example.com --output /tmp/hyperfoil-report
+```
+
 ## What the Test Does
 
 1. **POST /bulk** — Submits a bulk job requesting recommendations for all experiments discovered by `prometheus-1`, using a 24-hour measurement window.
