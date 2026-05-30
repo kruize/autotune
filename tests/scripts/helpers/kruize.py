@@ -600,7 +600,6 @@ def get_bulk_job_status(job_id,include=None,logger=None):
     if logger and include == "summary" or logger == None:
          msg = f"Include GET Response JSON: {response.json()}"
          log_message(msg, logger)
-
     return response
 
 
