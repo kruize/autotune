@@ -517,6 +517,41 @@ class BulkJobManagerLabelFilterTest {
         // Should preserve original key with dots and slashes
         assertTrue(result.contains("app.kubernetes.io/component"));
     }
+
+    @Test
+    @DisplayName("Test getLabelsForExperimentName with multiple distinct labels (order unspecified)")
+    void testGetLabelsForExperimentName_MultipleLabels() throws Exception {
+        // Note: This test intentionally does not assert on label ordering, only on presence.
+        // If getLabelsForExperimentName guarantees deterministic ordering, tighten these
+        // assertions accordingly (e.g., by checking relative indexOf positions).
+
+        Method method = BulkJobManager.class.getDeclaredMethod(
+                "getLabelsForExperimentName",
+                BulkInput.FilterWrapper.class
+        );
+        method.setAccessible(true);
+
+        BulkInput.FilterWrapper filterWrapper = new BulkInput.FilterWrapper();
+        BulkInput.Filter filter = new BulkInput.Filter();
+        Map<String, Object> labels = new HashMap<>();
+        labels.put("app", "payments-service");
+        labels.put("env", "prod");
+        labels.put("version", "v1");
+        filter.setLabels(labels);
+        filterWrapper.setInclude(filter);
+
+        String result = (String) method.invoke(bulkJobManager, filterWrapper);
+
+        assertNotNull(result);
+        // Assert that all labels and their values are present in the resulting string,
+        // irrespective of ordering.
+        assertTrue(result.contains("app"));
+        assertTrue(result.contains("payments-service"));
+        assertTrue(result.contains("env"));
+        assertTrue(result.contains("prod"));
+        assertTrue(result.contains("version"));
+        assertTrue(result.contains("v1"));
+    }
 }
 
 // Made with Bob
