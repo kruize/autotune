@@ -424,5 +424,3 @@ class DataSourceMetadataHelperTest {
         assertEquals("nginx:1.22", result.get("nginx-deployment").get("nginx").getContainerImageName());
     }
 }
-
-// Made with Bob
