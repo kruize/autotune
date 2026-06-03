@@ -194,7 +194,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             }
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
-            if (!Terms.checkIfMinDataAvailableForTerm(filteredResultsMap, terms, measurementDuration)) {
+            if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
