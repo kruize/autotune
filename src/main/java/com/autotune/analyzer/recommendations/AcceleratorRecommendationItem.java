@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
+import java.util.Objects;
+
 public class AcceleratorRecommendationItem implements ResourceRecommendation {
     private final String model;
     private final String partition;
@@ -23,11 +25,11 @@ public class AcceleratorRecommendationItem implements ResourceRecommendation {
     private final RecommendationConfigItem memory;
 
     public AcceleratorRecommendationItem(String model, String partition, Integer count, RecommendationConfigItem compute, RecommendationConfigItem memory) {
-        this.model = model;
+        this.model = Objects.requireNonNull(model, "model must not be null");
         this.partition = partition;
         this.count = count;
-        this.compute = compute;
-        this.memory = memory;
+        this.compute = Objects.requireNonNull(compute, "compute must not be null");
+        this.memory = Objects.requireNonNull(memory, "memory must not be null");
     }
 
     public String getModel() {
