@@ -18,11 +18,11 @@ package com.autotune.analyzer.recommendations;
 import java.util.Objects;
 
 public class AcceleratorRecommendationItem implements ResourceRecommendation {
-    private final String model;
-    private final String partition;
-    private final Integer count;
-    private final RecommendationConfigItem compute;
-    private final RecommendationConfigItem memory;
+    private String model;
+    private String partition;
+    private Integer count;
+    private RecommendationConfigItem compute;
+    private RecommendationConfigItem memory;
 
     public AcceleratorRecommendationItem(String model, String partition, Integer count, RecommendationConfigItem compute, RecommendationConfigItem memory) {
         this.model = Objects.requireNonNull(model, "model must not be null");
