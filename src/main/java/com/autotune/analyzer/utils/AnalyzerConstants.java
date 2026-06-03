@@ -195,7 +195,10 @@ public class AnalyzerConstants {
         // H100 96GB related partitions
         NVIDIA_GPU_PARTITION_3_CORES_48GB("nvidia.com/mig-3g.48gb"),
         NVIDIA_GPU_PARTITION_4_CORES_48GB("nvidia.com/mig-4g.48gb"),
-        NVIDIA_GPU_PARTITION_7_CORES_96GB("nvidia.com/mig-7g.96gb");
+        NVIDIA_GPU_PARTITION_7_CORES_96GB("nvidia.com/mig-7g.96gb"),
+
+        // Non-Kubernetes items, maintained for internal JSON representation
+        ACCELERATORS("accelerators");
 
 
         private final String value;
