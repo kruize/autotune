@@ -658,5 +658,3 @@ class TestBulkLabelFilteringEdgeCases:
                 else:
                     # If no experiments in metadata, just verify the count is correct
                     logging.info(f"Job completed with {job_data['summary']['total_experiments']} experiments but none in metadata response")
-
-# Made with Bob
