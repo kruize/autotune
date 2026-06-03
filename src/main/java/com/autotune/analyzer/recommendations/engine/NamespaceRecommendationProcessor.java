@@ -193,7 +193,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             }
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
-            if (!Terms.checkIfMinDataAvailableForTermForNamespace(filteredResultsMap, terms, measurementDuration)) {
+            if (!Terms.checkIfMinDataAvailableForTermForNamespace(namespaceData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
