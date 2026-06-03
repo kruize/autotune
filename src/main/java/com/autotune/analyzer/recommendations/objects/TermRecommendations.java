@@ -112,7 +112,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         this.plots = plots;
     }
 
-    public void addMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
+    public void setMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
         if (null != metricName && null != metricAggregationInfoResults) {
             if (null == this.metricsInfo)
                 this.metricsInfo = new HashMap<>();

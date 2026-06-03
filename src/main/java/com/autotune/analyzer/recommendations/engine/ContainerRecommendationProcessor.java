@@ -203,7 +203,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 // Determine min, max, avg pod count for a given term
                 MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap, termLevelNotifications);
                 LOGGER.info("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
-                mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
+                mappedRecommendationForTerm.setMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(model, containerData, filteredResultsMap, kruizeObject, currentConfig, termsEntry);
