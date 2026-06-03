@@ -194,7 +194,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             }
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
-            if (!Terms.checkIfMinDataAvailableForTerm(filteredResultsMap, terms, measurementDuration)) {
+            if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
@@ -202,7 +202,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 // Determine min, max, avg pod count for a given term
                 MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
                 LOGGER.info("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
-                mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
+                mappedRecommendationForTerm.setMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {

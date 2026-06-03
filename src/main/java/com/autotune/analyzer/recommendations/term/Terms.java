@@ -71,15 +71,6 @@ public class Terms {
         return maxTerms.map(term -> term.days).orElse(0); // Return the max days or 0 if terms is empty
     }
 
-    public static boolean checkIfMinDataAvailableForTerm(Map<Timestamp, IntervalResults> metricsData, Terms term, double measurementDuration) {
-        if (metricsData == null || metricsData.isEmpty()) {
-            return false;
-        }
-        int minDatapoints = 0;
-        minDatapoints = (int)((term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)  / measurementDuration);
-        return metricsData.size() >= minDatapoints;
-    }
-
     public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, Terms term, Timestamp monitoringEndTime,
                                                          double measurementDuration) {
         // Check if data is available
@@ -122,15 +113,6 @@ public class Terms {
             return true;
 
         return false;
-    }
-
-    public static boolean checkIfMinDataAvailableForTermForNamespace(Map<Timestamp, IntervalResults> metricsData, Terms term, double measurementDuration) {
-        if (metricsData == null || metricsData.isEmpty()) {
-            return false;
-        }
-        int minDatapoints = 0;
-        minDatapoints = (int)((term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)  / measurementDuration);
-        return metricsData.size() >= minDatapoints;
     }
 
     public static boolean checkIfMinDataAvailableForTermForNamespace(NamespaceData namespaceData,
