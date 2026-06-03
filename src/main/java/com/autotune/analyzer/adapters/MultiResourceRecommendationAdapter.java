@@ -55,7 +55,7 @@ public class MultiResourceRecommendationAdapter
         Type listType = new com.google.gson.reflect.TypeToken<List<AcceleratorRecommendationItem>>(){}.getType();
         List<AcceleratorRecommendationItem> items = context.deserialize(json, listType);
 
-        // Returning null and not empty list as we don't wanna show empty array in JSON at the time if serialization
+        // Returning null instead of an empty list to avoid emitting an empty array in the JSON during serialization
         if (items == null || items.isEmpty()) {
             return null;
         }
