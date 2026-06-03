@@ -29,6 +29,11 @@ public class MultiResourceRecommendationAdapter
 
     @Override
     public JsonElement serialize(MultiResourceRecommendation src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src == null
+                || src.getAcceleratorRecommendationItems() == null
+                || src.getAcceleratorRecommendationItems().isEmpty()) {
+            return JsonNull.INSTANCE;
+        }
         return context.serialize(src.getAcceleratorRecommendationItems());
     }
 
