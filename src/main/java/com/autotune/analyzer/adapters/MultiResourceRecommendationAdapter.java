@@ -29,14 +29,32 @@ public class MultiResourceRecommendationAdapter
 
     @Override
     public JsonElement serialize(MultiResourceRecommendation src, Type typeOfSrc, JsonSerializationContext context) {
-        return context.serialize(src.getItems());
+        return context.serialize(src.getAcceleratorRecommendationItems());
     }
 
     @Override
     public MultiResourceRecommendation deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
+
+        // if accelerators or any multi object array field missing or null
+        if (json == null || json.isJsonNull()) {
+            return null;
+        }
+
+        if (!json.isJsonArray()) {
+            throw new JsonParseException(
+                    "Expected a JSON array for MultiResourceRecommendation but found: "
+                            + json);
+        }
+
         Type listType = new com.google.gson.reflect.TypeToken<List<AcceleratorRecommendationItem>>(){}.getType();
         List<AcceleratorRecommendationItem> items = context.deserialize(json, listType);
+
+        // Returning null and not empty list as we don't wanna show empty array in JSON at the time if serialization
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+
         return new MultiResourceRecommendation(items);
     }
 }

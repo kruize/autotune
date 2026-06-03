@@ -26,21 +26,21 @@ import java.util.List;
  */
 @JsonAdapter(MultiResourceRecommendationAdapter.class)
 public final class MultiResourceRecommendation implements ResourceRecommendation {
-    private List<AcceleratorRecommendationItem> items;
+    private List<AcceleratorRecommendationItem> acceleratorRecommendationItems;
 
     public MultiResourceRecommendation() {
-        this.items = new ArrayList<>();
+        this.acceleratorRecommendationItems = new ArrayList<>();
     }
 
-    public MultiResourceRecommendation(List<AcceleratorRecommendationItem> items) {
-        this.items = items;
+    public MultiResourceRecommendation(List<AcceleratorRecommendationItem> acceleratorRecommendationItems) {
+        this.acceleratorRecommendationItems = acceleratorRecommendationItems;
     }
 
-    public List<AcceleratorRecommendationItem> getItems() {
-        return items;
+    public List<AcceleratorRecommendationItem> getAcceleratorRecommendationItems() {
+        return acceleratorRecommendationItems;
     }
 
-    public void setItems(List<AcceleratorRecommendationItem> items) {
-        this.items = items;
+    public void setAcceleratorRecommendationItems(List<AcceleratorRecommendationItem> acceleratorRecommendationItems) {
+        this.acceleratorRecommendationItems = acceleratorRecommendationItems;
     }
 }
