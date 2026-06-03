@@ -212,3 +212,84 @@ def test_no_runtime_recommendations_when_no_layers_detected(cluster_type):
         f"No JVM runtime recommendations expected when no JVM layers are detected, "
         f"but found: {jvm_related_envs}"
     )
+
+
+@pytest.mark.runtimes
+def test_conditional_query_execution_with_required_layers(cluster_type):
+    """
+    Test Description: Validates that runtime-specific queries with required_layers
+    are conditionally executed based on detected layers.
+    
+    This test specifically validates the runtime-conditional query execution feature
+    where metrics with required_layers (e.g., jvmInfo with required_layers: ["hotspot", "semeru"])
+    are only queried when at least one of the required layers is detected.
+    
+    Test scenarios:
+    1. With JVM layers (hotspot/semeru): Runtime recommendations should be present
+    2. Without JVM layers (only container): Runtime recommendations should be absent
+    
+    This validates the implementation in:
+    - AggregationFunctions.java: requiredLayers field
+    - Metric.java: requiredLayers field
+    - RuntimeRecommendationProcessor.java: areRequiredLayersDetected() method
+    - RecommendationEngine.java: conditional query execution logic
+    
+    Expected:
+    - When required layers are detected: Runtime env variables present with GC flags
+    - When required layers are NOT detected: No runtime env variables present
+    """
+    
+    # Scenario 1: With JVM layers - runtime recommendations should be present
+    list_reco_json_with_layers = _generate_and_list_recommendations_for_tfb(
+        cluster_type,
+        layer_filter=lambda p: p.name.startswith(("hotspot-", "quarkus-", "container-")),
+    )
+    
+    envs_with_layers = _extract_runtime_envs(list_reco_json_with_layers)
+    jvm_envs_with_layers = [
+        env for env in envs_with_layers
+        if env.get("name") in (JDK_JAVA_OPTIONS, JAVA_OPTIONS)
+    ]
+    
+    # When JVM layers are present, runtime recommendations should exist
+    assert jvm_envs_with_layers, (
+        "Expected JVM runtime recommendations when hotspot layer is detected, but none found"
+    )
+    
+    # Verify GC flags are present in the recommendations
+    env_values_with_layers = [env.get("value", "") for env in jvm_envs_with_layers]
+    assert _contains_any_pattern(env_values_with_layers, HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS), (
+        f"Expected GC flags in runtime recommendations when JVM layers are detected, "
+        f"but not found in: {env_values_with_layers}"
+    )
+    
+    # Verify Quarkus-specific environment variables are present when Quarkus layer is detected
+    quarkus_envs_with_layers = [
+        env for env in envs_with_layers
+        if env.get("name") == QUARKUS_THREAD_POOL_CORE_THREADS
+    ]
+    assert quarkus_envs_with_layers, (
+        f"Expected {QUARKUS_THREAD_POOL_CORE_THREADS} when JVM layers (including Quarkus) are present, "
+        f"but not found in: {envs_with_layers}"
+    )
+    
+    # Scenario 2: Without JVM layers - runtime recommendations should be absent
+    list_reco_json_without_layers = _generate_and_list_recommendations_for_tfb(
+        cluster_type,
+        layer_filter=lambda p: p.name.startswith("container-"),  # Only container layer
+    )
+    
+    envs_without_layers = _extract_runtime_envs(list_reco_json_without_layers)
+    jvm_envs_without_layers = [
+        env for env in envs_without_layers
+        if env.get("name") in (JDK_JAVA_OPTIONS, JAVA_OPTIONS, QUARKUS_THREAD_POOL_CORE_THREADS)
+    ]
+    
+    # When JVM layers are not detected, JVM-related env vars (including Quarkus thread pool tuning)
+    # should not be present at all.
+    assert not jvm_envs_without_layers, (
+        f"No JVM runtime recommendations expected when required layers (hotspot/semeru) are not detected, "
+        f"but found: {jvm_envs_without_layers}"
+    )
+    
+    print("✓ Conditional query execution validated: queries with required_layers are correctly skipped/executed")
