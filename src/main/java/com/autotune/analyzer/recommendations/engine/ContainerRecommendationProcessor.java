@@ -87,7 +87,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfig =
                 getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
         timestampRecommendation.setCurrentConfig(currentConfig);
 
@@ -109,13 +109,13 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         containerData.setContainerRecommendations(containerRecommendations);
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfigData(
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> getCurrentConfigData(
             ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfig = new HashMap<>();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentRequestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentLimitsMap = new HashMap<>();
 
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
@@ -139,6 +139,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             }
         }
 
+        // Currently accelerator related settings are applicable for limits
+
+
         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
@@ -154,7 +157,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
     private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
                                                        Timestamp monitoringEndTime,
                                                        HashMap<AnalyzerConstants.ResourceSetting,
-                                                               HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                               HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfig,
                                                        MappedRecommendationForTimestamp timestampRecommendation) {
         boolean recommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -239,7 +242,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
     private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime, KruizeObject kruizeObject,
                                                                             HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
+                                                                                    HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfigMap,
                                                                             Map.Entry<String, Terms> termEntry) {
 
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();

@@ -19,10 +19,7 @@ package com.autotune.analyzer.recommendations.engine;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.plots.PlotManager;
-import com.autotune.analyzer.recommendations.NamespaceRecommendations;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.model.RecommendationModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
@@ -94,7 +91,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
 
             timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfig =
                     getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
             timestampRecommendation.setCurrentConfig(currentConfig);
 
@@ -119,13 +116,13 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         }
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> getCurrentNamespaceConfigData(
             NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfig = new HashMap<>();
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentNamespaceConfig = new HashMap<>();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceRequestsMap = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceLimitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentNamespaceRequestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentNamespaceLimitsMap = new HashMap<>();
 
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
@@ -163,7 +160,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
     private boolean generateNamespaceRecommendationsBasedOnTerms(NamespaceData namespaceData, KruizeObject kruizeObject,
                                                                 Timestamp monitoringEndTime,
                                                                 HashMap<AnalyzerConstants.ResourceSetting,
-                                                                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                                        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfig,
                                                                 MappedRecommendationForTimestamp timestampRecommendation) {
         boolean namespaceRecommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -251,7 +248,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                                                                                     Timestamp monitoringEndTime,
                                                                                     RecommendationSettings recommendationSettings,
                                                                                     HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
+                                                                                            HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentNamespaceConfigMap,
                                                                                     Map.Entry<String, Terms> termEntry) {
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         
