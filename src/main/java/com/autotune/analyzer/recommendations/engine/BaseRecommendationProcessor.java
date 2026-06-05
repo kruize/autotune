@@ -17,8 +17,7 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
@@ -27,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_CPU_THRESHOLD;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.DEFAULT_MEMORY_THRESHOLD;
@@ -167,7 +167,7 @@ public abstract class BaseRecommendationProcessor {
      * @return CurrentConfigValues object containing CPU and memory request/limit values
      */
     protected CurrentConfigValues extractCurrentConfig(
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap) {
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfigMap) {
 
         RecommendationConfigItem currentCPURequest = null;
         RecommendationConfigItem currentCPULimit = null;
@@ -176,34 +176,89 @@ public abstract class BaseRecommendationProcessor {
 
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) &&
                 null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap =
+            HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requestsMap =
                     currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
             if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
                     null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+                currentCPURequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
             if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
                     null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+                currentMemRequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
 
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) &&
                 null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap =
+            HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limitsMap =
                     currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
             if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
                     null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+                currentCPULimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
             if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
                     null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+                currentMemLimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
 
         return new CurrentConfigValues(currentCPURequest, currentCPULimit, currentMemRequest, currentMemLimit);
     }
+
+    /**
+     * Extracts current container configuration items from requests and limits maps.
+     *
+     * @param currentConfigMap Map containing current configuration
+     * @return CurrentConfigValues object containing CPU and memory request/limit values
+     */
+    protected CurrentContainerConfigValues extractCurrentContainerConfig(
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> currentConfigMap) {
+        RecommendationConfigItem currentCPURequest = null;
+        RecommendationConfigItem currentCPULimit = null;
+        RecommendationConfigItem currentMemRequest = null;
+        RecommendationConfigItem currentMemLimit = null;
+
+        MultiResourceRecommendation currentAcceleratorRequest = null;
+        MultiResourceRecommendation currentAcceleratorLimit = null;
+
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) &&
+                null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
+            HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requestsMap =
+                    currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
+                    null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPURequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+            }
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
+                    null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemRequest = (RecommendationConfigItem) requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+            }
+        }
+
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) &&
+                null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
+            HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limitsMap =
+                    currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) &&
+                    null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPULimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
+            }
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) &&
+                    null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemLimit = (RecommendationConfigItem) limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
+            }
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.ACCELERATORS) &&
+                    null != limitsMap.get(AnalyzerConstants.RecommendationItem.ACCELERATORS)) {
+
+            }
+        }
+
+        CurrentContainerConfigValues currentContainerConfigValues = new CurrentContainerConfigValues(currentCPURequest, currentCPULimit, currentMemRequest, currentMemLimit);
+
+
+        return currentContainerConfigValues;
+    }
+
 
     /**
      * Helper class to hold threshold values.
@@ -235,6 +290,39 @@ public abstract class BaseRecommendationProcessor {
             this.cpuLimit = cpuLimit;
             this.memoryRequest = memoryRequest;
             this.memoryLimit = memoryLimit;
+        }
+    }
+
+    protected static class CurrentContainerConfigValues extends CurrentConfigValues {
+
+        public List<AcceleratorRecommendationItem> acceleratorRequestRecommendationItems;
+        public List<AcceleratorRecommendationItem> acceleratorLimitRecommendationItems;
+
+        public CurrentContainerConfigValues(RecommendationConfigItem cpuRequest,
+                                            RecommendationConfigItem cpuLimit,
+                                            RecommendationConfigItem memoryRequest,
+                                            RecommendationConfigItem memoryLimit) {
+            super(cpuRequest, cpuLimit, memoryRequest, memoryLimit);
+            acceleratorRequestRecommendationItems = null;
+            acceleratorLimitRecommendationItems = null;
+        }
+
+        public List<AcceleratorRecommendationItem> getAcceleratorRequestRecommendationItems() {
+            return acceleratorRequestRecommendationItems;
+        }
+
+        public void setAcceleratorRequestRecommendationItems(List<AcceleratorRecommendationItem> acceleratorRequestRecommendationItems) {
+            if (null != acceleratorRequestRecommendationItems && !acceleratorRequestRecommendationItems.isEmpty())
+                this.acceleratorRequestRecommendationItems = acceleratorRequestRecommendationItems;
+        }
+
+        public List<AcceleratorRecommendationItem> getAcceleratorLimitRecommendationItems() {
+            return acceleratorLimitRecommendationItems;
+        }
+
+        public void setAcceleratorLimitRecommendationItems(List<AcceleratorRecommendationItem> acceleratorLimitRecommendationItems) {
+            if (null != acceleratorLimitRecommendationItems && !acceleratorLimitRecommendationItems.isEmpty())
+                this.acceleratorLimitRecommendationItems = acceleratorLimitRecommendationItems;
         }
     }
 }

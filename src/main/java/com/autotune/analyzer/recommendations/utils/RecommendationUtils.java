@@ -2,10 +2,14 @@ package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.recommendations.AcceleratorRecommendationItem;
+import com.autotune.analyzer.recommendations.MultiResourceRecommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
+import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -31,11 +35,20 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 
 public class RecommendationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
+
+    private static final Set<AnalyzerConstants.MetricName> ACCELERATOR_METRICS =
+            EnumSet.of(
+                    AnalyzerConstants.MetricName.acceleratorCoreUsage,
+                    AnalyzerConstants.MetricName.acceleratorMemoryUsage,
+                    AnalyzerConstants.MetricName.acceleratorFrameBufferUsage
+            );
 
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
@@ -694,6 +707,187 @@ public class RecommendationUtils {
 
     public static Object getTunableValue(Map<TunableSpec, Object> tunableSpecObjectMap, String layerName, String tunableName) {
         return tunableSpecObjectMap.get(new TunableSpec(layerName, tunableName));
+    }
+
+    public static MultiResourceRecommendation getCurrentValueForAccelerators(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                                                             Timestamp timestampToExtract) {
+        Timestamp realTimestampToExtract = null;
+
+        if (filteredResultsMap.containsKey(timestampToExtract) &&
+                hasAcceleratorData(filteredResultsMap.get(timestampToExtract))) {
+            realTimestampToExtract = timestampToExtract;
+        } else {
+            realTimestampToExtract = findLatestAcceleratorTimestamp(filteredResultsMap, timestampToExtract);
+        }
+
+        if (realTimestampToExtract == null)
+            return null;
+
+        IntervalResults intervalResultWithAcceleratorData = filteredResultsMap.get(realTimestampToExtract);
+        AcceleratorRecommendationItem acceleratorRecommendationItem = null;
+        for (AnalyzerConstants.MetricName metricName: ACCELERATOR_METRICS) {
+            if (intervalResultWithAcceleratorData.getMetricResultsMap().containsKey(metricName)) {
+                MetricMetadata metricMetadata = intervalResultWithAcceleratorData.getMetricResultsMap().get(metricName).getMetadata();
+                if (metricMetadata instanceof AcceleratorMetricMetadata acceleratorMetadata) {
+                    acceleratorRecommendationItem = getAcceleratorRecommendationItem(acceleratorMetadata);
+                    if (null != acceleratorRecommendationItem)
+                        break;
+                }
+            }
+
+        }
+
+        if (null == acceleratorRecommendationItem) {
+            return null;
+        }
+        MultiResourceRecommendation multiResourceRecommendation = new MultiResourceRecommendation();
+        multiResourceRecommendation.addAcceleratorRecommendationItem(acceleratorRecommendationItem);
+        return multiResourceRecommendation;
+    }
+
+    private static boolean hasAcceleratorData(IntervalResults intervalResults) {
+        if (intervalResults == null || intervalResults.getMetricResultsMap() == null) {
+            return false;
+        }
+
+        for (AnalyzerConstants.MetricName metric : ACCELERATOR_METRICS) {
+            MetricResults metricResult =
+                    intervalResults.getMetricResultsMap().get(metric);
+
+            if (metricResult == null || metricResult.getMetadata() == null) {
+                continue;
+            }
+
+            if (AnalyzerConstants.DeviceType.ACCELERATOR.toString()
+                    .equalsIgnoreCase(metricResult.getMetadata().getType())) {
+                AcceleratorMetricMetadata acceleratorMetricMetadata = (AcceleratorMetricMetadata) metricResult.getMetadata();
+                if (null != acceleratorMetricMetadata.getModelName())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static Timestamp findLatestAcceleratorTimestamp(
+            Map<Timestamp, IntervalResults> filteredResultsMap,
+            Timestamp targetTimestamp) {
+        Timestamp latest = null;
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : filteredResultsMap.entrySet()) {
+            Timestamp ts = entry.getKey();
+            if (ts.after(targetTimestamp)) {
+                continue;
+            }
+            if (!hasAcceleratorData(entry.getValue())) {
+                continue;
+            }
+            if (latest == null || ts.after(latest)) {
+                latest = ts;
+            }
+        }
+        return latest;
+    }
+
+    private static RecommendationConfigItem getFullGpuCompute(String modelName) {
+        String supported = getSupportedModelBasedOnModelName(modelName);
+
+        return switch (supported) {
+            case AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB,
+                 AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB
+                    -> new RecommendationConfigItem(7.0, "slices");
+
+            default -> null;
+        };
+    }
+
+    private static RecommendationConfigItem getFullGpuMemory(String modelName) {
+        double memoryGiB = getFrameBufferBasedOnModel(modelName) / 1024.0;
+
+        return new RecommendationConfigItem(
+                memoryGiB,
+                "GiB"
+        );
+    }
+
+    private static RecommendationConfigItem getComputeFromProfile(String profile) {
+        String lower = profile.toLowerCase();
+
+        int gIndex = lower.indexOf('g');
+
+        int slices = Integer.parseInt(lower.substring(0, gIndex));
+
+        return new RecommendationConfigItem(
+                (double) slices,
+                "slices"
+        );
+    }
+
+    private static RecommendationConfigItem getMemoryFromProfile(String profile) {
+        String lower = profile.toLowerCase();
+
+        int gIndex = lower.indexOf('g');
+        int gbIndex = lower.indexOf("gb");
+
+        double memory = Double.parseDouble(
+                lower.substring(gIndex + 1, gbIndex)
+        );
+
+        return new RecommendationConfigItem(
+                memory,
+                "GiB"
+        );
+    }
+
+    private static String extractMigProfile(String profile) {
+        if (profile == null || profile.isBlank()) {
+            return null;
+        }
+
+        String normalized = profile.trim().toLowerCase();
+
+        Pattern pattern = Pattern.compile("(\\d+g\\.\\d+gb)");
+        Matcher matcher = pattern.matcher(normalized);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        return null;
+    }
+
+    public static AcceleratorRecommendationItem getAcceleratorRecommendationItem(
+            AcceleratorMetricMetadata metadata) {
+
+        if (metadata == null || metadata.getModelName() == null) {
+            return null;
+        }
+
+        String model = metadata.getModelName();
+        String partition = extractMigProfile(metadata.getProfileName());
+
+        RecommendationConfigItem compute;
+        RecommendationConfigItem memory;
+
+        if (partition != null && !partition.isBlank()) {
+            compute = getComputeFromProfile(partition);
+            memory = getMemoryFromProfile(partition);
+        } else {
+            compute = getFullGpuCompute(model);
+            memory = getFullGpuMemory(model);
+        }
+
+        return new AcceleratorRecommendationItem(
+                model,
+                partition,
+                1,
+                compute,
+                memory
+        );
     }
 
 }
