@@ -109,7 +109,13 @@ for (( i = 0; i < $iterations; i++ )); do
     wait
 
     echo "Collecting kruize metrics"
-    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv"
+    # Determine API version parameter based on USE_NEW_RECOMMENDATION_API environment variable
+    if [ "${USE_NEW_RECOMMENDATION_API}" = "true" ]; then
+        API_VERSION="v1"
+    else
+        API_VERSION="legacy"
+    fi
+    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv --api-version ${API_VERSION}"
     eval "${metrics_command}" &
 
     # Sleep for a short duration to avoid flooding the system with too many requests

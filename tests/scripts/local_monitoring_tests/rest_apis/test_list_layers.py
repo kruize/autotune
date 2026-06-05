@@ -24,7 +24,7 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_layers_validate import *
-from helpers.list_layers_schema import *
+from helpers.schemas.list_layers_schema import *
 
 layer_dir = get_layer_dir()
 

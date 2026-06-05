@@ -25,7 +25,7 @@ sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.short_term_list_reco_json_schema import *
+from helpers.schemas.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.list_datasources_json_validate import *
 from helpers.utils import *
@@ -35,18 +35,18 @@ from helpers.utils import apply_tfb_load
 from helpers.utils import wait_for_container_to_complete
 from helpers.utils import validate_local_monitoring_reco_json
 from helpers.list_metadata_json_validate import *
-from helpers.list_metadata_json_schema import *
-from helpers.list_metadata_json_verbose_true_schema import *
-from helpers.list_metadata_json_cluster_name_without_verbose_schema import *
+from helpers.schemas.list_metadata_json_schema import *
+from helpers.schemas.list_metadata_json_verbose_true_schema import *
+from helpers.schemas.list_metadata_json_cluster_name_without_verbose_schema import *
 from helpers.list_metric_profiles_validate import *
-from helpers.list_metric_profiles_without_parameters_schema import *
-from helpers.short_term_list_reco_json_schema import *
-from helpers.list_reco_json_local_monitoring_schema import *
+from helpers.schemas.list_metric_profiles_without_parameters_schema import *
+from helpers.schemas.short_term_list_reco_json_schema import *
+from helpers.schemas.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 from jinja2 import Environment, FileSystemLoader
 from helpers.list_metadata_profiles_validate import *
-from helpers.list_metadata_profiles_schema import *
+from helpers.schemas.list_metadata_profiles_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 metadata_profile_dir = get_metadata_profile_dir()
@@ -58,9 +58,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml")
-
     # list all datasources
     form_kruize_url(cluster_type)
 
@@ -148,7 +145,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Generate a temporary JSON filename
-    tmp_container_exp_json_file = "/tmp/create_exp_sysbench" + ".json"
+    tmp_container_exp_json_file = "/tmp/create_exp_tfb" + ".json"
     tmp_namespace_exp_json_file = "/tmp/create_exp_default_ns" + ".json"
     print("tmp_json_file for container exp = ", tmp_container_exp_json_file)
     print("tmp_json_file for namespace exp = ", tmp_namespace_exp_json_file)
@@ -160,10 +157,10 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     # Render the JSON content from the template
 
     container_exp_content = template.render(
-       version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
+       version="v2.0", experiment_name="monitor-tfb", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
-       experiment_type="container", kubernetes_obj_type="deployment", name="sysbench", namespace="default", namespace_name=None,
-       container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
+       experiment_type="container", kubernetes_obj_type="deployment", name="tfb-qrh-sample", namespace="default", namespace_name=None,
+       container_image_name="quay.io/kruize/tfb-qrh:1.13.2.F_et17", container_name="tfb-server", measurement_duration="2min", threshold="0.1"
     )
 
     namespace_exp_content = template.render(
@@ -196,7 +193,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     namespace_exp_json_file = tmp_namespace_exp_json_file
 
     response = delete_experiment(container_exp_json_file, rm=False)
-    print("delete sysbench container exp = ", response.status_code)
+    print("delete tfb container exp = ", response.status_code)
 
     response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
@@ -255,9 +252,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the threshold for short term recommendations
-    time.sleep(300)
-
     # generate recommendations
     json_file = open(container_exp_json_file, "r")
     input_json = json.loads(json_file.read())
@@ -282,8 +276,8 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     # Validate the json values
     validate_local_monitoring_recommendation_data_present(list_reco_json)
-    sysbench_exp_json = read_json_data_from_file(container_exp_json_file)
-    validate_local_monitoring_reco_json(sysbench_exp_json[0], list_reco_json[0])
+    tfb_exp_json = read_json_data_from_file(container_exp_json_file)
+    validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0])
 
     response = generate_recommendations(container_exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -307,7 +301,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
 
-    # Delete sysbench container experiment
+    # Delete tfb container experiment
     response = delete_experiment(container_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -321,6 +315,3 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
-
-    # Remove benchmarks directory
-    shutil.rmtree("benchmarks")

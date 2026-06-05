@@ -18,7 +18,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.list_layers_schema import list_layers_schema
+from helpers.schemas.list_layers_schema import list_layers_schema
 
 # Supported values
 LAYER_PRESENCE_TYPES_SUPPORTED = ("presence", "queries", "label")

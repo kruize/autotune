@@ -17,7 +17,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.import_metadata_json_schema import import_metadata_json_schema
+from helpers.schemas.import_metadata_json_schema import import_metadata_json_schema
 
 JSON_NULL_VALUES = ("is not of type 'string'", "is not of type 'integer'", "is not of type 'number'")
 VALUE_MISSING = " cannot be empty or null!"

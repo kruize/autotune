@@ -18,7 +18,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.list_metric_profiles_schema import list_metric_profiles_schema
+from helpers.schemas.list_metric_profiles_schema import list_metric_profiles_schema
 
 
 SLO_CLASSES_SUPPORTED = ("throughput", "response_time", "resource_usage")

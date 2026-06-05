@@ -23,6 +23,11 @@ def find_max_exec_time(exec_file):
     # Define the pattern to match
     pattern = r"scaletest\d+-\d+: Total time elapsed: (\d{2,3}:\d{2}:\d{2})"
 
+    # Check if file exists
+    if not os.path.exists(exec_file):
+        print(f"Execution time log not found: {exec_file}")
+        return
+
     with open(exec_file, "r") as file:
         lines = file.readlines()
 
@@ -89,11 +94,13 @@ def find_file_with_value(directory, column_name, target_value):
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', type=str, help='csv directory path', required=True)
 parser.add_argument('-r', type=str, help='Total results count', required=True)
+parser.add_argument('--api-version', type=str, help='API version (v1/legacy)', default='legacy')
 
 args = parser.parse_args()
 
 directory_path = args.d
 target_value_to_find = args.r
+use_new_api = args.api_version.lower() in ['v1', 'true']
 
 print(f"Directory path - {directory_path}")
 print(f"Results count - {target_value_to_find}")
@@ -109,16 +116,42 @@ else:
 
 csv_file_path = directory_path + '/' + csv_file_path
 
-column_name_to_parse = 'updateRecommendationsPerCall_success'
-
-max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)
-if max_val is not None and avg_val is not None:
-    max_val = round(max_val, 2)
-    avg_val = round(avg_val, 2)
-
-    print(f"Update Reco Latency Max / Avg value: {max_val} / {avg_val}")
+# Use appropriate metric name based on API version
+if use_new_api:
+    column_name_to_parse = 'recommendationsPerCall_success'
 else:
-    print(f"No valid values found in the specified column - {column_name_to_parse}")
+    column_name_to_parse = 'updateRecommendationsPerCall_success'
+
+# Check if the column exists in the CSV, if not fall back to the legacy column name
+column_found = False
+try:
+    with open(csv_file_path, mode='r') as file:
+        reader = csv.DictReader(file)
+        headers = reader.fieldnames
+        if headers and column_name_to_parse in headers:
+            column_found = True
+        elif headers and 'updateRecommendationsPerCall_success' in headers:
+            # Fall back to legacy column name
+            column_name_to_parse = 'updateRecommendationsPerCall_success'
+            column_found = True
+        else:
+            print(f"Warning: Neither 'recommendationsPerCall_success' nor 'updateRecommendationsPerCall_success' found in CSV headers")
+            if headers:
+                print(f"Available headers: {headers}")
+except Exception as e:
+    print(f"Error reading CSV headers: {e}")
+
+# Only try to compute if column was found
+if column_found:
+    max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)
+    if max_val is not None and avg_val is not None:
+        max_val = round(max_val, 2)
+        avg_val = round(avg_val, 2)
+        print(f"Update Reco Latency Max / Avg value: {max_val} / {avg_val}")
+    else:
+        print(f"No valid values found in the specified column - {column_name_to_parse}")
+else:
+    print(f"Skipping Update Reco Latency calculation - column not found")
 
 column_name_to_parse = 'updateResultsPerCall_success'
 max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)

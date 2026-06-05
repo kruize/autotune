@@ -24,9 +24,9 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
-from helpers.list_metric_profiles_without_parameters_schema import *
+from helpers.schemas.list_metric_profiles_without_parameters_schema import *
 from helpers.list_metadata_profiles_validate import *
-from helpers.list_metadata_profiles_schema import *
+from helpers.schemas.list_metadata_profiles_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 metadata_profile_dir = get_metadata_profile_dir()
@@ -50,8 +50,8 @@ def base_payload():
 def filtered_payload():
     payload = base_payload()
     payload["filter"]["include"]["namespace"] = ["default"]
-    payload["filter"]["include"]["workload"] = ["sysbench"]
-    payload["filter"]["include"]["containers"] = ["sysbench"]
+    payload["filter"]["include"]["workload"] = ["tfb-qrh-sample"]
+    payload["filter"]["include"]["containers"] = ["tfb-server"]
     return payload
 
 @pytest.mark.test_bulk_api_ros

@@ -42,8 +42,8 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended")
-	
+	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended" "recommendation")
+
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
 		check_test_case "remote_monitoring"
@@ -69,7 +69,7 @@ function remote_monitoring_tests() {
 
 			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 				echo "Setting up kruize...Done" | tee -a ${LOG}
-		
+
 			sleep 60
 
 			# create performance profile
@@ -117,7 +117,7 @@ function remote_monitoring_tests() {
 		echo "Test description: ${remote_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 	
-		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null 
+		pushd ${REMOTE_MONITORING_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
 			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"

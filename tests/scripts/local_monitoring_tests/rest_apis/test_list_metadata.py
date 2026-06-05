@@ -24,9 +24,9 @@ from helpers.kruize import *
 from helpers.utils import *
 from helpers.import_metadata_json_validate import *
 from helpers.list_metadata_json_validate import *
-from helpers.list_metadata_json_schema import *
-from helpers.list_metadata_json_verbose_true_schema import *
-from helpers.list_metadata_json_cluster_name_without_verbose_schema import *
+from helpers.schemas.list_metadata_json_schema import *
+from helpers.schemas.list_metadata_json_verbose_true_schema import *
+from helpers.schemas.list_metadata_json_cluster_name_without_verbose_schema import *
 from jinja2 import Environment, FileSystemLoader
 
 @pytest.mark.sanity

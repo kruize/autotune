@@ -17,7 +17,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.list_datasources_json_schema import list_datasources_json_schema
+from helpers.schemas.list_datasources_json_schema import list_datasources_json_schema
 
 #TODO - currently only prometheus datasurce provider is supported
 DATASOURCE_TYPE_SUPPORTED = "prometheus"

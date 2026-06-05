@@ -18,6 +18,26 @@ import json
 import requests
 import subprocess
 
+# API endpoint constants
+RECOMMENDATIONS_API_V1 = "/kruize/api/v1/recommendations"
+
+# Global variable to control which API to use
+# This is set by conftest.py which reads the USE_NEW_RECOMMENDATION_API environment variable
+# The environment variable is set by test_autotune.sh or remote_monitoring_scale_test_bulk.sh via the --api-version parameter
+# Default to False (use old/legacy APIs for backward compatibility)
+USE_NEW_API = False
+
+def set_api_version(use_new_api):
+    """
+    Set which API version to use.
+    Called by test scripts to configure API routing.
+    
+    Args:
+        use_new_api (bool): True for new v1 API, False for legacy APIs
+    """
+    global USE_NEW_API
+    USE_NEW_API = use_new_api
+
 def get_kruize_url():
     return URL
 
@@ -139,59 +159,81 @@ def update_results(result_json_file, logging=True):
 
 # Description: This function generates recommendation for the given experiment_name , start time and end time .
 def update_recommendations(experiment_name, startTime, endTime):
-    print("\n************************************************************")
-    print("\nUpdating the recommendation \n for %s for dates Start-time: %s and End-time: %s..." % (
-        experiment_name, startTime, endTime))
-    queryString = "?"
-    if experiment_name:
-        queryString = queryString + "&experiment_name=%s" % (experiment_name)
-    if endTime:
-        queryString = queryString + "&interval_end_time=%s" % (endTime)
-    if startTime:
-        queryString = queryString + "&interval_start_time=%s" % (startTime)
+    """
+    Update recommendations using either the old or new API based on USE_NEW_API flag.
+    
+    If USE_NEW_API is True (default), uses /kruize/api/v1/recommendations (POST)
+    If USE_NEW_API is False, uses /updateRecommendations (POST)
+    """
+    if USE_NEW_API:
+        print(f"\n[Using NEW API: {RECOMMENDATIONS_API_V1}]")
+        return generate_recommendations_v1(experiment_name, interval_end_time=endTime, interval_start_time=startTime)
+    else:
+        print("\n[Using OLD API: /updateRecommendations]")
+        print("\n************************************************************")
+        print("\nUpdating the recommendation \n for %s for dates Start-time: %s and End-time: %s..." % (
+            experiment_name, startTime, endTime))
+        queryString = "?"
+        if experiment_name:
+            queryString = queryString + "&experiment_name=%s" % (experiment_name)
+        if endTime:
+            queryString = queryString + "&interval_end_time=%s" % (endTime)
+        if startTime:
+            queryString = queryString + "&interval_start_time=%s" % (startTime)
 
-    url = URL + "/updateRecommendations?%s" % (queryString)
-    print("URL = ", url)
-    response = requests.post(url, )
-    print("Response status code = ", response.status_code)
-    print(response.text)
-    print("\n************************************************************")
-    return response
+        url = URL + "/updateRecommendations?%s" % (queryString)
+        print("URL = ", url)
+        response = requests.post(url, )
+        print("Response status code = ", response.status_code)
+        print(response.text)
+        print("\n************************************************************")
+        return response
 
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment name, flag indicating latest result and monitoring end time
 def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, rm=False):
-    PARAMS = ""
-    print("\nListing the recommendations...")
-    url = URL + "/listRecommendations"
-    if rm:
-        url += "?rm=true"
-    print("URL = ", url)
-
-    if experiment_name == None:
-        if latest == None and monitoring_end_time == None:
-            response = requests.get(url)
-        elif latest != None:
-            PARAMS = {'latest': latest}
-        elif monitoring_end_time != None:
-            PARAMS = {'monitoring_end_time': monitoring_end_time}
+    """
+    List recommendations using either the old or new API based on USE_NEW_API flag.
+    
+    If USE_NEW_API is True (default), uses /kruize/api/v1/recommendations (GET)
+    If USE_NEW_API is False, uses /listRecommendations (GET)
+    """
+    if USE_NEW_API:
+        print(f"\n[Using NEW API: {RECOMMENDATIONS_API_V1}]")
+        return list_recommendations_v1(experiment_name, latest, monitoring_end_time, rm)
     else:
-        if latest == None and monitoring_end_time == None:
-            PARAMS = {'experiment_name': experiment_name}
-        elif latest != None:
-            PARAMS = {'experiment_name': experiment_name, 'latest': latest}
-        elif monitoring_end_time != None:
-            PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time': monitoring_end_time}
+        print("\n[Using OLD API: /listRecommendations]")
+        PARAMS = ""
+        print("\nListing the recommendations...")
+        url = URL + "/listRecommendations"
+        if rm:
+            url += "?rm=true"
+        print("URL = ", url)
 
-    print("PARAMS = ", PARAMS)
-    response = requests.get(url=url, params=PARAMS)
+        if experiment_name == None:
+            if latest == None and monitoring_end_time == None:
+                response = requests.get(url)
+            elif latest != None:
+                PARAMS = {'latest': latest}
+            elif monitoring_end_time != None:
+                PARAMS = {'monitoring_end_time': monitoring_end_time}
+        else:
+            if latest == None and monitoring_end_time == None:
+                PARAMS = {'experiment_name': experiment_name}
+            elif latest != None:
+                PARAMS = {'experiment_name': experiment_name, 'latest': latest}
+            elif monitoring_end_time != None:
+                PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time': monitoring_end_time}
 
-    print("Response status code = ", response.status_code)
-    print("\n************************************************************")
-    print(response.text)
-    print("\n************************************************************")
-    return response
+        print("PARAMS = ", PARAMS)
+        response = requests.get(url=url, params=PARAMS)
+
+        print("Response status code = ", response.status_code)
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+        return response
 
 
 # Description: This function deletes the experiment and posts the experiment using createExperiment API to Kruize Autotune
@@ -527,21 +569,31 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
 
 
 # Description: This function generates recommendation for the given experiment_name
-def generate_recommendations(experiment_name):
-    print("\n************************************************************")
-    print("\nGenerating the recommendation \n for %s..." % (
-        experiment_name))
-    queryString = "?"
-    if experiment_name:
-        queryString = queryString + "experiment_name=%s" % (experiment_name)
+def generate_recommendations(experiment_name, interval_end_time=None, interval_start_time=None):
+    """
+    Generate recommendations using either the old or new API based on USE_NEW_API flag.
+    
+    If USE_NEW_API is True (default), uses /kruize/api/v1/recommendations (POST)
+    If USE_NEW_API is False, uses /generateRecommendations (POST)
+    """
+    if USE_NEW_API:
+        print(f"\n[Using NEW API: {RECOMMENDATIONS_API_V1}]")
+        return generate_recommendations_v1(experiment_name, interval_end_time, interval_start_time)
+    else:
+        print("\n[Using OLD API: /generateRecommendations]")
+        print("\n************************************************************")
+        print("\nGenerating the recommendation \n for %s..." % (experiment_name))
+        queryString = "?"
+        if experiment_name:
+            queryString = queryString + "experiment_name=%s" % (experiment_name)
 
-    url = URL + "/generateRecommendations%s" % (queryString)
-    print("URL = ", url)
-    response = requests.post(url, )
-    print("Response status code = ", response.status_code)
-    print(response.text)
-    print("\n************************************************************")
-    return response
+        url = URL + "/generateRecommendations%s" % (queryString)
+        print("URL = ", url)
+        response = requests.post(url, )
+        print("Response status code = ", response.status_code)
+        print(response.text)
+        print("\n************************************************************")
+        return response
 
 def log_message(message, logger=None):
  if logger:
@@ -798,3 +850,58 @@ def delete_layer_from_db(layer_name):
     except Exception as e:
         print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
         return False
+
+
+def list_recommendations_v1(experiment_name=None, latest=None, interval_end_time=None, rm=False):
+    """
+    Helper function to call GET /kruize/api/v1/recommendations API
+    """
+    params = ""
+    print("\nListing the recommendations...")
+    base_url = get_kruize_url()
+    url = f"{base_url}{RECOMMENDATIONS_API_V1}"
+    if rm:
+        url += "?rm=true"
+    print("URL = ", url)
+
+    if experiment_name is None:
+        if latest is None and interval_end_time is None:
+            params = ""
+        elif latest is not None:
+            params = {'latest': latest}
+        elif interval_end_time is not None:
+            params = {'monitoring_end_time': interval_end_time}
+    else:
+        if latest is None and interval_end_time is None:
+            params = {'experiment_name': experiment_name}
+        elif latest is not None:
+            params = {'experiment_name': experiment_name, 'latest': latest}
+        elif interval_end_time is not None:
+            params = {'experiment_name': experiment_name, 'monitoring_end_time': interval_end_time}
+
+    print("params = ", params)
+    response = requests.get(url=url, params=params)
+
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
+    return response
+
+
+def generate_recommendations_v1(experiment_name, interval_end_time=None, interval_start_time=None):
+    """
+    Helper function to call POST /kruize/api/v1/recommendations API
+    """
+    base_url = get_kruize_url()
+    api_url = f"{base_url}{RECOMMENDATIONS_API_V1}"
+    params = {'experiment_name': experiment_name}
+
+    if interval_end_time:
+        params['interval_end_time'] = interval_end_time
+    if interval_start_time:
+        params['interval_start_time'] = interval_start_time
+
+    response = requests.post(api_url, params=params)
+    return response
+

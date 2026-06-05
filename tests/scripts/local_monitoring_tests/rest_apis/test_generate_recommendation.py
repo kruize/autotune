@@ -25,7 +25,7 @@ sys.path.append("../../")
 
 from helpers.fixtures import *
 from helpers.kruize import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_json_local_monitoring_schema
+from helpers.schemas.list_reco_json_local_monitoring_schema import list_reco_json_local_monitoring_schema
 from helpers.list_reco_json_validate import validate_list_reco_json
 from helpers.utils import *
 from pathlib import Path

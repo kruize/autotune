@@ -25,7 +25,14 @@ import threading
 import os
 import argparse
 
-csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","createBulkJob_count_success", "bulkJobs_count_running" , "jobStatus_count_success", "bulk_getExperimentMap_count_success", "runBulkJob_count_success","importMetadata_count_success", "generatePlots_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","createBulkJob_count_failure","jobStatus_count_failure","runBulkJob_count_failure","importMetadata_count_failure","generatePlots_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","createBulkJob_sum_success", "jobStatus_sum_success", "bulk_getExperimentMap_sum_success", "runBulkJob_sum_success","importMetadata_sum_success", "generatePlots_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","createBulkJob_sum_failure", "jobStatus_sum_failure", "bulk_getExperimentMap_sum_failure", "runBulkJob_sum_failure","importMetadata_sum_failure","generatePlots_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","createBulkJob_max_success", "jobStatus_max_success", "bulk_getExperimentMap_max_success", "runBulkJob_max_success","importMetadata_max_success","generatePlots_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success","BulkJobPerCall_success", "updateRecommendations_notifications_total"]
+# Base CSV headers (common to both API versions)
+csv_headers_base = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","createBulkJob_count_success", "bulkJobs_count_running" , "jobStatus_count_success", "bulk_getExperimentMap_count_success", "runBulkJob_count_success","importMetadata_count_success", "generatePlots_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","createBulkJob_count_failure","jobStatus_count_failure","runBulkJob_count_failure","importMetadata_count_failure","generatePlots_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","createBulkJob_sum_success", "jobStatus_sum_success", "bulk_getExperimentMap_sum_success", "runBulkJob_sum_success","importMetadata_sum_success", "generatePlots_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","createBulkJob_sum_failure", "jobStatus_sum_failure", "bulk_getExperimentMap_sum_failure", "runBulkJob_sum_failure","importMetadata_sum_failure","generatePlots_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","createBulkJob_max_success", "jobStatus_max_success", "bulk_getExperimentMap_max_success", "runBulkJob_max_success","importMetadata_max_success","generatePlots_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success","BulkJobPerCall_success", "updateRecommendations_notifications_total"]
+
+# Additional headers for v1 API
+csv_headers_v1_additional = ["recommendationsPerCall_success"]
+
+# Will be set based on --api-version parameter
+csv_headers = csv_headers_base
 
 
 queries_map_total = {
@@ -226,7 +233,11 @@ def run_queries(map_type,server,prometheus_url=None):
                     sum_success = round(float(results_map["updateRecommendations_sum_success"]),10)
                     count_success = round(float(results_map["updateRecommendations_count_success"]),10)
                     if count_success != 0:
-                        results_map["updateRecommendationsPerCall_success"] = sum_success / count_success
+                        per_call_value = sum_success / count_success
+                        results_map["updateRecommendationsPerCall_success"] = per_call_value
+                        # For v1 API, also add the new column name
+                        if use_new_api:
+                            results_map["recommendationsPerCall_success"] = per_call_value
                 except ValueError:
                     print("Error: Unable to convert values to floats.")
         if "runBulkJob_sum_success" in results_map and "runBulkJob_count_success" in results_map:
@@ -300,15 +311,17 @@ def main(argv):
     global cluster_type
     global server
     global clusterResults
-    global time_duration 
+    global time_duration
     global queries_map
     global getOneDataPoint
     global resultsfile
     global namespace
     global prometheus_url
     global outputdir
+    global use_new_api
+    global csv_headers
 
-    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true> -e <results dir:Default:results')
+    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true> -e <results dir:Default:results> --api-version <API version: v1/legacy.Default:legacy>')
     parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube')
     parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
     parser.add_argument('-p', '--prometheus_url', help='Prometheus URL',default=None)
@@ -318,6 +331,7 @@ def main(argv):
     parser.add_argument('-o', '--get_one_data_point', help='Single data point', default='true')
     parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
     parser.add_argument('-e', '--outputdir', help='directory to store the results', default='results')
+    parser.add_argument('--api-version', type=str, help='API version (v1/legacy)', default='legacy')
     #args = parser.parse_args()
     args, unknown = parser.parse_known_args()
 
@@ -337,6 +351,15 @@ def main(argv):
     duration = args.duration
     time_duration = args.time
     queries_type = args.queries_type
+    use_new_api = args.api_version.lower() in ['v1', 'true']
+    
+    # Set CSV headers based on API version
+    if use_new_api:
+        csv_headers = csv_headers_base + csv_headers_v1_additional
+        print(f"[Using NEW API v1: CSV will include 'recommendationsPerCall_success' column]")
+    else:
+        csv_headers = csv_headers_base
+        print(f"[Using LEGACY API: CSV will include 'updateRecommendationsPerCall_success' column]")
     getOneDataPoint = args.get_one_data_point
     resultsfile = args.resultsfile
     prometheus_url = args.prometheus_url

@@ -178,6 +178,56 @@ Here are the test scenarios:
 - Delete performance profile with invalid profile name scenarios
 - Delete performance profile with when its associated with existing experiments
 
+# **Kruize Recommendation API Tests**
+
+Kruize Recommendation API tests validate the behavior of the new [Kruize Recommendations API v1.0](./../../../design/MonitoringModeAPI.md)
+using various positive and negative scenarios. These tests are developed using pytest framework and support both
+**Remote Monitoring** and **Local Monitoring** modes with proper test categorization.
+
+## Overview
+
+The Recommendation API v1.0 introduces an enhanced schema that includes:
+- **Replicas field** in current config, recommendation config, and variation
+- **Nested resources structure** with requests and limits under a resources map
+- **Pod count metrics** with aggregation (min, max, avg, sum) in metrics_info
+- Support for both **local** and **remote** monitoring targets
+
+#
+## Tests Description
+
+The `/kruize/api/v1/recommendations` endpoint supports the updated recommendation schema with replicas, nested resources structure, and pod_count metrics.
+
+
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_get_recommendations_v1_remote_e2e_workflow**:
+- End-to-end workflow for both container and namespace experiments
+- Creates experiments, updates results, generates recommendations
+- Validates complete recommendation structure with new v1.0 schema
+- Validates replicas field presence and values
+- Validates nested resources structure (requests/limits)
+- Validates pod_count metrics with aggregation
+- Tests both container-level and namespace-level experiments
+
+**test_get_recommendations_v1_invalid_experiment**:
+- Request recommendations for non-existing experiment
+- Expected: 400 Bad Request with proper error message
+
+**test_get_recommendations_v1_invalid_timestamp**:
+- Request with malformed interval_end_time parameter
+- Expected: 400 Bad Request with proper error message
+
+#### POST /kruize/api/v1/recommendations API Tests
+
+**test_post_recommendations_v1_without_experiment_name**:
+- POST request without experiment_name parameter
+- Expected: 400 Bad Request with proper error message
+
+**test_post_recommendations_v1_without_interval_end_time**:
+- POST request for remote target without interval_end_time
+- Expected: 400 Bad Request with proper error message
+
+
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
@@ -190,7 +240,7 @@ Here are the test scenarios:
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup]
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i kruize image] [--tctype=functional] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--api-version=<v1|legacy>]
 ```
 
 Where values for test_autotune.sh are:
@@ -206,6 +256,7 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, opensh
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
 			[ --skipsetup ] : optional. Specifying this option skips the Kruize setup and performance profile creation in case of remote_monitoring_tests
+			[ --api-version ] : optional. API version to use for recommendations - 'v1' for new API (/kruize/api/v1/recommendations), 'legacy' for old APIs (updateRecommendations/listRecommendations). Default is 'legacy'
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 Test cases supported are sanity, negative, extended and test_e2e
@@ -222,6 +273,12 @@ To run only the sanity remote monitoring tests,
 
 ```
 <KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --testcase=sanity --resultsdir=/home/results
+```
+
+To run remote monitoring tests with the new Recommendations API v1.0,
+
+```
+<KRUIZE_REPO>/tests/test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --api-version=v1 --resultsdir=/home/results
 ```
 
 Remote monitoring tests can also be run without using the test_autotune.sh. To do this, follow the below steps:

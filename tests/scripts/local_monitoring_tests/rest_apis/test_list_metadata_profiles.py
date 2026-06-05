@@ -23,8 +23,8 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metadata_profiles_validate import *
-from helpers.list_metadata_profiles_schema import *
-from helpers.list_metadata_profiles_without_parameters_schema import *
+from helpers.schemas.list_metadata_profiles_schema import *
+from helpers.schemas.list_metadata_profiles_without_parameters_schema import *
 
 metadata_profile_dir = get_metadata_profile_dir()
 
