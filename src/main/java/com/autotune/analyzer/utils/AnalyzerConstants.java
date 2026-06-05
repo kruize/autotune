@@ -71,6 +71,7 @@ public class AnalyzerConstants {
     public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
     public static final String WORKLOAD_VARIABLE = "$WORKLOAD$";
     public static final String WORKLOAD_TYPE_VARIABLE = "$WORKLOAD_TYPE$";
+    public static final String UNSUPPORTED_WORKLOAD_TYPES_VARIABLE = "$UNSUPPORTED_WORKLOAD_TYPES$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";
@@ -1117,5 +1118,32 @@ public class AnalyzerConstants {
 
             }
         }
+    }
+
+    /**
+     * Returns a PromQL filter string for unsupported workload types.
+     * This method generates a filter that excludes workload types not supported by Kruize.
+     * Currently, only DEPLOYMENT_CONFIG is unsupported.
+     *
+     * @return A string in the format 'workload_type!="type1", workload_type!="type2"'
+     *         or empty string if all types are supported
+     */
+    public static String getUnsupportedWorkloadTypesFilter() {
+        // List of unsupported K8S object types
+        List<K8S_OBJECT_TYPES> unsupportedTypes = Arrays.asList(
+            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG
+        );
+        
+        // Build the filter string
+        StringBuilder filter = new StringBuilder();
+        for (K8S_OBJECT_TYPES type : unsupportedTypes) {
+            if (filter.length() > 0) {
+                filter.append(", ");
+            }
+            // Convert enum to lowercase string for PromQL query
+            filter.append("workload_type!=").append("\"").append(type.name().toLowerCase()).append("\"");
+        }
+        
+        return filter.toString();
     }
 }
