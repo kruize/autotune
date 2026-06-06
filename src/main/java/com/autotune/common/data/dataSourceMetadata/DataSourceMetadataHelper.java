@@ -429,17 +429,31 @@ public class DataSourceMetadataHelper {
             for (String namespace : namespaceWorkloadMap.keySet()) {
                 DataSourceNamespace dataSourceNamespace = dataSourceCluster.getDataSourceNamespaceObject(namespace);
 
+                // If namespace doesn't exist, create it (for workloads found via label filtering)
                 if (null == dataSourceNamespace) {
-                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.INVALID_DATASOURCE_METADATA_NAMESPACE);
-                    continue;
+                    LOGGER.info("Creating missing namespace '{}' for label-filtered workloads", namespace);
+                    dataSourceNamespace = new DataSourceNamespace(namespace, new HashMap<>());
+                    dataSourceCluster.getNamespaces().put(namespace, dataSourceNamespace);
                 }
 
                 // Iterate over workloads in namespaceWorkloadMap
                 for (String workloadName : namespaceWorkloadMap.get(namespace).keySet()) {
                     DataSourceWorkload dataSourceWorkload = dataSourceNamespace.getDataSourceWorkloadObject(workloadName);
 
+                    // If workload doesn't exist in namespace, add it (for workloads found via label filtering)
+                    if (null == dataSourceWorkload) {
+                        DataSourceWorkload matchedWorkload = namespaceWorkloadMap.get(namespace).get(workloadName);
+                        if (matchedWorkload != null) {
+                            LOGGER.info("Adding missing workload '{}' to namespace '{}'", workloadName, namespace);
+                            dataSourceNamespace.getWorkloads().put(workloadName, matchedWorkload);
+                            dataSourceWorkload = matchedWorkload;
+                        } else {
+                            continue;
+                        }
+                    }
+
                     // Bulk update container data for the workload
-                    if (null == dataSourceWorkload || !workloadContainerMap.containsKey(workloadName)) {
+                    if (!workloadContainerMap.containsKey(workloadName)) {
                         continue;
                     }
                     dataSourceWorkload.setContainers(workloadContainerMap.get(workloadName));
@@ -449,14 +463,125 @@ public class DataSourceMetadataHelper {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.CONTAINER_METADATA_UPDATE_ERROR + e.getMessage());
         }
     }
+
+    public void filterMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
+                                         HashMap<String, DataSourceNamespace> matchedNamespaces,
+                                         HashMap<String, HashMap<String, DataSourceWorkload>> matchedWorkloads) {
+        try {
+            if (dataSourceMetadataInfo == null || dataSourceMetadataInfo.getDataSourceObject(dataSourceName) == null) {
+                return;
+            }
+
+            DataSourceCluster cluster = dataSourceMetadataInfo.getDataSourceObject(dataSourceName)
+                    .getDataSourceClusterObject(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.CLUSTER_NAME);
+
+            if (cluster == null || cluster.getNamespaces() == null) {
+                return;
+            }
+
+            // null = no filter requested, empty HashMap = filter requested but no matches
+            boolean namespaceFilterRequested = matchedNamespaces != null;
+            boolean workloadFilterRequested = matchedWorkloads != null;
+            
+            // If no filters were requested at all, don't filter anything
+            if (!namespaceFilterRequested && !workloadFilterRequested) {
+                LOGGER.debug("No label filters requested, keeping all workloads");
+                return;
+            }
+
+            // Check if we have any matches
+            boolean hasNamespaceMatches = namespaceFilterRequested && !matchedNamespaces.isEmpty();
+            boolean hasWorkloadMatches = workloadFilterRequested && !matchedWorkloads.isEmpty();
+            
+            // OR logic: Keep results if EITHER filter has matches
+            // If ALL requested filters returned no matches, skip filtering (keep all resources)
+            // This prevents empty metadata when label filter queries fail or return no results
+            if (namespaceFilterRequested && workloadFilterRequested) {
+                // Both filters requested - if BOTH have no matches, skip filtering
+                if (!hasNamespaceMatches && !hasWorkloadMatches) {
+                    LOGGER.warn("Both label filters requested but no resources matched - skipping label filtering (keeping all workloads). " +
+                               "This may indicate label filter queries are not finding matches. Check that kube_namespace_labels and kube_pod_labels metrics exist.");
+                    return;
+                }
+                // If at least one has matches, continue with filtering below
+                LOGGER.info("Label filters: namespace matches={}, workload matches={}", hasNamespaceMatches, hasWorkloadMatches);
+            } else if (namespaceFilterRequested && !hasNamespaceMatches) {
+                // Only namespace filter requested, no matches - skip filtering
+                LOGGER.warn("Namespace label filter requested but no resources matched - skipping label filtering (keeping all workloads). " +
+                           "Check that kube_namespace_labels metric exists and has the requested labels.");
+                return;
+            } else if (workloadFilterRequested && !hasWorkloadMatches) {
+                // Only workload filter requested, no matches - skip filtering
+                LOGGER.warn("Workload label filter requested but no resources matched - skipping label filtering (keeping all workloads). " +
+                           "Check that kube_pod_labels metric exists and has the requested labels.");
+                return;
+            }
+
+            cluster.getNamespaces().entrySet().removeIf(namespaceEntry -> {
+                String namespaceName = namespaceEntry.getKey();
+                DataSourceNamespace namespace = namespaceEntry.getValue();
+
+                boolean namespaceMatched = hasNamespaceMatches && matchedNamespaces.containsKey(namespaceName);
+                HashMap<String, DataSourceWorkload> namespaceMatchedWorkloads =
+                        hasWorkloadMatches ? matchedWorkloads.get(namespaceName) : null;
+
+                // If namespace matched by namespace filter, keep it
+                if (namespaceMatched) {
+                    return false;
+                }
+
+                // If workload filter has matches for this namespace, filter workloads and keep namespace
+                if (namespaceMatchedWorkloads != null && !namespaceMatchedWorkloads.isEmpty()) {
+                    if (namespace.getWorkloads() != null) {
+                        namespace.getWorkloads().entrySet().removeIf(workloadEntry ->
+                                !namespaceMatchedWorkloads.containsKey(workloadEntry.getKey()));
+                    }
+                    // Keep namespace if it still has workloads after filtering
+                    return namespace.getWorkloads() == null || namespace.getWorkloads().isEmpty();
+                }
+
+                // No matches from either filter for this namespace - remove it
+                return true;
+            });
+        } catch (Exception e) {
+            LOGGER.error("Error while filtering datasource metadata info {}", e.getMessage());
+        }
+    }
+
     public String getQueryFromProfile(MetadataProfile metadataProfile, String metricName) {
         List<Metric> metrics = metadataProfile.getQueryVariables();
+        LOGGER.info("Looking for metric '{}' in profile with {} metrics", metricName, metrics != null ? metrics.size() : 0);
+        
+        if (metrics == null || metrics.isEmpty()) {
+            LOGGER.warn("No metrics found in metadata profile");
+            return null;
+        }
+        
+        // Log all available metric names for debugging
+        LOGGER.info("Available metrics in profile: {}",
+            metrics.stream().map(Metric::getName).collect(java.util.stream.Collectors.joining(", ")));
+        
         for (Metric metric : metrics) {
             String name = metric.getName();
+            LOGGER.debug("Checking metric: {}", name);
             if (name.contains(metricName)) {
-                return metric.getAggregationFunctionsMap().get(KruizeConstants.JSONKeys.SUM).getQuery();
+                LOGGER.info("Found matching metric: {}", name);
+                if (metric.getAggregationFunctionsMap() == null) {
+                    LOGGER.warn("Metric '{}' has null aggregation functions map", name);
+                    return null;
+                }
+                if (!metric.getAggregationFunctionsMap().containsKey(KruizeConstants.JSONKeys.SUM)) {
+                    LOGGER.warn("Metric '{}' does not have 'sum' aggregation function. Available functions: {}",
+                               name, metric.getAggregationFunctionsMap().keySet());
+                    return null;
+                }
+                String query = metric.getAggregationFunctionsMap().get(KruizeConstants.JSONKeys.SUM).getQuery();
+                LOGGER.info("Retrieved query for metric '{}': {}", name, query);
+                return query;
             }
         }
+        LOGGER.warn("Metric '{}' not found in profile. Available metrics: {}",
+            metricName, metrics.stream().map(Metric::getName).collect(java.util.stream.Collectors.joining(", ")));
         return null;
     }
 }

@@ -154,9 +154,9 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude());
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -177,11 +177,13 @@ public class BulkJobManager implements Runnable {
 
                 if (null != datasource) {
                     JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
+                    // Note: labelString is used only for experiment naming, NOT for filtering metadata queries
+                    // Label filtering is handled separately via includeResourcesMap which contains podLabelFilter and namespaceLabelFilter
                     if (null != daterange) {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, null, (Long) daterange.get(START_TIME),
                                 (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
                     } else {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, null, 0, 0,
                                 0, measurementDuration, includeResourcesMap, excludeResourcesMap);
                     }
                     if (null == metadataInfo) {
@@ -523,6 +525,9 @@ public class BulkJobManager implements Runnable {
                                     for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
                                         // Experiment name - dynamically constructed
                                         String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
+                                        LOGGER.info("Creating experiment: {} for namespace={}, workload={}, workload_type={}, container={}",
+                                                   experiment_name, namespace.getNamespace(), dsw.getWorkloadName(),
+                                                   dsw.getWorkloadType(), dc.getContainerName());
                                         // create JSON to be passed in the createExperimentAPI
                                         List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
                                         CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
@@ -544,34 +549,49 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         String uniqueKey = null;
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
-                Map<String, String> includeLabels = filter.getInclude().getLabels();
+                Map<String, Object> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
-                    );
-                    // Remove trailing comma
-                    if (!includeLabelsBuilder.isEmpty()) {
+                    LOGGER.info("Processing {} labels for experiment name", includeLabels.size());
+                    
+                    includeLabels.forEach((key, value) -> {
+                        // Use original key name without normalization
+                        // Handle both single values and arrays
+                        if (value instanceof List) {
+                            // For arrays, use the first value for experiment name
+                            List<?> values = (List<?>) value;
+                            if (!values.isEmpty()) {
+                                String escapedValue = escapePromQLLabelValue(values.get(0).toString());
+                                includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                            }
+                        } else {
+                            // Single value
+                            String escapedValue = escapePromQLLabelValue(value.toString());
+                            includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                        }
+                    });
+                    
+                    if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
+                    
                     uniqueKey = includeLabelsBuilder.toString();
+                    LOGGER.info("Labels for experiment name: {}", uniqueKey);
                 }
+            } else {
+                LOGGER.debug("No include filter provided for experiment name labels");
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error processing labels for experiment name: {}", e.getMessage(), e);
         }
         return uniqueKey;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
@@ -580,8 +600,96 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            resourceFilters.putAll(buildLabelFilters(filter.getLabels()));
         }
         return resourceFilters;
+    }
+
+    /**
+     * Escapes special characters in PromQL label values to prevent query injection.
+     * Handles backslashes, double quotes, and newlines according to PromQL string literal rules.
+     *
+     * @param value The raw label value from user input
+     * @return Escaped value safe for use in PromQL queries
+     */
+    private String escapePromQLLabelValue(String value) {
+        if (value == null) {
+            LOGGER.debug("Label value is null, returning empty string");
+            return "";
+        }
+        
+        LOGGER.debug("Escaping label value - Original: [{}]", value);
+        
+        // Escape backslashes first (must be done before escaping quotes)
+        String escaped = value.replace("\\", "\\\\");
+        // Escape double quotes
+        escaped = escaped.replace("\"", "\\\"");
+        // Escape newlines
+        escaped = escaped.replace("\n", "\\n");
+        // Escape carriage returns
+        escaped = escaped.replace("\r", "\\r");
+        // Escape tabs
+        escaped = escaped.replace("\t", "\\t");
+        
+        if (!value.equals(escaped)) {
+            LOGGER.info("Label value escaped - Original: [{}], Escaped: [{}]", value, escaped);
+        } else {
+            LOGGER.debug("Label value requires no escaping: [{}]", value);
+        }
+        
+        return escaped;
+    }
+
+    private Map<String, String> buildLabelFilters(Map<String, Object> labels) {
+        Map<String, String> labelFilters = new HashMap<>();
+        if (labels == null || labels.isEmpty()) {
+            return labelFilters;
+        }
+
+        // For multiple labels, we need OR logic (match if ANY label matches)
+        // Build separate queries for each label and combine with 'or' operator
+        List<String> podLabelQueries = new ArrayList<>();
+        List<String> namespaceLabelQueries = new ArrayList<>();
+
+        labels.forEach((key, value) -> {
+            LOGGER.info("Processing label key: '{}' (original)", key);
+            
+            // kube-state-metrics normalizes label names by replacing special chars with underscores
+            // e.g., "pod-template-hash" becomes "label_pod_template_hash"
+            // e.g., "app.kubernetes.io/component" becomes "label_app_kubernetes_io_component"
+            String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            LOGGER.info("Normalized key for PromQL: '{}'", normalizedKey);
+            
+            // Handle both single string values and arrays of values
+            List<String> values = new ArrayList<>();
+            if (value instanceof List) {
+                // Array of values: {"app": ["kindnet", "sysbench"]}
+                ((List<?>) value).forEach(v -> values.add(v.toString()));
+            } else {
+                // Single value: {"app": "kindnet"}
+                values.add(value.toString());
+            }
+            
+            // Create a matcher for each value
+            for (String val : values) {
+                String escapedValue = escapePromQLLabelValue(val);
+                // Use normalized key for PromQL query
+                String matcher = "label_" + normalizedKey + "=\"" + escapedValue + "\"";
+                podLabelQueries.add(matcher);
+                namespaceLabelQueries.add(matcher);
+            }
+        });
+
+        // Join multiple label conditions with comma (will be used in OR queries)
+        if (!podLabelQueries.isEmpty()) {
+            labelFilters.put("podLabelFilter", String.join(",", podLabelQueries));
+        }
+
+        if (!namespaceLabelQueries.isEmpty()) {
+            labelFilters.put("namespaceLabelFilter", String.join(",", namespaceLabelQueries));
+        }
+
+        return labelFilters;
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
