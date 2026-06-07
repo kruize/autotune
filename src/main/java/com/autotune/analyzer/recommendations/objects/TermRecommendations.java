@@ -69,14 +69,14 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     }
 
     /**
-     *
+     * Method to add metricsInfo for each metric.
      * MetricsInfo is a map in which key is metric name and value is aggregated values of metrics for a given term.
      * For example, key is 'pod_count', value is min,max,avg of pod_count in a given time window.
      *
      * @param metricName
      * @param metricAggregationInfoResults
      */
-    public void setMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
+    public void addMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
         if (null != metricName && null != metricAggregationInfoResults) {
             this.metricsInfo.put(metricName, metricAggregationInfoResults);
         }
