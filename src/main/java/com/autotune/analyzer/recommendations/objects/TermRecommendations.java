@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -19,6 +20,10 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
+
+    @SerializedName(KruizeConstants.JSONKeys.METRICS_INFO)
+    private HashMap<String, MetricAggregationInfoResults> metricsInfo = new HashMap<>();
+
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
 
@@ -34,6 +39,10 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     @Override
     public HashMap<Integer, RecommendationNotification> getNotifications() {
         return this.termLevelNotificationMap;
+    }
+
+    public HashMap<String, MetricAggregationInfoResults> getMetricsInfo() {
+        return metricsInfo;
     }
 
     @Override
@@ -57,6 +66,20 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public void setTermLevelNotificationMap(HashMap<Integer, RecommendationNotification> termLevelNotificationMap) {
         this.termLevelNotificationMap = termLevelNotificationMap;
+    }
+
+    /**
+     *
+     * MetricsInfo is a map in which key is metric name and value is aggregated values of metrics for a given term.
+     * For example, key is 'pod_count', value is min,max,avg of pod_count in a given time window.
+     *
+     * @param metricName
+     * @param metricAggregationInfoResults
+     */
+    public void setMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
+        if (null != metricName && null != metricAggregationInfoResults) {
+            this.metricsInfo.put(metricName, metricAggregationInfoResults);
+        }
     }
 
     public void setMonitoringStartTime(Timestamp monitoringStartTime) {
