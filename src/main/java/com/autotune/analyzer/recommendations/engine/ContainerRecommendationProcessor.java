@@ -28,6 +28,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -315,5 +316,111 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 })
                 .max(Double::compareTo).get();
         return (int) Math.ceil(max_pods_cpu);
+    }
+
+    /**
+     * getPodCountAggrInfo is utility function responsible to determine min, max and avg of pods based on following sequence
+     *
+     * 1. From 'podCount' metric data if exists.
+     * 2. From 'cpuUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     * 3. From 'memoryUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     *
+     * To avoid issues with formulae, results are filtered to chose datapoints whose sum, avg is not null and avg is not 0.0.
+     *
+     * @param filteredResultsMap
+     * @return aggregated results like min, max, avg of pods from the results supplied.
+     */
+    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+        Double avg = 0.0, min = 0.0, max = 0.0;
+        LOGGER.info("filteredResultsMap: size = {}", filteredResultsMap.size());
+
+        // 1. Use 'podCount' metric data points
+        List<MetricAggregationInfoResults> podCountMetrics = filteredResultsMap.values().stream()
+                .filter(results -> results.getMetricResultsMap() != null)
+                .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
+                .filter(metricEntry -> metricEntry.getKey() == AnalyzerConstants.MetricName.podCount)
+                .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
+                .filter(aggInfo -> aggInfo != null && aggInfo.getAvg() != null)
+                .toList();
+        LOGGER.info("podCountMetrics : size = {}, content = {}", podCountMetrics.size(), podCountMetrics);
+        if (!podCountMetrics.isEmpty()) {
+            avg = podCountMetrics.stream()
+                    .mapToDouble(MetricAggregationInfoResults::getAvg)
+                    .average()
+                    .orElse(0.0);
+            if (avg > 0.0) {
+                min = podCountMetrics.stream()
+                        .mapToDouble(MetricAggregationInfoResults::getMin)
+                        .min()
+                        .orElse(0.0);
+                max = podCountMetrics.stream()
+                        .mapToDouble(MetricAggregationInfoResults::getMax)
+                        .max()
+                        .orElse(0.0);
+                metricAggregationInfoResults.setAvg(Math.ceil(avg));
+                metricAggregationInfoResults.setMin(Math.ceil(min));
+                metricAggregationInfoResults.setMax(Math.ceil(max));
+                LOGGER.info("Pod Count Aggregation Info: avg = {} min={}, max={}", avg, min, max);
+                return metricAggregationInfoResults;
+            }
+        }
+
+        // 2. Calculate from 'cpuUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+        List<MetricAggregationInfoResults> cpuUsageMetrics = filteredResultsMap.values().stream()
+                .filter(results -> results.getMetricResultsMap() != null)
+                .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
+                .filter(metricEntry -> metricEntry.getKey() == AnalyzerConstants.MetricName.cpuUsage)
+                .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
+                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
+                .toList();
+        LOGGER.info("cpuUsageMetrics : size = {}, content = {}", cpuUsageMetrics.size(), cpuUsageMetrics);
+        if (!cpuUsageMetrics.isEmpty()) {
+            List<Double> calcPodCounts = cpuUsageMetrics.stream()
+                    .mapToDouble(aggInfo -> aggInfo.getSum() / aggInfo.getAvg())
+                    .boxed()
+                    .toList();
+
+            avg = calcPodCounts.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            min = calcPodCounts.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+            max = calcPodCounts.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+            if (avg > 0.0) {
+                metricAggregationInfoResults.setAvg(Math.ceil(avg));
+                metricAggregationInfoResults.setMin(Math.ceil(min));
+                metricAggregationInfoResults.setMax(Math.ceil(max));
+                LOGGER.info("Pod Count Aggregation Info calculated using cpuUsage metric : avg = {} min={}, max={}", avg, min, max);
+                return metricAggregationInfoResults;
+            }
+        }
+
+        // 3. Calculate from 'memoryUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+        List<MetricAggregationInfoResults> memoryUsageMetrics = filteredResultsMap.values().stream()
+                .filter(results -> results.getMetricResultsMap() != null)
+                .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
+                .filter(metricEntry -> metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage)
+                .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
+                .filter(aggInfo -> (aggInfo != null && aggInfo.getAvg() != null && aggInfo.getAvg() != 0.0 && aggInfo.getSum() != null))
+                .toList();
+        LOGGER.info("memoryUsageMetrics : size = {}, content = {}", memoryUsageMetrics.size(), memoryUsageMetrics);
+        if (!memoryUsageMetrics.isEmpty()) {
+            List<Double> calcPodCounts = memoryUsageMetrics.stream()
+                    .mapToDouble(aggInfo -> aggInfo.getSum() / aggInfo.getAvg())
+                    .boxed()
+                    .toList();
+
+            avg = calcPodCounts.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            min = calcPodCounts.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+            max = calcPodCounts.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+            if (avg > 0.0) {
+                metricAggregationInfoResults.setAvg(Math.ceil(avg));
+                metricAggregationInfoResults.setMin(Math.ceil(min));
+                metricAggregationInfoResults.setMax(Math.ceil(max));
+                LOGGER.info("Pod Count Aggregation Info calculated using memoryUsage metric : avg = {} min={}, max={}", avg, min, max);
+                return metricAggregationInfoResults;
+            }
+        }
+
+        LOGGER.error("Failed to calculate Pod Count Aggregation Info. Size of : podCountMetrics = {}, cpuUsageMetrics = {}, memoryUsageMetrics = {}", podCountMetrics.size(), cpuUsageMetrics.size(), memoryUsageMetrics.size());
+        return null;
     }
 }
