@@ -120,6 +120,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
 
                     if (!pods.isEmpty()) {
                         for (String pod: pods) {
+                            System.out.println("Checking Cryostat targets for pod: " + pod);
                             String queryToTry = modifiedQuery.replace("$POD_NAME$", pod);
                             JSONObject graphQlJson = operator.getJsonObjectForQuery(cryostatDatasourceInfo, queryToTry);
                             JSONArray envNodes = graphQlJson
@@ -127,6 +128,8 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                                     .optJSONArray("environmentNodes");
 
                             if (envNodes != null && !envNodes.isEmpty()) {
+                                System.out.println(
+                                        "SUCCESS: Found Cryostat target(s) for pod '" + pod);
                                 return true;
                             }
                         }
