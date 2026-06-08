@@ -22,7 +22,7 @@
         <postgresql-version>42.7.11</postgresql-version>
         <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
-        <micrometer-version>1.12.10</micrometer-version>
+        <micrometer-version>1.17.0</micrometer-version>
         <awssdk-version>2.46.5</awssdk-version>
         <jackson-version>2.21.4</jackson-version>
         <evalex-version>3.6.0</evalex-version>
