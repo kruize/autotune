@@ -29,12 +29,10 @@ public class Config {
 
     // resources is a Map of map which wraps requests and limits.
     // New API endpoint make use of this to nest requests and limits under resources in its response.
-    // In such scenario, requests and limits are set to null
     @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
     private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
 
     // Existing API endpoints use requests and limits as-is
-    // In such scenario, resources is set to null.
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
@@ -53,11 +51,6 @@ public class Config {
 
     public void setResources(Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
         this.resources = resources;
-        if (resources != null) {
-            // When using the nested "resources" representation, keep the flat representation unset
-            this.requests = null;
-            this.limits = null;
-        }
     }
 
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
@@ -66,10 +59,6 @@ public class Config {
 
     public void setRequests(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests) {
         this.requests = requests;
-        if (requests != null) {
-            // When using the flat "requests"/"limits" representation, keep the nested "resources" unset
-            this.resources = null;
-        }
     }
 
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getLimits() {
@@ -78,10 +67,6 @@ public class Config {
 
     public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
         this.limits = limits;
-        if (limits != null) {
-            // When using the flat "requests"/"limits" representation, keep the nested "resources" unset
-            this.resources = null;
-        }
     }
 
     public List<RecommendationConfigEnv> getEnv() {
