@@ -9,7 +9,7 @@
     <version>0.10</version>
     <properties>
         <fabric8-version>7.7.0</fabric8-version>
-        <org-json-version>20250107</org-json-version>
+        <org-json-version>20260522</org-json-version>
         <jetty-version>12.1.7</jetty-version>
         <log4j-version>2.25.4</log4j-version>
         <java-version>25</java-version>
