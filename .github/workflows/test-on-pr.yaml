@@ -21,7 +21,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kruize/autotune
       - name: Setup Minikube
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.18.0
         with:
