@@ -87,8 +87,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
-                getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
+        Config currentConfig = getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
         timestampRecommendation.setCurrentConfig(currentConfig);
 
         boolean recommendationAvailable = generateRecommendationsBasedOnTerms(containerData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
@@ -109,10 +108,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         containerData.setContainerRecommendations(containerRecommendations);
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfigData(
-            ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
+    private Config getCurrentConfigData(ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+        Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
@@ -130,6 +128,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                     continue;
                 }
 
+
                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                     currentRequestsMap.put(recommendationItem, configItem);
                 }
@@ -143,18 +142,17 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
         if (!currentRequestsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+            currentConfig.setRequests(currentRequestsMap);
         }
         if (!currentLimitsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+            currentConfig.setLimits(currentLimitsMap);
         }
         return currentConfig;
     }
 
     private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
                                                        Timestamp monitoringEndTime,
-                                                       HashMap<AnalyzerConstants.ResourceSetting,
-                                                               HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                       Config currentConfig,
                                                        MappedRecommendationForTimestamp timestampRecommendation) {
         boolean recommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -238,8 +236,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
     private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime, KruizeObject kruizeObject,
-                                                                            HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
+                                                                            Config currentConfig,
                                                                             Map.Entry<String, Terms> termEntry) {
 
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
@@ -250,11 +247,11 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         double memoryThreshold = thresholds.memoryThreshold;
 
         // Extract current config using base class helper
-        CurrentConfigValues currentConfig = extractCurrentConfig(currentConfigMap);
-        RecommendationConfigItem currentCPURequest = currentConfig.cpuRequest;
-        RecommendationConfigItem currentCPULimit = currentConfig.cpuLimit;
-        RecommendationConfigItem currentMemRequest = currentConfig.memoryRequest;
-        RecommendationConfigItem currentMemLimit = currentConfig.memoryLimit;
+        CurrentConfigValues currentConfigValues = extractCurrentConfig(currentConfig);
+        RecommendationConfigItem currentCPURequest = currentConfigValues.cpuRequest;
+        RecommendationConfigItem currentCPULimit = currentConfigValues.cpuLimit;
+        RecommendationConfigItem currentMemRequest = currentConfigValues.memoryRequest;
+        RecommendationConfigItem currentMemLimit = currentConfigValues.memoryLimit;
 
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
