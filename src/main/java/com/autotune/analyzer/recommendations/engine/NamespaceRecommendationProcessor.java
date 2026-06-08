@@ -19,10 +19,7 @@ package com.autotune.analyzer.recommendations.engine;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.plots.PlotManager;
-import com.autotune.analyzer.recommendations.NamespaceRecommendations;
-import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.RecommendationConstants;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.model.RecommendationModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
@@ -94,8 +91,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
 
             timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
-                    getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
+            Config currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
             timestampRecommendation.setCurrentConfig(currentConfig);
 
             boolean recommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
@@ -119,10 +115,9 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         }
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(
-            NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
+    private Config getCurrentNamespaceConfigData(NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfig = new HashMap<>();
+        Config currentNamespaceConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceLimitsMap = new HashMap<>();
@@ -152,18 +147,17 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
         if (!currentNamespaceRequestsMap.isEmpty()) {
-            currentNamespaceConfig.put(AnalyzerConstants.ResourceSetting.requests, currentNamespaceRequestsMap);
+            currentNamespaceConfig.setRequests(currentNamespaceRequestsMap);
         }
         if (!currentNamespaceLimitsMap.isEmpty()) {
-            currentNamespaceConfig.put(AnalyzerConstants.ResourceSetting.limits, currentNamespaceLimitsMap);
+            currentNamespaceConfig.setLimits(currentNamespaceLimitsMap);
         }
         return currentNamespaceConfig;
     }
 
     private boolean generateNamespaceRecommendationsBasedOnTerms(NamespaceData namespaceData, KruizeObject kruizeObject,
                                                                 Timestamp monitoringEndTime,
-                                                                HashMap<AnalyzerConstants.ResourceSetting,
-                                                                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                                Config currentConfig,
                                                                 MappedRecommendationForTimestamp timestampRecommendation) {
         boolean namespaceRecommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -250,8 +244,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                                                                                     NamespaceData namespaceData,
                                                                                     Timestamp monitoringEndTime,
                                                                                     RecommendationSettings recommendationSettings,
-                                                                                    HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
+                                                                                    Config currentNamespaceConfig,
                                                                                     Map.Entry<String, Terms> termEntry) {
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         
@@ -261,7 +254,7 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
         double namespaceMemoryThreshold = thresholds.memoryThreshold;
 
         // Extract current config using base class helper
-        CurrentConfigValues currentConfig = extractCurrentConfig(currentNamespaceConfigMap);
+        CurrentConfigValues currentConfig = extractCurrentConfig(currentNamespaceConfig);
         RecommendationConfigItem currentNamespaceCPURequest = currentConfig.cpuRequest;
         RecommendationConfigItem currentNamespaceCPULimit = currentConfig.cpuLimit;
         RecommendationConfigItem currentNamespaceMemRequest = currentConfig.memoryRequest;
