@@ -21,13 +21,12 @@ import com.autotune.analyzer.kruizeLayer.presence.LabelBasedPresence;
 import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.database.service.ExperimentDBService;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Utility class for layer detection operations
@@ -128,5 +127,33 @@ public class LayerUtils {
         }
 
         return detectedLayers;
+    }
+
+    public static List<String> extractPods(JSONObject promResponse) {
+        List<String> pods = new ArrayList<>();
+
+        JSONObject data = promResponse.optJSONObject("data");
+        if (data == null) {
+            return pods;
+        }
+
+        JSONArray results = data.optJSONArray("result");
+        if (results == null) {
+            return pods;
+        }
+
+        for (int i = 0; i < results.length(); i++) {
+            JSONObject metric = results.optJSONObject(i)
+                    .optJSONObject("metric");
+
+            if (metric != null) {
+                String pod = metric.optString("pod", null);
+                if (pod != null && !pod.isBlank()) {
+                    pods.add(pod);
+                }
+            }
+        }
+
+        return pods;
     }
 }

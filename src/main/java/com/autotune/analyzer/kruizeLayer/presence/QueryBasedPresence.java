@@ -17,13 +17,18 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,26 +101,58 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                 // Start with the original query
                 String modifiedQuery = query.getLayerPresenceQuery();
 
-                // Append dynamic filters for namespace, container
-                if (namespace != null && !namespace.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
-                }
-                if (containerName != null && !containerName.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
-                }
+                if (query.getDataSource().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
+                    DataSourceOperatorImpl tmpPromOperator = DataSourceOperatorImpl.getInstance()
+                            .getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
+                    DataSourceInfo promDatasourceInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get("prometheus-1");
+                    DataSourceInfo cryostatDatasourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(KruizeConstants.SupportedDatasources.CRYOSTAT);
+                    String promQl = KruizeConstants.PromQueries.GET_PODS_WITH_NS_CONTAINER;
+                    if (namespace != null && !namespace.isBlank()) {
+                        promQl = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
+                    }
+                    if (containerName != null && !containerName.isBlank()) {
+                        promQl = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
+                    }
+                    JSONObject returnObj = tmpPromOperator.getJsonObjectForQuery(promDatasourceInfo, promQl);
+                    List<String> pods = LayerUtils.extractPods(returnObj);
 
-                LOGGER.debug(LogMessages.EXECUTING_QUERY, modifiedQuery);
+                    if (!pods.isEmpty()) {
+                        for (String pod: pods) {
+                            String queryToTry = modifiedQuery.replace("$POD_NAME$", pod);
+                            JSONObject graphQlJson = operator.getJsonObjectForQuery(cryostatDatasourceInfo, queryToTry);
+                            JSONArray envNodes = graphQlJson
+                                    .optJSONObject("data")
+                                    .optJSONArray("environmentNodes");
 
-                // Execute the modified query and get results
-                JsonArray resultArray = operator.getResultArrayForQuery(
-                        dataSourceInfo,
-                        modifiedQuery
-                );
+                            if (envNodes != null && !envNodes.isEmpty()) {
+                                return true;
+                            }
+                        }
+                    }
 
-                // Check if we got any results - if yes, layer is present
-                if (resultArray != null && !resultArray.isEmpty()) {
-                    LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, containerName);
-                    return true;
+                } else {
+                    // Append dynamic filters for namespace, container
+                    if (namespace != null && !namespace.isBlank()) {
+                        modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
+                    }
+                    if (containerName != null && !containerName.isBlank()) {
+                        modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
+                    }
+                    LOGGER.debug(LogMessages.EXECUTING_QUERY, modifiedQuery);
+
+                    // Execute the modified query and get results
+                    JsonArray resultArray = operator.getResultArrayForQuery(
+                            dataSourceInfo,
+                            modifiedQuery
+                    );
+
+                    // Check if we got any results - if yes, layer is present
+                    if (resultArray != null && !resultArray.isEmpty()) {
+                        LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, containerName);
+                        return true;
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error(LogMessages.ERROR_EXECUTING_QUERY, query.getDataSource(), e);
