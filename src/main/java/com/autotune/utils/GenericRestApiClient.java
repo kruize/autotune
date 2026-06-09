@@ -35,6 +35,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -105,16 +106,20 @@ public class GenericRestApiClient {
 
                 HttpPost httpPost = new HttpPost(baseURL);
 
-                // For Prometheus API:
-                // query=<promql>
-                List<NameValuePair> params = new ArrayList<>();
-                params.add(new BasicNameValuePair("query", queryString));
-
-                httpPost.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
-                httpPost.setHeader("Content-Type", "application/json");
-
+                httpPost.setEntity(
+                        new StringEntity(
+                                queryString,
+                                ContentType.APPLICATION_JSON
+                        )
+                );
                 httpRequestBase = httpPost;
-
+                LOGGER.info(
+                        "Request body: {}",
+                        EntityUtils.toString(
+                                ((HttpPost) httpRequestBase).getEntity(),
+                                StandardCharsets.UTF_8
+                        )
+                );
             } else {
                 throw new UnsupportedOperationException("Unsupported method type: " + methodType);
             }
@@ -123,6 +128,7 @@ public class GenericRestApiClient {
             applyAuthentication(httpRequestBase);
 
             LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+
 
             // Execute the request and get the HttpResponse
             HttpResponse response = httpclient.execute(httpRequestBase);

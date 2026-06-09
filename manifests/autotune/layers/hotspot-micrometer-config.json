@@ -40,7 +40,7 @@
       },
       {
         "datasource": "cryostat",
-        "query": "{\"query\":\"{ environmentNodes(filter:{ nodeTypes:[\"Pod\"] name:\"$POD_NAME$\" }) { name descendantTargets { name target { alias id jvmId } } } }\"}",
+        "query": "{\"query\":\"{ environmentNodes(filter:{ nodeTypes:[\\\"Pod\\\"] name:\\\"$POD_NAME$\\\" }) { name descendantTargets { name target { alias id jvmId } } } }\"}",
         "key": "pod"
       }
     ]
