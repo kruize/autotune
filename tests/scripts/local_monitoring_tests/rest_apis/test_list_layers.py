@@ -534,7 +534,7 @@ def test_list_layers_sorting_order(cluster_type, tmp_path):
 
 @pytest.mark.layers
 @pytest.mark.sanity
-def test_list_layers_performance_with_many_layers(cluster_type):
+def test_list_layers_performance_with_many_layers(cluster_type, tmp_path):
     """
     Test Description: This test validates listLayers API performance when listing 100+ layers.
     Creates multiple layers and measures response time.
@@ -553,7 +553,7 @@ def test_list_layers_performance_with_many_layers(cluster_type):
         created_layers.append(layer_name)
 
         # Create a simple layer
-        tmp_json_file = f"/tmp/create_layer_perf_{i}.json"
+        tmp_json_file = tmp_path / f"create_layer_perf_{i}.json"
         json_obj = {
             "apiVersion": "recommender.com/v1",
             "kind": "KruizeLayer",
@@ -564,15 +564,11 @@ def test_list_layers_performance_with_many_layers(cluster_type):
             "tunables": [{"name": f"tunable_{i}", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]
         }
 
-        try:
-            with open(tmp_json_file, "w") as f:
-                json.dump(json_obj, f)
+        with open(tmp_json_file, "w") as f:
+            json.dump(json_obj, f)
 
-            response = create_layer(tmp_json_file)
-            assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
-        finally:
-            if os.path.exists(tmp_json_file):
-                os.remove(tmp_json_file)
+        response = create_layer(tmp_json_file)
+        assert response.status_code == SUCCESS_STATUS_CODE, f"Failed to create layer {layer_name}"
 
     print(f"✓ Created {num_layers} layers successfully")
 

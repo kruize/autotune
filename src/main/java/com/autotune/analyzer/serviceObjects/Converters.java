@@ -552,19 +552,36 @@ public class Converters {
          * @return The string value of the field
          * @throws IllegalArgumentException if field is missing or null
          */
-        private static String getRequiredString(JSONObject json, String fieldName, String objectType, String fieldDescription) throws IllegalArgumentException {
+        /**
+         * Validates and retrieves a required string field from a JSONObject.
+         *
+         * @param json The JSONObject to read from
+         * @param fieldName The name of the field to retrieve
+         * @param context The context for error messages (e.g., "Request", "Tunable", "Query")
+         * @return The string value of the field
+         * @throws IllegalArgumentException if field is missing, null, not a string, or empty
+         */
+        private static String getRequiredString(JSONObject json, String fieldName, String context) throws IllegalArgumentException {
             if (!json.has(fieldName)) {
                 throw new IllegalArgumentException(
-                    String.format("%s must have '%s' field", objectType, fieldName));
+                    String.format("%s must have '%s' field", context, fieldName));
             }
             if (json.isNull(fieldName)) {
                 throw new IllegalArgumentException(
-                    String.format("%s %s cannot be null", objectType.replace(" object", ""), fieldDescription));
+                    String.format("%s '%s' cannot be null", context, fieldName));
             }
-            String value = json.getString(fieldName);
+
+            // Check if the value is actually a string before trying to get it
+            Object rawValue = json.get(fieldName);
+            if (!(rawValue instanceof String)) {
+                throw new IllegalArgumentException(
+                    String.format("%s '%s' must be a string, got %s", context, fieldName, rawValue.getClass().getSimpleName()));
+            }
+
+            String value = (String) rawValue;
             if (value.trim().isEmpty()) {
                 throw new IllegalArgumentException(
-                    String.format("%s %s cannot be empty", objectType.replace(" object", ""), fieldDescription));
+                    String.format("%s '%s' cannot be empty", context, fieldName));
             }
             return value;
         }
@@ -576,32 +593,29 @@ public class Converters {
                 JSONObject jsonObject = new JSONObject(inputData);
 
                 // Validate and get apiVersion
-                if (!jsonObject.has(AnalyzerConstants.API_VERSION)) {
-                    throw new IllegalArgumentException("Request must have 'apiVersion' field");
-                }
-                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                String apiVersion = getRequiredString(jsonObject, AnalyzerConstants.API_VERSION, "Request");
                 if (!apiVersion.contains("/")) {
                     throw new IllegalArgumentException("Invalid apiVersion format: " + apiVersion);
                 }
 
                 // Validate and get kind
-                if (!jsonObject.has(AnalyzerConstants.KIND)) {
-                    throw new IllegalArgumentException("Request must have 'kind' field");
-                }
-                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+                String kind = getRequiredString(jsonObject, AnalyzerConstants.KIND, "Request");
                 if (!"KruizeLayer".equals(kind)) {
                     throw new IllegalArgumentException("'kind' must be 'KruizeLayer', got: " + kind);
                 }
 
                 // Validate and parse metadata
                 if (!jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
-                    throw new IllegalArgumentException("Request must have 'metadata' object");
+                    throw new IllegalArgumentException("Request must have 'metadata' field");
+                }
+                if (jsonObject.isNull(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
+                    throw new IllegalArgumentException("Request 'metadata' cannot be null");
                 }
                 JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-                String name = null;
-                if (metadataObject != null) {
-                    name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                if (metadataObject == null) {
+                    throw new IllegalArgumentException("Request 'metadata' must be a valid JSON object");
                 }
+                String name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
 
                 // Parse basic layer fields
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
@@ -627,8 +641,8 @@ public class Converters {
                                 throw new IllegalArgumentException("Queries array contains null elements");
                             }
                             JSONObject queryJsonObject = (JSONObject) queryObj;
-                            String datasource = getRequiredString(queryJsonObject, "datasource", "Query object", "datasource");
-                            String query = getRequiredString(queryJsonObject, "query", "Query object", "string");
+                            String datasource = getRequiredString(queryJsonObject, "datasource", "Query");
+                            String query = getRequiredString(queryJsonObject, "query", "Query");
                             String key = queryJsonObject.optString("key", null);
                             LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, query, key);
                             queries.add(layerPresenceQuery);
@@ -645,8 +659,8 @@ public class Converters {
                                 throw new IllegalArgumentException("Label array contains null elements");
                             }
                             JSONObject labelObject = (JSONObject) labelObj;
-                            labelName = getRequiredString(labelObject, "name", "Label object", "name");
-                            labelValue = getRequiredString(labelObject, "value", "Label object", "value");
+                            labelName = getRequiredString(labelObject, "name", "Label");
+                            labelValue = getRequiredString(labelObject, "value", "Label");
                         }
                     }
                 }
@@ -664,7 +678,7 @@ public class Converters {
                         JSONObject tunableJsonObject = (JSONObject) tunableObj;
 
                         // Validate tunable name using helper method
-                        String tunableName = getRequiredString(tunableJsonObject, "name", "Tunable object", "name");
+                        String tunableName = getRequiredString(tunableJsonObject, "name", "Tunable");
 
                         // Validate value_type with custom error messages that include tunable name
                         if (!tunableJsonObject.has("value_type")) {
