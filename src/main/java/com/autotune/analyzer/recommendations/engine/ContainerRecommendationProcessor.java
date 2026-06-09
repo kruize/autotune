@@ -166,12 +166,25 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
             LOGGER.debug(String.format(KruizeConstants.APIMessages.MONITORING_START_TIME, monitoringStartTime));
 
+            // Extract the datapoints from monitoringStartTime to monitoringEndTime to be used for all recommendation models
+            Map<Timestamp, IntervalResults> filteredResultsMap = null;
+            if (containerData.getResults() != null) {
+                filteredResultsMap = containerData.getResults().entrySet().stream().filter(entry -> (entry.getKey().compareTo(monitoringStartTime) >= 0 && entry.getKey().compareTo(monitoringEndTime) <= 0)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            }
+
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
             if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
+                // Determine min, max, avg pod count for a given term.
+                // If podCountAggrInfo is null, addMetricsInfo will take care. So, no need to add null check.
+                // filteredResultsMap is null or empty is handled inside getPodCountAggrInfo, however it is not necessary as we don't reach here if filteredResultsMap is null or empty.
+                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
+                LOGGER.debug("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
+                mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
+
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
@@ -334,17 +347,19 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         Double avg = 0.0, min = 0.0, max = 0.0;
         LOGGER.debug("filteredResultsMap: size = {}", filteredResultsMap.size());
 
-        // 1. Use 'podCount' metric data points
-        metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.podCount);
+        if (filteredResultsMap != null && !filteredResultsMap.isEmpty()) {
+            // 1. Use 'podCount' metric data points
+            metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.podCount);
 
-        // 2. Calculate from 'cpuUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
-        if (null == metricAggregationInfoResults) {
-            metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.cpuUsage);
-        }
+            // 2. Calculate from 'cpuUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+            if (null == metricAggregationInfoResults) {
+                metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.cpuUsage);
+            }
 
-        // 3. Calculate from 'memoryUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
-        if (null == metricAggregationInfoResults) {
-            metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
+            // 3. Calculate from 'memoryUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+            if (null == metricAggregationInfoResults) {
+                metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
+            }
         }
 
         return metricAggregationInfoResults;
