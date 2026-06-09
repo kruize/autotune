@@ -345,9 +345,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
     private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
         MetricAggregationInfoResults metricAggregationInfoResults = null;
         Double avg = 0.0, min = 0.0, max = 0.0;
-        LOGGER.debug("filteredResultsMap: size = {}", filteredResultsMap.size());
 
         if (filteredResultsMap != null && !filteredResultsMap.isEmpty()) {
+            LOGGER.debug("filteredResultsMap: size = {}", filteredResultsMap.size());
             // 1. Use 'podCount' metric data points
             metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.podCount);
 
