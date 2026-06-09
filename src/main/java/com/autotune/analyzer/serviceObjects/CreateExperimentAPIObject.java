@@ -27,6 +27,8 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,8 +53,10 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
-    @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
+    @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //DEPRECATED - kept for backward compatibility
     private String datasource;
+    @SerializedName(KruizeConstants.JSONKeys.DATASOURCES) //NEW - list of datasource names
+    private List<String> datasources;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
     @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
@@ -161,6 +165,29 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
 
     public String getDatasource() {
         return datasource;
+    }
+
+    /**
+     * Get list of datasources configured for this experiment.
+     * Provides backward compatibility by converting single datasource to list.
+     * 
+     * @return List of datasource names, never null
+     */
+    public List<String> getDatasources() {
+        // Backward compatibility: if datasources is null but datasource is set
+        if (datasources == null && datasource != null) {
+            return List.of(datasource);
+        }
+        return datasources != null ? datasources : Collections.emptyList();
+    }
+
+    /**
+     * Set list of datasources for this experiment
+     * 
+     * @param datasources List of datasource names
+     */
+    public void setDatasources(List<String> datasources) {
+        this.datasources = datasources;
     }
 
     public void setDatasource(String datasource) {
