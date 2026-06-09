@@ -534,16 +534,18 @@ def test_list_layers_sorting_order(cluster_type, tmp_path):
 
 @pytest.mark.layers
 @pytest.mark.sanity
-def test_list_layers_performance_with_many_layers(cluster_type, tmp_path):
+@pytest.mark.parametrize("num_layers", [10])
+def test_list_layers_performance_with_many_layers(cluster_type, tmp_path, num_layers):
     """
-    Test Description: This test validates listLayers API performance when listing 100+ layers.
-    Creates multiple layers and measures response time.
+    Test Description: This test validates listLayers API performance for multiple layers.
+    The default CI configuration uses a smaller number of layers (e.g., 10) for practicality,
+    but this test can be run locally with higher num_layers values for stress/performance runs.
+    Creates multiple layers, measures response time, and asserts performance threshold.
     """
     form_kruize_url(cluster_type)
 
-    # Create 10 layers (reduced from 100+ for practical testing)
-    # In production, this would create 100+ layers
-    num_layers = 10
+    # Create num_layers layers (reduced from 100+ for CI practicality)
+    # In production-like or local stress runs, increase num_layers to 100+ as needed
     created_layers = []
 
     print(f"Creating {num_layers} layers for performance testing...")
@@ -586,6 +588,16 @@ def test_list_layers_performance_with_many_layers(cluster_type, tmp_path):
     assert len(layers) >= num_layers, f"Expected at least {num_layers} layers, got {len(layers)}"
 
     print(f"✓ Listed {len(layers)} layers in {response_time:.3f} seconds")
+
+    # Assert performance threshold
+    # Adjust threshold based on environment/cluster characteristics
+    max_allowed_seconds = 5.0  # Reasonable threshold for listing 10-100 layers
+    assert response_time < max_allowed_seconds, (
+        f"listLayers performance regression: {response_time:.3f}s "
+        f"(threshold: {max_allowed_seconds:.3f}s, num_layers={num_layers})"
+    )
+
+    print(f"✓ Performance within acceptable range ({response_time:.3f}s < {max_allowed_seconds:.3f}s)")
 
     # Cleanup: Delete all created layers
     for layer_name in created_layers:

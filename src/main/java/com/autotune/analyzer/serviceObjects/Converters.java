@@ -11,6 +11,7 @@ import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
@@ -544,15 +545,6 @@ public class Converters {
         }
 
         /**
-         * Helper method to get a required string field from a JSONObject with proper validation
-         * @param json The JSONObject to read from
-         * @param fieldName The field name to retrieve
-         * @param objectType The type of object (e.g., "Query object", "Label object") for error messages
-         * @param fieldDescription The description of the field (e.g., "datasource", "string") for error messages
-         * @return The string value of the field
-         * @throws IllegalArgumentException if field is missing or null
-         */
-        /**
          * Validates and retrieves a required string field from a JSONObject.
          *
          * @param json The JSONObject to read from
@@ -595,25 +587,25 @@ public class Converters {
                 // Validate and get apiVersion
                 String apiVersion = getRequiredString(jsonObject, AnalyzerConstants.API_VERSION, "Request");
                 if (!apiVersion.contains("/")) {
-                    throw new IllegalArgumentException("Invalid apiVersion format: " + apiVersion);
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.INVALID_API_VERSION_FORMAT, apiVersion));
                 }
 
                 // Validate and get kind
                 String kind = getRequiredString(jsonObject, AnalyzerConstants.KIND, "Request");
                 if (!"KruizeLayer".equals(kind)) {
-                    throw new IllegalArgumentException("'kind' must be 'KruizeLayer', got: " + kind);
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.INVALID_KIND, kind));
                 }
 
                 // Validate and parse metadata
                 if (!jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
-                    throw new IllegalArgumentException("Request must have 'metadata' field");
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_MISSING);
                 }
                 if (jsonObject.isNull(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
-                    throw new IllegalArgumentException("Request 'metadata' cannot be null");
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_NULL);
                 }
                 JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
                 if (metadataObject == null) {
-                    throw new IllegalArgumentException("Request 'metadata' must be a valid JSON object");
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_INVALID);
                 }
                 String name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
 
