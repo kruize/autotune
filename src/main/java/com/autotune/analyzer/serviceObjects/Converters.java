@@ -545,6 +545,28 @@ public class Converters {
         }
 
         /**
+         * Converts a Java object type to a human-friendly JSON type name.
+         *
+         * @param value The value to get the type name for
+         * @return A human-friendly type name (string/number/boolean/object/array)
+         */
+        private static String getJsonTypeName(Object value) {
+            if (value instanceof String) {
+                return "string";
+            } else if (value instanceof Number) {
+                return "number";
+            } else if (value instanceof Boolean) {
+                return "boolean";
+            } else if (value instanceof JSONObject) {
+                return "object";
+            } else if (value instanceof JSONArray) {
+                return "array";
+            } else {
+                return "unknown";
+            }
+        }
+
+        /**
          * Validates and retrieves a required string field from a JSONObject.
          *
          * @param json The JSONObject to read from
@@ -567,7 +589,7 @@ public class Converters {
             Object rawValue = json.get(fieldName);
             if (!(rawValue instanceof String)) {
                 throw new IllegalArgumentException(
-                    String.format("%s '%s' must be a string, got %s", context, fieldName, rawValue.getClass().getSimpleName()));
+                    String.format("%s '%s' must be a string, got %s", context, fieldName, getJsonTypeName(rawValue)));
             }
 
             String value = (String) rawValue;
@@ -607,7 +629,17 @@ public class Converters {
                 if (metadataObject == null) {
                     throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_INVALID);
                 }
-                String name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+
+                // Validate metadata.name field
+                String name;
+                try {
+                    name = getRequiredString(metadataObject, AnalyzerConstants.AutotuneObjectConstants.NAME, "Metadata");
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(
+                        AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.LAYER_METADATA_NAME_NULL,
+                        e
+                    );
+                }
 
                 // Parse basic layer fields
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
