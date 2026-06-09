@@ -11,6 +11,7 @@ import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
@@ -543,24 +544,106 @@ public class Converters {
             return metadataProfile;
         }
 
+        /**
+         * Converts a Java object type to a human-friendly JSON type name.
+         *
+         * @param value The value to get the type name for
+         * @return A human-friendly type name (string/number/boolean/object/array)
+         */
+        private static String getJsonTypeName(Object value) {
+            if (value instanceof String) {
+                return "string";
+            } else if (value instanceof Number) {
+                return "number";
+            } else if (value instanceof Boolean) {
+                return "boolean";
+            } else if (value instanceof JSONObject) {
+                return "object";
+            } else if (value instanceof JSONArray) {
+                return "array";
+            } else {
+                return "unknown";
+            }
+        }
+
+        /**
+         * Validates and retrieves a required string field from a JSONObject.
+         *
+         * @param json The JSONObject to read from
+         * @param fieldName The name of the field to retrieve
+         * @param context The context for error messages (e.g., "Request", "Tunable", "Query")
+         * @return The string value of the field
+         * @throws IllegalArgumentException if field is missing, null, not a string, or empty
+         */
+        private static String getRequiredString(JSONObject json, String fieldName, String context) throws IllegalArgumentException {
+            if (!json.has(fieldName)) {
+                throw new IllegalArgumentException(
+                    String.format("%s must have '%s' field", context, fieldName));
+            }
+            if (json.isNull(fieldName)) {
+                throw new IllegalArgumentException(
+                    String.format("%s '%s' cannot be null", context, fieldName));
+            }
+
+            // Check if the value is actually a string before trying to get it
+            Object rawValue = json.get(fieldName);
+            if (!(rawValue instanceof String)) {
+                throw new IllegalArgumentException(
+                    String.format("%s '%s' must be a string, got %s", context, fieldName, getJsonTypeName(rawValue)));
+            }
+
+            String value = (String) rawValue;
+            if (value.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                    String.format("%s '%s' cannot be empty", context, fieldName));
+            }
+            return value;
+        }
+
         public static KruizeLayer convertInputJSONToCreateLayer(String inputData) throws Exception, MonitoringAgentNotSupportedException {
             KruizeLayer kruizeLayer = null;
 
             if (inputData != null) {
                 JSONObject jsonObject = new JSONObject(inputData);
-                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
-                String kind = jsonObject.getString(AnalyzerConstants.KIND);
 
-                // Parse metadata
+                // Validate and get apiVersion
+                String apiVersion = getRequiredString(jsonObject, AnalyzerConstants.API_VERSION, "Request");
+                if (!apiVersion.contains("/")) {
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_API_VERSION_FORMAT, apiVersion));
+                }
+
+                // Validate and get kind
+                String kind = getRequiredString(jsonObject, AnalyzerConstants.KIND, "Request");
+                if (!"KruizeLayer".equals(kind)) {
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_KIND, kind));
+                }
+
+                // Validate and parse metadata
+                if (!jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_MISSING);
+                }
+                if (jsonObject.isNull(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_NULL);
+                }
                 JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-                String name = null;
-                if (metadataObject != null) {
-                    name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                if (metadataObject == null) {
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_INVALID);
+                }
+
+                // Validate metadata.name field
+                String name;
+                try {
+                    name = getRequiredString(metadataObject, AnalyzerConstants.AutotuneObjectConstants.NAME, "Metadata");
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(
+                        AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_METADATA_NAME_NULL,
+                        e
+                    );
                 }
 
                 // Parse basic layer fields
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
-                String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
+                String details = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS, null);
 
                 // Parse layer_presence
                 String presence = null;
@@ -570,7 +653,7 @@ public class Converters {
 
                 JSONObject layerPresenceObject = jsonObject.optJSONObject("layer_presence");
                 if (layerPresenceObject != null) {
-                    presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
+                    presence = layerPresenceObject.optString("presence", null);
 
                     // Parse queries array if present
                     if (layerPresenceObject.has("queries")) {
@@ -582,9 +665,9 @@ public class Converters {
                                 throw new IllegalArgumentException("Queries array contains null elements");
                             }
                             JSONObject queryJsonObject = (JSONObject) queryObj;
-                            String datasource = queryJsonObject.getString("datasource");
-                            String query = queryJsonObject.getString("query");
-                            String key = queryJsonObject.has("key") ? queryJsonObject.getString("key") : null;
+                            String datasource = getRequiredString(queryJsonObject, "datasource", "Query");
+                            String query = getRequiredString(queryJsonObject, "query", "Query");
+                            String key = queryJsonObject.optString("key", null);
                             LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, query, key);
                             queries.add(layerPresenceQuery);
                         }
@@ -600,8 +683,8 @@ public class Converters {
                                 throw new IllegalArgumentException("Label array contains null elements");
                             }
                             JSONObject labelObject = (JSONObject) labelObj;
-                            labelName = labelObject.getString("name");
-                            labelValue = labelObject.getString("value");
+                            labelName = getRequiredString(labelObject, "name", "Label");
+                            labelValue = getRequiredString(labelObject, "value", "Label");
                         }
                     }
                 }
@@ -614,9 +697,25 @@ public class Converters {
                     for (Object tunableObj : tunablesArray) {
                         // Check for null elements in tunables array
                         if (tunableObj == null || tunableObj == JSONObject.NULL) {
-                            throw new IllegalArgumentException("Tunables array contains null elements");
+                            throw new IllegalArgumentException("Tunables array contains null element");
                         }
                         JSONObject tunableJsonObject = (JSONObject) tunableObj;
+
+                        // Validate tunable name using helper method
+                        String tunableName = getRequiredString(tunableJsonObject, "name", "Tunable");
+
+                        // Validate value_type with custom error messages that include tunable name
+                        if (!tunableJsonObject.has("value_type")) {
+                            throw new IllegalArgumentException(String.format("Tunable '%s' missing value_type field", tunableName));
+                        }
+                        if (tunableJsonObject.isNull("value_type")) {
+                            throw new IllegalArgumentException(String.format("Tunable '%s' has null value_type", tunableName));
+                        }
+                        String valueType = tunableJsonObject.getString("value_type");
+                        if (!"double".equals(valueType) && !"integer".equals(valueType) && !"categorical".equals(valueType)) {
+                            throw new IllegalArgumentException(String.format("Tunable '%s' has invalid value_type. Must be one of: double, integer, categorical", tunableName));
+                        }
+
                         Tunable tunable = new Gson().fromJson(tunableJsonObject.toString(), Tunable.class);
                         tunables.add(tunable);
                     }

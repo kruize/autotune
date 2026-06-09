@@ -320,6 +320,10 @@ def test_list_layer_with_non_existent_name(cluster_type):
     pytest.param("invalid_param", "some_value", id="unknown_parameter"),
     pytest.param("verbose", "true", id="unsupported_parameter"),
     pytest.param("limit", "10", id="unsupported_limit"),
+    # Additional negative scenarios (4 tests)
+    pytest.param("name' OR '1'='1", "", id="sql_injection_in_name"),
+    pytest.param("name", "a" * 10000, id="extremely_long_name"),
+    pytest.param("invalid1&invalid2", "test", id="multiple_invalid_params"),
 ])
 def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, param_value):
     """
@@ -519,5 +523,6 @@ def test_list_layers_sorting_order(cluster_type, tmp_path):
     # Cleanup: Delete all created layers
     for layer_name in created_layers:
         delete_layer(layer_name)
-    
+
     print(f"✓ Sorting test completed")
+

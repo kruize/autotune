@@ -367,6 +367,11 @@ public class AnalyzerErrorConstants {
 
             // Layer validation errors
             public static final String LAYER_NULL = "Layer object cannot be null";
+            public static final String INVALID_API_VERSION_FORMAT = "Invalid apiVersion format: %s";
+            public static final String INVALID_KIND = "'kind' must be 'KruizeLayer', got: %s";
+            public static final String METADATA_MISSING = "Request must have 'metadata' field";
+            public static final String METADATA_NULL = "Request 'metadata' cannot be null";
+            public static final String METADATA_INVALID = "Request 'metadata' must be a valid JSON object";
             public static final String LAYER_METADATA_NAME_NULL = "metadata.name cannot be null or empty";
             public static final String LAYER_NAME_NULL = "layer_name cannot be null or empty";
             public static final String LAYER_PRESENCE_NULL = "layer_presence cannot be null";
