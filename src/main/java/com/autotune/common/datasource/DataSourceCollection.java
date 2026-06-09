@@ -105,13 +105,15 @@ public class DataSourceCollection {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
+        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)
+                && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)
+                && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
 //        Continue validations in case of supported providers
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-        if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT) || op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
             // add the authentication details to the DB
             addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);

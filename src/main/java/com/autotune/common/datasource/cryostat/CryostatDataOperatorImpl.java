@@ -35,7 +35,7 @@ public class CryostatDataOperatorImpl extends DataSourceOperatorImpl {
 
     @Override
     public String getDefaultServicePortForProvider() {
-        return "8181";
+        return "4180";
     }
 
     @Override
@@ -83,7 +83,7 @@ public class CryostatDataOperatorImpl extends DataSourceOperatorImpl {
 
         String baseURL = dataSource.getUrl().toString();
 
-        apiClient.setBaseURL(baseURL);
+        apiClient.setBaseURL(baseURL + getQueryEndpoint());
 
         try {
             return apiClient.fetchMetricsJson(

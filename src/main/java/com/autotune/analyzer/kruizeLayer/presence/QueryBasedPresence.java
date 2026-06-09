@@ -27,6 +27,7 @@ import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.apache.logging.log4j.core.util.SystemNanoClock;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -70,6 +71,8 @@ public class QueryBasedPresence implements LayerPresenceDetector {
             return false;
         }
 
+        System.out.println("Datasource Name: " + datasourceName);
+
         // Iterate through all configured queries
         for (LayerPresenceQuery query : queries) {
             // Skip null query objects
@@ -104,25 +107,35 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                 if (query.getDataSource().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
                     DataSourceOperatorImpl tmpPromOperator = DataSourceOperatorImpl.getInstance()
                             .getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-                    DataSourceInfo promDatasourceInfo = DataSourceCollection.getInstance()
-                            .getDataSourcesCollection()
-                            .get("prometheus-1");
+//                    DataSourceInfo promDatasourceInfo = DataSourceCollection.getInstance()
+//                            .getDataSourcesCollection()
+//                            .get("thanos-1");
                     DataSourceInfo cryostatDatasourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(KruizeConstants.SupportedDatasources.CRYOSTAT);
                     String promQl = KruizeConstants.PromQueries.GET_PODS_WITH_NS_CONTAINER;
                     if (namespace != null && !namespace.isBlank()) {
-                        promQl = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
+                        promQl = appendFilter(promQl, LayerConstants.LABEL_NAMESPACE, namespace);
                     }
                     if (containerName != null && !containerName.isBlank()) {
-                        promQl = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
+                        promQl = appendFilter(promQl, LayerConstants.LABEL_CONTAINER, containerName);
                     }
-                    JSONObject returnObj = tmpPromOperator.getJsonObjectForQuery(promDatasourceInfo, promQl);
+                    System.out.println("PromQl: " + promQl);
+                    JSONObject returnObj = tmpPromOperator.getJsonObjectForQuery(dataSourceInfo, promQl);
                     List<String> pods = LayerUtils.extractPods(returnObj);
-
+                    DataSourceOperatorImpl cryostatOperator = DataSourceOperatorImpl.getInstance()
+                            .getOperator(KruizeConstants.SupportedDatasources.CRYOSTAT);
                     if (!pods.isEmpty()) {
                         for (String pod: pods) {
                             System.out.println("Checking Cryostat targets for pod: " + pod);
                             String queryToTry = modifiedQuery.replace("$POD_NAME$", pod);
-                            JSONObject graphQlJson = operator.getJsonObjectForQuery(cryostatDatasourceInfo, queryToTry);
+                            System.out.println("Cryostat Query: " + queryToTry);
+                            if (null == cryostatDatasourceInfo) {
+                                System.out.println("Cryostat DS is null");
+                                continue;
+                            }
+                            JSONObject graphQlJson = cryostatOperator.getJsonObjectForQuery(cryostatDatasourceInfo, queryToTry);
+                            if (null == graphQlJson)
+                                System.out.println("Graph QL response is null");
+                            System.out.println("GraphQL object:" + graphQlJson.toString());
                             JSONArray envNodes = graphQlJson
                                     .optJSONObject("data")
                                     .optJSONArray("environmentNodes");
