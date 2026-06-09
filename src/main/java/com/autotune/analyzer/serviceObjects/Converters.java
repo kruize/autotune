@@ -609,25 +609,25 @@ public class Converters {
                 // Validate and get apiVersion
                 String apiVersion = getRequiredString(jsonObject, AnalyzerConstants.API_VERSION, "Request");
                 if (!apiVersion.contains("/")) {
-                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.INVALID_API_VERSION_FORMAT, apiVersion));
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_API_VERSION_FORMAT, apiVersion));
                 }
 
                 // Validate and get kind
                 String kind = getRequiredString(jsonObject, AnalyzerConstants.KIND, "Request");
                 if (!"KruizeLayer".equals(kind)) {
-                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.INVALID_KIND, kind));
+                    throw new IllegalArgumentException(String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_KIND, kind));
                 }
 
                 // Validate and parse metadata
                 if (!jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
-                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_MISSING);
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_MISSING);
                 }
                 if (jsonObject.isNull(AnalyzerConstants.AutotuneObjectConstants.METADATA)) {
-                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_NULL);
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_NULL);
                 }
                 JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
                 if (metadataObject == null) {
-                    throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.METADATA_INVALID);
+                    throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.METADATA_INVALID);
                 }
 
                 // Validate metadata.name field
@@ -636,7 +636,7 @@ public class Converters {
                     name = getRequiredString(metadataObject, AnalyzerConstants.AutotuneObjectConstants.NAME, "Metadata");
                 } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException(
-                        AnalyzerErrorConstants.AutotuneObjectErrors.CreateLayerAPI.LAYER_METADATA_NAME_NULL,
+                        AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_METADATA_NAME_NULL,
                         e
                     );
                 }
