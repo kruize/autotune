@@ -23,6 +23,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -333,8 +334,35 @@ public class RecommendationEngine implements RecommendationEngineService {
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
             // get the datasource
-            // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
-            String dataSource = kruizeObject.getDataSource();
+            // For multi-datasource experiments, use the first Prometheus datasource for metrics
+            // For backward compatibility, fall back to single datasource if available
+            String dataSource = null;
+            List<String> datasources = kruizeObject.getDatasources();
+            
+            if (datasources != null && !datasources.isEmpty()) {
+                // For multi-datasource: find first Prometheus datasource for metrics collection
+                for (String ds : datasources) {
+                    DataSourceInfo dsInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get(ds);
+                    if (dsInfo != null && dsInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        dataSource = ds;
+                        break;
+                    }
+                }
+                // If no Prometheus found, use first datasource as fallback
+                if (dataSource == null) {
+                    dataSource = datasources.getFirst();
+                }
+            } else {
+                // Backward compatibility: use single datasource field
+                dataSource = kruizeObject.getDataSource();
+            }
+
+            if (dataSource == null) {
+                // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
+                dataSource = KruizeDeploymentInfo.monitoring_agent;
+            }
 
             // call different models for different use cases
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
@@ -1435,7 +1463,12 @@ public class RecommendationEngine implements RecommendationEngineService {
                     boolean runtimeLayerDetected = RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
-                    if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
+                    // Skip accelerator detection for Cryostat-only datasources as they don't support Prometheus query API
+                    boolean isPrometheusDataSource = dataSourceInfo != null &&
+                            dataSourceInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS);
+                    
+                    if (!isROS && null == gpuUUID && isPrometheusDataSource &&
+                            (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
                         containerAcceleratorDetected = RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
                                 maxDateQuery,
                                 namespace,
@@ -1448,7 +1481,8 @@ public class RecommendationEngine implements RecommendationEngineService {
                     }
 
                     // Check if it's a partition
-                    if (!isROS && !containerAcceleratorDetected) {
+                    // Skip accelerator partition detection for Cryostat-only datasources
+                    if (!isROS && !containerAcceleratorDetected && isPrometheusDataSource) {
                         if (null != gpuUUID) {
                             containerAcceleratorPartitionDetected = RecommendationUtils.markAcceleratorPartitionDeviceStatusToContainer(containerData,
                                     maxDateQuery,
