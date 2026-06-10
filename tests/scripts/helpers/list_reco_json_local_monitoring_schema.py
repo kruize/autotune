@@ -125,6 +125,20 @@ list_reco_json_local_monitoring_schema = {
                                                                             },
                                                                             "monitoring_start_time": { "type": "string" },
                                                                             "duration_in_hours": { "type": "number" },
+                                                                            "metrics_info": {
+                                                                                "type": "object",
+                                                                                "properties": {
+                                                                                    "pod_count": {
+                                                                                        "type": "object",
+                                                                                        "properties": {
+                                                                                            "avg": {"type": "number"},
+                                                                                            "max": {"type": "number"},
+                                                                                            "min": {"type": "number"}
+                                                                                        },
+                                                                                    }
+                                                                                },
+                                                                                "required": ["pod_count"]
+                                                                            },
                                                                             "recommendation_engines": {
                                                                                 "type": "object",
                                                                                 "properties": {
@@ -416,7 +430,7 @@ list_reco_json_local_monitoring_schema = {
                                                                                 "required": ["datapoints", "plots_data"]
                                                                             }
                                                                         },
-                                                                        "required": []
+                                                                        "required": ["metrics_info"]
                                                                     }
                                                                 },
                                                                 "required": []
@@ -640,6 +654,20 @@ list_reco_namespace_json_local_monitoring_schema = {
                                                                         },
                                                                         "duration_in_hours": {
                                                                             "type": "number"
+                                                                        },
+                                                                        "metrics_info": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "pod_count": {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "avg": {"type": "number"},
+                                                                                        "max": {"type": "number"},
+                                                                                        "min": {"type": "number"}
+                                                                                    },
+                                                                                }
+                                                                            },
+                                                                            "required": ["pod_count"]
                                                                         },
                                                                         "recommendation_engines": {
                                                                             "type": "object",
@@ -1159,7 +1187,7 @@ list_reco_namespace_json_local_monitoring_schema = {
                                                                             ]
                                                                         }
                                                                     },
-                                                                    "required": []
+                                                                    "required": ["metrics_info"]
                                                                 }
                                                             },
                                                             "required": []
