@@ -22,7 +22,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
 
     @SerializedName(KruizeConstants.JSONKeys.METRICS_INFO)
-    private HashMap<String, MetricAggregationInfoResults> metricsInfo = new HashMap<>();
+    private HashMap<String, MetricAggregationInfoResults> metricsInfo;
 
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
@@ -78,6 +78,8 @@ public class TermRecommendations implements MappedRecommendationForTerm {
      */
     public void addMetricsInfo(String metricName, MetricAggregationInfoResults metricAggregationInfoResults) {
         if (null != metricName && null != metricAggregationInfoResults) {
+            if (null == this.metricsInfo)
+                this.metricsInfo = new HashMap<>();
             this.metricsInfo.put(metricName, metricAggregationInfoResults);
         }
     }
