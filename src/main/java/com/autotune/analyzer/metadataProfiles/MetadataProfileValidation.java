@@ -375,7 +375,8 @@ public class MetadataProfileValidation {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         metricQuery = metricQuery.replace(AnalyzerConstants.MetadataProfileConstants.ADDITIONAL_LABEL, "")
-                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT));
+                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT))
+                .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
 
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
