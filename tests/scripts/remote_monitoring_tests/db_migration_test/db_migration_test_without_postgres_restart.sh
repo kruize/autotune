@@ -110,14 +110,8 @@ LOG="${LOG_DIR}/db-migration-test-without-kruize-db-restart.log"
 
 PIP_INSTALL_LOG="${LOG_DIR}/pip_install.log"
 
-touch "${LOG}"
-exec > >(tee -a "${LOG}") 2>&1
-
-echo ""
-echo "Installing the required python modules..."
-echo "python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG}"
-python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG} 2>&1
-err_exit "ERROR: Installing python modules for the test run failed!"
+setup_script_logging "${LOG}"
+install_python_requirements "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" "${PIP_INSTALL_LOG}"
 
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
