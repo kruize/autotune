@@ -84,7 +84,7 @@ if __name__ == "__main__":
     parser.add_argument('--exptype', type=str, help='specify experiment type')
     parser.add_argument('--count', type=str,
                         help='specify input the number of experiments and corresponding results, separated by commas.')
-    parser.add_argument('--startdate', type=str, help='Specify start date and time in  "%Y-%m-%dT%H:%M:%S.%fZ" format.')
+    parser.add_argument('--startdate', type=str, help='Specify start date and time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS.fZ).')
     parser.add_argument('--minutesjump', type=int,
                         help='specify the time difference between the start time and end time of the interval.')
 

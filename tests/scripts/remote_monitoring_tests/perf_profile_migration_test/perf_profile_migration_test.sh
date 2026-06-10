@@ -27,6 +27,7 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO_PATH}/tests/scripts/remote_monitoring_tests"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -99,6 +100,18 @@ LOG_DIR="${RESULTS_DIR}/perf-profile-migration-test-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/perf-profile-migration-test.log"
+
+PIP_INSTALL_LOG="${LOG_DIR}/pip_install.log"
+
+touch "${LOG}"
+exec > >(tee -a "${LOG}") 2>&1
+
+echo ""
+echo "Installing the required python modules..."
+echo "python3 -m pip install --user -r ${REMOTE_MONITORING_TEST_DIR}/requirements.txt > ${PIP_INSTALL_LOG}"
+python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > "${PIP_INSTALL_LOG}" 2>&1
+err_exit "ERROR: Installing python modules for the test run failed!"
+
 total_results_count=0
 
 # Run scalability test to load 10 exps / 15 days data and update Recommendations with previous release
@@ -139,7 +152,6 @@ num_days_of_res=1
 echo "./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count}"
 ./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count}
 
-echo | tee -a ${LOG}
 echo ""
 
 # Validate the recommendations json
@@ -176,7 +188,7 @@ echo "Validating the recommendations...Done"
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo ""
-echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+echo "Test took ${elapsed_time} seconds to complete"
 
 if [ ${failed} == 0 ]; then
 	echo "Perf Profile Migration test - Passed!"

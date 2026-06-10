@@ -27,6 +27,7 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO_PATH}/tests/scripts/remote_monitoring_tests"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -109,6 +110,16 @@ mkdir -p ${LOG_DIR}
 LOG="${LOG_DIR}/db-migration-test.log"
 
 
+PIP_INSTALL_LOG="${LOG_DIR}/pip_install.log"
+
+touch "${LOG}"
+exec > >(tee -a "${LOG}") 2>&1
+
+echo ""
+echo "Installing the required python modules..."
+echo "python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG}"
+python3 -m pip install --user -r "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" > ${PIP_INSTALL_LOG} 2>&1
+err_exit "ERROR: Installing python modules for the test run failed!"
 
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
@@ -144,7 +155,7 @@ pushd ${SCALE_TEST} > /dev/null
 	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration"
 	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration"
 
-	echo | tee -a ${LOG}
+	echo ""
 	echo ""
 popd > /dev/null 
 
@@ -182,7 +193,7 @@ echo "Validating the recommendations...Done"
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo ""
-echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+echo "Test took ${elapsed_time} seconds to complete"
 
 if [ ${failed} == 0 ]; then
 	echo "DB Migration test - Passed!"
