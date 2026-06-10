@@ -149,13 +149,6 @@ LIST_LAYERS_INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exis
 LIST_LAYERS_NO_LAYERS_FOUND_MSG = "No layers found!"
 LIST_LAYERS_INVALID_QUERY_PARAM_MSG = "The query param(s) - [%s] is/are invalid"
 
-# Recommendations API messages
-POD_COUNT_KEY_MISSING_MSG = "pod_count key missing in metrics_info"
-KEY_MISSING_MSG = "{} key missing in pod_count"
-VALUE_TYPE_INVALID_MSG = "{} value should be numeric, found {}"
-VALUE_NEGATIVE_MSG = "{} value should be >= 0, found {}"
-MIN_GREATER_THAN_AVG_MSG = "min pod count cannot be greater than avg"
-AVG_GREATER_THAN_MAX_MSG = "avg pod count cannot be greater than max"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -843,10 +836,6 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
-
-                        # validate metrics_info object
-                        metrics_info = terms_obj[term]["metrics_info"]
-                        validate_metrics_info(metrics_info)
 
                         # Validate the precision of the valid duration
                         duration = terms_obj[term]["duration_in_hours"]
@@ -2330,28 +2319,3 @@ def validate_metadata_workloads(metadata_json, namespace, workload, container):
         f"Validation failed: No entry found for namespace='{namespace}', "
         f"workload='{workload}', and container='{container}'."
     )
-
-def validate_metrics_info(metrics_info):
-    """
-    Validates metrics_info structure:
-
-    {
-        "pod_count": {
-            "avg": 2,
-            "max": 3,
-            "min": 1
-        }
-    }
-    """
-
-    pod_count_key = "pod_count"
-
-    assert pod_count_key in metrics_info, POD_COUNT_KEY_MISSING_MSG
-
-    pod_count = metrics_info[pod_count_key]
-    for metric in ["avg", "max", "min"]:
-        assert metric in pod_count, KEY_MISSING_MSG % metric
-        assert isinstance(pod_count[metric], (int, float)), VALUE_TYPE_INVALID_MSG % (metric, type(pod_count[metric]))
-        assert pod_count[metric] >= 0, VALUE_NEGATIVE_MSG % (metric, type(pod_count[metric]))
-        assert pod_count["min"] <= pod_count["avg"], MIN_GREATER_THAN_AVG_MSG
-        assert pod_count["avg"] <= pod_count["max"], AVG_GREATER_THAN_MAX_MSG

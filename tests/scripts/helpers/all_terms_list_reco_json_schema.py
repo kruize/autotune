@@ -125,20 +125,6 @@ all_terms_list_reco_json_schema = {
                                       },
                                       "monitoring_start_time": { "type": "string" },
                                       "duration_in_hours": { "type": "number" },
-                                      "metrics_info": {
-                                        "type": "object",
-                                        "properties": {
-                                          "pod_count": {
-                                            "type": "object",
-                                            "properties": {
-                                              "avg": {"type": "number"},
-                                              "max": {"type": "number"},
-                                              "min": {"type": "number"}
-                                            },
-                                          }
-                                        },
-                                        "required": ["pod_count"]
-                                      },
                                       "recommendation_engines": {
                                         "type": "object",
                                         "properties": {
@@ -430,7 +416,7 @@ all_terms_list_reco_json_schema = {
                                         "required": ["datapoints", "plots_data"]
                                       }
                                     },
-                                    "required": ["metrics_info"]
+                                    "required": []
                                   },
                                   "medium_term": {
                                     "type": "object",
@@ -449,20 +435,6 @@ all_terms_list_reco_json_schema = {
                                       },
                                       "monitoring_start_time": { "type": "string" },
                                       "duration_in_hours": { "type": "number" },
-                                      "metrics_info": {
-                                        "type": "object",
-                                        "properties": {
-                                          "pod_count": {
-                                            "type": "object",
-                                            "properties": {
-                                              "avg": {"type": "number"},
-                                              "max": {"type": "number"},
-                                              "min": {"type": "number"}
-                                            },
-                                          }
-                                        },
-                                        "required": ["pod_count"]
-                                      },
                                       "recommendation_engines": {
                                         "type": "object",
                                         "properties": {
@@ -754,7 +726,7 @@ all_terms_list_reco_json_schema = {
                                         "required": ["datapoints", "plots_data"]
                                       }
                                     },
-                                    "required": ["metrics_info"]
+                                    "required": []
                                   },
                                   "long_term": {
                                     "type": "object",
@@ -773,20 +745,6 @@ all_terms_list_reco_json_schema = {
                                       },
                                       "monitoring_start_time": { "type": "string" },
                                       "duration_in_hours": { "type": "number" },
-                                      "metrics_info": {
-                                        "type": "object",
-                                        "properties": {
-                                          "pod_count": {
-                                            "type": "object",
-                                            "properties": {
-                                              "avg": {"type": "number"},
-                                              "max": {"type": "number"},
-                                              "min": {"type": "number"}
-                                            },
-                                          }
-                                        },
-                                        "required": ["pod_count"]
-                                      },
                                       "recommendation_engines": {
                                         "type": "object",
                                         "properties": {
@@ -1078,7 +1036,7 @@ all_terms_list_reco_json_schema = {
                                         "required": ["datapoints", "plots_data"]
                                       }
                                     },
-                                    "required": ["metrics_info"]
+                                    "required": []
                                   }
                                 },
                                 "required": []
