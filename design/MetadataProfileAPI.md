@@ -3,31 +3,6 @@
 This article describes how to add and retrieve Metadata Profiles with REST APIs using curl command. 
 Documentation still in progress stay tuned.
 
-## Supported and Unsupported Workload Types
-
-Kruize supports various Kubernetes workload types for monitoring and generating recommendations. However, certain workload types are not supported and are automatically filtered out during metadata import and query execution.
-
-### Supported Workload Types
-
-The following Kubernetes workload types are **supported** by Kruize:
-
-- **Deployment**
-- **StatefulSet**
-- **ReplicaSet**
-- **ReplicationController**
-- **DaemonSet**
-- **Job**
-
-### Unsupported Workload Types
-
-The following workload types are **not supported** by Kruize:
-
-- **DeploymentConfig** - OpenShift-specific deployment configuration (deprecated)
-
-The reason for excluding DeploymentConfig is that it is OpenShift-specific and has been deprecated from [Red Hat OpenShift v4.14](https://access.redhat.com/articles/7041372) onwards. OpenShift users are encouraged to migrate to standard Kubernetes Deployments.
-
----
-
 ## CreateMetadataProfile
 
 This is quick guide instructions to create metadata profile using input JSON as follows. For a more detailed guide,
