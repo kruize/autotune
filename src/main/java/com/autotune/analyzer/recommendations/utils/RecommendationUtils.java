@@ -6,6 +6,7 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -36,6 +37,76 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 
 public class RecommendationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
+
+    // Utility method to reduce redundant code.
+    private static Double getPodCount(MetricAggregationInfoResults metricAggregationInfoResults) {
+        if (null != metricAggregationInfoResults && metricAggregationInfoResults.getSum() != null && metricAggregationInfoResults.getAvg() != null && metricAggregationInfoResults.getAvg() > 0.0 && metricAggregationInfoResults.getSum() > 0.0 ) {
+            return metricAggregationInfoResults.getSum() / metricAggregationInfoResults.getAvg();
+        }
+        return null;
+    }
+
+    /**
+     * To populate current config of containers, we need to get request and limits of CPU and MEMORY of last datapoint.
+     * Currently, it supports
+     *   limits
+     *   requests
+     *   replicas
+     *
+     * @param currentDatapoint Datapoint at last interval based on end timestamp.
+     * @param metricName Name of the metric for which current value is to be determined
+     * @param notifications List of errors (if any).
+     *
+     * @return RecommendationConfigItem with value and format.
+     */
+    public static RecommendationConfigItem getCurrentValue(IntervalResults currentDatapoint, AnalyzerConstants.MetricName metricName, ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
+        RecommendationConfigItem recommendationConfigItem = null;
+        Double currentValue = null;
+        String format = null;
+        if (null != metricName) {
+            if (currentDatapoint.getMetricResultsMap().containsKey(metricName)) {
+                MetricResults metricResults = currentDatapoint.getMetricResultsMap().get(metricName);
+                MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                if (null != metricAggregationInfoResults) {
+                    currentValue = metricAggregationInfoResults.getAvg();
+                    format = metricAggregationInfoResults.getFormat();
+                }
+            } else if (metricName == AnalyzerConstants.MetricName.podCount) { // fallback for replicas in case podCount metrics is unavailable
+                if (currentDatapoint.getMetricResultsMap().containsKey(AnalyzerConstants.MetricName.cpuUsage)) {
+                    MetricResults cpuMetricResults = currentDatapoint.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
+                    currentValue = getPodCount(cpuMetricResults.getAggregationInfoResult());
+                    if (currentValue != null) {
+                        LOGGER.debug("current replicas from metric 'cpuUsage' is {}", currentValue);
+                        return new RecommendationConfigItem(currentValue, format);
+                    }
+                }
+                if (currentDatapoint.getMetricResultsMap().containsKey(AnalyzerConstants.MetricName.memoryUsage)) {
+                    MetricResults memMetricResults = currentDatapoint.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
+                    currentValue = getPodCount(memMetricResults.getAggregationInfoResult());
+                    if (currentValue != null) {
+                        LOGGER.debug("current replicas from metric 'memoryUsage' is {}", currentValue);
+                        return new RecommendationConfigItem(currentValue, format);
+                    }
+                }
+            }
+
+            if (currentValue == null) {
+                //TODO: Add notification when we are unable to determine replicas for some reason.
+                if (notifications != null) {
+                    if (metricName == AnalyzerConstants.MetricName.cpuRequest)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
+                        notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+                }
+            }
+            return new RecommendationConfigItem(currentValue, format);
+        }
+        return null;
+    }
 
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
