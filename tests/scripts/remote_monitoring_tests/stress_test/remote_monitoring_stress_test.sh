@@ -16,6 +16,8 @@
 #
 ### Script to run stress test with Kruize in remote monitoring mode ##
 #
+# Usage: ./remote_monitoring_stress_test.sh [--api-version=v1|legacy]
+#
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
@@ -48,7 +50,12 @@ jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script] [-b Experiment type [container|namespace] default - container]"
+	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script] [-b Experiment type [container|namespace] default - container] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
@@ -78,9 +85,20 @@ function jmeter_setup() {
 	export PATH=${JMETER_HOME}/bin:${PATH}
 }
 
-while getopts c:r:i:u:d:t:e:b: gopts
+while getopts c:r:i:u:d:t:e:b:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
 		;;
@@ -110,6 +128,28 @@ done
 
 if [ -z "${CLUSTER_TYPE}" ]; then
 	usage
+fi
+
+# Set the API version environment variable if specified
+if [ -n "${api_version}" ]; then
+	case "${api_version}" in
+		v1|V1)
+			export USE_NEW_RECOMMENDATION_API=true
+			echo "Using NEW API (v1): /kruize/api/v1/recommendations"
+			;;
+		legacy|LEGACY|old|OLD)
+			export USE_NEW_RECOMMENDATION_API=false
+			echo "Using OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+			;;
+		*)
+			echo "Error: Invalid API version '${api_version}'. Valid values are: v1, legacy"
+			exit -1
+			;;
+	esac
+else
+	# Default to old/legacy API if no parameter specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
 fi
 
 if [[ "${exp_type}" != "container" && "${exp_type}" != "namespace" ]]; then

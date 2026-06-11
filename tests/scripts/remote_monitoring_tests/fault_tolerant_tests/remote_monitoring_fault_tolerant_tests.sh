@@ -16,6 +16,8 @@
 #
 ### Script to run fault tolerant tests with Kruize in remote monitoring mode ##
 #
+# Usage: ./remote_monitoring_fault_tolerant_tests.sh [--api-version=v1|legacy]
+#
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
@@ -39,7 +41,12 @@ num_exps=1
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
@@ -54,9 +61,20 @@ function get_kruize_pod_log() {
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts c:r:i:u:d:t:h gopts
+while getopts c:r:i:u:d:t:h-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
 		;;
@@ -80,6 +98,28 @@ done
 
 if [ -z "${CLUSTER_TYPE}" ]; then
 	usage
+fi
+
+# Set the API version environment variable if specified
+if [ -n "${api_version}" ]; then
+	case "${api_version}" in
+		v1|V1)
+			export USE_NEW_RECOMMENDATION_API=true
+			echo "Using NEW API (v1): /kruize/api/v1/recommendations"
+			;;
+		legacy|LEGACY|old|OLD)
+			export USE_NEW_RECOMMENDATION_API=false
+			echo "Using OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+			;;
+		*)
+			echo "Error: Invalid API version '${api_version}'. Valid values are: v1, legacy"
+			exit -1
+			;;
+	esac
+else
+	# Default to old/legacy API if no parameter specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
 fi
 
 start_time=$(get_date)

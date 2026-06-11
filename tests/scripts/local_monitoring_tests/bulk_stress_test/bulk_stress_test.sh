@@ -16,6 +16,8 @@
 #
 ### Script to run bulk stress test with Kruize in local monitoring mode ##
 #
+# Usage: ./bulk_stress_test.sh [--api-version=v1|legacy]
+#
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
@@ -47,7 +49,12 @@ function usage() {
 	echo
 	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s End date of tsdb block (default - current date & time)]"
 	echo "[-d no. of days of metrics usage data (default - 15)] [-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup]"
-	echo "[ -z to test with prometheus datasource] [--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
+	echo "[ -z to test with prometheus datasource] [--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit 1
 }
 
@@ -95,11 +102,17 @@ function kruize_local_thanos_patch() {
 }
 
 
-while getopts r:i:w:d:s:t:a:zh:-: gopts
+while getopts r:i:w:d:s:t:a:zh-: gopts
 do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			skipsetup)
+				skip_setup=1
+				;;
 			test=*)
 				test=${OPTARG#*=}
 				;;
@@ -144,6 +157,28 @@ do
 		;;
 	esac
 done
+
+# Set the API version environment variable if specified
+if [ -n "${api_version}" ]; then
+	case "${api_version}" in
+		v1|V1)
+			export USE_NEW_RECOMMENDATION_API=true
+			echo "Using NEW API (v1): /kruize/api/v1/recommendations"
+			;;
+		legacy|LEGACY|old|OLD)
+			export USE_NEW_RECOMMENDATION_API=false
+			echo "Using OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+			;;
+		*)
+			echo "Error: Invalid API version '${api_version}'. Valid values are: v1, legacy"
+			exit -1
+			;;
+	esac
+else
+	# Default to old/legacy API if no parameter specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+fi
 
 start_time=$(get_date)
 LOG_DIR="${RESULTS_DIR}/bulk-stress-test-$(date +%Y%m%d%H%M)"
