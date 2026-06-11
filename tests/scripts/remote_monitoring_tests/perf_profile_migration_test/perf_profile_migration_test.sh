@@ -16,6 +16,8 @@
 #
 ### Script to run DB migration test with Kruize in remote monitoring mode ##
 #
+# Usage: ./perf_profile_migration_test.sh [--api-version=v1|legacy]
+#
 
 # This test does the following:
 # Deploys the previous release of kruize that is specified and uploads results for 10 exps / 15 days
@@ -51,13 +53,29 @@ kruize_image_current="quay.io/kruize/autotune_operator:0.7"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image previous release] [-j kruize image current release] [-u No. of experiments (default - 10)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 10)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2025-10-01T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>]"
+	echo "Usage: [-i Kruize image previous release] [-j kruize image current release] [-u No. of experiments (default - 10)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 10)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2025-10-01T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
-while getopts r:i:j:u:d:t:n:m:s:q:h gopts
+while getopts r:i:j:u:d:t:n:m:s:q:h-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	r)
 		RESULTS_DIR="${OPTARG}"		
 		;;
@@ -94,6 +112,28 @@ do
 	esac
 done
 
+# Set the API version environment variable if specified
+if [ -n "${api_version}" ]; then
+	case "${api_version}" in
+		v1|V1)
+			export USE_NEW_RECOMMENDATION_API=true
+			echo "Using NEW API (v1): /kruize/api/v1/recommendations"
+			;;
+		legacy|LEGACY|old|OLD)
+			export USE_NEW_RECOMMENDATION_API=false
+			echo "Using OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+			;;
+		*)
+			echo "Error: Invalid API version '${api_version}'. Valid values are: v1, legacy"
+			exit -1
+			;;
+	esac
+else
+	# Default to old/legacy API if no parameter specified
+	export USE_NEW_RECOMMENDATION_API=false
+	echo "Using default OLD/LEGACY APIs: /updateRecommendations, /generateRecommendations"
+fi
+
 start_time=$(get_date)
 LOG_DIR="${RESULTS_DIR}/perf-profile-migration-test-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
@@ -104,8 +144,16 @@ total_results_count=0
 # Run scalability test to load 10 exps / 15 days data and update Recommendations with previous release
 echo ""
 echo "Run scalability test to load 10 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-echo "./run_test.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_10_15days -e ${total_results_count}"
-./run_test.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_10_15days -e ${total_results_count}
+
+# Determine API version parameter
+if [ "${USE_NEW_RECOMMENDATION_API}" = "true" ]; then
+	API_VERSION_PARAM="--api-version=v1"
+else
+	API_VERSION_PARAM="--api-version=legacy"
+fi
+
+echo "./run_test.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_10_15days -e ${total_results_count} ${API_VERSION_PARAM}"
+./run_test.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_10_15days -e ${total_results_count} ${API_VERSION_PARAM}
 echo ""
 
 sleep 20
@@ -136,8 +184,8 @@ kruize_setup=false
 total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 num_days_of_res=1
 
-echo "./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count}"
-./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count}
+echo "./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count} ${API_VERSION_PARAM}"
+./run_test.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_10_16days -e ${total_results_count} ${API_VERSION_PARAM}
 
 echo | tee -a ${LOG}
 echo ""
