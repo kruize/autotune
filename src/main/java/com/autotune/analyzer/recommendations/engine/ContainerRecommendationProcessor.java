@@ -28,6 +28,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -87,8 +88,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig =
-                getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
+        Config currentConfig = getCurrentConfigData(containerData, monitoringEndTime, timestampRecommendation);
         timestampRecommendation.setCurrentConfig(currentConfig);
 
         boolean recommendationAvailable = generateRecommendationsBasedOnTerms(containerData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
@@ -109,10 +109,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         containerData.setContainerRecommendations(containerRecommendations);
     }
 
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentConfigData(
-            ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
+    private Config getCurrentConfigData(ContainerData containerData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
+        Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
@@ -130,6 +129,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                     continue;
                 }
 
+
                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                     currentRequestsMap.put(recommendationItem, configItem);
                 }
@@ -143,18 +143,17 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
         }
         if (!currentRequestsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+            currentConfig.setRequests(currentRequestsMap);
         }
         if (!currentLimitsMap.isEmpty()) {
-            currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+            currentConfig.setLimits(currentLimitsMap);
         }
         return currentConfig;
     }
 
     private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
                                                        Timestamp monitoringEndTime,
-                                                       HashMap<AnalyzerConstants.ResourceSetting,
-                                                               HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig,
+                                                       Config currentConfig,
                                                        MappedRecommendationForTimestamp timestampRecommendation) {
         boolean recommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -167,12 +166,25 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
             LOGGER.debug(String.format(KruizeConstants.APIMessages.MONITORING_START_TIME, monitoringStartTime));
 
+            // Extract the datapoints from monitoringStartTime to monitoringEndTime to be used for all recommendation models
+            Map<Timestamp, IntervalResults> filteredResultsMap = null;
+            if (containerData.getResults() != null) {
+                filteredResultsMap = containerData.getResults().entrySet().stream().filter(entry -> (entry.getKey().compareTo(monitoringStartTime) >= 0 && entry.getKey().compareTo(monitoringEndTime) <= 0)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            }
+
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
             if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
+                // Determine min, max, avg pod count for a given term.
+                // If podCountAggrInfo is null, addMetricsInfo will take care. So, no need to add null check.
+                // filteredResultsMap is null or empty is handled inside getPodCountAggrInfo, however it is not necessary as we don't reach here if filteredResultsMap is null or empty.
+                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
+                LOGGER.debug("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
+                mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
+
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
@@ -238,8 +250,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
     private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime, KruizeObject kruizeObject,
-                                                                            HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
+                                                                            Config currentConfig,
                                                                             Map.Entry<String, Terms> termEntry) {
 
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
@@ -250,11 +261,11 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         double memoryThreshold = thresholds.memoryThreshold;
 
         // Extract current config using base class helper
-        CurrentConfigValues currentConfig = extractCurrentConfig(currentConfigMap);
-        RecommendationConfigItem currentCPURequest = currentConfig.cpuRequest;
-        RecommendationConfigItem currentCPULimit = currentConfig.cpuLimit;
-        RecommendationConfigItem currentMemRequest = currentConfig.memoryRequest;
-        RecommendationConfigItem currentMemLimit = currentConfig.memoryLimit;
+        CurrentConfigValues currentConfigValues = extractCurrentConfig(currentConfig);
+        RecommendationConfigItem currentCPURequest = currentConfigValues.cpuRequest;
+        RecommendationConfigItem currentCPULimit = currentConfigValues.cpuLimit;
+        RecommendationConfigItem currentMemRequest = currentConfigValues.memoryRequest;
+        RecommendationConfigItem currentMemLimit = currentConfigValues.memoryLimit;
 
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
@@ -315,5 +326,118 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 })
                 .max(Double::compareTo).get();
         return (int) Math.ceil(max_pods_cpu);
+    }
+
+    /**
+     * getPodCountAggrInfo is utility function responsible to determine min, max and avg of pods based on following sequence
+     *
+     * 1. From 'podCount' metric data if exists.
+     * 2. From 'cpuUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     * 3. From 'memoryUsage' metric data using formulae avg(sum/avg), min(sum/avg), max(sum/avg).
+     *
+     * To avoid issues with formulae, results are filtered to choose datapoints whose sum and avg are not null,
+     * avg is strictly greater than 0.0, sum is greater than or equal to 0.0, and the derived pod count (sum/avg)
+     * is finite (i.e., not NaN or infinite).
+     *
+     * @param filteredResultsMap
+     * @return aggregated results like min, max, avg of pods from the results supplied.
+     */
+    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        MetricAggregationInfoResults metricAggregationInfoResults = null;
+        Double avg = 0.0, min = 0.0, max = 0.0;
+
+        if (filteredResultsMap != null && !filteredResultsMap.isEmpty()) {
+            LOGGER.debug("filteredResultsMap: size = {}", filteredResultsMap.size());
+            // 1. Use 'podCount' metric data points
+            metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.podCount);
+
+            // 2. Calculate from 'cpuUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+            if (null == metricAggregationInfoResults) {
+                metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.cpuUsage);
+            }
+
+            // 3. Calculate from 'memoryUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
+            if (null == metricAggregationInfoResults) {
+                metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
+            }
+        }
+
+        return metricAggregationInfoResults;
+    }
+
+    private static MetricAggregationInfoResults getPodCountAggrInfoFromMetric(Map<Timestamp, IntervalResults> filteredResultsMap, AnalyzerConstants.MetricName metricName) {
+        Double avg = 0.0, min = 0.0, max = 0.0;
+        MetricAggregationInfoResults metricAggregationInfoResults = null;
+        List<MetricAggregationInfoResults> metricDatapoints = filteredResultsMap.values().stream()
+                .filter(results -> results.getMetricResultsMap() != null)
+                .flatMap(results -> results.getMetricResultsMap().entrySet().stream())
+                .filter(metricEntry -> metricEntry.getKey() == metricName)
+                .map(metricEntry -> metricEntry.getValue().getAggregationInfoResult())
+                .filter(aggInfo -> isValid(metricName, aggInfo))
+                .toList();
+        if (!metricDatapoints.isEmpty()) {
+            // When podCount is computed from cpuUsage or memoryUsage, we need to first compute sum/avg for all datapoints to get podCount.
+            // Then, we compute min, max, avg of these computed datapoints for podCount.
+            if (metricName == AnalyzerConstants.MetricName.cpuUsage || metricName == AnalyzerConstants.MetricName.memoryUsage) {
+                List<Double> calcPodCounts = metricDatapoints.stream()
+                        .mapToDouble(aggInfo -> aggInfo.getSum() / aggInfo.getAvg())
+                        .filter(Double::isFinite)
+                        .boxed()
+                        .toList();
+
+                avg = calcPodCounts.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                min = calcPodCounts.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+                max = calcPodCounts.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+            } else if (metricName == AnalyzerConstants.MetricName.podCount) { // Compute min, max, avg directly from podCount datapoints.
+                avg = metricDatapoints.stream()
+                        .mapToDouble(MetricAggregationInfoResults::getAvg)
+                        .average()
+                        .orElse(0.0);
+                if (avg > 0.0) {
+                    min = metricDatapoints.stream()
+                            .mapToDouble(MetricAggregationInfoResults::getMin)
+                            .min()
+                            .orElse(0.0);
+                    max = metricDatapoints.stream()
+                            .mapToDouble(MetricAggregationInfoResults::getMax)
+                            .max()
+                            .orElse(0.0);
+                }
+            }
+            metricAggregationInfoResults = new MetricAggregationInfoResults();
+            metricAggregationInfoResults.setAvg(Math.ceil(avg));
+            metricAggregationInfoResults.setMin(Math.ceil(min));
+            metricAggregationInfoResults.setMax(Math.ceil(max));
+        }
+
+        LOGGER.debug("Aggregation Info for metric {}: avg = {} min={}, max={}", metricName, avg, min, max);
+        return metricAggregationInfoResults; // no datapoints available for given metric to compute podCount. So, return null;
+    }
+
+    private static boolean isValid(AnalyzerConstants.MetricName metricName, MetricAggregationInfoResults aggInfo) {
+        if (aggInfo == null) {
+            return false;
+        }
+
+        switch (metricName) {
+            case podCount:
+                // For podCount we later use avg, min, and max; sum is not required.
+                return aggInfo.getAvg() != null
+                        && aggInfo.getMin() != null
+                        && aggInfo.getMax() != null;
+            case cpuUsage:
+            case memoryUsage:
+                // For cpu/memory we compute podCount from sum/avg and don't use min/max.
+                return aggInfo.getAvg() != null
+                        && aggInfo.getAvg() != 0.0
+                        && aggInfo.getSum() != null
+                        && aggInfo.getSum() >= 0.0;
+            default:
+                // Fallback: keep the original stricter behavior.
+                return aggInfo.getAvg() != null
+                        && aggInfo.getAvg() != 0.0
+                        && aggInfo.getSum() != null
+                        && aggInfo.getSum() >= 0.0;
+        }
     }
 }

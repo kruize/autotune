@@ -27,7 +27,7 @@ jobs:
         run: echo "Comment :${{ github.event.comment.body }}"
 
      
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v9
         id: get-pr
         with:
           script: |
@@ -45,12 +45,12 @@ jobs:
             }
       
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
 
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.15.0
+        uses: manusa/actions-setup-minikube@v2.18.0
         with:
           minikube version: 'v1.38.0'
           kubernetes version: 'v1.34.4'
@@ -103,7 +103,7 @@ jobs:
     if: failure()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
@@ -124,7 +124,7 @@ jobs:
     if: cancelled()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
@@ -145,7 +145,7 @@ jobs:
     if: success()
     steps:
     - name: Create comment
-      uses: actions/github-script@v6
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |

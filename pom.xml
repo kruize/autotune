@@ -8,13 +8,13 @@
     <artifactId>autotune</artifactId>
     <version>0.10</version>
     <properties>
-        <fabric8-version>7.6.0</fabric8-version>
-        <org-json-version>20250107</org-json-version>
+        <fabric8-version>7.7.0</fabric8-version>
+        <org-json-version>20260522</org-json-version>
         <jetty-version>12.1.7</jetty-version>
         <log4j-version>2.25.4</log4j-version>
         <java-version>25</java-version>
         <prometheus-simpleclient>0.16.0</prometheus-simpleclient>
-        <gson-version>2.13.2</gson-version>
+        <gson-version>2.14.0</gson-version>
         <maven-compiler-plugin-version>3.13.0</maven-compiler-plugin-version>
         <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>2.1.0</appassembler-maven-plugin-version>
@@ -23,10 +23,10 @@
         <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
         <micrometer-version>1.12.10</micrometer-version>
-        <awssdk-version>2.42.25</awssdk-version>
-        <jackson-version>2.21.1</jackson-version>
+        <awssdk-version>2.46.5</awssdk-version>
+        <jackson-version>2.22.0</jackson-version>
         <evalex-version>3.6.0</evalex-version>
-        <mockito-version>5.21.0</mockito-version>
+        <mockito-version>5.23.0</mockito-version>
         <kafka-version>4.2.0</kafka-version>
         <maven-surefire-plugin-version>3.5.2</maven-surefire-plugin-version>
         <argLine></argLine>

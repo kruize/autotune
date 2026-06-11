@@ -26,7 +26,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Get PR number
         run: |
           echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
@@ -37,7 +37,7 @@ jobs:
           ./build.sh -i autotune_operator:pr_${{ env.PR_NUMBER }} -o autotune_optuna:pr_${{ env.PR_NUMBER }}
           docker images | grep autotune
       - name: docker login
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: quay.io
           username: ${{ secrets.DOCKER_USER }}
@@ -54,12 +54,12 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Get PR number
         run: |
            echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.15.0
+        uses: manusa/actions-setup-minikube@v2.18.0
         with:
           minikube version: 'v1.38.0'
           kubernetes version: 'v1.34.4'
