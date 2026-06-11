@@ -125,7 +125,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(lastDatapoint, AnalyzerConstants.MetricName.podCount, notifications);
         if (configItem != null && configItem.getAmount() != null) {
             // RecommendationUtils.getPodCount ensured that configItem.getAmount() is never 0. It can be 'null'.
-            int replicas = configItem.getAmount().intValue();
+            int replicas = (int) Math.ceil(configItem.getAmount());
             currentConfig.setReplicas(replicas);
             LOGGER.debug("Current replicas for workload '{}' is {}", containerData.getContainer_name(), replicas);
         }
