@@ -15,39 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
-import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
-import com.autotune.analyzer.adapters.RecommendationItemAdapter;
-import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
-import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
-import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.datasource.DataSourceManager;
-import com.autotune.common.k8sObjects.TrialSettings;
-import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.dao.ExperimentDAOImpl;
-import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import io.micrometer.core.instrument.Timer;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -58,7 +25,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,11 +42,69 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.http.conn.ConnectTimeoutException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
+import com.autotune.analyzer.serviceObjects.BulkInput;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import static com.autotune.analyzer.services.BulkService.filterJson;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
+import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
+import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.common.k8sObjects.TrialSettings;
+import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.operator.KruizeDeploymentInfo;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.operator.KruizeDeploymentInfo.job_filter_to_db;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
+import com.autotune.utils.GenericRestApiClient;
+import com.autotune.utils.KruizeConstants;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.COMPLETED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.CREATE_EXPERIMENT_CONFIG_BEAN;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.END_TIME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.FAILED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+import com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_CONNECT_TIMEOUT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_DOWN_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_GATEWAY_TIMEOUT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.DATASOURCE_NOT_REG_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.EXPERIMENT_FAILED;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.LIMIT_INFO;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.METADATA_PROFILE_NOT_FOUND;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.NOTHING_INFO;
+import com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.START_TIME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.STEPS;
+import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import io.micrometer.core.instrument.Timer;
 
 
 /**
@@ -154,9 +188,12 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude());
+                    
+                    LOGGER.info("Filter configuration for job {}: includeResourcesMap={}, excludeResourcesMap={}",
+                               jobID, includeResourcesMap, excludeResourcesMap);
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -177,11 +214,13 @@ public class BulkJobManager implements Runnable {
 
                 if (null != datasource) {
                     JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
+                    // Note: labelString is used only for experiment naming, NOT for filtering metadata queries
+                    // Label filtering is handled separately via includeResourcesMap which contains podLabelFilter and namespaceLabelFilter
                     if (null != daterange) {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, null, (Long) daterange.get(START_TIME),
                                 (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
                     } else {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, null, 0, 0,
                                 0, measurementDuration, includeResourcesMap, excludeResourcesMap);
                     }
                     if (null == metadataInfo) {
@@ -523,6 +562,9 @@ public class BulkJobManager implements Runnable {
                                     for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
                                         // Experiment name - dynamically constructed
                                         String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
+                                        LOGGER.info("Creating experiment: {} for namespace={}, workload={}, workload_type={}, container={}",
+                                                   experiment_name, namespace.getNamespace(), dsw.getWorkloadName(),
+                                                   dsw.getWorkloadType(), dc.getContainerName());
                                         // create JSON to be passed in the createExperimentAPI
                                         List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
                                         CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
@@ -544,44 +586,168 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         String uniqueKey = null;
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
-                Map<String, String> includeLabels = filter.getInclude().getLabels();
+                Map<String, Object> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
-                    );
-                    // Remove trailing comma
-                    if (!includeLabelsBuilder.isEmpty()) {
+                    LOGGER.info("Processing {} labels for experiment name", includeLabels.size());
+                    
+                    includeLabels.forEach((key, value) -> {
+                        // Use original key name without normalization
+                        // Handle both single values and arrays
+                        if (value instanceof List) {
+                            // For arrays, use the first value for experiment name
+                            List<?> values = (List<?>) value;
+                            if (!values.isEmpty()) {
+                                String escapedValue = escapePromQLLabelValue(values.get(0).toString());
+                                includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                            }
+                        } else {
+                            // Single value
+                            String escapedValue = escapePromQLLabelValue(value.toString());
+                            includeLabelsBuilder.append(key).append("=").append("\"").append(escapedValue).append("\"").append(",");
+                        }
+                    });
+                    
+                    if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
+                    
                     uniqueKey = includeLabelsBuilder.toString();
+                    LOGGER.info("Labels for experiment name: {}", uniqueKey);
                 }
+            } else {
+                LOGGER.debug("No include filter provided for experiment name labels");
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Error processing labels for experiment name: {}", e.getMessage(), e);
         }
         return uniqueKey;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
-            resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
-                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "");
-            resourceFilters.put("workloadRegex", filter.getWorkload() != null ?
-                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
-            resourceFilters.put("containerRegex", filter.getContainers() != null ?
-                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            String namespaceRegex = filter.getNamespace() != null ?
+                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            String workloadRegex = filter.getWorkload() != null ?
+                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            String containerRegex = filter.getContainers() != null ?
+                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "";
+            
+            resourceFilters.put("namespaceRegex", namespaceRegex);
+            resourceFilters.put("workloadRegex", workloadRegex);
+            resourceFilters.put("containerRegex", containerRegex);
+            
+            LOGGER.debug("Built resource regex filters - namespace: '{}', workload: '{}', container: '{}'",
+                        namespaceRegex, workloadRegex, containerRegex);
+            
+            Map<String, String> labelFilters = buildLabelFilters(filter.getLabels());
+            resourceFilters.putAll(labelFilters);
+            
+            LOGGER.debug("Combined resource filters: {}", resourceFilters);
+        } else {
+            LOGGER.debug("No filter provided, returning empty resource filters");
         }
         return resourceFilters;
+    }
+
+    /**
+     * Escapes special characters in PromQL label values to prevent query injection.
+     * Handles backslashes, double quotes, and newlines according to PromQL string literal rules.
+     *
+     * @param value The raw label value from user input
+     * @return Escaped value safe for use in PromQL queries
+     */
+    private String escapePromQLLabelValue(String value) {
+        if (value == null) {
+            LOGGER.debug("Label value is null, returning empty string");
+            return "";
+        }
+        
+        LOGGER.debug("Escaping label value - Original: [{}]", value);
+        
+        // Escape backslashes first (must be done before escaping quotes)
+        String escaped = value.replace("\\", "\\\\");
+        // Escape double quotes
+        escaped = escaped.replace("\"", "\\\"");
+        // Escape newlines
+        escaped = escaped.replace("\n", "\\n");
+        // Escape carriage returns
+        escaped = escaped.replace("\r", "\\r");
+        // Escape tabs
+        escaped = escaped.replace("\t", "\\t");
+        
+        if (!value.equals(escaped)) {
+            LOGGER.info("Label value escaped - Original: [{}], Escaped: [{}]", value, escaped);
+        } else {
+            LOGGER.debug("Label value requires no escaping: [{}]", value);
+        }
+        
+        return escaped;
+    }
+
+    private Map<String, String> buildLabelFilters(Map<String, Object> labels) {
+        Map<String, String> labelFilters = new HashMap<>();
+        if (labels == null || labels.isEmpty()) {
+            LOGGER.debug("No labels provided for filtering");
+            return labelFilters;
+        }
+
+        LOGGER.info("Building label filters from {} label(s)", labels.size());
+        
+        // For multiple labels, we need OR logic (match if ANY label matches)
+        // Build separate queries for each label and combine with 'or' operator
+        List<String> podLabelQueries = new ArrayList<>();
+        List<String> namespaceLabelQueries = new ArrayList<>();
+
+        labels.forEach((key, value) -> {
+            LOGGER.info("Processing label key: '{}' (original), value: '{}'", key, value);
+            
+            // Handle both single string values and arrays of values
+            List<String> values = new ArrayList<>();
+            if (value instanceof List) {
+                // Array of values: {"app": ["kindnet", "sysbench"]}
+                ((List<?>) value).forEach(v -> values.add(v.toString()));
+            } else {
+                // Single value: {"app": "kindnet"}
+                values.add(value.toString());
+            }
+            
+            // kube-state-metrics normalizes label names by replacing special chars with underscores
+            // e.g., "pod-template-hash" becomes "label_pod_template_hash"
+            // e.g., "app.kubernetes.io/component" becomes "label_app_kubernetes_io_component"
+            String normalizedKey = key.replaceAll("[^a-zA-Z0-9_]", "_");
+            LOGGER.info("Normalized key for PromQL: '{}'", normalizedKey);
+            
+            // Create a matcher for each value
+            for (String val : values) {
+                String escapedValue = escapePromQLLabelValue(val);
+                // Use normalized key for PromQL query
+                String matcher = "label_" + normalizedKey + "=\"" + escapedValue + "\"";
+                podLabelQueries.add(matcher);
+                namespaceLabelQueries.add(matcher);
+            }
+        });
+
+        // Join multiple label conditions with comma (will be used in OR queries)
+        if (!podLabelQueries.isEmpty()) {
+            String podFilter = String.join(",", podLabelQueries);
+            labelFilters.put("podLabelFilter", podFilter);
+            LOGGER.info("Built podLabelFilter with {} condition(s): {}", podLabelQueries.size(), podFilter);
+        }
+
+        if (!namespaceLabelQueries.isEmpty()) {
+            String namespaceFilter = String.join(",", namespaceLabelQueries);
+            labelFilters.put("namespaceLabelFilter", namespaceFilter);
+            LOGGER.info("Built namespaceLabelFilter with {} condition(s): {}", namespaceLabelQueries.size(), namespaceFilter);
+        }
+
+        LOGGER.info("Final label filters: {}", labelFilters);
+        return labelFilters;
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
