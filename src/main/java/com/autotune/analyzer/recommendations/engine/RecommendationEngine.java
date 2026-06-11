@@ -1215,16 +1215,35 @@ public class RecommendationEngine implements RecommendationEngineService {
             String maxDateQuery = null;
             String acceleratorDetectionQuery = null;
             String acceleratorMigDetectionQuery = null;
+            
+            // For Cryostat-only datasources, we need to use Prometheus for PromQL queries (like MAX_DATE)
+            DataSourceInfo promQLDataSourceInfo = dataSourceInfo;
+            if (dataSourceInfo != null && dataSourceInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
+                LOGGER.debug("Cryostat datasource detected. Looking for Prometheus datasource for PromQL queries.");
+                // Find a Prometheus datasource from the collection for PromQL queries
+                for (DataSourceInfo ds : DataSourceCollection.getInstance().getDataSourcesCollection().values()) {
+                    if (ds.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        promQLDataSourceInfo = ds;
+                        LOGGER.debug("Using Prometheus datasource '{}' for PromQL queries", ds.getName());
+                        break;
+                    }
+                }
+                
+                if (promQLDataSourceInfo == dataSourceInfo) {
+                    LOGGER.warn("Cryostat datasource requires a Prometheus datasource for PromQL queries, but none found. Metrics collection may fail.");
+                }
+            }
 
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
                 acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMemoryUsage.name());
                 acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
 
+                // Use promQLDataSourceInfo for PromQL queries
                 fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
                         interval_end_time,
                         interval_start_time,
-                        dataSourceInfo,
+                        promQLDataSourceInfo,
                         metricProfile,
                         maxDateQuery,
                         acceleratorDetectionQuery,
@@ -1232,7 +1251,8 @@ public class RecommendationEngine implements RecommendationEngineService {
 
             } else if (kruizeObject.isNamespaceExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
-                fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
+                // Use promQLDataSourceInfo for PromQL queries
+                fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, promQLDataSourceInfo, metricProfile, maxDateQuery);
             }
         } catch (Exception e) {
             e.printStackTrace();
