@@ -38,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.*;
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.*;
@@ -106,7 +107,7 @@ public class DataSourceCollection {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (!KruizeSupportedTypes.DATASOURCES_SUPPORTED.contains(provider)) {
+        if (!KruizeSupportedTypes.DATASOURCES_SUPPORTED.contains(provider.toLowerCase(Locale.ROOT))) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
 //        Continue validations in case of supported providers

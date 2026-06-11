@@ -98,23 +98,10 @@ public class GenericRestApiClient {
             if (methodType.equalsIgnoreCase("GET")) {
                 httpRequestBase = new HttpGet(baseURL + URLEncoder.encode(queryString, StandardCharsets.UTF_8));
             } else if (methodType.equalsIgnoreCase("POST")) {
-
                 HttpPost httpPost = new HttpPost(baseURL);
-
-                httpPost.setEntity(
-                        new StringEntity(
-                                queryString,
-                                ContentType.APPLICATION_JSON
-                        )
-                );
+                httpPost.setEntity(new StringEntity(queryString, ContentType.APPLICATION_JSON));
                 httpRequestBase = httpPost;
-                LOGGER.info(
-                        "Request body: {}",
-                        EntityUtils.toString(
-                                ((HttpPost) httpRequestBase).getEntity(),
-                                StandardCharsets.UTF_8
-                        )
-                );
+                LOGGER.debug("Request body: {}", EntityUtils.toString(((HttpPost) httpRequestBase).getEntity(), StandardCharsets.UTF_8));
             } else {
                 throw new UnsupportedOperationException("Unsupported method type: " + methodType);
             }
@@ -154,8 +141,7 @@ public class GenericRestApiClient {
             }
         }
         if (jsonResponse == null || jsonResponse.isBlank()) {
-            LOGGER.warn("Received null or empty JSON response");
-            return new JSONObject();
+            throw new IOException("Received null or empty JSON response");
         }
         return new JSONObject(jsonResponse);
     }
