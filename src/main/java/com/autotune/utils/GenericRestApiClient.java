@@ -141,43 +141,24 @@ public class GenericRestApiClient {
             jsonResponse = new StringResponseHandler().handleResponse(response);
 
             if (!methodType.equalsIgnoreCase("POST")) {
-                // Check if response is valid JSON before parsing
-                if (jsonResponse != null && !jsonResponse.trim().isEmpty()) {
-                    // Check if response starts with '<' (HTML/XML) instead of JSON
-                    String trimmedResponse = jsonResponse.trim();
-                    if (trimmedResponse.startsWith("<")) {
-                        LOGGER.error("Received HTML/XML response instead of JSON. Response starts with: {}",
-                                trimmedResponse.substring(0, Math.min(100, trimmedResponse.length())));
-                        throw new IOException("Invalid response format: Expected JSON but received HTML/XML. " +
-                                "This may indicate an authentication error, incorrect endpoint, or server error.");
-                    }
-                    
-                    try {
-                        // Parse the JSON response
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        JsonNode rootNode = objectMapper.readTree(jsonResponse);
-                        JsonNode resultNode = rootNode.path("data").path("result");
-                        JsonNode warningsNode = rootNode.path("warnings");
+                // Parse the JSON response
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(jsonResponse);
+                JsonNode resultNode = rootNode.path("data").path("result");
+                JsonNode warningsNode = rootNode.path("warnings");
 
-                        // Check if the result is empty and if there are specific warnings
-                        if (resultNode.isArray() && resultNode.size() == 0) {
-                            for (JsonNode warning : warningsNode) {
-                                String warningMessage = warning.asText();
-                                if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
-                                    LOGGER.warn("Warning detected: {}", warningMessage);
-                                    throw new IOException(warningMessage);
-                                }
-                            }
+                // Check if the result is empty and if there are specific warnings
+                if (resultNode.isArray() && resultNode.size() == 0) {
+                    for (JsonNode warning : warningsNode) {
+                        String warningMessage = warning.asText();
+                        if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                            LOGGER.warn("Warning detected: {}", warningMessage);
+                            throw new IOException(warningMessage);
                         }
-                    } catch (com.fasterxml.jackson.core.JsonParseException e) {
-                        LOGGER.error("Failed to parse JSON response. Response preview: {}",
-                                trimmedResponse.substring(0, Math.min(200, trimmedResponse.length())));
-                        throw new IOException("Invalid JSON response from datasource: " + e.getMessage(), e);
                     }
                 }
             }
         }
-        assert jsonResponse != null;
         return new JSONObject(jsonResponse);
     }
 

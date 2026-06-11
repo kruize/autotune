@@ -29,8 +29,6 @@ import com.autotune.analyzer.recommendations.model.RecommendationModel;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
-import com.autotune.common.datasource.DataSourceCollection;
-import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -96,31 +94,11 @@ public final class RuntimeRecommendationProcessor {
             RecommendationConfigItem recommendationMemLimits) {
 
         List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-        String dataSource = null;
-        List<String> datasources = kruizeObject.getDatasources();
-
-        if (datasources != null && !datasources.isEmpty()) {
-            // For multi-datasource: find first Prometheus datasource for metrics collection
-            for (String ds : datasources) {
-                DataSourceInfo dsInfo = DataSourceCollection.getInstance()
-                        .getDataSourcesCollection()
-                        .get(ds);
-                if (dsInfo != null && dsInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-                    dataSource = ds;
-                    break;
-                }
+        if (kruizeObject.getDataSource() == null) {
+            if (kruizeObject.getDatasources() == null || kruizeObject.getDatasources().isEmpty()) {
+                LOGGER.warn("Datasource missing, skipping runtime recommendations");
+                return null;
             }
-            // If no Prometheus found, use first datasource as fallback
-            if (dataSource == null) {
-                dataSource = datasources.getFirst();
-            }
-        } else {
-            // Backward compatibility: use single datasource field
-            dataSource = kruizeObject.getDataSource();
-        }
-        if (dataSource == null) {
-            LOGGER.warn("Datasource missing, skipping runtime recommendations");
-            return null;
         }
         Map<String, KruizeLayer> layerMap = containerData.getLayerMap();
         LOGGER.debug("layerMap: {}", new Gson().toJson(layerMap));

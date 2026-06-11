@@ -334,13 +334,12 @@ public class RecommendationEngine implements RecommendationEngineService {
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
             // get the datasource
-            // For multi-datasource experiments, use the first Prometheus datasource for metrics
-            // For backward compatibility, fall back to single datasource if available
+            // For multi-datasource experiments, Prometheus is mandatory for metrics collection.
+            // For backward compatibility, a single datasource is allowed only if the provider is Prometheus.
             String dataSource = null;
             List<String> datasources = kruizeObject.getDatasources();
-            
+
             if (datasources != null && !datasources.isEmpty()) {
-                // For multi-datasource: find first Prometheus datasource for metrics collection
                 for (String ds : datasources) {
                     DataSourceInfo dsInfo = DataSourceCollection.getInstance()
                             .getDataSourcesCollection()
@@ -350,18 +349,20 @@ public class RecommendationEngine implements RecommendationEngineService {
                         break;
                     }
                 }
-                // If no Prometheus found, use first datasource as fallback
-                if (dataSource == null) {
-                    dataSource = datasources.getFirst();
-                }
             } else {
-                // Backward compatibility: use single datasource field
                 dataSource = kruizeObject.getDataSource();
+                if (dataSource != null) {
+                    DataSourceInfo dsInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get(dataSource);
+                    if (dsInfo == null || !dsInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        dataSource = null;
+                    }
+                }
             }
 
             if (dataSource == null) {
-                // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
-                dataSource = KruizeDeploymentInfo.monitoring_agent;
+                throw new Exception("No Prometheus datasource configured for experiment: " + kruizeObject.getExperimentName());
             }
 
             // call different models for different use cases
@@ -1216,7 +1217,7 @@ public class RecommendationEngine implements RecommendationEngineService {
             String acceleratorDetectionQuery = null;
             String acceleratorMigDetectionQuery = null;
             
-            // For Cryostat-only datasources, we need to use Prometheus for PromQL queries (like MAX_DATE)
+            // For non-prometheus datasources, we need to use Prometheus for PromQL queries (like MAX_DATE)
             DataSourceInfo promQLDataSourceInfo = dataSourceInfo;
             if (dataSourceInfo != null && dataSourceInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
                 LOGGER.debug("Cryostat datasource detected. Looking for Prometheus datasource for PromQL queries.");

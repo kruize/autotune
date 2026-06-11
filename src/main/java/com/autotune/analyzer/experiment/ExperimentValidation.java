@@ -187,7 +187,7 @@ public class ExperimentValidation {
                                 }
                             }
                         } else {
-                            errorMsg = "No datasources specified in the experiment";
+                            errorMsg = KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.NO_DATASOURCE_SERVICEABLE;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }
@@ -411,7 +411,7 @@ public class ExperimentValidation {
                         }
                     }
                 } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
-                    // Check both single datasource (deprecated) and datasources list (new)
+                    // Check both single datasource and datasources list
                     if (null == expObj.getDataSource() && (null == expObj.getDatasources() || expObj.getDatasources().isEmpty())) {
                         errorMsg = errorMsg.concat(String.format(LOCAL_MONITORING_DATASOURCE_MANDATORY, expObj.getExperimentName()));
                         missingLocalDatasource = true;

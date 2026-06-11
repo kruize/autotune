@@ -166,33 +166,28 @@ public class ServiceHelpers {
                 // Aggregate detected layers from all datasources
                 Map<String, KruizeLayer> aggregatedLayers = new java.util.HashMap<>();
                 
-                // Try detection with each configured datasource
-                for (String datasourceName : datasources) {
-                    try {
-                        LOGGER.debug("Detecting layers for container '{}' using datasource '{}'",
-                            containerAPIObject.getContainer_name(), datasourceName);
-                        
-                        Map<String, KruizeLayer> layers = LayerUtils.detectLayers(
-                            containerAPIObject.getContainer_name(),
-                            kubernetesAPIObject.getNamespace(),
-                            datasourceName
-                        );
-                        
-                        // Merge detected layers
-                        if (!layers.isEmpty()) {
-                            aggregatedLayers.putAll(layers);
-                            LOGGER.info("Datasource '{}' detected {} layer(s) for container '{}'",
-                                datasourceName, layers.size(), containerAPIObject.getContainer_name());
-                        } else {
-                            LOGGER.debug("Datasource '{}' detected no layers for container '{}'",
-                                datasourceName, containerAPIObject.getContainer_name());
-                        }
-                    } catch (Exception e) {
-                        // Log error but continue with other datasources
-                        LOGGER.error("Error detecting layers with datasource '{}' for container '{}': {}",
-                            datasourceName, containerAPIObject.getContainer_name(), e.getMessage());
-                        LOGGER.debug("Stack trace:", e);
+                try {
+                    LOGGER.debug("Detecting layers for container '{}' using datasources '{}'",
+                        containerAPIObject.getContainer_name(), datasources);
+
+                    Map<String, KruizeLayer> layers = LayerUtils.detectLayers(
+                        containerAPIObject.getContainer_name(),
+                        kubernetesAPIObject.getNamespace(),
+                        datasources
+                    );
+
+                    if (!layers.isEmpty()) {
+                        aggregatedLayers.putAll(layers);
+                        LOGGER.info("Datasources '{}' detected {} layer(s) for container '{}'",
+                            datasources, layers.size(), containerAPIObject.getContainer_name());
+                    } else {
+                        LOGGER.debug("Datasources '{}' detected no layers for container '{}'",
+                            datasources, containerAPIObject.getContainer_name());
                     }
+                } catch (Exception e) {
+                    LOGGER.error("Error detecting layers with datasources '{}' for container '{}': {}",
+                        datasources, containerAPIObject.getContainer_name(), e.getMessage());
+                    LOGGER.debug("Stack trace:", e);
                 }
                 
                 // Store aggregated layers in container

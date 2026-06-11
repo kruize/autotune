@@ -65,13 +65,16 @@ public class QueryBasedPresence implements LayerPresenceDetector {
      * @throws Exception if detection fails
      */
     @Override
-    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
+    public boolean detectPresence(String namespace, String containerName, List<String> datasourceNames) throws Exception {
         if (queries == null || queries.isEmpty()) {
             LOGGER.warn(LogMessages.NO_QUERIES_DEFINED);
             return false;
         }
 
-        System.out.println("Datasource Name: " + datasourceName);
+        if (datasourceNames == null || datasourceNames.isEmpty()) {
+            LOGGER.warn("No datasource names provided for layer detection");
+            return false;
+        }
 
         // Iterate through all configured queries
         for (LayerPresenceQuery query : queries) {
@@ -81,128 +84,138 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                 continue;
             }
 
-            try {
-                // Get the specific datasource by name from the experiment
-                DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance()
-                        .getDataSourcesCollection()
-                        .get(datasourceName);
+            for (String datasourceName : datasourceNames) {
+                try {
+                    // Get the specific datasource by name from the experiment
+                    DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get(datasourceName);
 
-                if (dataSourceInfo == null) {
-                    LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, datasourceName);
-                    continue;
-                }
-
-                // Skip queries that don't match the datasource provider
-                // This prevents executing Prometheus queries against Cryostat and vice versa
-                if (query.getDataSource() != null &&
-                    !query.getDataSource().equalsIgnoreCase(dataSourceInfo.getProvider())) {
-                    LOGGER.debug("Skipping query for datasource '{}' as it doesn't match current datasource provider '{}'",
-                            query.getDataSource(), dataSourceInfo.getProvider());
-                    continue;
-                }
-
-                // Get the appropriate operator for the datasource provider
-                DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
-                        .getOperator(dataSourceInfo.getProvider());
-
-                if (operator == null) {
-                    LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, dataSourceInfo.getProvider());
-                    continue;
-                }
-
-                // Start with the original query
-                String modifiedQuery = query.getLayerPresenceQuery();
-
-                if (query.getDataSource().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
-                    // For Cryostat detection, we need to:
-                    // 1. Query Prometheus to get the list of pods
-                    // 2. Query Cryostat to check if those pods have JVM targets
-                    
-                    // Find a Prometheus datasource from the collection
-                    DataSourceInfo promDatasourceInfo = null;
-                    for (DataSourceInfo ds : DataSourceCollection.getInstance().getDataSourcesCollection().values()) {
-                        if (ds.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-                            promDatasourceInfo = ds;
-                            break;
-                        }
-                    }
-                    
-                    if (promDatasourceInfo == null) {
-                        LOGGER.warn("Cryostat layer detection requires a Prometheus datasource to query pods, but none found. Skipping Cryostat detection.");
+                    if (dataSourceInfo == null) {
+                        LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, datasourceName);
                         continue;
                     }
-                    
-                    DataSourceOperatorImpl tmpPromOperator = DataSourceOperatorImpl.getInstance()
-                            .getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-                    
-                    // Build PromQL query to get pods
-                    String promQl = KruizeConstants.PromQueries.GET_PODS_WITH_NS_CONTAINER;
-                    if (namespace != null && !namespace.isBlank()) {
-                        promQl = appendFilter(promQl, LayerConstants.LABEL_NAMESPACE, namespace);
-                    }
-                    if (containerName != null && !containerName.isBlank()) {
-                        promQl = appendFilter(promQl, LayerConstants.LABEL_CONTAINER, containerName);
-                    }
-                    System.out.println("PromQl: " + promQl);
-                    
-                    // Execute Prometheus query using the Prometheus datasource
-                    JSONObject returnObj = tmpPromOperator.getJsonObjectForQuery(promDatasourceInfo, promQl);
-                    List<String> pods = LayerUtils.extractPods(returnObj);
-                    
-                    // Get Cryostat operator and datasource
-                    DataSourceOperatorImpl cryostatOperator = DataSourceOperatorImpl.getInstance()
-                            .getOperator(KruizeConstants.SupportedDatasources.CRYOSTAT);
-                    if (!pods.isEmpty()) {
-                        for (String pod: pods) {
-                            System.out.println("Checking Cryostat targets for pod: " + pod);
-                            String queryToTry = modifiedQuery.replace("$POD_NAME$", pod);
-                            System.out.println("Cryostat Query: " + queryToTry);
-                            
-                            // Use the Cryostat datasource (dataSourceInfo) for GraphQL query
-                            JSONObject graphQlJson = cryostatOperator.getJsonObjectForQuery(dataSourceInfo, queryToTry);
-                            if (null == graphQlJson) {
-                                System.out.println("Graph QL response is null");
-                                continue;
-                            }
-                            
-                            System.out.println("GraphQL object:" + graphQlJson);
-                            JSONArray envNodes = graphQlJson
-                                    .optJSONObject("data")
-                                    .optJSONArray("environmentNodes");
 
-                            if (envNodes != null && !envNodes.isEmpty()) {
-                                System.out.println(
-                                        "SUCCESS: Found Cryostat target(s) for pod '" + pod);
-                                return true;
+                    // Skip queries that don't match the datasource provider
+                    if (query.getDataSource() != null &&
+                        !query.getDataSource().equalsIgnoreCase(dataSourceInfo.getProvider())) {
+                        LOGGER.debug("Skipping query for datasource '{}' as it doesn't match current datasource provider '{}'",
+                                query.getDataSource(), dataSourceInfo.getProvider());
+                        continue;
+                    }
+
+                    // Get the appropriate operator for the datasource provider
+                    DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
+                            .getOperator(dataSourceInfo.getProvider());
+
+                    if (operator == null) {
+                        LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, dataSourceInfo.getProvider());
+                        continue;
+                    }
+
+                    // Start with the original query
+                    String modifiedQuery = query.getLayerPresenceQuery();
+
+                    if (query.getDataSource().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
+                        // For Cryostat detection, we need to:
+                        // 1. Query Prometheus to get the list of pods
+                        // 2. Query Cryostat to check if those pods have JVM targets
+
+                        DataSourceInfo promDatasourceInfo = null;
+                        for (String experimentDatasourceName : datasourceNames) {
+                            DataSourceInfo experimentDatasourceInfo = DataSourceCollection.getInstance()
+                                    .getDataSourcesCollection()
+                                    .get(experimentDatasourceName);
+                            if (experimentDatasourceInfo != null &&
+                                    KruizeConstants.SupportedDatasources.PROMETHEUS.equalsIgnoreCase(experimentDatasourceInfo.getProvider())) {
+                                promDatasourceInfo = experimentDatasourceInfo;
+                                break;
                             }
                         }
-                    }
 
-                } else {
-                    // Append dynamic filters for namespace, container
-                    if (namespace != null && !namespace.isBlank()) {
-                        modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
-                    }
-                    if (containerName != null && !containerName.isBlank()) {
-                        modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
-                    }
-                    LOGGER.debug(LogMessages.EXECUTING_QUERY, modifiedQuery);
+                        if (promDatasourceInfo == null) {
+                            LOGGER.warn("Cryostat layer detection requires a Prometheus datasource instance in the experiment datasource list, but none found. Skipping Cryostat detection.");
+                            continue;
+                        }
 
-                    // Execute the modified query and get results
-                    JsonArray resultArray = operator.getResultArrayForQuery(
-                            dataSourceInfo,
-                            modifiedQuery
-                    );
+                        DataSourceOperatorImpl prometheusOperator = DataSourceOperatorImpl.getInstance()
+                                .getOperator(promDatasourceInfo.getProvider());
 
-                    // Check if we got any results - if yes, layer is present
-                    if (resultArray != null && !resultArray.isEmpty()) {
-                        LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, containerName);
-                        return true;
+                        // Build PromQL query to get pods
+                        String promQl = KruizeConstants.PromQueries.GET_PODS_WITH_NS_CONTAINER;
+                        if (namespace != null && !namespace.isBlank()) {
+                            promQl = appendFilter(promQl, LayerConstants.LABEL_NAMESPACE, namespace);
+                        }
+                        if (containerName != null && !containerName.isBlank()) {
+                            promQl = appendFilter(promQl, LayerConstants.LABEL_CONTAINER, containerName);
+                        }
+                        LOGGER.debug("PromQl: {}", promQl);
+
+                        // Execute Prometheus query using the Prometheus datasource
+                        JSONObject returnObj = prometheusOperator.getJsonObjectForQuery(promDatasourceInfo, promQl);
+                        List<String> pods = LayerUtils.extractPods(returnObj);
+
+                        // Get Cryostat operator and datasource
+                        DataSourceOperatorImpl cryostatOperator = DataSourceOperatorImpl.getInstance()
+                                .getOperator(KruizeConstants.SupportedDatasources.CRYOSTAT);
+                        if (!pods.isEmpty()) {
+                            for (String pod: pods) {
+                                LOGGER.debug("Checking Cryostat targets for pod: {}", pod);
+                                String queryToTry = modifiedQuery.replace("$POD_NAME$", pod);
+                                LOGGER.debug("Cryostat Query: {}", queryToTry);
+
+                                // Use the Cryostat datasource (dataSourceInfo) for GraphQL query
+                                JSONObject graphQlJson = cryostatOperator.getJsonObjectForQuery(dataSourceInfo, queryToTry);
+                                if (null == graphQlJson) {
+                                    LOGGER.warn(
+                                            "Cryostat query returned no response while checking layer presence. datasource='{}', provider='{}', namespace='{}', container='{}', pod='{}'. Skipping this pod.",
+                                            dataSourceInfo.getName(),
+                                            dataSourceInfo.getProvider(),
+                                            namespace,
+                                            containerName,
+                                            pod
+                                    );
+                                    LOGGER.debug("Cryostat GraphQL query with no response: {}", queryToTry);
+                                    continue;
+                                }
+
+                                LOGGER.debug("GraphQL object: {}", graphQlJson);
+                                JSONArray envNodes = graphQlJson
+                                        .optJSONObject("data")
+                                        .optJSONArray("environmentNodes");
+
+                                if (envNodes != null && !envNodes.isEmpty()) {
+                                    LOGGER.debug("SUCCESS: Found Cryostat target(s) for pod '{}'", pod);
+                                    return true;
+                                }
+                            }
+                        }
+
+                    } else {
+                        // Append dynamic filters for namespace, container
+                        if (namespace != null && !namespace.isBlank()) {
+                            modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
+                        }
+                        if (containerName != null && !containerName.isBlank()) {
+                            modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
+                        }
+                        LOGGER.debug(LogMessages.EXECUTING_QUERY, modifiedQuery);
+
+                        // Execute the modified query and get results
+                        JsonArray resultArray = operator.getResultArrayForQuery(
+                                dataSourceInfo,
+                                modifiedQuery
+                        );
+
+                        // Check if we got any results - if yes, layer is present
+                        if (resultArray != null && !resultArray.isEmpty()) {
+                            LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, containerName);
+                            return true;
+                        }
                     }
+                } catch (Exception e) {
+                    LOGGER.error(LogMessages.ERROR_EXECUTING_QUERY, query.getDataSource(), e);
                 }
-            } catch (Exception e) {
-                LOGGER.error(LogMessages.ERROR_EXECUTING_QUERY, query.getDataSource(), e);
-                // Continue to next query instead of failing completely
             }
         }
 
