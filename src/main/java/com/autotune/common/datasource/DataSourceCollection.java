@@ -22,6 +22,7 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -105,7 +106,7 @@ public class DataSourceCollection {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
+        if (!KruizeSupportedTypes.DATASOURCES_SUPPORTED.contains(provider)) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
 //        Continue validations in case of supported providers
