@@ -15,7 +15,7 @@ public class MappedRecommendationForModel {
         this.podsCount = 0;
         this.confidence_level = 0.0;
         this.config = new Config();
-        this.variation = new HashMap<>();
+        this.variation = new Config();
         this.notificationHashMap = new HashMap<>();
     }
 
@@ -26,7 +26,7 @@ public class MappedRecommendationForModel {
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
     private Config config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
+    private Config variation;
 
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationHashMap;
@@ -55,11 +55,11 @@ public class MappedRecommendationForModel {
         this.config = config;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getVariation() {
+    public Config getVariation() {
         return variation;
     }
 
-    public void setVariation(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation) {
+    public void setVariation(Config variation) {
         this.variation = variation;
     }
 

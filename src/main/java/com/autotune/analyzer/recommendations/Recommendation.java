@@ -41,7 +41,7 @@ public class Recommendation {
     @SerializedName(KruizeConstants.JSONKeys.CONFIG)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
-    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
+    private Config variation;
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notifications;
 
@@ -119,11 +119,11 @@ public class Recommendation {
         this.config = config;
     }
 
-    public HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getVariation() {
+    public Config getVariation() {
         return variation;
     }
 
-    public void setVariation(HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation) {
+    public void setVariation(Config variation) {
         this.variation = variation;
     }
 
