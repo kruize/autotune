@@ -114,7 +114,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                     // Start with the original query
                     String modifiedQuery = query.getLayerPresenceQuery();
 
-                    if (query.getDataSource().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
+                    if (KruizeConstants.SupportedDatasources.CRYOSTAT.equalsIgnoreCase(query.getDataSource())) {
                         // For Cryostat detection, we need to:
                         // 1. Query Prometheus to get the list of pods
                         // 2. Query Cryostat to check if those pods have JVM targets
@@ -138,6 +138,14 @@ public class QueryBasedPresence implements LayerPresenceDetector {
 
                         DataSourceOperatorImpl prometheusOperator = DataSourceOperatorImpl.getInstance()
                                 .getOperator(promDatasourceInfo.getProvider());
+                        if (prometheusOperator == null) {
+                            LOGGER.warn(
+                                    "No datasource operator found for provider='{}' while performing Cryostat layer detection. " +
+                                            "Skipping detection for datasource='{}'.", promDatasourceInfo.getProvider(),
+                                    promDatasourceInfo.getName()
+                            );
+                            continue;
+                        }
 
                         // Build PromQL query to get pods
                         String promQl = KruizeConstants.PromQueries.GET_PODS_WITH_NS_CONTAINER;
@@ -156,6 +164,14 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                         // Get Cryostat operator and datasource
                         DataSourceOperatorImpl cryostatOperator = DataSourceOperatorImpl.getInstance()
                                 .getOperator(KruizeConstants.SupportedDatasources.CRYOSTAT);
+                        if (cryostatOperator == null) {
+                            LOGGER.warn(
+                                    "No datasource operator found for provider='{}' while performing Cryostat layer detection. " +
+                                            "Skipping detection for datasource='{}'.", KruizeConstants.SupportedDatasources.CRYOSTAT,
+                                    dataSourceInfo.getName()
+                            );
+                            continue;
+                        }
                         if (!pods.isEmpty()) {
                             for (String pod: pods) {
                                 LOGGER.debug("Checking Cryostat targets for pod: {}", pod);

@@ -132,6 +132,10 @@ public class LayerUtils {
     public static List<String> extractPods(JSONObject promResponse) {
         List<String> pods = new ArrayList<>();
 
+        if (promResponse == null) {
+            return pods;
+        }
+
         JSONObject data = promResponse.optJSONObject("data");
         if (data == null) {
             return pods;
@@ -143,9 +147,12 @@ public class LayerUtils {
         }
 
         for (int i = 0; i < results.length(); i++) {
-            JSONObject metric = results.optJSONObject(i)
-                    .optJSONObject("metric");
+            JSONObject result = results.optJSONObject(i);
+            if (result == null) {
+                continue;
+            }
 
+            JSONObject metric = result.optJSONObject("metric");
             if (metric != null) {
                 String pod = metric.optString("pod", null);
                 if (pod != null && !pod.isBlank()) {
