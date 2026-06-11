@@ -38,56 +38,73 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 public class RecommendationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
 
+    // Utility method to reduce redundant code.
+    private static Double getPodCount(MetricAggregationInfoResults metricAggregationInfoResults) {
+        if (null != metricAggregationInfoResults && metricAggregationInfoResults.getSum() != null && metricAggregationInfoResults.getAvg() != null && metricAggregationInfoResults.getAvg() > 0.0 && metricAggregationInfoResults.getSum() > 0.0 ) {
+            return metricAggregationInfoResults.getSum() / metricAggregationInfoResults.getAvg();
+        }
+        return null;
+    }
+
+    /**
+     * To populate current config of containers, we need to get request and limits of CPU and MEMORY of last datapoint.
+     * Currently, it supports
+     *   limits
+     *   requests
+     *   replicas
+     *
+     * @param currentDatapoint Datapoint at last interval based on end timestamp.
+     * @param metricName Name of the metric for which current value is to be determined
+     * @param notifications List of errors (if any).
+     *
+     * @return RecommendationConfigItem with value and format.
+     */
     public static RecommendationConfigItem getCurrentValue(IntervalResults currentDatapoint, AnalyzerConstants.MetricName metricName, ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
         RecommendationConfigItem recommendationConfigItem = null;
-        Double currentValue = 0.0;
+        Double currentValue = null;
         String format = null;
         if (null != metricName) {
-            MetricResults metricResults = currentDatapoint.getMetricResultsMap().get(metricName);
-            if (null != metricResults) {
+            if (currentDatapoint.getMetricResultsMap().containsKey(metricName)) {
+                MetricResults metricResults = currentDatapoint.getMetricResultsMap().get(metricName);
                 MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
                 if (null != metricAggregationInfoResults) {
                     currentValue = metricAggregationInfoResults.getAvg();
                     format = metricAggregationInfoResults.getFormat();
-                    return new RecommendationConfigItem(currentValue, format);
                 }
             } else if (metricName == AnalyzerConstants.MetricName.podCount) { // fallback for replicas in case podCount metrics is unavailable
-                // 1. calculation of replicas using cpuUsage metric
-                MetricResults cpuMetricResults = currentDatapoint.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
-                if (null != cpuMetricResults) {
-                    MetricAggregationInfoResults cpuMetricAggregationInfoResults = cpuMetricResults.getAggregationInfoResult();
-                    if (null != cpuMetricAggregationInfoResults && cpuMetricAggregationInfoResults.getSum() != null && cpuMetricAggregationInfoResults.getAvg() != null && cpuMetricAggregationInfoResults.getAvg() != 0.0) {
-                        currentValue = cpuMetricAggregationInfoResults.getSum() / cpuMetricAggregationInfoResults.getAvg();
+                if (currentDatapoint.getMetricResultsMap().containsKey(AnalyzerConstants.MetricName.cpuUsage)) {
+                    MetricResults cpuMetricResults = currentDatapoint.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
+                    currentValue = getPodCount(cpuMetricResults.getAggregationInfoResult());
+                    if (currentValue != null) {
                         LOGGER.debug("current replicas from metric 'cpuUsage' is {}", currentValue);
+                        return new RecommendationConfigItem(currentValue, format);
                     }
                 }
-                // 2. calculation of replicas using memoryUsage metric
-                if (currentValue == 0.0) {
+                if (currentDatapoint.getMetricResultsMap().containsKey(AnalyzerConstants.MetricName.memoryUsage)) {
                     MetricResults memMetricResults = currentDatapoint.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
-                    if (null != memMetricResults) {
-                        MetricAggregationInfoResults memMetricAggregationInfoResults = memMetricResults.getAggregationInfoResult();
-                        if (null != memMetricAggregationInfoResults && memMetricAggregationInfoResults.getSum() != null && memMetricAggregationInfoResults.getAvg() != null && memMetricAggregationInfoResults.getAvg() != 0.0) {
-                            currentValue = memMetricAggregationInfoResults.getSum() / memMetricAggregationInfoResults.getAvg();
-                            LOGGER.debug("current replicas from metric 'memoryUsage' is {}", currentValue);
-                        }
+                    currentValue = getPodCount(memMetricResults.getAggregationInfoResult());
+                    if (currentValue != null) {
+                        LOGGER.debug("current replicas from metric 'memoryUsage' is {}", currentValue);
+                        return new RecommendationConfigItem(currentValue, format);
                     }
                 }
-                return new RecommendationConfigItem(Math.ceil(currentValue), format);
             }
-        }
 
-        // Shouldn't reach here in normal scenarios
-        if (notifications != null) {
-            if (metricName == AnalyzerConstants.MetricName.cpuRequest)
-                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
-            else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
-                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
-            else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
-                notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
-            else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
-                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+            if (currentValue == null) {
+                //TODO: Add notification when we are unable to determine replicas for some reason.
+                if (notifications != null) {
+                    if (metricName == AnalyzerConstants.MetricName.cpuRequest)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
+                        notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
+                    else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
+                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+                }
+            }
+            return new RecommendationConfigItem(currentValue, format);
         }
-
         return null;
     }
 
