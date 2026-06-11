@@ -33,9 +33,7 @@ import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -52,7 +50,9 @@ public final class KruizeObject implements ExperimentTypeAware {
     @SerializedName("cluster_name")
     private String clusterName;
     @SerializedName("datasource")
-    private String datasource;
+    private String datasource; // DEPRECATED - kept for backward compatibility
+    @SerializedName("datasources")
+    private List<String> datasources; // NEW - list of datasource names for multi-datasource support
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
     @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
@@ -368,6 +368,29 @@ public final class KruizeObject implements ExperimentTypeAware {
     public String getDataSource() {
         return datasource;
     }
+    /**
+     * Get list of datasources configured for this experiment.
+     * Provides backward compatibility by converting single datasource to list.
+     * 
+     * @return List of datasource names, never null
+     */
+    public List<String> getDatasources() {
+        // Backward compatibility: if datasources is null but datasource is set
+        if (datasources == null && datasource != null) {
+            return Arrays.asList(datasource);
+        }
+        return datasources != null ? datasources : Collections.emptyList();
+    }
+
+    /**
+     * Set list of datasources for this experiment
+     * 
+     * @param datasources List of datasource names
+     */
+    public void setDatasources(List<String> datasources) {
+        this.datasources = datasources;
+    }
+
 
     public void setDataSource(String datasource) {
         this.datasource = datasource;
