@@ -129,7 +129,6 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                     continue;
                 }
 
-
                 if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                     currentRequestsMap.put(recommendationItem, configItem);
                 }
