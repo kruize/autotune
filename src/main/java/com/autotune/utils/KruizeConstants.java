@@ -401,6 +401,10 @@ public class KruizeConstants {
         }
     }
 
+    public static class PromQueries {
+        public static final String GET_PODS_WITH_NS_CONTAINER = "sum by (pod) (container_cpu_usage_seconds_total{})";
+    }
+
     public static class HttpConstants {
         private HttpConstants() {
         }
