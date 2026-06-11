@@ -383,17 +383,36 @@ public final class KruizeObject implements ExperimentTypeAware {
     }
 
     /**
-     * Set list of datasources for this experiment
-     * 
+     * Set list of datasources for this experiment.
+     * Also updates the deprecated datasource field with the first datasource for backward compatibility.
+     *
      * @param datasources List of datasource names
      */
     public void setDatasources(List<String> datasources) {
         this.datasources = datasources;
+        // Maintain backward compatibility: sync deprecated datasource field
+        if (datasources != null && !datasources.isEmpty()) {
+            this.datasource = datasources.getFirst();
+        } else {
+            this.datasource = null;
+        }
     }
 
 
+    /**
+     * Set single datasource for this experiment (deprecated).
+     * Also updates the datasources list to maintain consistency.
+     *
+     * @param datasource Single datasource name
+     */
     public void setDataSource(String datasource) {
         this.datasource = datasource;
+        // Maintain consistency: sync datasources list
+        if (datasource != null) {
+            this.datasources = List.of(datasource);
+        } else {
+            this.datasources = null;
+        }
     }
 
     public AnalyzerConstants.ExperimentType getExperimentType() {

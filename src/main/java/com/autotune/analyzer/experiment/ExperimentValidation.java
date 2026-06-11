@@ -175,8 +175,9 @@ public class ExperimentValidation {
                         // check if the provided datasource name(s) exist
                         List<String> datasources = kruizeObject.getDatasources();
                         if (datasources != null && !datasources.isEmpty()) {
+                            Map<String, DataSourceInfo> dataSourcesCollection = DataSourceCollection.getInstance().getDataSourcesCollection();
                             for (String datasourceName : datasources) {
-                                DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
+                                DataSourceInfo dataSourceInfo = dataSourcesCollection.get(datasourceName);
                                 if (dataSourceInfo != null) {
                                     LOGGER.debug("DataSource {} exists", datasourceName);
                                 } else {
