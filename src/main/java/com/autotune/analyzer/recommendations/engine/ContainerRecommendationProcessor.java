@@ -119,10 +119,33 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
 
+        Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults();
+        IntervalResults lastDatapoint = filteredResultsMap.get(monitoringEndTime);
+
+        RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(lastDatapoint, AnalyzerConstants.MetricName.podCount, notifications);
+        if (configItem != null && configItem.getAmount() != null) {
+            // RecommendationUtils.getPodCount ensured that configItem.getAmount() is never 0. It can be 'null'.
+            int replicas = configItem.getAmount().intValue();
+            currentConfig.setReplicas(replicas);
+            LOGGER.debug("Current replicas for workload '{}' is {}", containerData.getContainer_name(), replicas);
+        }
+
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(containerData.getResults(),
-                        monitoringEndTime, resourceSetting, recommendationItem, notifications);
+                AnalyzerConstants.MetricName metricName = null;
+                if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.cpuRequest;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.memoryRequest;
+                } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                        metricName = AnalyzerConstants.MetricName.cpuLimit;
+                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                        metricName = AnalyzerConstants.MetricName.memoryLimit;
+                }
+
+                configItem = RecommendationUtils.getCurrentValue(lastDatapoint, metricName, notifications);
 
                 // Use base class validation method
                 if (!validateConfigItem(configItem, recommendationItem, notifications, LOGGER, experimentName, intervalEndTime)) {

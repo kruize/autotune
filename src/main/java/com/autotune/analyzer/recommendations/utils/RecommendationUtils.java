@@ -63,7 +63,7 @@ public class RecommendationUtils {
         RecommendationConfigItem recommendationConfigItem = null;
         Double currentValue = null;
         String format = null;
-        if (null != metricName) {
+        if (currentDatapoint != null && null != metricName) {
             if (currentDatapoint.getMetricResultsMap().containsKey(metricName)) {
                 MetricResults metricResults = currentDatapoint.getMetricResultsMap().get(metricName);
                 MetricAggregationInfoResults metricAggregationInfoResults = metricResults.getAggregationInfoResult();
@@ -91,21 +91,26 @@ public class RecommendationUtils {
             }
 
             if (currentValue == null) {
-                //TODO: Add notification when we are unable to determine replicas for some reason.
-                if (notifications != null) {
-                    if (metricName == AnalyzerConstants.MetricName.cpuRequest)
-                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
-                    else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
-                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
-                    else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
-                        notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
-                    else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
-                        notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
-                }
+                checkAndAddNotifications(metricName, notifications);
             }
             return new RecommendationConfigItem(currentValue, format);
         }
+        checkAndAddNotifications(metricName, notifications);
         return null;
+    }
+
+    //TODO: Add notification when we are unable to determine replicas for some reason.
+    private static void checkAndAddNotifications(AnalyzerConstants.MetricName metricName, ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
+        if (notifications != null) {
+            if (metricName == AnalyzerConstants.MetricName.cpuRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.memoryRequest)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.cpuLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET);
+            else if (metricName == AnalyzerConstants.MetricName.memoryLimit)
+                notifications.add(RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET);
+        }
     }
 
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
