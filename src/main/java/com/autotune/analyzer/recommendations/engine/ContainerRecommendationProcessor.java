@@ -178,14 +178,15 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
+                ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
+
                 // Determine min, max, avg pod count for a given term.
                 // If podCountAggrInfo is null, addMetricsInfo will take care. So, no need to add null check.
                 // filteredResultsMap is null or empty is handled inside getPodCountAggrInfo, however it is not necessary as we don't reach here if filteredResultsMap is null or empty.
-                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap);
+                MetricAggregationInfoResults podCountAggrInfo = getPodCountAggrInfo(filteredResultsMap, termLevelNotifications );
                 LOGGER.debug("[{}] pod count aggr results: {}", kruizeObject.getExperimentName(), podCountAggrInfo);
                 mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
-                ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime, model, containerData, monitoringEndTime, kruizeObject, currentConfig, termsEntry);
@@ -342,7 +343,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
      * @param filteredResultsMap
      * @return aggregated results like min, max, avg of pods from the results supplied.
      */
-    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap) {
+    private static MetricAggregationInfoResults getPodCountAggrInfo(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         MetricAggregationInfoResults metricAggregationInfoResults = null;
         Double avg = 0.0, min = 0.0, max = 0.0;
 
@@ -359,6 +360,16 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             // 3. Calculate from 'memoryUsage' datapoints using formulae avg of 'sum/avg', min of 'sum/avg', max of 'sum/avg'
             if (null == metricAggregationInfoResults) {
                 metricAggregationInfoResults = getPodCountAggrInfoFromMetric(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
+                if (null != metricAggregationInfoResults) {
+                    if (notifications != null)
+                        notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY));
+                } else {
+                    if (notifications != null)
+                        notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NOT_ENOUGH_DATA_FOR_POD_COUNT));
+                }
+            } else {
+                if (notifications != null)
+                    notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_POD_COUNT_DERIVED_FROM_CPU));
             }
         }
 

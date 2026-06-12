@@ -66,6 +66,7 @@
 | 221002 |  ERROR   |      NUM_PODS_CANNOT_BE_NEGATIVE      |              Specifies that the number of pods cannot be negative               |                      Number of pods cannot be negative                       | API USER  |
 | 221003 |  ERROR   |         HOURS_CANNOT_BE_ZERO          |                  Specifies that duration hours cannot be zero                   |                        Duration hours cannot be zero                         | API USER  |
 | 221004 |  ERROR   |       HOURS_CANNOT_BE_NEGATIVE        |                Specifies that duration hours cannot be negative                 |                      Duration hours cannot be negative                       | API USER  |
+| 221005 |  ERROR   |       NOT_ENOUGH_DATA_FOR_POD_COUNT        |                      Specifies that there is not enough data available to determine pod count                       |                           Not enough data available to determine Pod Count                           | API USER  |
 | 223001 |  ERROR   |     AMOUNT_MISSING_IN_CPU_SECTION     |          Specifies that the amount field is missing in the CPU Section          |                  Amount field is missing in the CPU Section                  | API USER  |
 | 223002 |  ERROR   |     INVALID_AMOUNT_IN_CPU_SECTION     |          Specifies that there is an invalid amount in the CPU Section           |                        Invalid Amount in CPU Section                         | API USER  |
 | 223003 |  ERROR   |     FORMAT_MISSING_IN_CPU_SECTION     |          Specifies that the format field is missing in the CPU Section          |                    Format field is missing in CPU Section                    | API USER  |
@@ -74,6 +75,8 @@
 | 224002 |  ERROR   |   INVALID_AMOUNT_IN_MEMORY_SECTION    |         Specifies that there is an invalid amount in the Memory Section         |                       Invalid Amount in Memory Section                       | API USER  |
 | 224003 |  ERROR   |   FORMAT_MISSING_IN_MEMORY_SECTION    |        Specifies that the format field is missing in the Memory Section         |                  Format field is missing in Memory Section                   | API USER  |
 | 224004 |  ERROR   |   INVALID_FORMAT_IN_MEMORY_SECTION    |         Specifies that there is an invalid format in the Memory Section         |                       Invalid Format in Memory Section                       | API USER  |
+| 321001 |  NOTICE  |      POD_COUNT_DERIVED_FROM_CPU       |   Specifies that pod count is derived from CPU usage metric data   | Pod count is derived from CPU usage metric data | DATA USER |
+| 321002 |  NOTICE  |    POD_COUNT_DERIVED_FROM_MEMORY      | Specifies that pod count is derived from Memory usage metric data | Pod count is derived from Memory usage metric data | DATA USER |
 | 323001 |  NOTICE  |         CPU_RECORDS_ARE_IDLE          | Specifies that the CPU records in the observed period are less than a millicore | CPU Usage is less than a millicore, No CPU Recommendations can be generated  | DATA USER |
 | 323002 |  NOTICE  |         CPU_RECORDS_ARE_ZERO          |                   Specifies that the CPU recordings are ZERO                    |          CPU usage is zero, No CPU Recommendations can be generated          | DATA USER |
 | 323003 |  NOTICE  |       CPU_RECORDS_NOT_AVAILABLE       |               Specifies that the CPU recordings are NOT AVAILABLE               |    CPU metrics are not available, No CPU Recommendations can be generated    | DATA USER |
@@ -116,6 +119,8 @@
 | 223004              |  ERROR   |     INVALID_FORMAT_IN_CPU_SECTION     |                0                 |          1          |       1        |        0         |
 | 224003              |  ERROR   |   FORMAT_MISSING_IN_MEMORY_SECTION    |                0                 |          1          |       1        |        0         |
 | 224004              |  ERROR   |   INVALID_FORMAT_IN_MEMORY_SECTION    |                0                 |          1          |       1        |        0         |
+| 321001              |  NOTICE  |      POD_COUNT_DERIVED_FROM_CPU       |                0                 |          1          |       1        |        0         |
+| 321002              |  NOTICE  |     POD_COUNT_DERIVED_FROM_MEMORY     |                0                 |          1          |       1        |        0         |
 | 323001              |  NOTICE  |         CPU_RECORDS_ARE_IDLE          |                0                 |          0          |       1        |        0         |
 | 323002              |  NOTICE  |         CPU_RECORDS_ARE_ZERO          |                0                 |          0          |       1        |        0         |
 | 323003              |  NOTICE  |       CPU_RECORDS_NOT_AVAILABLE       |                0                 |          0          |       1        |        0         |
@@ -123,6 +128,7 @@
 | 324002              |  NOTICE  |     MEMORY_RECORDS_NOT_AVAILABLE      |                0                 |          0          |       1        |        0         |
 | 221003              |  ERROR   |         HOURS_CANNOT_BE_ZERO          |                0                 |          0          |       1        |        0         |
 | 221004              |  ERROR   |       HOURS_CANNOT_BE_NEGATIVE        |                0                 |          0          |       1        |        0         |
+| 221005              |  ERROR   |     NOT_ENOUGH_DATA_FOR_POD_COUNT     |                0                 |          0          |       1        |        0         |
 | 323004              |  NOTICE  |        CPU_REQUESTS_OPTIMISED         |                0                 |          0          |       0        |        1         |
 | 323005              |  NOTICE  |         CPU_LIMITS_OPTIMISED          |                0                 |          0          |       0        |        1         |
 | 324003              |  NOTICE  |       MEMORY_REQUESTS_OPTIMISED       |                0                 |          0          |       0        |        1         |
