@@ -23,6 +23,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -333,8 +334,36 @@ public class RecommendationEngine implements RecommendationEngineService {
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
             // get the datasource
-            // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
-            String dataSource = kruizeObject.getDataSource();
+            // For multi-datasource experiments, Prometheus is mandatory for metrics collection.
+            // For backward compatibility, a single datasource is allowed only if the provider is Prometheus.
+            String dataSource = null;
+            List<String> datasources = kruizeObject.getDatasources();
+
+            if (datasources != null && !datasources.isEmpty()) {
+                for (String ds : datasources) {
+                    DataSourceInfo dsInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get(ds);
+                    if (dsInfo != null && dsInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        dataSource = ds;
+                        break;
+                    }
+                }
+            } else {
+                dataSource = kruizeObject.getDataSource();
+                if (dataSource != null) {
+                    DataSourceInfo dsInfo = DataSourceCollection.getInstance()
+                            .getDataSourcesCollection()
+                            .get(dataSource);
+                    if (dsInfo == null || !dsInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        dataSource = null;
+                    }
+                }
+            }
+
+            if (dataSource == null) {
+                throw new Exception("No Prometheus datasource configured for experiment: " + kruizeObject.getExperimentName());
+            }
 
             // call different models for different use cases
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
@@ -1187,16 +1216,35 @@ public class RecommendationEngine implements RecommendationEngineService {
             String maxDateQuery = null;
             String acceleratorDetectionQuery = null;
             String acceleratorMigDetectionQuery = null;
+            
+            // For non-prometheus datasources, we need to use Prometheus for PromQL queries (like MAX_DATE)
+            DataSourceInfo promQLDataSourceInfo = dataSourceInfo;
+            if (dataSourceInfo != null && dataSourceInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.CRYOSTAT)) {
+                LOGGER.debug("Cryostat datasource detected. Looking for Prometheus datasource for PromQL queries.");
+                // Find a Prometheus datasource from the collection for PromQL queries
+                for (DataSourceInfo ds : DataSourceCollection.getInstance().getDataSourcesCollection().values()) {
+                    if (ds.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+                        promQLDataSourceInfo = ds;
+                        LOGGER.debug("Using Prometheus datasource '{}' for PromQL queries", ds.getName());
+                        break;
+                    }
+                }
+                
+                if (promQLDataSourceInfo == dataSourceInfo) {
+                    LOGGER.warn("Cryostat datasource requires a Prometheus datasource for PromQL queries, but none found. Metrics collection may fail.");
+                }
+            }
 
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
                 acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMemoryUsage.name());
                 acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
 
+                // Use promQLDataSourceInfo for PromQL queries
                 fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
                         interval_end_time,
                         interval_start_time,
-                        dataSourceInfo,
+                        promQLDataSourceInfo,
                         metricProfile,
                         maxDateQuery,
                         acceleratorDetectionQuery,
@@ -1204,7 +1252,8 @@ public class RecommendationEngine implements RecommendationEngineService {
 
             } else if (kruizeObject.isNamespaceExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
-                fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
+                // Use promQLDataSourceInfo for PromQL queries
+                fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, promQLDataSourceInfo, metricProfile, maxDateQuery);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1435,7 +1484,12 @@ public class RecommendationEngine implements RecommendationEngineService {
                     boolean runtimeLayerDetected = RuntimeRecommendationProcessor.isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
-                    if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
+                    // Skip accelerator detection for Cryostat-only datasources as they don't support Prometheus query API
+                    boolean isPrometheusDataSource = dataSourceInfo != null &&
+                            dataSourceInfo.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS);
+                    
+                    if (!isROS && null == gpuUUID && isPrometheusDataSource &&
+                            (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
                         containerAcceleratorDetected = RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
                                 maxDateQuery,
                                 namespace,
@@ -1448,7 +1502,8 @@ public class RecommendationEngine implements RecommendationEngineService {
                     }
 
                     // Check if it's a partition
-                    if (!isROS && !containerAcceleratorDetected) {
+                    // Skip accelerator partition detection for Cryostat-only datasources
+                    if (!isROS && !containerAcceleratorDetected && isPrometheusDataSource) {
                         if (null != gpuUUID) {
                             containerAcceleratorPartitionDetected = RecommendationUtils.markAcceleratorPartitionDeviceStatusToContainer(containerData,
                                     maxDateQuery,
