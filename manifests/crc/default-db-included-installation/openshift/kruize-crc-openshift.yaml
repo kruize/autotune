@@ -262,9 +262,44 @@ data:
                 "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
               }
           }
+        },
+        {
+          "name": "cryostat",
+          "provider": "cryostat",
+          "serviceName": "",
+          "namespace": "",
+          "url": "https://cryostat-ultron.cryostat-ultron.svc.cluster.local:4180",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+          }
         }
       ]
     }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cryostat-access-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-cryostat-access
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cryostat-access-role
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -363,7 +398,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.10
+          image: quay.io/bharathappali/exman:cryostat-layer-detect
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -601,7 +636,7 @@ spec:
     spec:
       containers:
         - name: kruize-ui-nginx-container
-          image: quay.io/kruize/kruize-ui:0.0.9
+          image: quay.io/kruize/kruize-ui:0.1.0
           imagePullPolicy: Always
           env:
             - name: KRUIZE_UI_ENV
@@ -614,3 +649,15 @@ spec:
         - name: nginx-config-volume
           configMap:
             name: nginx-config
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kruize-route
+  namespace: openshift-tuning
+spec:
+  to:
+    kind: Service
+    name: kruize
+  port:
+    targetPort: kruize-port
