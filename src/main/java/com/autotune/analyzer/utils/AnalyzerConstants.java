@@ -16,6 +16,7 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 
 import java.util.Map;
 import java.util.*;
@@ -71,6 +72,7 @@ public class AnalyzerConstants {
     public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
     public static final String WORKLOAD_VARIABLE = "$WORKLOAD$";
     public static final String WORKLOAD_TYPE_VARIABLE = "$WORKLOAD_TYPE$";
+    public static final String UNSUPPORTED_WORKLOAD_TYPES_VARIABLE = "$UNSUPPORTED_WORKLOAD_TYPES$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";
@@ -1119,5 +1121,35 @@ public class AnalyzerConstants {
 
             }
         }
+    }
+
+    /**
+     * Returns a PromQL filter string for unsupported workload types.
+     * This method generates a filter that excludes workload types not supported by Kruize.
+     * Currently, only DEPLOYMENT_CONFIG is unsupported.
+     * Uses case-insensitive regex matching to handle different naming conventions from various data sources.
+     *
+     * @return A string in the format 'workload_type!~"(?i)type1", workload_type!~"(?i)type2"'
+     *         or empty string if all types are supported
+     */
+    public static String getUnsupportedWorkloadTypesFilter() {
+        // List of unsupported K8S object types
+        List<K8S_OBJECT_TYPES> unsupportedTypes = Arrays.asList(
+            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG
+        );
+        
+        // Build the filter string with case-insensitive regex matching
+        StringBuilder filter = new StringBuilder();
+        for (K8S_OBJECT_TYPES type : unsupportedTypes) {
+            if (filter.length() > 0) {
+                filter.append(", ");
+            }
+            // Use regex with case-insensitive flag to match any case variation
+            // This handles: DeploymentConfig, deploymentConfig, deploymentconfig, etc.
+            String typeString = Utils.getAppropriateK8sObjectTypeString(type);
+            filter.append("workload_type!~").append("\"(?i)").append(typeString).append("\"");
+        }
+        
+        return filter.toString();
     }
 }
