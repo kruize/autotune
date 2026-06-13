@@ -170,19 +170,83 @@ class MultiDatasourceTest {
     }
 
     @Test
-    @DisplayName("CreateExperimentAPIObject should maintain backward compatibility")
-    void createExperimentShouldMaintainBackwardCompatibility() {
+    @DisplayName("CreateExperimentAPIObject should use single datasource when only datasource is set")
+    void createExperimentShouldUseSingleDatasourceWhenOnlyDatasourceIsSet() {
         // Given
         CreateExperimentAPIObject apiObject = new CreateExperimentAPIObject();
-        
-        // When - set using old single datasource field
+
+        // When
         apiObject.setDatasource("prometheus");
-        
-        // Then - getDatasources() should return a list with single element
-        List<String> datasources = apiObject.getDatasources();
-        assertNotNull(datasources);
-        assertEquals(1, datasources.size());
-        assertEquals("prometheus", datasources.get(0));
+
+        // Then
+        assertEquals("prometheus", apiObject.getDatasource());
+        assertNull(apiObject.getDatasources());
+    }
+
+    @Test
+    @DisplayName("CreateExperimentAPIObject should use datasources list only when single datasource is absent")
+    void createExperimentShouldUseDatasourcesListOnlyWhenSingleDatasourceIsAbsent() {
+        // Given
+        CreateExperimentAPIObject apiObject = new CreateExperimentAPIObject();
+
+        // When
+        apiObject.setDatasources(Arrays.asList("cryostat-1", "thanos-2"));
+
+        // Then
+        assertNull(apiObject.getDatasource());
+        assertEquals(2, apiObject.getDatasources().size());
+        assertEquals("cryostat-1", apiObject.getDatasources().get(0));
+        assertEquals("thanos-2", apiObject.getDatasources().get(1));
+    }
+
+    @Test
+    @DisplayName("CreateExperimentAPIObject should prefer single datasource over datasources list when both are set")
+    void createExperimentShouldPreferSingleDatasourceOverDatasourcesList() {
+        // Given
+        CreateExperimentAPIObject apiObject = new CreateExperimentAPIObject();
+
+        // When
+        apiObject.setDatasource("thanos-1");
+        apiObject.setDatasources(Arrays.asList("cryostat-1", "thanos-2"));
+
+        // Then
+        assertEquals("thanos-1", apiObject.getDatasource());
+        assertEquals(2, apiObject.getDatasources().size());
+        assertEquals("cryostat-1", apiObject.getDatasources().get(0));
+        assertEquals("thanos-2", apiObject.getDatasources().get(1));
+    }
+
+    @Test
+    @DisplayName("BulkInput should use datasources list only when single datasource is absent")
+    void bulkInputShouldUseDatasourcesListOnlyWhenSingleDatasourceIsAbsent() {
+        // Given
+        com.autotune.analyzer.serviceObjects.BulkInput bulkInput = new com.autotune.analyzer.serviceObjects.BulkInput();
+
+        // When
+        bulkInput.setDatasources(Arrays.asList("cryostat-1", "thanos-2"));
+
+        // Then
+        assertNull(bulkInput.getDatasource());
+        assertEquals(2, bulkInput.getDatasources().size());
+        assertEquals("cryostat-1", bulkInput.getDatasources().get(0));
+        assertEquals("thanos-2", bulkInput.getDatasources().get(1));
+    }
+
+    @Test
+    @DisplayName("BulkInput should prefer single datasource over datasources list when both are set")
+    void bulkInputShouldPreferSingleDatasourceOverDatasourcesList() {
+        // Given
+        com.autotune.analyzer.serviceObjects.BulkInput bulkInput = new com.autotune.analyzer.serviceObjects.BulkInput();
+
+        // When
+        bulkInput.setDatasource("thanos-1");
+        bulkInput.setDatasources(Arrays.asList("cryostat-1", "thanos-2"));
+
+        // Then
+        assertEquals("thanos-1", bulkInput.getDatasource());
+        assertEquals(2, bulkInput.getDatasources().size());
+        assertEquals("cryostat-1", bulkInput.getDatasources().get(0));
+        assertEquals("thanos-2", bulkInput.getDatasources().get(1));
     }
 
     @Test

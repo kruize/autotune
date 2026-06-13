@@ -16,6 +16,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,10 @@ import java.util.Map;
 public class BulkInput {
     private FilterWrapper filter;
     private TimeRange time_range;
-    private String datasource;
+    @SerializedName("datasource")
+    private String datasource; // DEPRECATED - kept for backward compatibility
+    @SerializedName("datasources")
+    private List<String> datasources; // NEW - list of datasource names for multi-datasource support
     private Webhook webhook;
     private String metadata_profile;
     private String measurement_duration;
@@ -47,7 +51,7 @@ public class BulkInput {
     @JsonIgnore
     public boolean isEmpty() {
         return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
-                && datasource == null);
+                && datasource == null && (datasources == null || datasources.isEmpty()));
     }
 
     public TimeRange getTime_range() {
@@ -58,12 +62,41 @@ public class BulkInput {
         this.time_range = time_range;
     }
 
+    /**
+     * Get single datasource (deprecated).
+     *
+     * @return Single datasource name
+     */
     public String getDatasource() {
         return datasource;
     }
 
+    /**
+     * Set single datasource (deprecated).
+     *
+     * @param datasource Single datasource name
+     */
     public void setDatasource(String datasource) {
         this.datasource = datasource;
+    }
+
+    /**
+     * Get list of datasources configured for this bulk job.
+     *
+     * @return List of datasource names, never null
+     */
+    public List<String> getDatasources() {
+        return datasources;
+    }
+
+    /**
+     * Set list of datasources for this bulk job.
+     * Also updates the deprecated datasource field with the first datasource for backward compatibility.
+     *
+     * @param datasources List of datasource names
+     */
+    public void setDatasources(List<String> datasources) {
+        this.datasources = datasources;
     }
 
     public FilterWrapper getFilter() {

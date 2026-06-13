@@ -158,7 +158,7 @@ public class BulkJobManager implements Runnable {
                     includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
                     excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
                 }
-                if (null == this.bulkInput.getDatasource()) {
+                if (this.bulkInput.getDatasources() == null || this.bulkInput.getDatasources().isEmpty()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
                 }
                 try {
@@ -624,6 +624,7 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
         createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
         createExperimentAPIObject.setExperimentName(experiment_name);
+        createExperimentAPIObject.setDatasources(this.bulkInput.getDatasources());
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
         createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());

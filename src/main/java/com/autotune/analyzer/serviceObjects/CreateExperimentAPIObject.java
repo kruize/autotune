@@ -174,11 +174,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
      * @return List of datasource names, never null
      */
     public List<String> getDatasources() {
-        // Backward compatibility: if datasources is null but datasource is set
-        if (datasources == null && datasource != null) {
-            return List.of(datasource);
-        }
-        return datasources != null ? datasources : Collections.emptyList();
+        // If single datasource is explicitly set, it is authoritative and the list is ignored.
+        return datasources;
     }
 
     /**
