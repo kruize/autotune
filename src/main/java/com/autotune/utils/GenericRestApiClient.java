@@ -25,17 +25,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
@@ -50,6 +54,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -96,6 +102,24 @@ public class GenericRestApiClient {
             HttpRequestBase httpRequestBase;
             if (methodType.equalsIgnoreCase("GET")) {
                 httpRequestBase = new HttpGet(baseURL + URLEncoder.encode(queryString, StandardCharsets.UTF_8));
+            } else if (methodType.equalsIgnoreCase("POST")) {
+
+                HttpPost httpPost = new HttpPost(baseURL);
+
+                httpPost.setEntity(
+                        new StringEntity(
+                                queryString,
+                                ContentType.APPLICATION_JSON
+                        )
+                );
+                httpRequestBase = httpPost;
+                LOGGER.info(
+                        "Request body: {}",
+                        EntityUtils.toString(
+                                ((HttpPost) httpRequestBase).getEntity(),
+                                StandardCharsets.UTF_8
+                        )
+                );
             } else {
                 throw new UnsupportedOperationException("Unsupported method type: " + methodType);
             }
@@ -104,6 +128,7 @@ public class GenericRestApiClient {
             applyAuthentication(httpRequestBase);
 
             LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+
 
             // Execute the request and get the HttpResponse
             HttpResponse response = httpclient.execute(httpRequestBase);
@@ -115,19 +140,21 @@ public class GenericRestApiClient {
             // Get the response body if needed
             jsonResponse = new StringResponseHandler().handleResponse(response);
 
-            // Parse the JSON response
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(jsonResponse);
-            JsonNode resultNode = rootNode.path("data").path("result");
-            JsonNode warningsNode = rootNode.path("warnings");
+            if (!methodType.equalsIgnoreCase("POST")) {
+                // Parse the JSON response
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(jsonResponse);
+                JsonNode resultNode = rootNode.path("data").path("result");
+                JsonNode warningsNode = rootNode.path("warnings");
 
-            // Check if the result is empty and if there are specific warnings
-            if (resultNode.isArray() && resultNode.size() == 0) {
-                for (JsonNode warning : warningsNode) {
-                    String warningMessage = warning.asText();
-                    if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
-                        LOGGER.warn("Warning detected: {}", warningMessage);
-                        throw new IOException(warningMessage);
+                // Check if the result is empty and if there are specific warnings
+                if (resultNode.isArray() && resultNode.size() == 0) {
+                    for (JsonNode warning : warningsNode) {
+                        String warningMessage = warning.asText();
+                        if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                            LOGGER.warn("Warning detected: {}", warningMessage);
+                            throw new IOException(warningMessage);
+                        }
                     }
                 }
             }

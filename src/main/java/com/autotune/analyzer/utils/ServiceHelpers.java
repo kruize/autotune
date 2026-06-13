@@ -136,17 +136,68 @@ public class ServiceHelpers {
         return kruizeExpList;
     }
 
-    public static void detectLayers (CreateExperimentAPIObject validAPIObj) throws Exception {
+    /**
+     * Detect layers for an experiment using configured datasources.
+     * Supports both single datasource (backward compatible) and multiple datasources.
+     *
+     * @param validAPIObj The experiment configuration
+     */
+    public static void detectLayers(CreateExperimentAPIObject validAPIObj) {
+        if (validAPIObj == null) {
+            LOGGER.warn("CreateExperimentAPIObject is null, skipping layer detection");
+            return;
+        }
+        
+        // Get datasources from experiment (handles backward compatibility)
+        List<String> datasources = validAPIObj.getDatasources();
+        if (datasources == null || datasources.isEmpty()) {
+            LOGGER.warn("No datasources configured for experiment: {}",
+                validAPIObj.getExperimentName());
+            return;
+        }
+        
+        LOGGER.info("Detecting layers for experiment '{}' using {} datasource(s): {}",
+            validAPIObj.getExperimentName(), datasources.size(), datasources);
+        
+        // Detect layers for each container
         for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                // detect layers for the container
-                Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
+                
+                // Aggregate detected layers from all datasources
+                Map<String, KruizeLayer> aggregatedLayers = new java.util.HashMap<>();
+                
+                try {
+                    LOGGER.debug("Detecting layers for container '{}' using datasources '{}'",
+                        containerAPIObject.getContainer_name(), datasources);
+
+                    Map<String, KruizeLayer> layers = LayerUtils.detectLayers(
+                        containerAPIObject.getContainer_name(),
                         kubernetesAPIObject.getNamespace(),
-                        validAPIObj.getDatasource()
-                );
-                // Skipping null check as we return atleast an empty map if there are no exceptions
-                if (!layers.isEmpty()) {
-                    containerAPIObject.setLayerMap(layers);
+                        datasources
+                    );
+
+                    if (!layers.isEmpty()) {
+                        aggregatedLayers.putAll(layers);
+                        LOGGER.info("Datasources '{}' detected {} layer(s) for container '{}'",
+                            datasources, layers.size(), containerAPIObject.getContainer_name());
+                    } else {
+                        LOGGER.debug("Datasources '{}' detected no layers for container '{}'",
+                            datasources, containerAPIObject.getContainer_name());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error detecting layers with datasources '{}' for container '{}': {}",
+                        datasources, containerAPIObject.getContainer_name(), e.getMessage());
+                    LOGGER.debug("Stack trace:", e);
+                }
+                
+                // Store aggregated layers in container
+                if (!aggregatedLayers.isEmpty()) {
+                    containerAPIObject.setLayerMap(aggregatedLayers);
+                    LOGGER.info("Total {} unique layer(s) detected for container '{}' across all datasources",
+                        aggregatedLayers.size(), containerAPIObject.getContainer_name());
+                } else {
+                    LOGGER.info("No layers detected for container '{}' across any datasource",
+                        containerAPIObject.getContainer_name());
                 }
             }
         }
