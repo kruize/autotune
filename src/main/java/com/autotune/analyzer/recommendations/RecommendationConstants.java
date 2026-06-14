@@ -474,10 +474,11 @@ public class RecommendationConstants {
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_START = 328000;
         public static final int NOTICE_ACCELERATOR_NOT_SUPPORTED = 328001;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_END = 328999;
-        public static final int SECTION_WARNING_START = 400000;
         // Pod count derivation notifications (321001-321002): Notifications when pod count is derived from other metrics
         public static final int NOTICE_POD_COUNT_DERIVED_FROM_CPU = 321001;      // Pod count derived from CPU usage metrics
         public static final int NOTICE_POD_COUNT_DERIVED_FROM_MEMORY = 321002;   // Pod count derived from Memory usage metrics
+        public static final int SECTION_WARNING_START = 400000;
+
 
         // Section - Warning:               400000 - 499999
         //      SubSection - General Info:  410000 - 419999
