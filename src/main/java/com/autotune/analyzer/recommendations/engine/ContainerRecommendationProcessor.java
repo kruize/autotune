@@ -124,7 +124,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(lastDatapoint, AnalyzerConstants.MetricName.podCount, notifications);
         if (configItem != null && configItem.getAmount() != null) {
-            // RecommendationUtils.getPodCount ensured that configItem.getAmount() is never 0. It can be 'null'.
+            // RecommendationUtils.getCurrentValue ensured that configItem.getAmount() is never 0. It can be 'null'.
             int replicas = (int) Math.ceil(configItem.getAmount());
             currentConfig.setReplicas(replicas);
             LOGGER.debug("Current replicas for workload '{}' is {}", containerData.getContainer_name(), replicas);
@@ -132,19 +132,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                AnalyzerConstants.MetricName metricName = null;
-                if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
-                        metricName = AnalyzerConstants.MetricName.cpuRequest;
-                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
-                        metricName = AnalyzerConstants.MetricName.memoryRequest;
-                } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
-                        metricName = AnalyzerConstants.MetricName.cpuLimit;
-                    else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
-                        metricName = AnalyzerConstants.MetricName.memoryLimit;
-                }
 
+                AnalyzerConstants.MetricName metricName = getMetricName(resourceSetting, recommendationItem);
                 configItem = RecommendationUtils.getCurrentValue(lastDatapoint, metricName, notifications);
 
                 // Use base class validation method
@@ -172,6 +161,22 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
             currentConfig.setLimits(currentLimitsMap);
         }
         return currentConfig;
+    }
+
+    private static AnalyzerConstants.MetricName getMetricName(AnalyzerConstants.ResourceSetting resourceSetting, AnalyzerConstants.RecommendationItem recommendationItem) {
+        AnalyzerConstants.MetricName metricName = null;
+        if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+            if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                metricName = AnalyzerConstants.MetricName.cpuRequest;
+            else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                metricName = AnalyzerConstants.MetricName.memoryRequest;
+        } else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+            if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
+                metricName = AnalyzerConstants.MetricName.cpuLimit;
+            else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
+                metricName = AnalyzerConstants.MetricName.memoryLimit;
+        }
+        return metricName;
     }
 
     private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
