@@ -24,13 +24,14 @@ Kruize supports connecting to various monitoring datasources (Prometheus, Thanos
 
 ### Required Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `datasources` | array | Yes | Array of datasource configurations |
-| `datasources[].name` | string | Yes | Name of the datasource instance |
-| `datasources[].provider` | string | Yes | Provider type (e.g., "prometheus") |
-| `datasources[].url` OR `serviceName`+`namespace` | string | Yes | Connection endpoint |
-| `datasources[].authentication` | object | No | Authentication configuration (defaults to "none") |
+| Field                                            | Type   | Required | Description                                            |
+|--------------------------------------------------|--------|----------|--------------------------------------------------------|
+| `datasources`                                    | array  | Yes      | Array of datasource configurations                     |
+| `datasources[].name`                             | string | Yes      | Name of the datasource instance                        |
+| `datasources[].provider`                         | string | Yes      | Provider type (e.g., "prometheus")                     |
+| `datasources[].url` OR `serviceName`+`namespace` | string | Yes      | Connection endpoint                                    |
+| `datasources[].authentication`                   | object | No       | Authentication configuration (defaults to "none")      |
+| `datasources[].clusters`                         | array  | No       | Array of cluster names associated with this datasource |
 
 ### URL vs ServiceName
 
@@ -358,11 +359,79 @@ spec:
           secretName: kruize-mtls-certs
 ```
 
+## Cluster Configuration
+
+### Overview
+
+Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
+
+> **⚠️ Current Limitation**: While the API supports multiple clusters in the configuration, the current implementation only supports **single cluster** per datasource. Full multi-cluster support will be added in a future release.
+
+### Configuration
+
+#### Single Cluster Example
+
+```json
+{
+  "datasource": [
+    {
+      "name": "prometheus-1",
+      "provider": "prometheus",
+      "serviceName": "prometheus-k8s",
+      "namespace": "openshift-monitoring",
+      "clusters": ["default"]
+    }
+  ]
+}
+```
+
+#### Multiple Clusters Example
+TBA
+
+### Behavior
+
+- **Optional Field**: If the `clusters` field is omitted, the datasource works without cluster association
+- **Multiple Clusters**: Supports an array of cluster names
+- **Backward Compatible**: Existing configurations without the clusters field continue to work
+- **Empty Array**: An empty clusters array `[]` is treated the same as omitting the field
+
+### Use Cases
+
+1. **Multi-Cluster Monitoring**: A single Prometheus instance monitoring multiple Kubernetes clusters
+2. **Environment Separation**: Different clusters for dev, stage, and production environments
+3. **Cluster-Specific Recommendations**: Generate recommendations specific to each cluster's workload
+
+### API Response
+
+When listing datasources or fetching metadata, the cluster information is included in the response:
+
+```json
+{
+  "datasources": [
+    {
+      "name": "prometheus-1",
+      "provider": "prometheus",
+      "serviceName": "prometheus-k8s",
+      "namespace": "openshift-monitoring",
+      "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9090",
+      "clusters": ["default"]
+    }
+  ]
+}
+```
+
+### Integration with Kruize Optimizer
+
+The cluster information is used by kruize-optimizer to:
+1. Fetch cluster-specific metadata via the `/dsmetadata` API
+2. Construct bulk API payloads with appropriate cluster context
+3. Generate cluster-aware recommendations
+
 ## Related Documentation
 
 - [Kruize Local API](./KruizeLocalAPI.md)
 
 ---
 
-**Last Updated:** 2026-02-11  
-**Version:** 1.0
+**Last Updated:** 2026-06-18
+**Version:** 1.1
