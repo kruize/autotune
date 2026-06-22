@@ -48,14 +48,6 @@ public class BulkServiceValidation {
     
     // Cluster name validation constants
     private static final int MAX_CLUSTER_NAME_LENGTH = 253;
-    private static final String CLUSTER_NAME_FORMAT_ERROR =
-            "Invalid cluster_name: must not exceed " + MAX_CLUSTER_NAME_LENGTH + " characters.";
-    
-    // Valid recommendation model names
-    private static final Set<String> VALID_MODELS = Set.of("performance", "cost");
-    
-    // Valid recommendation term names
-    private static final Set<String> VALID_TERMS = Set.of("short", "medium", "long");
 
     /**
      * Validates the bulk request payload and returns the corresponding validation output.

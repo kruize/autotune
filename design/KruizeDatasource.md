@@ -373,7 +373,7 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
 
 ```json
 {
-  "datasource": [
+  "datasources": [
     {
       "name": "prometheus-1",
       "provider": "prometheus",

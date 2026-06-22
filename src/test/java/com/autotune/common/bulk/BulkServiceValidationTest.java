@@ -178,6 +178,27 @@ class BulkServiceValidationTest {
             // Then
             assertEquals("", result, "Single character cluster name should be accepted");
         }
+
+        @Test
+        @DisplayName("Should accept cluster name with leading and trailing whitespace after trimming")
+        void shouldAcceptClusterNameWithWhitespaceAfterTrimming() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("  prod-cluster  ");
+
+            // Then
+            assertEquals("", result, "Cluster name with leading/trailing spaces should be accepted after trimming");
+        }
+
+        @Test
+        @DisplayName("Should reject whitespace-only cluster name")
+        void shouldRejectWhitespaceOnlyClusterName() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("   ");
+
+            // Then
+            assertTrue(result.contains("cannot be an empty string"),
+                "Whitespace-only cluster name should be rejected as empty");
+        }
     }
 
 

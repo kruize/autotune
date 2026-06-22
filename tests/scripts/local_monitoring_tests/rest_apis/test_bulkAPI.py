@@ -389,7 +389,8 @@ def test_bulk_api_filter_application(
     ("Cluster-A", ERROR_STATUS_CODE, "Invalid cluster_name format"),  # Uppercase
     ("-cluster", ERROR_STATUS_CODE, "Invalid cluster_name format"),  # Starts with hyphen
     ("cluster_name", ERROR_STATUS_CODE, "Invalid cluster_name format"),  # Underscore
-    ("a" * 254, ERROR_STATUS_CODE, "cluster_name is too long"),  # Exceeds max length
+    ("a" * 254, ERROR_STATUS_CODE, "too long (max"),  # Exceeds max length - matches backend message
+    (None, SUCCESS_200_STATUS_CODE, None),  # Omitted cluster_name - should use metadata cluster
 ])
 def test_bulk_api_cluster_name_validation(cluster_type, cluster_name, expected_status, expected_error, caplog):
     """
