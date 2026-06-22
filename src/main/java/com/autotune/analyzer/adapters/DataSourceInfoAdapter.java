@@ -36,21 +36,9 @@ public class DataSourceInfoAdapter implements JsonSerializer<DataSourceInfo> {
         
         jsonObject.addProperty("name", src.getName());
         jsonObject.addProperty("provider", src.getProvider());
-        
-        // Only add serviceName if not null
-        if (src.getServiceName() != null) {
-            jsonObject.addProperty("serviceName", src.getServiceName());
-        }
-        
-        // Only add namespace if not null
-        if (src.getNamespace() != null) {
-            jsonObject.addProperty("namespace", src.getNamespace());
-        }
-        
-        // Only add url if not null
-        if (src.getUrl() != null) {
-            jsonObject.addProperty("url", src.getUrl().toString());
-        }
+        jsonObject.addProperty("serviceName", src.getServiceName());
+        jsonObject.addProperty("namespace", src.getNamespace());
+        jsonObject.addProperty("url", src.getUrl() != null ? src.getUrl().toString() : null);
         
         // Serialize authenticationConfig
         if (src.getAuthenticationConfig() != null) {

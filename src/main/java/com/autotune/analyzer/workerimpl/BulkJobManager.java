@@ -625,7 +625,15 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
         createExperimentAPIObject.setExperimentName(experiment_name);
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
-        createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
+        // Use cluster_name from bulk payload if provided (trimmed), otherwise use metadata cluster
+        String clusterName = dsc.getDataSourceClusterName(); // default to metadata cluster
+        if (this.bulkInput.getCluster_name() != null) {
+            String trimmedClusterName = this.bulkInput.getCluster_name().trim();
+            if (!trimmedClusterName.isEmpty()) {
+                clusterName = trimmedClusterName;
+            }
+        }
+        createExperimentAPIObject.setClusterName(clusterName);
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
         createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
@@ -638,8 +646,11 @@ public class BulkJobManager implements Runnable {
         kubernetesAPIObject.setNamespace(namespace.getNamespace());
         kubernetesAPIObjectList.add(kubernetesAPIObject);
         createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+        
+        // Create recommendation settings with threshold
         RecommendationSettings rs = new RecommendationSettings();
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
+        
         createExperimentAPIObject.setRecommendationSettings(rs);
         TrialSettings trialSettings = new TrialSettings();
         trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());

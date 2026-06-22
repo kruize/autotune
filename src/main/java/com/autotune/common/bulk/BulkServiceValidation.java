@@ -84,14 +84,6 @@ public class BulkServiceValidation {
         validationOutputData = buildErrorOutput(validateClusterName(payload.getCluster_name()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
-        // Validate model_settings if provided
-        validationOutputData = buildErrorOutput(validateModelSettings(payload.getModel_settings()), jobID);
-        if (validationOutputData != null) return validationOutputData;
-
-        // Validate term_settings if provided
-        validationOutputData = buildErrorOutput(validateTermSettings(payload.getTerm_settings()), jobID);
-        if (validationOutputData != null) return validationOutputData;
-
         if (payload.getDatasource() != null) {
             validationOutputData = buildErrorOutput(validateDatasourceConnection(payload.getDatasource()), jobID);
         }
@@ -223,75 +215,4 @@ public class BulkServiceValidation {
         return "";
     }
 
-    /**
-     * Validates the model_settings field if provided.
-     * Checks for:
-     * <ul>
-     *     <li>Non-null models list when model_settings is provided</li>
-     *     <li>Non-empty models list</li>
-     *     <li>Valid model names (performance, cost)</li>
-     * </ul>
-     *
-     * @param modelSettings the model settings to validate (can be null)
-     * @return an error message if validation fails; otherwise an empty string
-     */
-    public static String validateModelSettings(com.autotune.analyzer.kruizeObject.ModelSettings modelSettings) {
-        if (modelSettings == null) {
-            return ""; // null is valid (will use all default models)
-        }
-        
-        if (modelSettings.getModels() == null || modelSettings.getModels().isEmpty()) {
-            return "model_settings.models cannot be null or empty when model_settings is provided. " +
-                   "Valid model names: " + VALID_MODELS;
-        }
-        
-        for (String model : modelSettings.getModels()) {
-            if (model == null || model.trim().isEmpty()) {
-                return "model_settings.models contains null or empty model name";
-            }
-            
-            String modelLower = model.toLowerCase().trim();
-            if (!VALID_MODELS.contains(modelLower)) {
-                return "Invalid model name: '" + model + "'. Valid model names are: " + VALID_MODELS;
-            }
-        }
-        
-        return "";
-    }
-
-    /**
-     * Validates the term_settings field if provided.
-     * Checks for:
-     * <ul>
-     *     <li>Non-null terms list when term_settings is provided</li>
-     *     <li>Non-empty terms list</li>
-     *     <li>Valid term names (short, medium, long)</li>
-     * </ul>
-     *
-     * @param termSettings the term settings to validate (can be null)
-     * @return an error message if validation fails; otherwise an empty string
-     */
-    public static String validateTermSettings(com.autotune.analyzer.kruizeObject.TermSettings termSettings) {
-        if (termSettings == null) {
-            return ""; // null is valid (will use all default terms)
-        }
-        
-        if (termSettings.getTerms() == null || termSettings.getTerms().isEmpty()) {
-            return "term_settings.terms cannot be null or empty when term_settings is provided. " +
-                   "Valid term names: " + VALID_TERMS;
-        }
-        
-        for (String term : termSettings.getTerms()) {
-            if (term == null || term.trim().isEmpty()) {
-                return "term_settings.terms contains null or empty term name";
-            }
-            
-            String termLower = term.toLowerCase().trim();
-            if (!VALID_TERMS.contains(termLower)) {
-                return "Invalid term name: '" + term + "'. Valid term names are: " + VALID_TERMS;
-            }
-        }
-        
-        return "";
-    }
 }

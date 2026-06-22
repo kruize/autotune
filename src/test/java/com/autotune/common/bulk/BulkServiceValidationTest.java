@@ -93,47 +93,47 @@ class BulkServiceValidationTest {
         }
 
         @Test
-        @DisplayName("Should accept cluster name with uppercase letters")
-        void shouldAcceptClusterNameWithUppercase() {
+        @DisplayName("Should reject cluster name with uppercase letters")
+        void shouldRejectClusterNameWithUppercase() {
             // When
             String result = BulkServiceValidation.validateClusterName("Cluster-A");
 
             // Then
-            assertEquals("", result,
-                "Uppercase letters should be accepted (format validation removed)");
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Uppercase letters should be rejected");
         }
 
         @Test
-        @DisplayName("Should accept cluster name starting with hyphen")
-        void shouldAcceptClusterNameStartingWithHyphen() {
+        @DisplayName("Should reject cluster name starting with hyphen")
+        void shouldRejectClusterNameStartingWithHyphen() {
             // When
             String result = BulkServiceValidation.validateClusterName("-cluster");
 
             // Then
-            assertEquals("", result,
-                "Cluster name starting with hyphen should be accepted (format validation removed)");
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Cluster name starting with hyphen should be rejected");
         }
 
         @Test
-        @DisplayName("Should accept cluster name ending with hyphen")
-        void shouldAcceptClusterNameEndingWithHyphen() {
+        @DisplayName("Should reject cluster name ending with hyphen")
+        void shouldRejectClusterNameEndingWithHyphen() {
             // When
             String result = BulkServiceValidation.validateClusterName("cluster-");
 
             // Then
-            assertEquals("", result,
-                "Cluster name ending with hyphen should be accepted (format validation removed)");
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Cluster name ending with hyphen should be rejected");
         }
 
         @Test
-        @DisplayName("Should accept cluster name with special characters")
-        void shouldAcceptClusterNameWithSpecialCharacters() {
+        @DisplayName("Should reject cluster name with special characters")
+        void shouldRejectClusterNameWithSpecialCharacters() {
             // When
             String result = BulkServiceValidation.validateClusterName("cluster_name");
 
             // Then
-            assertEquals("", result,
-                "Underscore should be accepted (format validation removed)");
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Underscore should be rejected");
         }
 
         @Test
@@ -146,7 +146,7 @@ class BulkServiceValidationTest {
             String result = BulkServiceValidation.validateClusterName(longName);
 
             // Then
-            assertTrue(result.contains("must not exceed 253 characters"),
+            assertTrue(result.contains("too long"), 
                 "Cluster name exceeding 253 characters should be rejected");
         }
 
@@ -164,14 +164,14 @@ class BulkServiceValidationTest {
         }
 
         @Test
-        @DisplayName("Should accept cluster name with spaces")
-        void shouldAcceptClusterNameWithSpaces() {
+        @DisplayName("Should reject cluster name with spaces")
+        void shouldRejectClusterNameWithSpaces() {
             // When
             String result = BulkServiceValidation.validateClusterName("cluster name");
 
             // Then
-            assertEquals("", result,
-                "Spaces should be accepted (format validation removed)");
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Spaces should be rejected");
         }
 
         @Test
@@ -185,381 +185,3 @@ class BulkServiceValidationTest {
         }
     }
 
-    @Nested
-    @DisplayName("Model Settings Validation Tests")
-    class ModelSettingsValidationTests {
-
-        @Test
-        @DisplayName("Should accept null model settings")
-        void shouldAcceptNullModelSettings() {
-            // When
-            String result = BulkServiceValidation.validateModelSettings(null);
-
-            // Then
-            assertEquals("", result, "Null model settings should be valid");
-        }
-
-        @Test
-        @DisplayName("Should reject model settings with null models list")
-        void shouldRejectModelSettingsWithNullModelsList() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(null);
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("cannot be null or empty"), 
-                "Null models list should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject model settings with empty models list")
-        void shouldRejectModelSettingsWithEmptyModelsList() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Collections.emptyList());
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("cannot be null or empty"), 
-                "Empty models list should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should accept valid performance model")
-        void shouldAcceptValidPerformanceModel() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("performance"));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertEquals("", result, "Performance model should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept valid cost model")
-        void shouldAcceptValidCostModel() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("cost"));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertEquals("", result, "Cost model should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept multiple valid models")
-        void shouldAcceptMultipleValidModels() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("performance", "cost"));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertEquals("", result, "Multiple valid models should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept models with different case")
-        void shouldAcceptModelsWithDifferentCase() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("Performance", "COST"));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertEquals("", result, "Models with different case should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should reject invalid model name")
-        void shouldRejectInvalidModelName() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("invalid-model"));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("Invalid model name"), 
-                "Invalid model name should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject models list with null element")
-        void shouldRejectModelsListWithNullElement() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("performance", null));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty model name"), 
-                "Null model element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject models list with empty string element")
-        void shouldRejectModelsListWithEmptyStringElement() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("performance", ""));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty model name"), 
-                "Empty string model element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject models list with whitespace-only element")
-        void shouldRejectModelsListWithWhitespaceOnlyElement() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList("performance", "   "));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty model name"), 
-                "Whitespace-only model element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should accept models with leading/trailing whitespace")
-        void shouldAcceptModelsWithLeadingTrailingWhitespace() {
-            // Given
-            ModelSettings settings = new ModelSettings();
-            settings.setModels(Arrays.asList(" performance ", " cost "));
-
-            // When
-            String result = BulkServiceValidation.validateModelSettings(settings);
-
-            // Then
-            assertEquals("", result, "Models with whitespace should be trimmed and accepted");
-        }
-    }
-
-    @Nested
-    @DisplayName("Term Settings Validation Tests")
-    class TermSettingsValidationTests {
-
-        @Test
-        @DisplayName("Should accept null term settings")
-        void shouldAcceptNullTermSettings() {
-            // When
-            String result = BulkServiceValidation.validateTermSettings(null);
-
-            // Then
-            assertEquals("", result, "Null term settings should be valid");
-        }
-
-        @Test
-        @DisplayName("Should reject term settings with null terms list")
-        void shouldRejectTermSettingsWithNullTermsList() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(null);
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("cannot be null or empty"), 
-                "Null terms list should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject term settings with empty terms list")
-        void shouldRejectTermSettingsWithEmptyTermsList() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Collections.emptyList());
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("cannot be null or empty"), 
-                "Empty terms list should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should accept valid short term")
-        void shouldAcceptValidShortTerm() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Short term should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept valid medium term")
-        void shouldAcceptValidMediumTerm() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("medium"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Medium term should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept valid long term")
-        void shouldAcceptValidLongTerm() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("long"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Long term should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept multiple valid terms")
-        void shouldAcceptMultipleValidTerms() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short", "medium", "long"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Multiple valid terms should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept terms with different case")
-        void shouldAcceptTermsWithDifferentCase() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("Short", "MEDIUM", "Long"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Terms with different case should be accepted");
-        }
-
-        @Test
-        @DisplayName("Should reject invalid term name")
-        void shouldRejectInvalidTermName() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("invalid-term"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("Invalid term name"), 
-                "Invalid term name should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject terms list with null element")
-        void shouldRejectTermsListWithNullElement() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short", null));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty term name"), 
-                "Null term element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject terms list with empty string element")
-        void shouldRejectTermsListWithEmptyStringElement() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short", ""));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty term name"), 
-                "Empty string term element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should reject terms list with whitespace-only element")
-        void shouldRejectTermsListWithWhitespaceOnlyElement() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short", "   "));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertTrue(result.contains("null or empty term name"), 
-                "Whitespace-only term element should be rejected");
-        }
-
-        @Test
-        @DisplayName("Should accept terms with leading/trailing whitespace")
-        void shouldAcceptTermsWithLeadingTrailingWhitespace() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList(" short ", " long "));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Terms with whitespace should be trimmed and accepted");
-        }
-
-        @Test
-        @DisplayName("Should accept subset of valid terms")
-        void shouldAcceptSubsetOfValidTerms() {
-            // Given
-            TermSettings settings = new TermSettings();
-            settings.setTerms(Arrays.asList("short", "long"));
-
-            // When
-            String result = BulkServiceValidation.validateTermSettings(settings);
-
-            // Then
-            assertEquals("", result, "Subset of valid terms should be accepted");
-        }
-    }
-}
