@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.autotune.common.bulk.BulkServiceValidationTest$ClusterNameValidationTests
+-------------------------------------------------------------------------------
+Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.148 s -- in com.autotune.common.bulk.BulkServiceValidationTest$ClusterNameValidationTests

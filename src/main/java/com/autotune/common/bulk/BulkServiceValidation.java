@@ -186,11 +186,13 @@ public class BulkServiceValidation {
 
     /**
      * Validates the cluster_name field if provided.
-     * Trims whitespace and checks for:
+     * Validates according to Kubernetes DNS-1123 subdomain rules:
      * <ul>
      *     <li>Empty string (not allowed)</li>
-     *     <li>Length (max 253 characters per Kubernetes DNS-1123 subdomain spec)</li>
-     *     <li>Format (lowercase alphanumeric with hyphens and dots)</li>
+     *     <li>Length (max 253 characters)</li>
+     *     <li>Format: lowercase alphanumeric characters, hyphens, and dots only</li>
+     *     <li>Must start and end with alphanumeric character</li>
+     *     <li>No spaces or special characters (except hyphen and dot)</li>
      * </ul>
      *
      * @param clusterName the cluster name to validate (can be null)
@@ -208,8 +210,38 @@ public class BulkServiceValidation {
             return "cluster_name cannot be an empty string. Either provide a valid cluster name or omit the field";
         }
         
+        // Check length first
         if (trimmedClusterName.length() > MAX_CLUSTER_NAME_LENGTH) {
-            return CLUSTER_NAME_FORMAT_ERROR + " Provided: " + trimmedClusterName.length() + " characters";
+            return "Invalid cluster_name: too long (max " + MAX_CLUSTER_NAME_LENGTH + " characters). Provided: " + trimmedClusterName.length() + " characters";
+        }
+        
+        // Kubernetes DNS-1123 subdomain validation
+        // Must contain only lowercase alphanumeric characters, hyphens, or dots
+        // Must start and end with an alphanumeric character
+        
+        // Check if it starts with a hyphen or dot
+        if (trimmedClusterName.startsWith("-") || trimmedClusterName.startsWith(".")) {
+            return "Invalid cluster_name format: must start with an alphanumeric character. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check if it ends with a hyphen or dot
+        if (trimmedClusterName.endsWith("-") || trimmedClusterName.endsWith(".")) {
+            return "Invalid cluster_name format: must end with an alphanumeric character. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for uppercase letters
+        if (!trimmedClusterName.equals(trimmedClusterName.toLowerCase())) {
+            return "Invalid cluster_name format: must contain only lowercase characters. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for spaces
+        if (trimmedClusterName.contains(" ")) {
+            return "Invalid cluster_name format: cannot contain spaces. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for invalid characters (anything other than lowercase alphanumeric, hyphen, or dot)
+        if (!trimmedClusterName.matches("^[a-z0-9.-]+$")) {
+            return "Invalid cluster_name format: must contain only lowercase alphanumeric characters, hyphens, or dots. Provided: '" + trimmedClusterName + "'";
         }
         
         return "";

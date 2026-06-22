@@ -16,9 +16,7 @@
 package com.autotune.analyzer.workerimpl;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
@@ -39,13 +37,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for BulkJobManager cluster name and recommendation settings passthrough logic.
- * 
+ * Unit tests for BulkJobManager cluster name passthrough logic.
+ *
  * Tests verify that:
  * 1. Cluster name from bulk payload is correctly passed to experiments
- * 2. Model settings from bulk payload are correctly passed to experiments
- * 3. Term settings from bulk payload are correctly passed to experiments
- * 4. Backward compatibility is maintained when fields are not provided
+ * 2. Backward compatibility is maintained when cluster name is not provided
  */
 class BulkJobManagerPassthroughTest {
 
@@ -155,201 +151,33 @@ class BulkJobManagerPassthroughTest {
     }
 
     @Nested
-    @DisplayName("Model Settings Passthrough Tests")
-    class ModelSettingsPassthroughTests {
+    @DisplayName("Cluster Name Usage Tests")
+    class ClusterNameUsageTests {
 
         @Test
-        @DisplayName("Should pass through model settings when provided")
-        void shouldPassThroughModelSettingsWhenProvided() {
-            // Given
-            ModelSettings modelSettings = new ModelSettings();
-            modelSettings.setModels(Arrays.asList("performance"));
-            when(bulkInput.getModel_settings()).thenReturn(modelSettings);
-
-            // When
-            // Note: This test verifies the logic exists in BulkJobManager.prepareCreateExperimentJSONInput
-            // The actual method is complex and requires full integration testing
-            // Here we verify the mock setup works correctly
-            ModelSettings result = bulkInput.getModel_settings();
-
-            // Then
-            assertNotNull(result, "Model settings should not be null");
-            assertEquals(1, result.getModels().size(), "Should have one model");
-            assertEquals("performance", result.getModels().get(0), "Should be performance model");
-        }
-
-        @Test
-        @DisplayName("Should handle null model settings")
-        void shouldHandleNullModelSettings() {
-            // Given
-            when(bulkInput.getModel_settings()).thenReturn(null);
-
-            // When
-            ModelSettings result = bulkInput.getModel_settings();
-
-            // Then
-            assertNull(result, "Model settings should be null when not provided");
-        }
-
-        @Test
-        @DisplayName("Should pass through multiple models")
-        void shouldPassThroughMultipleModels() {
-            // Given
-            ModelSettings modelSettings = new ModelSettings();
-            modelSettings.setModels(Arrays.asList("performance", "cost"));
-            when(bulkInput.getModel_settings()).thenReturn(modelSettings);
-
-            // When
-            ModelSettings result = bulkInput.getModel_settings();
-
-            // Then
-            assertNotNull(result, "Model settings should not be null");
-            assertEquals(2, result.getModels().size(), "Should have two models");
-            assertTrue(result.getModels().contains("performance"), "Should contain performance model");
-            assertTrue(result.getModels().contains("cost"), "Should contain cost model");
-        }
-    }
-
-    @Nested
-    @DisplayName("Term Settings Passthrough Tests")
-    class TermSettingsPassthroughTests {
-
-        @Test
-        @DisplayName("Should pass through term settings when provided")
-        void shouldPassThroughTermSettingsWhenProvided() {
-            // Given
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList("long"));
-            when(bulkInput.getTerm_settings()).thenReturn(termSettings);
-
-            // When
-            TermSettings result = bulkInput.getTerm_settings();
-
-            // Then
-            assertNotNull(result, "Term settings should not be null");
-            assertEquals(1, result.getTerms().size(), "Should have one term");
-            assertEquals("long", result.getTerms().get(0), "Should be long term");
-        }
-
-        @Test
-        @DisplayName("Should handle null term settings")
-        void shouldHandleNullTermSettings() {
-            // Given
-            when(bulkInput.getTerm_settings()).thenReturn(null);
-
-            // When
-            TermSettings result = bulkInput.getTerm_settings();
-
-            // Then
-            assertNull(result, "Term settings should be null when not provided");
-        }
-
-        @Test
-        @DisplayName("Should pass through multiple terms")
-        void shouldPassThroughMultipleTerms() {
-            // Given
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList("short", "medium", "long"));
-            when(bulkInput.getTerm_settings()).thenReturn(termSettings);
-
-            // When
-            TermSettings result = bulkInput.getTerm_settings();
-
-            // Then
-            assertNotNull(result, "Term settings should not be null");
-            assertEquals(3, result.getTerms().size(), "Should have three terms");
-            assertTrue(result.getTerms().contains("short"), "Should contain short term");
-            assertTrue(result.getTerms().contains("medium"), "Should contain medium term");
-            assertTrue(result.getTerms().contains("long"), "Should contain long term");
-        }
-
-        @Test
-        @DisplayName("Should pass through subset of terms")
-        void shouldPassThroughSubsetOfTerms() {
-            // Given
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList("short", "long"));
-            when(bulkInput.getTerm_settings()).thenReturn(termSettings);
-
-            // When
-            TermSettings result = bulkInput.getTerm_settings();
-
-            // Then
-            assertNotNull(result, "Term settings should not be null");
-            assertEquals(2, result.getTerms().size(), "Should have two terms");
-            assertTrue(result.getTerms().contains("short"), "Should contain short term");
-            assertTrue(result.getTerms().contains("long"), "Should contain long term");
-            assertFalse(result.getTerms().contains("medium"), "Should not contain medium term");
-        }
-    }
-
-    @Nested
-    @DisplayName("Combined Settings Tests")
-    class CombinedSettingsTests {
-
-        @Test
-        @DisplayName("Should handle all custom settings together")
-        void shouldHandleAllCustomSettingsTogether() {
+        @DisplayName("Should use cluster name from bulk payload in experiment name")
+        void shouldUseClusterNameFromBulkPayloadInExperimentName() {
             // Given
             when(bulkInput.getCluster_name()).thenReturn("prod-cluster");
 
-            ModelSettings modelSettings = new ModelSettings();
-            modelSettings.setModels(Arrays.asList("performance"));
-            when(bulkInput.getModel_settings()).thenReturn(modelSettings);
-
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList("long"));
-            when(bulkInput.getTerm_settings()).thenReturn(termSettings);
-
             // When
             String clusterName = bulkInput.getCluster_name();
-            ModelSettings models = bulkInput.getModel_settings();
-            TermSettings terms = bulkInput.getTerm_settings();
 
             // Then
             assertEquals("prod-cluster", clusterName, "Cluster name should match");
-            assertNotNull(models, "Model settings should not be null");
-            assertEquals("performance", models.getModels().get(0), "Should have performance model");
-            assertNotNull(terms, "Term settings should not be null");
-            assertEquals("long", terms.getTerms().get(0), "Should have long term");
         }
 
         @Test
-        @DisplayName("Should handle partial custom settings")
-        void shouldHandlePartialCustomSettings() {
-            // Given - Only cluster name provided
-            when(bulkInput.getCluster_name()).thenReturn("prod-cluster");
-            when(bulkInput.getModel_settings()).thenReturn(null);
-            when(bulkInput.getTerm_settings()).thenReturn(null);
-
-            // When
-            String clusterName = bulkInput.getCluster_name();
-            ModelSettings models = bulkInput.getModel_settings();
-            TermSettings terms = bulkInput.getTerm_settings();
-
-            // Then
-            assertEquals("prod-cluster", clusterName, "Cluster name should match");
-            assertNull(models, "Model settings should be null");
-            assertNull(terms, "Term settings should be null");
-        }
-
-        @Test
-        @DisplayName("Should handle no custom settings (backward compatibility)")
-        void shouldHandleNoCustomSettings() {
+        @DisplayName("Should handle null cluster name (backward compatibility)")
+        void shouldHandleNullClusterName() {
             // Given
             when(bulkInput.getCluster_name()).thenReturn(null);
-            when(bulkInput.getModel_settings()).thenReturn(null);
-            when(bulkInput.getTerm_settings()).thenReturn(null);
 
             // When
             String clusterName = bulkInput.getCluster_name();
-            ModelSettings models = bulkInput.getModel_settings();
-            TermSettings terms = bulkInput.getTerm_settings();
 
             // Then
             assertNull(clusterName, "Cluster name should be null");
-            assertNull(models, "Model settings should be null");
-            assertNull(terms, "Term settings should be null");
         }
     }
 
@@ -358,12 +186,10 @@ class BulkJobManagerPassthroughTest {
     class BackwardCompatibilityTests {
 
         @Test
-        @DisplayName("Should maintain existing behavior when no new fields provided")
-        void shouldMaintainExistingBehaviorWhenNoNewFieldsProvided() {
-            // Given - Old-style bulk input without new fields
+        @DisplayName("Should maintain existing behavior when cluster name not provided")
+        void shouldMaintainExistingBehaviorWhenClusterNameNotProvided() {
+            // Given - Old-style bulk input without cluster name
             when(bulkInput.getCluster_name()).thenReturn(null);
-            when(bulkInput.getModel_settings()).thenReturn(null);
-            when(bulkInput.getTerm_settings()).thenReturn(null);
 
             // When
             String experimentName = bulkJobManager.frameExperimentName(
@@ -379,22 +205,16 @@ class BulkJobManagerPassthroughTest {
         }
 
         @Test
-        @DisplayName("Should not break existing experiments without custom settings")
-        void shouldNotBreakExistingExperimentsWithoutCustomSettings() {
+        @DisplayName("Should not break existing experiments without cluster name")
+        void shouldNotBreakExistingExperimentsWithoutClusterName() {
             // Given
             when(bulkInput.getCluster_name()).thenReturn(null);
-            when(bulkInput.getModel_settings()).thenReturn(null);
-            when(bulkInput.getTerm_settings()).thenReturn(null);
 
-            // When - Verify that BulkInput can be created without new fields
+            // When - Verify that BulkInput can be created without cluster name
             boolean hasClusterName = bulkInput.getCluster_name() != null;
-            boolean hasModelSettings = bulkInput.getModel_settings() != null;
-            boolean hasTermSettings = bulkInput.getTerm_settings() != null;
 
             // Then
             assertFalse(hasClusterName, "Should not have cluster name");
-            assertFalse(hasModelSettings, "Should not have model settings");
-            assertFalse(hasTermSettings, "Should not have term settings");
         }
     }
 }
