@@ -1,4 +1,0 @@
-com/autotune/analyzer/adapters/MetricAggregationInfoResultsIntSerializerTest.class
-com/autotune/analyzer/workerimpl/BulkJobManagerMockedTest.class
-com/autotune/database/table/KruizeDataSourceEntryTest.class
-com/autotune/analyzer/utils/TestEvalExParser.class
