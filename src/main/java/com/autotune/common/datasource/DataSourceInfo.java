@@ -17,6 +17,8 @@ package com.autotune.common.datasource;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.auth.AuthenticationConfig;
@@ -41,10 +43,15 @@ public class DataSourceInfo {
     private final String namespace;
     private final URL url;
     private AuthenticationConfig authenticationConfig;
+    private final List<String> clusters;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
     public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authConfig) {
+        this(name, provider, serviceName, namespace, url, authConfig, null);
+    }
+
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authConfig, List<String> clusters) {
         this.name = name;
         this.provider = provider;
         if (null == url) {
@@ -55,6 +62,7 @@ public class DataSourceInfo {
         this.serviceName = serviceName;
         this.namespace = namespace;
         this.authenticationConfig = authConfig;
+        this.clusters = (clusters != null) ? new ArrayList<>(clusters) : new ArrayList<>();
     }
 
     /**
@@ -146,6 +154,14 @@ public class DataSourceInfo {
         LOGGER.debug("Authentication details for datasource {} have been updated.", this.name);
     }
 
+    /**
+     * Returns the list of cluster names associated with this datasource
+     * @return List of cluster names, empty list if no clusters defined
+     */
+    public java.util.List<String> getClusters() {
+        return new java.util.ArrayList<>(clusters);
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfo{" +
@@ -154,6 +170,7 @@ public class DataSourceInfo {
                 ", serviceName='" + serviceName + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", url=" + url +
+                ", clusters=" + clusters +
                 '}';
     }
 }

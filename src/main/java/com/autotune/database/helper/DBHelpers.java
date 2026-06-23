@@ -1202,12 +1202,15 @@ public class DBHelpers {
                                 LOGGER.error("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
                             }
                         }
+                        // Get cluster list from database entry
+                        List<String> clusterList = kruizeDataSource.getClusterList();
+                        
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig);
+                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig, clusterList);
                         } else {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig);
+                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig, clusterList);
                         }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
@@ -1239,6 +1242,8 @@ public class DBHelpers {
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
                     kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
                     kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                    // Set cluster list from DataSourceInfo
+                    kruizeDataSource.setClusterList(dataSourceInfo.getClusters());
                 } catch (Exception e) {
                     kruizeDataSource = null;
                     LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());

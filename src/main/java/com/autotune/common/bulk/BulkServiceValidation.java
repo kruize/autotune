@@ -21,12 +21,14 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.ClusterNameUtils;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Set;
 
 /**
  * Utility class that performs validation for bulk service requests.
@@ -66,6 +68,10 @@ public class BulkServiceValidation {
         ValidationOutputData validationOutputData;
 
         validationOutputData = buildErrorOutput(validateTimeRange(payload.getTime_range()), jobID);
+        if (validationOutputData != null) return validationOutputData;
+
+        // Validate cluster_name if provided
+        validationOutputData = buildErrorOutput(validateClusterName(payload.getCluster_name()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
         if (payload.getDatasource() != null) {
@@ -167,4 +173,16 @@ public class BulkServiceValidation {
         }
         return errorMessage;
     }
+
+    /**
+     * Validates the cluster_name field if provided.
+     * Delegates to ClusterNameUtils for centralized DNS-1123 validation.
+     *
+     * @param clusterName the cluster name to validate (can be null)
+     * @return an error message if validation fails; otherwise an empty string
+     */
+    public static String validateClusterName(String clusterName) {
+        return ClusterNameUtils.validateClusterName(clusterName);
+    }
+
 }
