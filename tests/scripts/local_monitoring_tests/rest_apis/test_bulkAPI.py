@@ -377,3 +377,85 @@ def test_bulk_api_filter_application(
                         assert set(containers.keys()).issubset(
                             set(expected["containers"])
                         )
+
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.parametrize("cluster_name, expected_status, expected_error", [
+    ("prod-cluster", SUCCESS_200_STATUS_CODE, None),  # Valid cluster name
+    ("cluster-01", SUCCESS_200_STATUS_CODE, None),  # Valid with numbers
+    ("cluster.us-east.prod", SUCCESS_200_STATUS_CODE, None),  # Valid with dots
+    ("  prod-cluster  ", SUCCESS_200_STATUS_CODE, None),  # Valid with whitespace (should be trimmed)
+    ("Cluster-A", SUCCESS_200_STATUS_CODE, None),  # Valid with uppercase (simple validation)
+    ("-cluster", SUCCESS_200_STATUS_CODE, None),  # Valid with hyphen at start (simple validation)
+    ("cluster_name", SUCCESS_200_STATUS_CODE, None),  # Valid with underscore (simple validation)
+    ("", ERROR_STATUS_CODE, "cluster_name cannot be an empty string"),  # Empty string
+    ("a" * 254, ERROR_STATUS_CODE, "too long (max"),  # Exceeds max length - matches backend message
+    (None, SUCCESS_200_STATUS_CODE, None),  # Omitted cluster_name - should use metadata cluster
+])
+def test_bulk_api_cluster_name_validation(cluster_type, cluster_name, expected_status, expected_error, caplog):
+    """
+    Validates cluster_name field validation in Bulk API.
+    Tests valid formats, invalid formats, and edge cases.
+    """
+    form_kruize_url(cluster_type)
+    
+    payload = base_payload()
+    payload["cluster_name"] = cluster_name
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+    
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+    
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        
+        assert response.status_code == expected_status, \
+            f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
+        
+        if expected_error:
+            assert expected_error in response.json()["message"], \
+                f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
+        else:
+            # Valid cluster name should create a job
+            assert "job_id" in response.json(), "Expected job_id in response for valid cluster_name"
+
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.parametrize("model_settings, expected_status, expected_error", [
+    ({"models": ["performance"]}, SUCCESS_200_STATUS_CODE, None),  # Valid single model
+    ({"models": ["cost"]}, SUCCESS_200_STATUS_CODE, None),  # Valid cost model
+    ({"models": ["performance", "cost"]}, SUCCESS_200_STATUS_CODE, None),  # Valid multiple models
+    ({"models": ["Performance", "COST"]}, SUCCESS_200_STATUS_CODE, None),  # Valid case-insensitive
+    ({"models": []}, ERROR_STATUS_CODE, "model_settings.models cannot be null or empty"),  # Empty list
+    ({"models": ["invalid"]}, ERROR_STATUS_CODE, "Invalid model name"),  # Invalid model
+    ({"models": ["performance", "invalid"]}, ERROR_STATUS_CODE, "Invalid model name"),  # Mixed valid/invalid
+    ({}, ERROR_STATUS_CODE, "model_settings.models cannot be null or empty"),  # Missing models field
+])
+def test_bulk_api_model_settings_validation(cluster_type, model_settings, expected_status, expected_error, caplog):
+    """
+    Validates model_settings field validation in Bulk API.
+    Tests valid models, invalid models, and edge cases.
+    """
+    form_kruize_url(cluster_type)
+    
+    payload = base_payload()
+    payload["model_settings"] = model_settings
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+    
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+    
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        
+        assert response.status_code == expected_status, \
+            f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
+        
+        if expected_error:
+            assert expected_error in response.json()["message"], \
+                f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
+        else:
+            # Valid model_settings should create a job
+            assert "job_id" in response.json(), "Expected job_id in response for valid model_settings"

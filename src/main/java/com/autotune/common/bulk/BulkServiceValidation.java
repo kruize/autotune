@@ -176,10 +176,9 @@ public class BulkServiceValidation {
 
     /**
      * Validates the cluster_name field if provided.
-     * Delegates to ClusterNameUtils for centralized validation (length and emptiness checks).
-     * Null values are considered valid since cluster_name is optional.
+     * Delegates to ClusterNameUtils for centralized DNS-1123 validation.
      *
-     * @param clusterName the cluster name to validate (can be null for optional field)
+     * @param clusterName the cluster name to validate (can be null)
      * @return an error message if validation fails; otherwise an empty string
      */
     public static String validateClusterName(String clusterName) {
