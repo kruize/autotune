@@ -206,22 +206,27 @@ public class DataSourceCollection {
                 if (dataSourceObject.has(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS)) {
                     JSONArray clustersArray = dataSourceObject.optJSONArray(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
                     if (clustersArray != null) {
-                        // Convert JSONArray to List<String>
-                        List<String> rawClusterList = new ArrayList<>();
                         for (int i = 0; i < clustersArray.length(); i++) {
                             String clusterName = clustersArray.optString(i, null);
-                            if (clusterName != null) {
-                                rawClusterList.add(clusterName);
-                            } else {
+                            if (clusterName == null) {
                                 LOGGER.warn("Null cluster name encountered for datasource '{}', index {}. Skipping entry.", name, i);
+                                continue;
                             }
+                            String trimmedClusterName = clusterName.trim();
+                            if (trimmedClusterName.isEmpty()) {
+                                LOGGER.warn("Blank or whitespace-only cluster name encountered for datasource '{}', index {}. Original value: '{}'. Skipping entry.", name, i, clusterName);
+                                continue;
+                            }
+                            // Validate cluster name format
+                            String validationError = com.autotune.utils.ClusterNameUtils.validateClusterName(trimmedClusterName);
+                            if (!validationError.isEmpty()) {
+                                LOGGER.warn("Invalid cluster name '{}' for datasource '{}' at index {}: {}. Skipping entry.",
+                                           trimmedClusterName, name, i, validationError);
+                                continue;
+                            }
+                            clusters.add(trimmedClusterName);
                         }
-                        
-                        // Use ClusterNameUtils to validate and filter the list
-                        clusters = com.autotune.utils.ClusterNameUtils.validateAndFilterClusterList(rawClusterList);
-                        
-                        // Use DEBUG level to avoid exposing internal topology details and reduce noise
-                        LOGGER.debug("Valid clusters for datasource {}. Cluster count: {}", name, clusters.size());
+                        LOGGER.info("Valid clusters for datasource {}: {}", name, clusters);
                     }
                 }
 

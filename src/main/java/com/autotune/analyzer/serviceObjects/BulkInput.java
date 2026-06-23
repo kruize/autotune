@@ -30,6 +30,13 @@ public class BulkInput {
     private String metadata_profile;
     private String measurement_duration;
     private String requestId; //TODO: to be used for the Kafka consumer case to map requestID with jobID
+    
+    /**
+     * Cluster name to use for all experiments in this bulk job.
+     * If provided, overrides cluster name from datasource metadata.
+     * If not provided, cluster name from metadata will be used.
+     */
+    private String cluster_name;
 
     // Getters and Setters
 
@@ -47,7 +54,7 @@ public class BulkInput {
     @JsonIgnore
     public boolean isEmpty() {
         return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
-                && datasource == null);
+                && datasource == null && cluster_name == null);
     }
 
     public TimeRange getTime_range() {
@@ -89,6 +96,14 @@ public class BulkInput {
     public String getMeasurement_duration() {return measurement_duration;}
 
     public void setMeasurement_duration(String measurement_duration) {this.measurement_duration = measurement_duration;}
+
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
+    }
 
     // Nested class for FilterWrapper that contains 'exclude' and 'include'
     public static class FilterWrapper {

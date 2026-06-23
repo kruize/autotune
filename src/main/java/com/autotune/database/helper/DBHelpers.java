@@ -1241,10 +1241,7 @@ public class DBHelpers {
                     kruizeDataSource.setProvider(dataSourceInfo.getProvider());
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
                     kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
-                    // Only set URL if it's not null (service-based datasources have null URL)
-                    if (dataSourceInfo.getUrl() != null) {
-                        kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
-                    }
+                    kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
                     // Set cluster list from DataSourceInfo
                     kruizeDataSource.setClusterList(dataSourceInfo.getClusters());
                 } catch (Exception e) {
