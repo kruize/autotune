@@ -16,7 +16,10 @@
 
 package com.autotune.database.table;
 
+import com.autotune.utils.ClusterNameUtils;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 /**
  * This is a Java class named KruizeDataSourceEntry annotated with JPA annotations.
@@ -42,6 +45,7 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
+    private String clusters; // Comma-separated cluster names
     @ManyToOne(cascade = CascadeType.PERSIST) // Cascade PERSIST to auto-save authentication entry
     @JoinColumn(name = "authentication_id", nullable = false) // Foreign key column in the datasource table
     private KruizeAuthenticationEntry kruizeAuthenticationEntry;
@@ -100,5 +104,32 @@ public class KruizeDataSourceEntry {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(String clusters) {
+        this.clusters = clusters;
+    }
+
+    /**
+     * Get cluster names as a validated list.
+     * Invalid cluster names are filtered out and logged.
+     * @return List of valid cluster names, empty list if no clusters defined
+     */
+    public List<String> getClusterList() {
+        return ClusterNameUtils.parseClusterList(clusters);
+    }
+
+    /**
+     * Set cluster names from a list.
+     * Invalid cluster names are filtered out and logged.
+     * @param clusterList List of cluster names
+     */
+    public void setClusterList(List<String> clusterList) {
+        List<String> validClusters = ClusterNameUtils.validateAndFilterClusterList(clusterList);
+        this.clusters = ClusterNameUtils.clusterListToString(validClusters);
     }
 }
