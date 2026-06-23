@@ -200,6 +200,30 @@ public class DataSourceCollection {
                 String dataSourceURL = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
                 LOGGER.info(dataSourceURL);
                 AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
+                
+                // Extract and validate clusters array if present
+                List<String> clusters = new ArrayList<>();
+                if (dataSourceObject.has(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS)) {
+                    JSONArray clustersArray = dataSourceObject.optJSONArray(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
+                    if (clustersArray != null) {
+                        // Convert JSONArray to List<String>
+                        List<String> rawClusterList = new ArrayList<>();
+                        for (int i = 0; i < clustersArray.length(); i++) {
+                            String clusterName = clustersArray.optString(i, null);
+                            if (clusterName != null) {
+                                rawClusterList.add(clusterName);
+                            } else {
+                                LOGGER.warn("Null cluster name encountered for datasource '{}', index {}. Skipping entry.", name, i);
+                            }
+                        }
+                        
+                        // Use ClusterNameUtils to validate and filter the list
+                        clusters = com.autotune.utils.ClusterNameUtils.validateAndFilterClusterList(rawClusterList);
+                        
+                        // Use DEBUG level to avoid exposing internal topology details and reduce noise
+                        LOGGER.debug("Valid clusters for datasource {}. Cluster count: {}", name, clusters.size());
+                    }
+                }
 
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
@@ -212,7 +236,7 @@ public class DataSourceCollection {
                     if (!dataSourceURL.isBlank()) {
                         url = new URI(dataSourceURL).toURL();
                     }
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig, clusters);
 
                     // Attempt to add, addDataSource() returns corresponding exception if it fails. Increment the success count otherwise.
                     addDataSource(dataSourceInfo);
