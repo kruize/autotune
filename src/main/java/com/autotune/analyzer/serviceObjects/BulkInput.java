@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.kruizeObject.ModelSettings;
+import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,18 @@ public class BulkInput {
      * If not provided, cluster name from metadata will be used.
      */
     private String cluster_name;
+    
+    /**
+     * Optional model settings to customize which recommendation models to generate.
+     * If not provided, all models will be generated.
+     */
+    private ModelSettings model_settings;
+    
+    /**
+     * Optional term settings to customize which recommendation terms to generate.
+     * If not provided, all terms will be generated.
+     */
+    private TermSettings term_settings;
 
     // Getters and Setters
 
@@ -54,7 +68,7 @@ public class BulkInput {
     @JsonIgnore
     public boolean isEmpty() {
         return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
-                && datasource == null && cluster_name == null);
+                && datasource == null && cluster_name == null && model_settings == null && term_settings == null);
     }
 
     public TimeRange getTime_range() {
@@ -103,6 +117,22 @@ public class BulkInput {
 
     public void setCluster_name(String cluster_name) {
         this.cluster_name = cluster_name;
+    }
+
+    public ModelSettings getModel_settings() {
+        return model_settings;
+    }
+
+    public void setModel_settings(ModelSettings model_settings) {
+        this.model_settings = model_settings;
+    }
+
+    public TermSettings getTerm_settings() {
+        return term_settings;
+    }
+
+    public void setTerm_settings(TermSettings term_settings) {
+        this.term_settings = term_settings;
     }
 
     // Nested class for FilterWrapper that contains 'exclude' and 'include'

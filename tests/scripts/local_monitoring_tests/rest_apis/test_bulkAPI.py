@@ -459,3 +459,88 @@ def test_bulk_api_model_settings_validation(cluster_type, model_settings, expect
         else:
             # Valid model_settings should create a job
             assert "job_id" in response.json(), "Expected job_id in response for valid model_settings"
+def test_bulk_api_term_settings_validation(cluster_type, term_settings, expected_status, expected_error, caplog):
+    """
+    Validates term_settings field validation in Bulk API.
+    Tests valid terms, invalid terms, and edge cases.
+    """
+    form_kruize_url(cluster_type)
+    
+    payload = base_payload()
+    payload["term_settings"] = term_settings
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+    
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+    
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        
+        assert response.status_code == expected_status, \
+            f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
+        
+        if expected_error:
+            assert expected_error in response.json()["message"], \
+                f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
+        else:
+            # Valid term settings should create a job
+            assert "job_id" in response.json(), "Expected job_id in response for valid term_settings"
+
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.sanity
+def test_bulk_api_combined_custom_settings(cluster_type, caplog):
+    """
+    Validates that cluster_name, model_settings, and term_settings
+    can be used together in a single bulk API request.
+    """
+    form_kruize_url(cluster_type)
+    
+    payload = base_payload()
+    payload["cluster_name"] = "test-cluster"
+    payload["model_settings"] = {"models": ["performance"]}
+    payload["term_settings"] = {"terms": ["short", "medium"]}
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+    
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+    
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        
+        assert response.status_code == SUCCESS_200_STATUS_CODE, \
+            f"Expected status {SUCCESS_200_STATUS_CODE} but got {response.status_code}. Response: {response.json()}"
+        
+        # Should successfully create a job with all custom settings
+        assert "job_id" in response.json(), "Expected job_id in response for combined custom settings"
+
+    
+def test_bulk_api_combined_custom_settings(cluster_type, caplog):
+    """
+    Validates that cluster_name, model_settings, and term_settings
+    can be used together in a single bulk API request.
+    """
+    form_kruize_url(cluster_type)
+    
+    payload = base_payload()
+    payload["cluster_name"] = "test-cluster"
+    payload["model_settings"] = {"models": ["performance"]}
+    payload["term_settings"] = {"terms": ["short", "medium"]}
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+    
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+    
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        
+        assert response.status_code == SUCCESS_200_STATUS_CODE, \
+            f"Expected status {SUCCESS_200_STATUS_CODE} but got {response.status_code}. Response: {response.json()}"
+        
+        # Should successfully create a job with all custom settings
+        assert "job_id" in response.json(), "Expected job_id in response for combined custom settings"
+
+    

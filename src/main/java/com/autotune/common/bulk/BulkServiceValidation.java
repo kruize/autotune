@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -46,6 +48,10 @@ import java.util.Set;
 public class BulkServiceValidation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkServiceValidation.class);
+    
+    // Valid model and term names (case-insensitive)
+    private static final List<String> VALID_MODELS = Arrays.asList("performance", "cost");
+    private static final List<String> VALID_TERMS = Arrays.asList("short", "medium", "long");
 
     /**
      * Validates the bulk request payload and returns the corresponding validation output.
@@ -72,6 +78,14 @@ public class BulkServiceValidation {
 
         // Validate cluster_name if provided
         validationOutputData = buildErrorOutput(validateClusterName(payload.getCluster_name()), jobID);
+        if (validationOutputData != null) return validationOutputData;
+        
+        // Validate model_settings if provided
+        validationOutputData = buildErrorOutput(validateModelSettings(payload.getModel_settings()), jobID);
+        if (validationOutputData != null) return validationOutputData;
+        
+        // Validate term_settings if provided
+        validationOutputData = buildErrorOutput(validateTermSettings(payload.getTerm_settings()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
         if (payload.getDatasource() != null) {
@@ -183,6 +197,62 @@ public class BulkServiceValidation {
      */
     public static String validateClusterName(String clusterName) {
         return ClusterNameUtils.validateClusterName(clusterName);
+    }
+    
+    /**
+     * Validates the model_settings field if provided.
+     * Checks that:
+     * - models array is not null or empty
+     * - all model names are valid (case-insensitive)
+     *
+     * @param modelSettings the model settings to validate (can be null)
+     * @return an error message if validation fails; otherwise an empty string
+     */
+    public static String validateModelSettings(com.autotune.analyzer.kruizeObject.ModelSettings modelSettings) {
+        if (modelSettings == null) {
+            return ""; // Optional field, null is valid
+        }
+        
+        List<String> models = modelSettings.getModels();
+        if (models == null || models.isEmpty()) {
+            return "model_settings.models cannot be null or empty";
+        }
+        
+        for (String model : models) {
+            if (model == null || !VALID_MODELS.contains(model.toLowerCase())) {
+                return "Invalid model name: " + model + ". Valid models are: " + VALID_MODELS;
+            }
+        }
+        
+        return "";
+    }
+    
+    /**
+     * Validates the term_settings field if provided.
+     * Checks that:
+     * - terms array is not null or empty
+     * - all term names are valid (case-insensitive)
+     *
+     * @param termSettings the term settings to validate (can be null)
+     * @return an error message if validation fails; otherwise an empty string
+     */
+    public static String validateTermSettings(com.autotune.analyzer.kruizeObject.TermSettings termSettings) {
+        if (termSettings == null) {
+            return ""; // Optional field, null is valid
+        }
+        
+        List<String> terms = termSettings.getTerms();
+        if (terms == null || terms.isEmpty()) {
+            return "term_settings.terms cannot be null or empty";
+        }
+        
+        for (String term : terms) {
+            if (term == null || !VALID_TERMS.contains(term.toLowerCase())) {
+                return "Invalid term name: " + term + ". Valid terms are: " + VALID_TERMS;
+            }
+        }
+        
+        return "";
     }
 
 }

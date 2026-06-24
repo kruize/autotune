@@ -63,6 +63,13 @@ progress of the job.
     "container",
     "namespace"
   ],
+  "cluster_name": "prod-cluster",
+  "model_settings": {
+    "models": ["performance", "cost"]
+  },
+  "term_settings": {
+    "terms": ["short", "medium", "long"]
+  },
   "webhook": {
     "url": "http://127.0.0.1:8080/webhook"
   }
@@ -97,8 +104,18 @@ progress of the job.
 - **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
   should be installed / created before invoking bulk API.
 
-- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not
   specified `15min` as default measurement_duration value is considered.
+
+- **cluster_name:** (Optional) Cluster name to use for all experiments in this bulk job. If provided, overrides cluster name from datasource metadata. Must follow DNS-1123 subdomain format (lowercase alphanumeric, hyphens, dots, max 253 chars).
+
+- **model_settings:** (Optional) Customize which recommendation models to generate. If not provided, all models will be generated.
+    - **models:** Array of model names. Valid values: `"performance"`, `"cost"` (case-insensitive)
+    - Example: `{"models": ["performance"]}` - generates only performance-based recommendations
+
+- **term_settings:** (Optional) Customize which recommendation terms to generate. If not provided, all terms will be generated.
+    - **terms:** Array of term names. Valid values: `"short"`, `"medium"`, `"long"` (case-insensitive)
+    - Example: `{"terms": ["long"]}` - generates only long-term recommendations
 
 ### Success Response
 
