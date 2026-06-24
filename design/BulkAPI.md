@@ -59,17 +59,17 @@ progress of the job.
   "datasource": "Cbank1Xyz",
   "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min",
-  "experiment_types": [
-    "container",
-    "namespace"
-  ],
-  "cluster_name": "prod-cluster",
+  "cluster_name": "production-cluster",
   "model_settings": {
     "models": ["performance", "cost"]
   },
   "term_settings": {
     "terms": ["short", "medium", "long"]
   },
+  "experiment_types": [
+    "container",
+    "namespace"
+  ],
   "webhook": {
     "url": "http://127.0.0.1:8080/webhook"
   }
@@ -104,18 +104,28 @@ progress of the job.
 - **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
   should be installed / created before invoking bulk API.
 
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+
+- **cluster_name:** (Optional) The cluster name to use for all experiments created in this bulk job. If provided, this
+  overrides the cluster name from datasource metadata. If not provided, the cluster name from metadata will be used.
+  Must be a valid Kubernetes DNS-1123 subdomain (lowercase alphanumeric, hyphens, dots, max 253 characters).
+
+- **model_settings:** (Optional) Custom recommendation model settings. If provided, only the specified models will be
+  used for generating recommendations. If not provided, all default models (performance and cost) will be used.
+    - **models:** Array of model names to use. Valid values: `"performance"`, `"cost"`.
+    - Example: `{"models": ["performance"]}` - generates only performance-based recommendations.
+    - Example: `{"models": ["cost"]}` - generates only cost-based recommendations.
+    - Example: `{"models": ["performance", "cost"]}` - generates both (same as default).
+
+- **term_settings:** (Optional) Custom recommendation term settings. If provided, only the specified terms will be
+  used for generating recommendations. If not provided, all default terms (short, medium, and long) will be used.
+    - **terms:** Array of term names to use. Valid values: `"short"`, `"medium"`, `"long"`.
+    - Example: `{"terms": ["short"]}` - generates only short-term recommendations.
+    - Example: `{"terms": ["short", "long"]}` - generates short and long-term recommendations.
+    - Example: `{"terms": ["short", "medium", "long"]}` - generates all terms (same as default).
+  
 - **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not
   specified `15min` as default measurement_duration value is considered.
-
-- **cluster_name:** (Optional) Cluster name to use for all experiments in this bulk job. If provided, overrides cluster name from datasource metadata. Must follow DNS-1123 subdomain format (lowercase alphanumeric, hyphens, dots, max 253 chars).
-
-- **model_settings:** (Optional) Customize which recommendation models to generate. If not provided, all models will be generated.
-    - **models:** Array of model names. Valid values: `"performance"`, `"cost"` (case-insensitive)
-    - Example: `{"models": ["performance"]}` - generates only performance-based recommendations
-
-- **term_settings:** (Optional) Customize which recommendation terms to generate. If not provided, all terms will be generated.
-    - **terms:** Array of term names. Valid values: `"short"`, `"medium"`, `"long"` (case-insensitive)
-    - Example: `{"terms": ["long"]}` - generates only long-term recommendations
 
 ### Success Response
 
@@ -157,8 +167,8 @@ container or namespace level. Ensure that:
 #### 3. **Request Payload with both `include` and `exclude` filter specified:**
 
 - **`include`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` but
-  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for
-  the `openshift-tuning` namespace.
+  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for the `openshift-tuning` namespace.
+
 
 ### GET Request:
 

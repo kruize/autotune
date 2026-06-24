@@ -41,14 +41,16 @@ public class BulkInput {
     private String cluster_name;
     
     /**
-     * Optional model settings to customize which recommendation models to generate.
-     * If not provided, all models will be generated.
+     * Custom recommendation model settings.
+     * If provided, only specified models will be used for recommendations.
+     * If not provided, all default models (performance + cost) will be used.
      */
     private ModelSettings model_settings;
     
     /**
-     * Optional term settings to customize which recommendation terms to generate.
-     * If not provided, all terms will be generated.
+     * Custom recommendation term settings.
+     * If provided, only specified terms will be used for recommendations.
+     * If not provided, all default terms (short + medium + long) will be used.
      */
     private TermSettings term_settings;
 

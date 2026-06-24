@@ -21,15 +21,12 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.utils.ClusterNameUtils;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,9 +46,14 @@ public class BulkServiceValidation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkServiceValidation.class);
     
-    // Valid model and term names (case-insensitive)
-    private static final List<String> VALID_MODELS = Arrays.asList("performance", "cost");
-    private static final List<String> VALID_TERMS = Arrays.asList("short", "medium", "long");
+    // Cluster name validation constants
+    private static final int MAX_CLUSTER_NAME_LENGTH = 253;
+    
+    // Valid recommendation model names
+    private static final Set<String> VALID_MODELS = Set.of("performance", "cost");
+    
+    // Valid recommendation term names
+    private static final Set<String> VALID_TERMS = Set.of("short", "medium", "long");
 
     /**
      * Validates the bulk request payload and returns the corresponding validation output.
@@ -79,11 +81,11 @@ public class BulkServiceValidation {
         // Validate cluster_name if provided
         validationOutputData = buildErrorOutput(validateClusterName(payload.getCluster_name()), jobID);
         if (validationOutputData != null) return validationOutputData;
-        
+
         // Validate model_settings if provided
         validationOutputData = buildErrorOutput(validateModelSettings(payload.getModel_settings()), jobID);
         if (validationOutputData != null) return validationOutputData;
-        
+
         // Validate term_settings if provided
         validationOutputData = buildErrorOutput(validateTermSettings(payload.getTerm_settings()), jobID);
         if (validationOutputData != null) return validationOutputData;
@@ -190,65 +192,133 @@ public class BulkServiceValidation {
 
     /**
      * Validates the cluster_name field if provided.
-     * Delegates to ClusterNameUtils for centralized DNS-1123 validation.
+     * Validates according to Kubernetes DNS-1123 subdomain rules:
+     * <ul>
+     *     <li>Empty string (not allowed)</li>
+     *     <li>Length (max 253 characters)</li>
+     *     <li>Format: lowercase alphanumeric characters, hyphens, and dots only</li>
+     *     <li>Must start and end with alphanumeric character</li>
+     *     <li>No spaces or special characters (except hyphen and dot)</li>
+     * </ul>
      *
      * @param clusterName the cluster name to validate (can be null)
      * @return an error message if validation fails; otherwise an empty string
      */
     public static String validateClusterName(String clusterName) {
-        return ClusterNameUtils.validateClusterName(clusterName);
+        if (clusterName == null) {
+            return ""; // null is valid (will use metadata cluster)
+        }
+        
+        // Trim whitespace to handle accidental surrounding spaces
+        String trimmedClusterName = clusterName.trim();
+        
+        if (trimmedClusterName.isEmpty()) {
+            return "cluster_name cannot be an empty string. Either provide a valid cluster name or omit the field";
+        }
+        
+        // Check length first
+        if (trimmedClusterName.length() > MAX_CLUSTER_NAME_LENGTH) {
+            return "Invalid cluster_name: too long (max " + MAX_CLUSTER_NAME_LENGTH + " characters). Provided: " + trimmedClusterName.length() + " characters";
+        }
+        
+        // Kubernetes DNS-1123 subdomain validation
+        // Must contain only lowercase alphanumeric characters, hyphens, or dots
+        // Must start and end with an alphanumeric character
+        
+        // Check if it starts with a hyphen or dot
+        if (trimmedClusterName.startsWith("-") || trimmedClusterName.startsWith(".")) {
+            return "Invalid cluster_name format: must start with an alphanumeric character. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check if it ends with a hyphen or dot
+        if (trimmedClusterName.endsWith("-") || trimmedClusterName.endsWith(".")) {
+            return "Invalid cluster_name format: must end with an alphanumeric character. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for uppercase letters
+        if (!trimmedClusterName.equals(trimmedClusterName.toLowerCase())) {
+            return "Invalid cluster_name format: must contain only lowercase characters. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for spaces
+        if (trimmedClusterName.contains(" ")) {
+            return "Invalid cluster_name format: cannot contain spaces. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        // Check for invalid characters (anything other than lowercase alphanumeric, hyphen, or dot)
+        if (!trimmedClusterName.matches("^[a-z0-9.-]+$")) {
+            return "Invalid cluster_name format: must contain only lowercase alphanumeric characters, hyphens, or dots. Provided: '" + trimmedClusterName + "'";
+        }
+        
+        return "";
     }
-    
+
     /**
      * Validates the model_settings field if provided.
-     * Checks that:
-     * - models array is not null or empty
-     * - all model names are valid (case-insensitive)
+     * Checks for:
+     * <ul>
+     *     <li>Non-null models list when model_settings is provided</li>
+     *     <li>Non-empty models list</li>
+     *     <li>Valid model names (performance, cost)</li>
+     * </ul>
      *
      * @param modelSettings the model settings to validate (can be null)
      * @return an error message if validation fails; otherwise an empty string
      */
     public static String validateModelSettings(com.autotune.analyzer.kruizeObject.ModelSettings modelSettings) {
         if (modelSettings == null) {
-            return ""; // Optional field, null is valid
+            return ""; // null is valid (will use all default models)
         }
         
-        List<String> models = modelSettings.getModels();
-        if (models == null || models.isEmpty()) {
-            return "model_settings.models cannot be null or empty";
+        if (modelSettings.getModels() == null || modelSettings.getModels().isEmpty()) {
+            return "model_settings.models cannot be null or empty when model_settings is provided. " +
+                   "Valid model names: " + VALID_MODELS;
         }
         
-        for (String model : models) {
-            if (model == null || !VALID_MODELS.contains(model.toLowerCase())) {
-                return "Invalid model name: " + model + ". Valid models are: " + VALID_MODELS;
+        for (String model : modelSettings.getModels()) {
+            if (model == null || model.trim().isEmpty()) {
+                return "model_settings.models contains null or empty model name";
+            }
+            
+            String modelLower = model.toLowerCase().trim();
+            if (!VALID_MODELS.contains(modelLower)) {
+                return "Invalid model name: '" + model + "'. Valid model names are: " + VALID_MODELS;
             }
         }
         
         return "";
     }
-    
+
     /**
      * Validates the term_settings field if provided.
-     * Checks that:
-     * - terms array is not null or empty
-     * - all term names are valid (case-insensitive)
+     * Checks for:
+     * <ul>
+     *     <li>Non-null terms list when term_settings is provided</li>
+     *     <li>Non-empty terms list</li>
+     *     <li>Valid term names (short, medium, long)</li>
+     * </ul>
      *
      * @param termSettings the term settings to validate (can be null)
      * @return an error message if validation fails; otherwise an empty string
      */
     public static String validateTermSettings(com.autotune.analyzer.kruizeObject.TermSettings termSettings) {
         if (termSettings == null) {
-            return ""; // Optional field, null is valid
+            return ""; // null is valid (will use all default terms)
         }
         
-        List<String> terms = termSettings.getTerms();
-        if (terms == null || terms.isEmpty()) {
-            return "term_settings.terms cannot be null or empty";
+        if (termSettings.getTerms() == null || termSettings.getTerms().isEmpty()) {
+            return "term_settings.terms cannot be null or empty when term_settings is provided. " +
+                   "Valid term names: " + VALID_TERMS;
         }
         
-        for (String term : terms) {
-            if (term == null || !VALID_TERMS.contains(term.toLowerCase())) {
-                return "Invalid term name: " + term + ". Valid terms are: " + VALID_TERMS;
+        for (String term : termSettings.getTerms()) {
+            if (term == null || term.trim().isEmpty()) {
+                return "term_settings.terms contains null or empty term name";
+            }
+            
+            String termLower = term.toLowerCase().trim();
+            if (!VALID_TERMS.contains(termLower)) {
+                return "Invalid term name: '" + term + "'. Valid term names are: " + VALID_TERMS;
             }
         }
         

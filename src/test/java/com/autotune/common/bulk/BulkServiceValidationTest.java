@@ -87,6 +87,49 @@ class BulkServiceValidationTest {
             assertEquals("", result, "Cluster name with numbers should be accepted");
         }
 
+        @Test
+        @DisplayName("Should reject cluster name with uppercase letters")
+        void shouldRejectClusterNameWithUppercase() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("Cluster-A");
+
+            // Then
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Uppercase letters should be rejected");
+        }
+
+        @Test
+        @DisplayName("Should reject cluster name starting with hyphen")
+        void shouldRejectClusterNameStartingWithHyphen() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("-cluster");
+
+            // Then
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Cluster name starting with hyphen should be rejected");
+        }
+
+        @Test
+        @DisplayName("Should reject cluster name ending with hyphen")
+        void shouldRejectClusterNameEndingWithHyphen() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("cluster-");
+
+            // Then
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Cluster name ending with hyphen should be rejected");
+        }
+
+        @Test
+        @DisplayName("Should reject cluster name with special characters")
+        void shouldRejectClusterNameWithSpecialCharacters() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("cluster_name");
+
+            // Then
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Underscore should be rejected");
+        }
 
         @Test
         @DisplayName("Should reject cluster name exceeding 253 characters")
@@ -115,6 +158,16 @@ class BulkServiceValidationTest {
             assertEquals("", result, "253 character cluster name should be accepted");
         }
 
+        @Test
+        @DisplayName("Should reject cluster name with spaces")
+        void shouldRejectClusterNameWithSpaces() {
+            // When
+            String result = BulkServiceValidation.validateClusterName("cluster name");
+
+            // Then
+            assertTrue(result.contains("Invalid cluster_name format"), 
+                "Spaces should be rejected");
+        }
 
         @Test
         @DisplayName("Should accept single character cluster name")

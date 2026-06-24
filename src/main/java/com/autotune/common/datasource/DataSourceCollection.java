@@ -201,7 +201,7 @@ public class DataSourceCollection {
                 LOGGER.info(dataSourceURL);
                 AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
                 
-                // Extract and validate clusters array if present
+                // Extract clusters array if present
                 List<String> clusters = new ArrayList<>();
                 if (dataSourceObject.has(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS)) {
                     JSONArray clustersArray = dataSourceObject.optJSONArray(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
@@ -217,16 +217,9 @@ public class DataSourceCollection {
                                 LOGGER.warn("Blank or whitespace-only cluster name encountered for datasource '{}', index {}. Original value: '{}'. Skipping entry.", name, i, clusterName);
                                 continue;
                             }
-                            // Validate cluster name format
-                            String validationError = com.autotune.utils.ClusterNameUtils.validateClusterName(trimmedClusterName);
-                            if (!validationError.isEmpty()) {
-                                LOGGER.warn("Invalid cluster name '{}' for datasource '{}' at index {}: {}. Skipping entry.",
-                                           trimmedClusterName, name, i, validationError);
-                                continue;
-                            }
                             clusters.add(trimmedClusterName);
                         }
-                        LOGGER.info("Valid clusters for datasource {}: {}", name, clusters);
+                        LOGGER.info("Clusters for datasource {}: {}", name, clusters);
                     }
                 }
 

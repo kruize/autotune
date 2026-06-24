@@ -16,9 +16,12 @@
 
 package com.autotune.database.table;
 
-import com.autotune.utils.ClusterNameUtils;
+import java.util.stream.Collectors;
+
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -115,21 +118,28 @@ public class KruizeDataSourceEntry {
     }
 
     /**
-     * Get cluster names as a validated list.
-     * Invalid cluster names are filtered out and logged.
-     * @return List of valid cluster names, empty list if no clusters defined
+     * Get cluster names as a list
+     * @return List of cluster names, empty list if no clusters defined
      */
     public List<String> getClusterList() {
-        return ClusterNameUtils.parseClusterList(clusters);
+        if (clusters == null || clusters.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(clusters.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     /**
-     * Set cluster names from a list.
-     * Invalid cluster names are filtered out and logged.
+     * Set cluster names from a list
      * @param clusterList List of cluster names
      */
-    public void setClusterList(List<String> clusterList) {
-        List<String> validClusters = ClusterNameUtils.validateAndFilterClusterList(clusterList);
-        this.clusters = ClusterNameUtils.clusterListToString(validClusters);
+    public void setClusterList(java.util.List<String> clusterList) {
+        if (clusterList == null || clusterList.isEmpty()) {
+            this.clusters = null;
+        } else {
+            this.clusters = String.join(",", clusterList);
+        }
     }
 }

@@ -651,12 +651,14 @@ public class BulkJobManager implements Runnable {
         RecommendationSettings rs = new RecommendationSettings();
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
         
-        // Pass through model_settings and term_settings from bulk payload if provided
-        if (bulkInput.getModel_settings() != null) {
-            rs.setModelSettings(bulkInput.getModel_settings());
+        // Passthrough model_settings if provided in bulk input
+        if (this.bulkInput.getModel_settings() != null) {
+            rs.setModelSettings(this.bulkInput.getModel_settings());
         }
-        if (bulkInput.getTerm_settings() != null) {
-            rs.setTermSettings(bulkInput.getTerm_settings());
+        
+        // Passthrough term_settings if provided in bulk input
+        if (this.bulkInput.getTerm_settings() != null) {
+            rs.setTermSettings(this.bulkInput.getTerm_settings());
         }
         
         createExperimentAPIObject.setRecommendationSettings(rs);
