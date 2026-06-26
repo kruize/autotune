@@ -59,6 +59,7 @@ progress of the job.
   "datasource": "Cbank1Xyz",
   "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min",
+  "cluster_name": "production-cluster",
   "experiment_types": [
     "container",
     "namespace"
@@ -98,6 +99,12 @@ progress of the job.
   should be installed / created before invoking bulk API.
 
 - **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+
+- **cluster_name:** (Optional) The cluster name to use for all experiments created in this bulk job. If provided, this 
+  overrides the cluster name from datasource metadata. If not provided, the cluster name from metadata will be used.
+  Must be non-empty and not exceed 253 characters.
+  
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not
   specified `15min` as default measurement_duration value is considered.
 
 ### Success Response
@@ -140,8 +147,8 @@ container or namespace level. Ensure that:
 #### 3. **Request Payload with both `include` and `exclude` filter specified:**
 
 - **`include`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` but
-  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for
-  the `openshift-tuning` namespace.
+  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for the `openshift-tuning` namespace.
+
 
 ### GET Request:
 
