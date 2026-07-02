@@ -809,7 +809,7 @@ public class RecommendationEngine implements RecommendationEngineService {
         }
 
         // Create variation map
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation = new HashMap<>();
+        Config variation = new Config();
         // Create a new map for storing variation in requests
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsVariationMap = new HashMap<>();
 
@@ -1093,18 +1093,16 @@ public class RecommendationEngine implements RecommendationEngineService {
 
         // Set Request variation map
         if (!requestsVariationMap.isEmpty()) {
-            variation.put(AnalyzerConstants.ResourceSetting.requests, requestsVariationMap);
+            variation.setRequests(requestsVariationMap);
         }
 
         // Set Limits variation map
         if (!limitsVariationMap.isEmpty()) {
-            variation.put(AnalyzerConstants.ResourceSetting.limits, limitsVariationMap);
+            variation.setLimits(limitsVariationMap);
         }
 
-        // Set Variation Map
-        if (!variation.isEmpty()) {
-            recommendationModel.setVariation(variation);
-        }
+        // Set Variation
+        recommendationModel.setVariation(variation);
 
         return isSuccess;
     }

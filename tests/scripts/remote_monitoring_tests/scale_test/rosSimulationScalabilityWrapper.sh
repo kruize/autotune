@@ -29,6 +29,10 @@ outputdir="results"
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --api-version)
+            api_version="$2"
+            shift 2
+            ;;
         --ip)
             ip="$2"
             shift 2
@@ -90,6 +94,12 @@ if [[ -z "$ip" || -z "$port" || -z "$count" || -z "$minutesjump" || -z "$name_pr
     exit 1
 fi
 
+echo "rosSimulationScalabilityTest.sh :: api_version = ${api_version}"
+# Set the API version to default if not passed on parameter
+if [ -z "${api_version}" ]; then
+  api_version="legacy"
+fi
+
 # Calculate the number of iterations based on interval and limit days
 iterations=$(( $limit_days * 24 / $interval_hours ))
 
@@ -99,7 +109,7 @@ for (( i = 0; i < $iterations; i++ )); do
     current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
     # Build the full command
-    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type} --api-version ${api_version}"
 
     # Execute the command
     echo "Executing: $full_command"
@@ -109,7 +119,7 @@ for (( i = 0; i < $iterations; i++ )); do
     wait
 
     echo "Collecting kruize metrics"
-    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv"
+    metrics_command="python3 ../../../../scripts/kruize_metrics.py -c openshift -s ${prometheus_server} -t 360m -e ${outputdir}/results -r kruizeMetrics-${client_thread}.csv --api-version ${api_version}"
     eval "${metrics_command}" &
 
     # Sleep for a short duration to avoid flooding the system with too many requests

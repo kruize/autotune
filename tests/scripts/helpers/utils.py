@@ -47,7 +47,7 @@ ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
-UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
+UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, percentage, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
 KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
 KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
@@ -149,6 +149,17 @@ LIST_LAYERS_INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exis
 LIST_LAYERS_NO_LAYERS_FOUND_MSG = "No layers found!"
 LIST_LAYERS_INVALID_QUERY_PARAM_MSG = "The query param(s) - [%s] is/are invalid"
 
+# Recommendations API messages
+MISSING_REPLICA_OBJECT = "replicas key missing in current config"
+INCORRECT_REPLICA_DATATYPE = "replicas should be int, found %s"
+REPLICAS_CANNOT_BE_ZERO = "replicas should be > 0, found %s"
+POD_COUNT_KEY_MISSING_MSG = "pod_count key missing in metrics_info"
+KEY_MISSING_MSG = "{} key missing in pod_count"
+VALUE_TYPE_INVALID_MSG = "{} value should be numeric, found {}"
+VALUE_NEGATIVE_MSG = "{} value should be >= 0, found {}"
+MIN_GREATER_THAN_AVG_MSG = "min pod count cannot be greater than avg"
+AVG_GREATER_THAN_MAX_MSG = "avg pod count cannot be greater than max"
+REQUEST_CANNOT_BE_GREATER_THAN_LIMITS = "{} in requests should be less than that of limits"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -170,6 +181,12 @@ NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET = "523001"
 NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET = "423001"
 NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET = "524001"
 NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET = "524002"
+NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_CPU = "321001"
+NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_CPU_MESSAGE = "Pod count is derived from CPU usage metric data"
+NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_MEMORY = "321002"
+NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_MEMORY_MESSAGE = "Pod count is derived from Memory usage metric data"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA_FOR_POD_COUNT = "221005"
+NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA_FOR_POD_COUNT_MESSAGE = "Not enough data available to determine Pod Count"
 
 AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
 INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
@@ -190,6 +207,9 @@ INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
 INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
+
+INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "128001"
+NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE = "328001"
 
 CPU_REQUEST_OPTIMISED_CODE = "323004"
 CPU_LIMIT_OPTIMISED_CODE = "323005"
@@ -659,7 +679,6 @@ def term_based_start_time(input_date_str, term):
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
                        test_name=None):
     # Validate experiment
-    assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
     experiment_type = create_exp_json.get("experiment_type")
@@ -682,7 +701,6 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
 
 def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None, test_name=None):
     # Validate experiment
-    assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
@@ -827,7 +845,14 @@ def validate_container(update_results_container, update_results_json, list_reco_
 
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
+                if pytest.USE_NEW_API:
+                    if "resources" in current_config:
+                        current_config.update(current_config.pop("resources"))
+                # validate current config
+                assert current_config is not None
+                validate_current(current_config, CONTAINER_EXPERIMENT_TYPE)
 
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
                 for term in duration_terms.keys():
@@ -836,6 +861,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+
+                        # validate metrics_info object
+                        if "metrics_info" in terms_obj[term]:
+                            validate_metrics_info(terms_obj[term]["metrics_info"])
 
                         # Validate the precision of the valid duration
                         duration = terms_obj[term]["duration_in_hours"]
@@ -881,6 +910,9 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    if pytest.USE_NEW_API:
+                                        engine_obj["config"].update(engine_obj["config"].pop("resources"))
+                                        engine_obj["variation"].update(engine_obj["variation"].pop("resources"))
                                     validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
                         # validate Plots data
@@ -928,7 +960,9 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
             if check_if_recommendations_are_present(list_reco_namespace["recommendations"]):
                 terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
-
+                if pytest.USE_NEW_API:
+                    if "resources" in current_config:
+                        current_config.update(current_config.pop("resources"))
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
                 for term in duration_terms.keys():
                     if check_if_recommendations_are_present(terms_obj[term]):
@@ -981,6 +1015,9 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    if pytest.USE_NEW_API:
+                                        engine_obj["config"].update(engine_obj["config"].pop("resources"))
+                                        engine_obj["variation"].update(engine_obj["variation"].pop("resources"))
                                     validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
                         # validate Plots data for namespace experiment_type
@@ -1018,7 +1055,14 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         print(f"interval_end_time = {interval_end_time}")
 
         terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
+        if pytest.USE_NEW_API:
+            if "resources" in current_config:
+                current_config.update(current_config.pop("resources"))
+        # validate current config
+        assert current_config is not None
+        validate_current(current_config, CONTAINER_EXPERIMENT_TYPE)
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
@@ -1029,6 +1073,11 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                 #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
                 interval_start_time = list_reco_container['recommendations']['data'][interval_end_time]['recommendation_terms'][term]['monitoring_start_time']
+
+                # validate metrics_info object
+                if "metrics_info" in terms_obj[term]:
+                    validate_metrics_info(terms_obj[term]["metrics_info"])
+
                 # Validate the precision of the valid duration
                 duration = terms_obj[term]["duration_in_hours"]
                 assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
@@ -1073,6 +1122,9 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                            if pytest.USE_NEW_API:
+                                engine_obj["config"].update(engine_obj["config"].pop("resources"))
+                                engine_obj["variation"].update(engine_obj["variation"].pop("resources"))
                             validate_config_local_monitoring(engine_obj["config"])
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
                 # validate Plots data
@@ -1106,7 +1158,9 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
 
         terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
         current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
-
+        if pytest.USE_NEW_API:
+            if "resources" in current_config:
+                current_config.update(current_config.pop("resources"))
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
@@ -1157,6 +1211,9 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                     for engine_entry in engines_list:
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                            if pytest.USE_NEW_API:
+                                engine_obj["config"].update(engine_obj["config"].pop("resources"))
+                                engine_obj["variation"].update(engine_obj["variation"].pop("resources"))
                             validate_config_local_monitoring(engine_obj["config"])
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
                 # validate Plots data
@@ -1571,6 +1628,9 @@ def check_optimised_codes(cost_notifications, perf_notifications):
 def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
     assert "variation" in recommendations["recommendation_engines"][profile]
     assert "config" in recommendations["recommendation_engines"][profile]
+    if pytest.USE_NEW_API:
+        recommendations["recommendation_engines"][profile]["config"].update(recommendations["recommendation_engines"][profile]["config"].pop("resources"))
+
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["cpu"]["amount"] == current["requests"]["cpu"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
@@ -2319,3 +2379,35 @@ def validate_metadata_workloads(metadata_json, namespace, workload, container):
         f"Validation failed: No entry found for namespace='{namespace}', "
         f"workload='{workload}', and container='{container}'."
     )
+
+def validate_metrics_info(metrics_info):
+    """
+    Validates metrics_info structure:
+
+    {
+        "pod_count": {
+            "avg": 2,
+            "max": 3,
+            "min": 1
+        }
+    }
+    """
+
+    pod_count_key = "pod_count"
+
+    assert pod_count_key in metrics_info, POD_COUNT_KEY_MISSING_MSG
+
+    pod_count = metrics_info[pod_count_key]
+    for metric in ["avg", "max", "min"]:
+        assert metric in pod_count, KEY_MISSING_MSG % metric
+        assert isinstance(pod_count[metric], int), VALUE_TYPE_INVALID_MSG % (metric, type(pod_count[metric]))
+        assert pod_count[metric] >= 0, VALUE_NEGATIVE_MSG % (metric, type(pod_count[metric]))
+        assert pod_count["min"] <= pod_count["avg"], MIN_GREATER_THAN_AVG_MSG
+        assert pod_count["avg"] <= pod_count["max"], AVG_GREATER_THAN_MAX_MSG
+
+
+def validate_current(current_config, experiment_type):
+    if experiment_type == CONTAINER_EXPERIMENT_TYPE:
+        assert "replicas" in current_config, MISSING_REPLICA_OBJECT
+        assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
+        assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']

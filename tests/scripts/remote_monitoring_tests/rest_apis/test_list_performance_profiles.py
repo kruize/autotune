@@ -18,9 +18,9 @@ import sys
 
 import pytest
 
-from helpers.list_metric_profiles_validate import *
 sys.path.append("../../")
 
+from helpers.list_metric_profiles_validate import *
 from helpers.utils import *
 from helpers.fixtures import *
 

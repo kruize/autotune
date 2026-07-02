@@ -23,6 +23,11 @@ def find_max_exec_time(exec_file):
     # Define the pattern to match
     pattern = r"scaletest\d+-\d+: Total time elapsed: (\d{2,3}:\d{2}:\d{2})"
 
+    # Check if file exists
+    if not os.path.exists(exec_file):
+        print(f"Execution time log not found: {exec_file}")
+        return
+
     with open(exec_file, "r") as file:
         lines = file.readlines()
 
@@ -67,7 +72,7 @@ def compute_max_avg(csv_file, column_name):
         return None, None
 
     avg_value = total_sum / count
-    
+
     return max_value, avg_value
 
 

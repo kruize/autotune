@@ -21,13 +21,12 @@ import re
 
 sys.path.append("../../")
 from helpers.fixtures import *
-from helpers.kruize import *
 from helpers.list_reco_json_validate import *
 from helpers.utils import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
-from helpers.long_term_list_reco_json_schema import long_term_namespace_reco_json_schema
-from helpers.medium_term_list_reco_json_schema import medium_term_namespace_reco_json_schema
-from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
+from helpers.reco_json_schemas import list_reco_namespace_json_local_monitoring_schema
+from helpers.reco_json_schemas import long_term_namespace_reco_json_schema
+from helpers.reco_json_schemas import medium_term_namespace_reco_json_schema
+from helpers.reco_json_schemas import short_term_list_reco_json_schema
 
 namespace_reco_term_input = [
     ("short_term_test_latest_true", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),
@@ -522,6 +521,9 @@ def test_update_recommendations_with_unknown_interval_end_time(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_METRICS_NOT_FOUND + start_time + " to " + end_time
 
+    # Delete the experiment
+    response = delete_experiment(create_exp_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.negative
 def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
@@ -726,6 +728,7 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
+        result_batch = []
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
@@ -743,17 +746,26 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
             end_time = increment_timestamp_by_given_mins(start_time, 15)
             result_json[0]['interval_end_time'] = end_time
 
-            write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file, False)
+            result_batch.append(result_json[0])
+            if (len(result_batch) == 100): # Call updateResults API for every 100 datapoints
+                write_json_data_to_file(update_results_json_file, result_batch)
+                response = update_results(update_results_json_file, logging)
+                data = response.json()
+                print("message = ", data['message'])
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data['status'] == SUCCESS_STATUS
+                assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+                result_batch = []
 
+        if (len(result_batch) > 0): # Handle last batch of metrics datapoints
+            write_json_data_to_file(update_results_json_file, result_batch)
+            response = update_results(update_results_json_file, logging)
             data = response.json()
             print("message = ", data['message'])
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-            update_recommendations(experiment_name, None, end_time)
 
         list_of_result_json_arr.append(result_json_arr)
 
@@ -1159,7 +1171,7 @@ def test_update_recommendations_with_perf_profile_single_pod(cluster_type):
         }
     ]
 
-    perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v2.json"
     perf_profile_dir = get_metric_profile_dir()
     perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
 
@@ -1175,15 +1187,22 @@ def test_update_recommendations_with_perf_profile_single_pod(cluster_type):
             print(f"Experiment doesn't exist: {e}")
     # Delete any existing profile
     response = delete_performance_profile(perf_profile_v2_json_file)
-    print("delete API status code = ", response.status_code)
+    assert response is not None
     data = response.json()
-    print("delete API status message  = ", data["message"])
+    assert response.status_code in (200, 400), ( # API return status code as 400 when profile is not found
+        f"Failed to delete performance profile: "
+        f"status={response.status_code}, body={data}"
+    )
     sleep(5)
 
     # Step 1: Create the v1 performance profile
     response = create_performance_profile(perf_profile_v1_json_file)
+    assert response is not None
     data = response.json()
-    print(data['message'])
+    assert response.status_code in (201, 400), (  # API return status code as 400 when profile is not found
+        f"Failed to create performance profile: "
+        f"status={response.status_code}, body={data['message']}"
+    )
 
     # Step 2: Create container experiment
     print(f"\n[Step 2] Creating container experiment...")
@@ -1262,14 +1281,16 @@ def test_update_recommendations_with_perf_profile_single_pod(cluster_type):
     # Step 4: Update the performance profile to v2
     print("\n [Step 4] Updating performance profile to v2...")
     response = update_performance_profile(perf_profile_v2_json_file)
-    print(f"Update performance profile v2 response: {response.status_code}")
+    assert response is not None
     data = response.json()
-    print(f"Response: {data}")
-    assert response.status_code == SUCCESS_200_STATUS_CODE
+    assert response.status_code in (200, 400), (  # API return status code as 400 when profile is not found
+        f"Failed to update performance profile: "
+        f"status={response.status_code}, body={data['message']}"
+    )
     # Check for the update success message with version 2.0
-    assert "updated successfully to version 2.0" in data.get('message', '') or \
-           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
-    print("Performance profile updated to v2 successfully")
+    assert "updated successfully to version 3.0" in data.get('message', '') or \
+           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 3.0) in data.get('message', '')
+    print("Performance profile updated to v3 successfully")
 
     # Step 5: Create 3 new experiments (container, namespace, GPU)
     print("\n[Step 5] Creating experiments for container, namespace, and GPU...")
@@ -1358,6 +1379,10 @@ def test_update_recommendations_with_perf_profile_single_pod(cluster_type):
 
     # Cleanup: Delete all experiments
     print("\n[Cleanup] Deleting all experiments...")
+
+    response = delete_experiment(input_json_file)
+    print(f"Delete {experiment_name} experiment: {response.status_code}")
+
     for exp in experiments:
         response = delete_experiment(exp["exp_file"])
         print(f"Delete {exp['name']} experiment: {response.status_code}")
@@ -1413,8 +1438,9 @@ def test_update_recommendations_with_perf_profile_multi_pod(cluster_type):
         }
     ]
 
+    perf_profile_v1_json_file = "../json_files/resource_optimization_openshift_v2.json"
     perf_profile_dir = get_metric_profile_dir()
-    perf_profile_v2_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    perf_profile_v3_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
 
     form_kruize_url(cluster_type)
 
@@ -1426,6 +1452,25 @@ def test_update_recommendations_with_perf_profile_multi_pod(cluster_type):
             print(f"Delete {exp['name']} experiment response: {response.status_code}")
         except Exception as e:
             print(f"Experiment doesn't exist: {e}")
+
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_v3_json_file)
+    assert response is not None
+    data = response.json()
+    assert response.status_code in (200, 400), (  # API return status code as 400 when profile is not found
+        f"Failed to delete performance profile: "
+        f"status={response.status_code}, body={data}"
+    )
+    sleep(5)
+
+    # Step 1: Create the v1 performance profile
+    response = create_performance_profile(perf_profile_v1_json_file)
+    assert response is not None
+    data = response.json()
+    assert response.status_code in (201, 400), (  # API return status code as 400 when profile is not found
+        f"Failed to create performance profile: "
+        f"status={response.status_code}, body={data['message']}"
+    )
 
     # Step 2: Create container experiment
     print(f"\n[Step 2] Creating container experiment...")
@@ -1500,18 +1545,21 @@ def test_update_recommendations_with_perf_profile_multi_pod(cluster_type):
     validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     print(f"{experiments[0]['name']} experiment recommendations validated successfully")
-
-    # Step 4: Update the performance profile to v2
-    print("\n [Step 4] Updating performance profile to v2...")
-    response = update_performance_profile(perf_profile_v2_json_file)
-    print(f"Update performance profile v2 response: {response.status_code}")
+        
+    # Step 4: Update the performance profile to v3
+    print("\n [Step 4] Updating performance profile to v3...")
+    response = update_performance_profile(perf_profile_v3_json_file)
+    assert response is not None
     data = response.json()
-    print(f"Response: {data}")
+    assert response.status_code in (200, 400), (  # API return status code as 400 when profile is not found
+        f"Failed to update performance profile: "
+        f"status={response.status_code}, body={data['message']}"
+    )
     assert response.status_code == SUCCESS_200_STATUS_CODE
     # Check for the update success message with version 2.0
-    assert "updated successfully to version 2.0" in data.get('message', '') or \
-           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 2.0) in data.get('message', '')
-    print("Performance profile updated to v2 successfully")
+    assert "updated successfully to version 3.0" in data.get('message', '') or \
+           UPDATE_PERF_PROFILE_SUCCESS_MSG % ("resource-optimization-openshift", 3.0) in data.get('message', '')
+    print("Performance profile updated to v3 successfully")
 
     # Step 5: Create 3 new experiments (container, namespace, GPU)
     print("\n[Step 5] Creating experiments for container, namespace, and GPU...")
@@ -1600,6 +1648,10 @@ def test_update_recommendations_with_perf_profile_multi_pod(cluster_type):
 
     # Cleanup: Delete all experiments
     print("\n[Cleanup] Deleting all experiments...")
+
+    response = delete_experiment(input_json_file)
+    print(f"Delete {experiment_name} experiment: {response.status_code}")
+
     for exp in experiments:
         response = delete_experiment(exp["exp_file"])
         print(f"Delete {exp['name']} experiment: {response.status_code}")

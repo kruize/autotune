@@ -27,6 +27,8 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO_PATH}/tests/scripts/remote_monitoring_tests"
+declare -l api_version
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -55,13 +57,29 @@ hours=6
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image previous release] [-j kruize image current release] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>]"
+	echo "Usage: [-i Kruize image previous release] [-j kruize image current release] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
-while getopts r:i:j:u:d:t:n:m:s:f:q:h gopts
+while getopts r:i:j:u:d:t:n:m:s:f:q:h:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	r)
 		RESULTS_DIR="${OPTARG}"		
 		;;
@@ -101,55 +119,68 @@ do
 	esac
 done
 
+echo "db_migration_test_without_postgres_restart.sh :: api_version = ${api_version}"
+# Set the API version to default if not passed on parameter
+if [ -z "${api_version}" ]; then
+  api_version="legacy"
+fi
+
 start_time=$(get_date)
 LOG_DIR="${RESULTS_DIR}/db-migration-test-without-kruize-db-restart-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/db-migration-test-without-kruize-db-restart.log"
 
+PIP_INSTALL_LOG="${LOG_DIR}/pip_install.log"
+
+install_python_requirements "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" "${PIP_INSTALL_LOG}" | tee -a ${LOG}
+
+# Enable user workload monitoring
+${KRUIZE_REPO_PATH}/scripts/enable_user_workload_monitoring_openshift.sh | tee -a ${LOG}
+
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
-	echo ""
-	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a migration"
+	echo "" | tee -a ${LOG}
+	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}" | tee -a ${LOG}
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a migration" | tee -a ${LOG}
 	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a "migration"
-popd > /dev/null 
-	echo ""
+popd > /dev/null
+	echo "" | tee -a ${LOG}
 
 sleep 20
 
 # Restart only kruize with the current release image
-echo ""
-echo "Restarting only kruize instances with ${kruize_image_current} image..."
-echo "kubectl set image deployment/kruize kruize=${kruize_image_current} -n ${NAMESPACE}"
+echo "" | tee -a ${LOG}
+echo "Restarting only kruize instances with ${kruize_image_current} image..." | tee -a ${LOG}
+echo "kubectl set image deployment/kruize kruize=${kruize_image_current} -n ${NAMESPACE}" | tee -a ${LOG}
 kubectl set image deployment/kruize kruize=${kruize_image_current} -n ${NAMESPACE}
 status=$?
 if [ ${status} != 0 ]; then
-	echo "Restarting only kruize instances with ${kruize_image_current} image failed!"
+	echo "Restarting only kruize instances with ${kruize_image_current} image failed!" | tee -a ${LOG}
 	exit 1
 else
-	echo "Restarting only kruize instances with ${kruize_image_current} image...done"
+	echo "Restarting only kruize instances with ${kruize_image_current} image...done" | tee -a ${LOG}
 fi
 
-echo ""
+echo "" | tee -a ${LOG}
 sleep 60
 total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 
 # Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with the current release
 pushd ${SCALE_TEST} > /dev/null
-	echo ""
-	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations with ${kruize_image_current}..."
+	echo "" | tee -a ${LOG}
+	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations with ${kruize_image_current}..." | tee -a ${LOG}
 
 	initial_start_date=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 	kruize_setup=false
 
 	num_days_of_res=1
 
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration"
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration --api-version=${api_version}" | tee -a ${LOG}
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration" --api-version=${api_version}
 
-	echo | tee -a ${LOG}
-	echo ""
+	echo "" | tee -a ${LOG}
+	echo "" | tee -a ${LOG}
 popd > /dev/null 
 
 
@@ -157,7 +188,7 @@ popd > /dev/null
 failed=0
 end_time=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 pushd ${CURRENT_DIR} > /dev/null
-echo "Validating the recommendations..."
+echo "Validating the recommendations..." | tee -a ${LOG}
 
 for ((loop=1; loop<=num_clients; loop++));
 do
@@ -170,10 +201,15 @@ do
 
 	        reco_json_dir="${LOG_DIR}/reco_jsons"
         	mkdir -p ${reco_json_dir}
-        	echo "curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true"
-	        curl -s "http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true" > ${reco_json_dir}/${exp_name}_reco.json
+        	if [[ "${api_version}" == "v1" ]]; then
+        	  echo "curl -s http://${SERVER_IP_ADDR}/kruize/api/v1/recommendations?experiment_name=${exp_name}&rm=true" | tee -a ${LOG}
+	          curl -s "http://${SERVER_IP_ADDR}/kruize/api/v1/recommendations?experiment_name=${exp_name}&rm=true" > ${reco_json_dir}/${exp_name}_reco.json
+	        else
+	          echo "curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true" | tee -a ${LOG}
+	          curl -s "http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true" > ${reco_json_dir}/${exp_name}_reco.json
+	        fi
 
-		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -e ${end_time}
+		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -e ${end_time} --api-version ${api_version}
 		if [ $? != 0 ]; then
 			failed=1
 		fi
@@ -181,19 +217,19 @@ do
 done
 popd > /dev/null
 
-echo "Validating the recommendations...Done"
+echo "Validating the recommendations...Done" | tee -a ${LOG}
 
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
-echo ""
+echo "" | tee -a ${LOG}
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [ ${failed} == 0 ]; then
-	echo "DB Migration test without kruize DB restart - Passed!"
+	echo "DB Migration test without kruize DB restart - Passed!" | tee -a ${LOG}
 	exit 0
 else
-	echo "DB Migration test without kruize DB restart - Failed! Check logs for details"
+	echo "DB Migration test without kruize DB restart - Failed! Check logs for details" | tee -a ${LOG}
 	exit 1
 fi
 

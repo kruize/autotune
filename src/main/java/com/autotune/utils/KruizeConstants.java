@@ -306,6 +306,9 @@ public class KruizeConstants {
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
         public static final String GPU_PROFILE = "GPU_I_PROFILE";
+        public static final String METRICS_INFO = "metrics_info";
+        public static final String POD_COUNT = "pod_count";
+        public static final String REPLICAS = "replicas";
 
         public static final String CREATION_DATE = "creation_date";
         public static final String UPDATE_DATE = "update_date";

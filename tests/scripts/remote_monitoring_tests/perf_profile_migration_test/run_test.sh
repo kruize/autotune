@@ -17,6 +17,7 @@
 ### Script to run scale test with Kruize in remote monitoring mode ##
 #
 
+declare -l api_version
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 SCALE_TEST="${CURRENT_DIR}/../scale_test"
@@ -50,7 +51,12 @@ total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 10)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 10)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2025-10-01T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 10)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 10)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2025-10-01T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
@@ -94,9 +100,20 @@ function kruize_scale_test_remote_patch() {
 
 }
 
-while getopts r:i:u:d:t:n:m:s:b:e:q:c:h gopts
+while getopts r:i:u:d:t:n:m:s:b:e:q:c:h:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	r)
 		RESULTS_DIR="${OPTARG}"		
 		;;
@@ -138,6 +155,12 @@ do
 		;;
 	esac
 done
+
+echo "run_test.sh :: api_version = ${api_version}"
+# Set the API version to default if not passed on parameter
+if [ -z "${api_version}" ]; then
+  api_version="legacy"
+fi
 
 start_time=$(get_date)
 LOG_DIR="${RESULTS_DIR}/perf-test-$(date +%Y%m%d%H%M)"
@@ -191,7 +214,7 @@ if [ -z "${SERVER_IP_ADDR}" ]; then
 fi
 
 if [ ${kruize_setup} == true ]; then
-	old_perf_profile="../json_files/resource_optimization_openshift_v1.json"
+	old_perf_profile="../json_files/resource_optimization_openshift_v2.json"
 	# Create perf profile using the provided json
 	create_performance_profile ${old_perf_profile}
 	curl -s "http://${SERVER_IP_ADDR}/listPerformanceProfiles" | jq > ${LOG_DIR}/listperf_profile_old.json
@@ -212,8 +235,8 @@ pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Running scale test for kruize on ${cluster_type}" | tee -a ${LOG}
 	echo ""
-	echo "nohup ./run_bulk_scalability_test.sh -c "${cluster_type}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 & "
-	nohup ./run_bulk_scalability_test.sh -c "${cluster_type}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 &
+	echo "nohup ./run_bulk_scalability_test.sh -c "${cluster_type}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version=${api_version}  > >(tee -a ${LOG}) 2>&1 & "
+	nohup ./run_bulk_scalability_test.sh -c "${cluster_type}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version="${api_version}" > >(tee -a ${LOG}) 2>&1 &
 popd > /dev/null
 wait $!
 
