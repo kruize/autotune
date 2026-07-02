@@ -31,7 +31,7 @@ function usage() {
 	echo
 	echo "Usage: ./run_scalability_test.sh -c cluster_type[minikube|openshift (default - openshift)] [-a IP] [-p PORT] [-u No. of experiments per client (default - 250)]"
 	echo "	     [-d No. of days of results (default - 2)] [-n No. of clients] [-m results duration interval in mins (default - 15)] [-i interval hours (default - 6)]"
-        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>] [-e total results count already in the DB]"
+        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>] [-e total results count already in the DB] [--api-version=<v1|legacy>]"
 	exit -1
 }
 
@@ -110,7 +110,7 @@ function container_ns_scale_test() {
 			logfile="${SCALE_LOG_DIR}/${name}.log"
 			echo "logfile = $logfile"
 
-			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "container" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "container" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
 			pid_array+=($!)
 
 			echo
@@ -126,7 +126,7 @@ function container_ns_scale_test() {
 			logfile="${SCALE_LOG_DIR}/${name}.log"
 			echo "logfile = $logfile"
 
-			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "namespace" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "namespace" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
 			pid_array+=($!)
 			echo
 			echo "#####################################################################################"
@@ -166,7 +166,7 @@ function scale_test() {
 		logfile="${SCALE_LOG_DIR}/${name}.log"
 		echo "logfile = $logfile"
 
-	        nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "${exp_type}" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+	        nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "${exp_type}" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
 
 	        pid_array+=($!)
 
@@ -194,9 +194,16 @@ function scale_test() {
 	echo "###########################################################################"
 }
 
-while getopts c:a:p:r:u:n:d:m:i:e:s:q:f:h gopts
+while getopts c:a:p:r:u:n:d:m:i:e:s:q:f:h:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+		esac
+		;;
 	c)
 		cluster_type=${OPTARG}
 		;;
@@ -244,6 +251,12 @@ done
 
 if [ -z "${IP}" ]; then
 	usage
+fi
+
+echo "run_bulk_scalability_test.sh :: api_version = ${api_version}"
+# Set the API version to default if not passed on parameter
+if [ -z "${api_version}" ]; then
+  api_version="legacy"
 fi
 
 SCALE_LOG_DIR="${RESULTS_DIR}/scale_logs"

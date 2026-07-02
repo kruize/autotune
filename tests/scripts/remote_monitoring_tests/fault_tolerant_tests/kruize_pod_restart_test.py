@@ -19,30 +19,34 @@ import json
 import os
 import sys
 import time
+import pytest
 
 sys.path.append("../../")
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.generate_rm_jsons import *
 
+api_version = "legacy"
+
 
 def main(argv):
+    global api_version
     cluster_type = "minikube"
     results_dir = "."
     iterations = 2
     num_exps = 1
     failed = 0
     try:
-        opts, args = getopt.getopt(argv, "h:c:a:u:r:d:")
+        opts, args = getopt.getopt(argv, "h:c:a:u:r:d:", ["api-version="])
     except getopt.GetoptError:
         print(
-            "kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart (default - 2> -r <results dir>")
+            "kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart (default - 2> -r <results dir> --api-version <v1/legacy>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
             print(
-                "kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart(default - 2> -r <results dir>")
+                "kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart(default - 2> -r <results dir> --api-version <v1/legacy>")
             sys.exit(0)
         elif opt == '-c':
             cluster_type = arg
@@ -54,6 +58,13 @@ def main(argv):
             results_dir = arg
         elif opt == '-d':
             iterations = int(arg)
+        elif opt == '--api-version':
+            api_version = str(arg)
+
+    if api_version.lower() == "v1":
+        pytest.USE_NEW_API = True
+    else:
+        pytest.USE_NEW_API = False
 
     print(f"Cluster type = {cluster_type}")
     print(f"No. of experiments = {num_exps}")

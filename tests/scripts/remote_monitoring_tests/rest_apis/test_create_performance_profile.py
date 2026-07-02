@@ -18,10 +18,9 @@ import tempfile
 import pytest
 import sys
 
-
-from helpers.list_metric_profiles_validate import *
 sys.path.append("../../")
 
+from helpers.list_metric_profiles_validate import *
 from helpers.fixtures import *
 from helpers.utils import *
 

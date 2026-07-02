@@ -1,0 +1,474 @@
+/*******************************************************************************
+ * Copyright (c) 2026 IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+
+package com.autotune.analyzer.services;
+
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.MetricAggregationInfoResultsIntSerializer;
+import com.autotune.analyzer.adapters.MetricMetadataAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.NamespaceRecommendations;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.analyzer.utils.ServiceHelpers;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.common.data.metrics.MetricMetadata;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.LOCAL;
+import static com.autotune.analyzer.utils.AnalyzerConstants.REMOTE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_RECOMMENDATIONS_API_VERSION;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+
+/**
+ * REST API v1 endpoint for getting recommendations with the new schema.
+ * This endpoint supports the new recommendation schema with replicas, nested resources,
+ * and metrics_info containing pod_count metrics.
+ * 
+ * Endpoint: /kruize/api/v1/recommendations
+ * Query Parameters:
+ *   - experiment_name: Name of the experiment (optional)
+ *   - interval_end_time: Specific timestamp for recommendations (optional)
+ */
+@WebServlet(asyncSupported = true)
+public class RecommendationsResource extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationsResource.class);
+    private final AtomicInteger counter = new AtomicInteger(0);
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    @Override
+    protected void doGet(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+        LOGGER.info("RecommendationsResource GET request received");
+        String statusValue = KruizeConstants.APIMessages.FAILURE;
+        Timer.Sample timer = Timer.start(MetricsConfig.meterRegistry());
+
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+
+        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+        String bulkJobID = request.getParameter(JOB_ID);
+        Timestamp monitoringEndTimestamp = null;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
+
+        boolean getLatest = true;
+        boolean checkForTimestamp = false;
+        boolean error = false;
+        boolean rmTable = false;
+
+        if (null != latestRecommendation
+                && !latestRecommendation.isEmpty()
+                && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
+            getLatest = false;
+        }
+        if (null != rm
+                && !rm.isEmpty()
+                && rm.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)) {
+            rmTable = true;
+        }
+
+        List<KruizeObject> kruizeObjectList = new ArrayList<>();
+        try {
+            if (null != experimentName) {
+                experimentName = experimentName.trim();
+                try {
+                    if (rmTable) {
+                        new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    } else {
+                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, bulkJobID);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
+                }
+
+                if (mKruizeExperimentMap.containsKey(experimentName)) {
+                    if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                        monitoringEndTime = monitoringEndTime.trim();
+                        if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                            Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                            monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
+                            boolean timestampExists = ServiceHelpers.KruizeObjectOperations
+                                    .checkRecommendationTimestampExists(mKruizeExperimentMap.get(experimentName), monitoringEndTime);
+                            if (timestampExists) {
+                                checkForTimestamp = true;
+                            } else {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
+                                );
+                            }
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
+                            );
+                        }
+                    }
+                    kruizeObjectList.add(mKruizeExperimentMap.get(experimentName));
+                } else {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                    );
+                }
+            } else {
+                try {
+                    if (rmTable) {
+                        new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                    } else {
+                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap, bulkJobID);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
+                }
+
+                if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                    monitoringEndTime = monitoringEndTime.trim();
+                    if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                        Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                        monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
+                        for (String expName : mKruizeExperimentMap.keySet()) {
+                            boolean timestampExists = ServiceHelpers.KruizeObjectOperations
+                                    .checkRecommendationTimestampExists(mKruizeExperimentMap.get(expName), monitoringEndTime);
+                            if (timestampExists) {
+                                kruizeObjectList.add(mKruizeExperimentMap.get(expName));
+                                checkForTimestamp = true;
+                            }
+                        }
+                        if (kruizeObjectList.isEmpty()) {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
+                            );
+                        }
+                    } else {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
+                        );
+                    }
+                } else {
+                    kruizeObjectList.addAll(mKruizeExperimentMap.values());
+                }
+            }
+
+            if (!error) {
+                sendRecommendationsResponse(response, kruizeObjectList, getLatest, checkForTimestamp, monitoringEndTimestamp, HttpServletResponse.SC_OK);
+                statusValue = KruizeConstants.APIMessages.SUCCESS;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception in RecommendationsResource GET: {}", e.getMessage());
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            MetricsConfig.timerGETRecommendations = MetricsConfig.timerBGETRecommendations.tag("status", statusValue)
+                    .register(MetricsConfig.meterRegistry());
+            timer.stop(MetricsConfig.timerGETRecommendations);
+        }
+    }
+
+    /**
+     * Generates recommendations using the V1 schema
+     *
+     * @param request  an {@link HttpServletRequest} object that contains the request the client has made
+     * @param response an {@link HttpServletResponse} object that contains the response the servlet sends to the client
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int calCount = counter.incrementAndGet();
+        LOGGER.debug("RecommendationsResource POST request received - count: {}", calCount);
+        String statusValue = KruizeConstants.APIMessages.FAILURE;
+        Timer.Sample timer = Timer.start(MetricsConfig.meterRegistry());
+        
+        try {
+            request.setCharacterEncoding(CHARACTER_ENCODING);
+            String experimentName = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
+            String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+            String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+            String bulkJobID = request.getParameter(JOB_ID);
+            String target = KruizeDeploymentInfo.local ? LOCAL : REMOTE; // Identify target using configMap
+            LOGGER.debug("RecommendationsResource POST - target: {}", target);
+
+            if (KruizeDeploymentInfo.log_http_req_resp) {
+                LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_INPUT_PARAMS,
+                        experimentName, intervalStartTimeStr, intervalEndTimeStr));
+            }
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, intervalEndTimeStr, intervalStartTimeStr);
+            String errorMessage;
+            if (target.equals(LOCAL)) {
+                errorMessage = recommendationEngine.validate_local();
+            } else {
+                errorMessage = recommendationEngine.validate();
+            }
+            if (errorMessage.isEmpty()) { // validation is successful
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, target, bulkJobID);
+                if (kruizeObject.getValidation_data().isSuccess()) {
+                    Timestamp intervalEndTime = null;
+                    if (intervalEndTimeStr != null) {
+                        intervalEndTime = Utils.DateUtils.getTimeStampFrom(
+                                KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                                intervalEndTimeStr);
+                        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                        LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS,
+                                experimentName, sdf.format(intervalEndTime)));
+                    }
+                    sendRecommendationsResponse(response, List.of(kruizeObject), false, false, intervalEndTime, HttpServletResponse.SC_CREATED);
+                    statusValue = KruizeConstants.APIMessages.SUCCESS;
+                } else {
+                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(),
+                            kruizeObject.getValidation_data().getMessage());
+                }
+            } else { // validation failed
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+            }
+        } catch (FetchMetricsError e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.ERROR_FETCHING_METRICS);
+            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Exception in RecommendationsResource POST - count: {}", calCount);
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            LOGGER.debug("RecommendationsResource POST completed - count: {}", calCount);
+            MetricsConfig.timerPOSTRecommendations = MetricsConfig.timerBPOSTRecommendations
+                    .tag(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS, statusValue)
+                    .register(MetricsConfig.meterRegistry());
+            timer.stop(MetricsConfig.timerPOSTRecommendations);
+        }
+    }
+
+    private void sendRecommendationsResponse(HttpServletResponse response, List<KruizeObject> kruizeObjectList,
+                                             boolean getLatest, boolean checkForTimestamp, Timestamp monitoringEndTimestamp,
+                                             int httpStatusCode) throws IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(httpStatusCode);
+
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        for (KruizeObject ko : kruizeObjectList) {
+            try {
+                ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters
+                        .convertKruizeObjectToListRecommendationSO(
+                                ko,
+                                getLatest,
+                                checkForTimestamp,
+                                monitoringEndTimestamp);
+                // Traverse Kubernetes objects
+                for (KubernetesAPIObject kubernetesAPIObject : listRecommendationsAPIObject.getKubernetesObjects()) {
+
+                    // Handle container recommendations
+                    if (kubernetesAPIObject.getContainerAPIObjects() != null) {
+                        for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                            ContainerRecommendations recommendations = containerAPIObject.getContainerRecommendations();
+                            if (recommendations != null && recommendations.getData() != null && !recommendations.getData().isEmpty()) {
+                                processRecommendations(recommendations.getData().values());
+                            }
+                        }
+                    }
+
+                    // Handle namespace recommendations
+                    if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
+                        NamespaceRecommendations recommendations = kubernetesAPIObject.getNamespaceAPIObject().getNamespaceRecommendations();
+                        if (recommendations != null && recommendations.getData() != null && !recommendations.getData().isEmpty()) {
+                            processRecommendations(recommendations.getData().values());
+                        }
+                    }
+                }
+                listRecommendationsAPIObject.setApiVersion(CURRENT_RECOMMENDATIONS_API_VERSION);
+                recommendationList.add(listRecommendationsAPIObject);
+            } catch (Exception e) {
+                LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+            }
+        }
+
+        ExclusionStrategy strategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes field) {
+                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
+                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+
+        GsonBuilder gsonBuilder = new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+                .registerTypeAdapter(MetricAggregationInfoResults.class, new MetricAggregationInfoResultsIntSerializer())
+                .setExclusionStrategies(strategy);
+
+        String gsonStr = "[]";
+        if (!recommendationList.isEmpty()) {
+            gsonStr = gsonBuilder.create().toJson(recommendationList);
+        }
+
+        if (KruizeDeploymentInfo.log_http_req_resp) {
+            LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_RESPONSE,
+                    new Gson().toJson(JsonParser.parseString(gsonStr))));
+        }
+
+        response.getWriter().println(gsonStr);
+        response.getWriter().close();
+    }
+
+    /**
+     * Processes recommendation timestamps by:
+     * 1. Moving requests/limits into the resources map for currentConfig
+     * 2. Moving requests/limits into the resources map for config and variation
+     * 3. Nullifying old fields
+     */
+    private void processRecommendations(Collection<MappedRecommendationForTimestamp> recommendations) {
+
+        if (recommendations != null) {
+            for (MappedRecommendationForTimestamp recommendation : recommendations) {
+                if (recommendation != null) {
+                    // Restructure requests and limits in current config
+                    restructureConfigObj(recommendation.getCurrentConfig());
+
+                    Map<String, TermRecommendations> termRecommendationsMap = recommendation.getRecommendationForTermHashMap();
+                    if (termRecommendationsMap != null) {
+                        for (TermRecommendations termRecommendations : termRecommendationsMap.values()) { // Iterate all terms - short, medium, long
+                            if (termRecommendations != null) {
+                                Map<String, MappedRecommendationForModel> engineMap = termRecommendations.getRecommendationForModelHashMap();
+                                if (engineMap != null) {
+                                    for (MappedRecommendationForModel modelRecommendation : engineMap.values()) { // Iterate all recommendation engines - cost, performance
+                                        if (modelRecommendation != null) {
+                                            restructureConfigObj(modelRecommendation.getConfig()); // Restructure requests and limits in recommended config
+                                            restructureConfigObj(modelRecommendation.getVariation()); // Restructure requests and limits in variation
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void restructureConfigObj(Config config) {
+        if (config != null) {
+            Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+                    resources = new EnumMap<>(AnalyzerConstants.ResourceSetting.class);
+
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = config.getRequests();
+            if (requests != null) {
+                resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
+            }
+
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = config.getLimits();
+            if (limits != null) {
+                resources.put(AnalyzerConstants.ResourceSetting.limits, limits);
+            }
+
+            if (!resources.isEmpty()) {
+                config.setResources(resources); // requests & limits are nested under resources
+                config.setRequests(null); // remove requests as it is part of resources now
+                config.setLimits(null); // remove limits as it is part of resources now
+            }
+        }
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
+    }
+}
+

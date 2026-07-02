@@ -44,11 +44,11 @@ RESOURCE_OPTIMIZATION_JSON="${PERFORMANCE_PROFILE_DIR}/resource_optimization_ope
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
-jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
+declare -l api_version
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script] [-b Experiment type [container|namespace] default - container]"
+	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script] [-b Experiment type [container|namespace] default - container] [--api-version=<v1|legacy>]"
 	exit -1
 }
 
@@ -78,9 +78,16 @@ function jmeter_setup() {
 	export PATH=${JMETER_HOME}/bin:${PATH}
 }
 
-while getopts c:r:i:u:d:t:e:b: gopts
+while getopts c:r:i:u:d:t:e:b:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+		esac
+		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
 		;;
@@ -107,6 +114,8 @@ do
 		;;
 	esac
 done
+
+echo "remote_monitoring_stress_test.sh :: api_version = ${api_version}"
 
 if [ -z "${CLUSTER_TYPE}" ]; then
 	usage
@@ -228,8 +237,14 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
+	if [[ "${api_version}" == "v1" ]]; then
+	  jmx_file="jmx/kruize_remote_monitoring_stress_openshift_v1.jmx"
+	fi
 	if [ "${exp_type}" == "namespace" ]; then
 		jmx_file="jmx/kruize_ns_remote_monitoring_stress_openshift.jmx"
+		if [[ "${api_version}" == "v1" ]]; then
+	    jmx_file="jmx/kruize_ns_remote_monitoring_stress_openshift_v1.jmx"
+	  fi
 	fi
 
 	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
@@ -237,8 +252,15 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 
 else
 	echo ""
+	jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
+	if [[ "${api_version}" == "v1" ]]; then
+	  jmx_file="jmx/kruize_remote_monitoring_stress_v1.jmx"
+	fi
 	if [ "${exp_type}" == "namespace" ]; then
 		jmx_file="jmx/kruize_ns_remote_monitoring_stress.jmx"
+		if [[ "${api_version}" == "v1" ]]; then
+	    jmx_file="jmx/kruize_ns_remote_monitoring_stress_v1.jmx"
+	  fi
 	fi
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}

@@ -17,9 +17,12 @@
 ### Script to run fault tolerant tests with Kruize in remote monitoring mode ##
 #
 
+declare -l api_version
+
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles"
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO_PATH}/tests/scripts/remote_monitoring_tests"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -39,7 +42,12 @@ num_exps=1
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>]"
+	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>] [--api-version=v1|legacy]"
+	echo
+	echo "API Version Parameter:"
+	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
+	echo "  --api-version=legacy  Use OLD/LEGACY APIs (/updateRecommendations, /generateRecommendations)"
+	echo "  Default: legacy (if no parameter specified)"
 	exit -1
 }
 
@@ -54,9 +62,20 @@ function get_kruize_pod_log() {
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts c:r:i:u:d:t:h gopts
+while getopts c:r:i:u:d:t:h:-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			api-version=*)
+				api_version=${OPTARG#*=}
+				;;
+			*)
+				echo "Error: Invalid option --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
 		;;
@@ -78,6 +97,12 @@ do
 	esac
 done
 
+echo "remote_monitoring_fault_tolerant_tests.sh :: api_version = ${api_version}"
+# Set the API version to default if not passed on parameter
+if [ -z "${api_version}" ]; then
+  api_version="legacy"
+fi
+
 if [ -z "${CLUSTER_TYPE}" ]; then
 	usage
 fi
@@ -87,6 +112,9 @@ LOG_DIR="${RESULTS_DIR}/remote-monitoring-fault-tolerant-test-$(date +%Y%m%d%H%M
 mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/remote-monitoring-fault-tolerant-test.log"
+PIP_INSTALL_LOG="${LOG_DIR}/pip_install.log"
+
+install_python_requirements "${REMOTE_MONITORING_TEST_DIR}/requirements.txt" "${PIP_INSTALL_LOG}" | tee -a ${LOG}
 
 prometheus_pod_running=$(kubectl get pods --all-namespaces | grep "prometheus-k8s-0")
 if [ "${prometheus_pod_running}" == "" ]; then
@@ -152,14 +180,14 @@ TEST_LOG="${LOG_DIR}/kruize_pod_restart_test.log"
 echo ""
 echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} --api-version ${api_version} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" --api-version "${api_version}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 
 else
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} --api-version ${api_version} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" --api-version "${api_version}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 fi

@@ -63,7 +63,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--cleanup_prometheus] [-t cleanup kruize setup]
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube [-i autotune image] [-o [operator image]] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--cleanup_prometheus] [--api-version=<v1|legacy>] [-t cleanup kruize setup]
 ```
 
 Where values for test_autotune.sh are:
@@ -71,12 +71,14 @@ Where values for test_autotune.sh are:
 ```
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
                         [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune_operator:test
+			[ -o ] : optional. Deploy Kruize in operator mode (only for local_monitoring_tests). Optionally specify operator image, default - quay.io/kruize/kruize-operator:<version>
 			[ --testsuite ] : Testsuite to run. Use testsuite=help, to list the supported testsuites
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
 			[ --resultsdir ] : optional. Results directory location, by default it creates the results directory in current working directory
 			[ --skipsetup ] : optional. Specifying this option skips the autotune setup & application deployment
 			[ --cleanup_prometheus ] : optional. Specifying this option along with -t option cleans up prometheus setup
+			[ --api-version ] : optional. API version to use for recommendations - 'v1' for new API (/kruize/api/v1/recommendations), 'legacy' for old APIs (updateRecommendations/listRecommendations). Default is 'legacy'
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
 
@@ -94,4 +96,16 @@ To run local monitoring tests,
 
 ```
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -i kruize/autotune_operator:0.8 --testsuite=local_monitoring_tests --resultsdir=/home/results
+```
+
+To run local monitoring tests in operator mode,
+
+```
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -o --testsuite=local_monitoring_tests --resultsdir=/home/results
+```
+
+Or with a specific operator image,
+
+```
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -o quay.io/kruize/kruize-operator:latest --testsuite=local_monitoring_tests --resultsdir=/home/results
 ```

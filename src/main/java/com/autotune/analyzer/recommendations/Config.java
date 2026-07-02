@@ -17,14 +17,41 @@
 package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 import java.util.Map;
 
 public class Config {
+    @SerializedName(KruizeConstants.JSONKeys.REPLICAS)
+    private Integer replicas;
+
+    // resources is a Map of map which wraps requests and limits.
+    // New API endpoint make use of this to nest requests and limits under resources in its response.
+    @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
+    private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
+
+    // Existing API endpoints use requests and limits as-is
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
     private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
     private List<RecommendationConfigEnv> env;
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
+    }
+
+    public Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
+        return resources;
+    }
+
+    public void setResources(Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
+        this.resources = resources;
+    }
 
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
         return requests;

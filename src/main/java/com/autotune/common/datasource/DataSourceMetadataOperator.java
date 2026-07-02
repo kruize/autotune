@@ -242,6 +242,11 @@ public class DataSourceMetadataOperator {
         workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
         containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
+        // Replace unsupported workload types variable with actual filter (only for workload and container queries)
+        String unsupportedWorkloadTypesFilter = AnalyzerConstants.getUnsupportedWorkloadTypesFilter();
+        workloadQuery = workloadQuery.replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, unsupportedWorkloadTypesFilter);
+        containerQuery = containerQuery.replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, unsupportedWorkloadTypesFilter);
+
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);

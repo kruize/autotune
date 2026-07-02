@@ -17,7 +17,7 @@ import json
 import jsonschema
 from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
-from helpers.list_reco_json_schema import list_reco_json_schema
+from helpers.reco_json_schemas import list_reco_json_schema
 
 KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "replicaset", "deploymentConfig", "statefulset", "daemonset", "replicationController", "job")
 
@@ -28,8 +28,9 @@ VALUE_MISSING = " cannot be empty or null!"
 def validate_list_reco_json(list_reco_json, json_schema):
     errorMsg = ""
     try:
+        print(f"Json being validated: {list_reco_json}")
+        print(f"Json schema used for validation: {json_schema}")
         # create a validator with the format checker
-        print("Validating json against the json schema...")
         validator = jsonschema.Draft7Validator(json_schema, format_checker=FormatChecker())
 
         # validate the JSON data against the schema

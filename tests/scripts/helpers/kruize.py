@@ -17,6 +17,8 @@ limitations under the License.
 import json
 import requests
 import subprocess
+import pytest
+
 
 def get_kruize_url():
     return URL
@@ -149,8 +151,11 @@ def update_recommendations(experiment_name, startTime, endTime):
         queryString = queryString + "&interval_end_time=%s" % (endTime)
     if startTime:
         queryString = queryString + "&interval_start_time=%s" % (startTime)
-
-    url = URL + "/updateRecommendations?%s" % (queryString)
+    print("pytest.USE_NEW_API = ", pytest.USE_NEW_API)
+    if pytest.USE_NEW_API:
+        url = URL + "/kruize/api/v1/recommendations?%s" % (queryString)
+    else:
+        url = URL + "/updateRecommendations?%s" % (queryString)
     print("URL = ", url)
     response = requests.post(url, )
     print("Response status code = ", response.status_code)
@@ -164,7 +169,12 @@ def update_recommendations(experiment_name, startTime, endTime):
 def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, rm=False):
     PARAMS = ""
     print("\nListing the recommendations...")
-    url = URL + "/listRecommendations"
+
+    print("pytest.USE_NEW_API = ", pytest.USE_NEW_API)
+    if pytest.USE_NEW_API:
+        url = URL + "/kruize/api/v1/recommendations"
+    else:
+        url = URL + "/listRecommendations"
     if rm:
         url += "?rm=true"
     print("URL = ", url)
@@ -535,7 +545,10 @@ def generate_recommendations(experiment_name):
     if experiment_name:
         queryString = queryString + "experiment_name=%s" % (experiment_name)
 
-    url = URL + "/generateRecommendations%s" % (queryString)
+    if pytest.USE_NEW_API:
+        url = URL + "/kruize/api/v1/recommendations%s" % (queryString)
+    else:
+        url = URL + "/generateRecommendations%s" % (queryString)
     print("URL = ", url)
     response = requests.post(url, )
     print("Response status code = ", response.status_code)

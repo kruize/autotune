@@ -15,7 +15,8 @@ import io.micrometer.prometheus.PrometheusMeterRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MetricsConfig {
-    
+
+    public static Timer timerPOSTRecommendations, timerGETRecommendations;
     public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecomendations;
     public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerLoadBulkJobId, timerUpdateBulkJobId,  timerBoxPlots, timerUpdateExpDate;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
@@ -27,6 +28,7 @@ public class MetricsConfig {
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
     public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations, timerBUpdateExpDate;
+    public static Timer.Builder timerBPOSTRecommendations, timerBGETRecommendations;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
@@ -109,6 +111,9 @@ public class MetricsConfig {
         timerBAddLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addLayerToDB");
         timerBLoadAllLayers = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllLayers");
         timerBLoadLayerByName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadLayerByName");
+
+        timerBPOSTRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "POST");
+        timerBGETRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "GET");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

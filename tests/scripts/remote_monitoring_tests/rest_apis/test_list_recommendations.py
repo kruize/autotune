@@ -21,20 +21,11 @@ import sys
 
 sys.path.append("../../")
 
-from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
-from helpers.kruize import *
-from helpers.list_reco_json_schema import *
-from helpers.medium_and_long_term_list_reco_json_schema import medium_and_long_term_list_reco_json_schema
-from helpers.medium_term_list_reco_json_schema import *
-from helpers.long_term_list_reco_json_schema import *
+from helpers.reco_json_schemas import *
 from helpers.list_reco_json_validate import *
-from helpers.short_and_long_term_list_reco_json_schema import short_and_long_term_list_reco_json_schema
-from helpers.short_and_medium_term_list_reco_json_schema import short_and_medium_term_list_reco_json_schema
-from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
 from helpers.utils import *
-from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
 
 reco_term_input = [
     ("short_term_test_latest_true", 1, list_reco_json_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),
@@ -97,20 +88,49 @@ term_input_for_missing_terms_non_contiguous = [
 ]
 
 invalid_term_input = [
-    ("short_term_test_no_data_point", 0, list_reco_json_schema, 0, True),
-    ("short_term_test_1_data_point", 1, list_reco_json_schema, 0.25, True),
-    ("medium_term_test_191_data_points", 191, medium_term_list_reco_json_schema, 47.8, False),
-    ("long_term_test_true", 767, long_term_list_reco_json_schema, 191.8, False),
+    ("short_term_test_no_data_point", 0, no_terms_reco_json_schema, 0, True),
+    ("short_term_test_1_data_point", 1, no_terms_reco_json_schema, 0.25, True),
+    ("medium_term_test_191_data_points", 191, short_term_list_reco_json_schema, 47.8, False),
+    ("long_term_test_true", 767, short_and_medium_term_list_reco_json_schema, 191.8, False),
 ]
 
 term_input_exceeding_limit = [
-    ("short_term_test_non_contiguous_2_data_points_exceeding_24_hours", 2, list_reco_json_schema, 0.5, 1440, True),
-    ("medium_term_test_non_contiguous_192_data_points_exceeding_7_days", 192, medium_term_list_reco_json_schema, 48.0,
-     420, False),
-    (
-        "long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0,
-        360,
-        False)
+    ("short_term_test_non_contiguous_2_data_points_exceeding_24_hours", 2, no_terms_reco_json_schema, 0.5, 1440, True),
+    ("medium_term_test_non_contiguous_192_data_points_exceeding_7_days", 192, short_term_list_reco_json_schema, 48.0, 420, False),
+    ("long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, short_and_medium_term_list_reco_json_schema, 192.0, 360, False)
+]
+
+pod_count_notifications = [
+    ("pod_count_no_data_test", 1, True, [
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"memoryRSS": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}}
+    ], NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA_FOR_POD_COUNT, NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA_FOR_POD_COUNT_MESSAGE),
+    ("pod_count_using_cpu_test", 1, True, [
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0.75, "avg": 0.75, "min": 0.75, "max": 0.75, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0.5, "avg": 0.5, "min": 0.5, "max": 0.5, "format": "cores"}},
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 90, "avg": 90, "min": 90, "max": 90, "format": "MiB"}},
+        {"memoryRSS": {'sum': 90, "avg": 90, "min": 90, "max": 90, "format": "MiB"}}
+    ], NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_CPU, NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_CPU_MESSAGE),
+    ("pod_count_using_memory_test", 1, True, [
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 90, "avg": 90, "min": 90, "max": 90, "format": "MiB"}},
+        {"memoryRSS": {'sum': 90, "avg": 90, "min": 90, "max": 90, "format": "MiB"}}
+    ], NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_MEMORY, NOTIFICATION_CODE_FOR_POD_COUNT_DERIVED_FROM_MEMORY_MESSAGE)
 ]
 
 profile_notifications = [
@@ -972,9 +992,22 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
                                                                    expected_duration_in_hours, latest, logging,
                                                                    cluster_type):
     """
-        Test Description: This test validates list recommendations for all the terms for multiple experiments posted using different json files
-                          and query with only the parameter latest and with both latest=true and latest=false
+    Test Description: This test validates list recommendations for all the terms for single experiment with parameter
+    - latest=true and latest=false
+
+    Test Flow:
+    For a given term as defined by parameter 'test_name' and 'num_days',
+    1. experiment is created using /createExperiment endpoint
+    2. metrics data is pushed using /updateResults endpoint in batches of 100 datapoints
+    3. recommendation is generated using /updateRecommendation endpoint.
+    4. fetch recommendation using /listRecommendations endpoint.
+
+    Test Validation
+    1. Validate if recommendation calls are success
+    2. Validate kubernetes objects of request payload of results, experiment endpoints and response payload of
+    recommendation endpoint.
     """
+
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
 
@@ -1010,6 +1043,7 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
+        result_batch = []
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
@@ -1026,25 +1060,26 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
             result_json[0]['interval_start_time'] = start_time
             end_time = increment_timestamp_by_given_mins(start_time, 15)
             result_json[0]['interval_end_time'] = end_time
-
-            write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file, logging)
+            result_batch.append(result_json[0])
+            if (len(result_batch) == 100): # Call updateResults API for every 100 datapoints
+                write_json_data_to_file(update_results_json_file, result_batch)
+                response = update_results(update_results_json_file, logging)
+                data = response.json()
+                print("message = ", data['message'])
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data['status'] == SUCCESS_STATUS
+                assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+                result_batch = []
 
+        if (len(result_batch) > 0): # Handle last batch of metrics datapoints
+            write_json_data_to_file(update_results_json_file, result_batch)
+            response = update_results(update_results_json_file, logging)
             data = response.json()
             print("message = ", data['message'])
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-            update_recommendations(experiment_name, None, end_time)
-
-            # Get the experiment name
-            json_data = json.load(open(create_exp_json_file))
-            experiment_name = json_data[0]['experiment_name']
-
-            response = list_recommendations(experiment_name, rm=True)
-            assert response.status_code == SUCCESS_200_STATUS_CODE
 
         list_of_result_json_arr.append(result_json_arr)
 
@@ -2755,118 +2790,121 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                 aggre_info["min"] = OPTIMISED_MEMORY
                 aggre_info["max"] = OPTIMISED_MEMORY
 
-            write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            if (len(result_json_arr) == 100):
+                write_json_data_to_file(update_results_json_file, result_json_arr)
+                response = update_results(update_results_json_file)
+                data = response.json()
+                print("message = ", data['message'])
+                result_json_arr = []
 
+        if (len(result_json_arr) > 0):
+            write_json_data_to_file(update_results_json_file, result_json_arr)
+            response = update_results(update_results_json_file)
             data = response.json()
             print("message = ", data['message'])
 
-            if j > 95:
-                response = update_recommendations(experiment_name, None, end_time)
-                data = response.json()
-                assert response.status_code == SUCCESS_STATUS_CODE
-                assert data[0]['experiment_name'] == experiment_name
 
-                # Get the experiment name
-                json_data = json.load(open(create_exp_json_file))
-                experiment_name = json_data[0]['experiment_name']
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
 
-                response = list_recommendations(experiment_name, rm=True)
-                assert response.status_code == SUCCESS_200_STATUS_CODE
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
 
-                recommendation_json = response.json()
+        response = list_recommendations(experiment_name, rm=True)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
 
-                recommendation_section = None
+        recommendation_json = response.json()
 
-                for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
-                    actual_container_name = containers["container_name"]
-                    print(
-                        f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
-                    if containers["container_name"] == container_name_to_update:
-                        recommendation_section = containers["recommendations"]
-                        break
+        recommendation_section = None
 
-                assert recommendation_section is not None
+        for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
+            actual_container_name = containers["container_name"]
+            print(
+                f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
+            if containers["container_name"] == container_name_to_update:
+                recommendation_section = containers["recommendations"]
+                break
 
-                high_level_notifications = recommendation_section["notifications"]
+        assert recommendation_section is not None
 
-                # Check for Recommendation level notifications
-                assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+        high_level_notifications = recommendation_section["notifications"]
 
-                data_section = recommendation_section["data"]
-                # Check if recommendation exists
-                assert str(end_time) in data_section
-                # Check for timestamp level notifications
-                timestamp_level_notifications = data_section[str(end_time)]["notifications"]
-                assert INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE in timestamp_level_notifications
+        # Check for Recommendation level notifications
+        assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
-                # Check for current recommendation
-                recommendation_current = None
-                if "current" in data_section[str(end_time)]:
-                    recommendation_current = data_section[str(end_time)]["current"]
+        data_section = recommendation_section["data"]
+        # Check if recommendation exists
+        assert str(end_time) in data_section
+        # Check for timestamp level notifications
+        timestamp_level_notifications = data_section[str(end_time)]["notifications"]
+        assert INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE in timestamp_level_notifications
 
-                short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
-                medium_term_recommendation = None
-                long_term_recommendation = None
-                if j > 671:  # 7 days
-                    medium_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["medium_term"]
-                if j > 1439:  # 15 days
-                    long_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["long_term"]
+        # Check for current recommendation
+        recommendation_current = None
+        if "current" in data_section[str(end_time)]:
+            recommendation_current = data_section[str(end_time)]["current"]
+            if pytest.USE_NEW_API:
+                recommendation_current.update(recommendation_current.pop("resources"))
 
-                if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
-                                                                  current=recommendation_current,
-                                                                  profile="cost")
+        short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+        medium_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["medium_term"]
+        long_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["long_term"]
 
-                    if j > 671:
-                        validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
-                                                                      current=recommendation_current,
-                                                                      profile="cost")
-                    if j > 1439:
-                        validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
-                                                                      current=recommendation_current,
-                                                                      profile="cost")
+        if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+            validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
+                                                          current=recommendation_current,
+                                                          profile="cost")
+        if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in medium_term_recommendation["notifications"]:
+            validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
+                                                              current=recommendation_current,
+                                                              profile="cost")
+        if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in long_term_recommendation["notifications"]:
+                validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
+                                                              current=recommendation_current,
+                                                              profile="cost")
 
-                if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
-                                                                  current=recommendation_current,
-                                                                  profile="performance")
+        if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+            validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
+                                                          current=recommendation_current,
+                                                          profile="performance")
+        if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in medium_term_recommendation["notifications"]:
+            validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
+                                                          current=recommendation_current,
+                                                          profile="performance")
+        if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in long_term_recommendation["notifications"]:
+            validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
+                                                          current=recommendation_current,
+                                                          profile="performance")
 
-                    if j > 671:
-                        validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
-                                                                      current=recommendation_current,
-                                                                      profile="performance")
-                    if j > 1439:
-                        validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
-                                                                      current=recommendation_current,
-                                                                      profile="performance")
+        short_term_recommendation_cost_notifications = \
+            short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+        short_term_recommendation_perf_notifications = \
+            short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                short_term_recommendation_cost_notifications = \
-                    short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                short_term_recommendation_perf_notifications = \
-                    short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+        check_optimised_codes(short_term_recommendation_cost_notifications,
+                              short_term_recommendation_perf_notifications)
 
-                check_optimised_codes(short_term_recommendation_cost_notifications,
-                                      short_term_recommendation_perf_notifications)
 
-                if j > 672:
-                    medium_term_recommendation_cost_notifications = \
-                        medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                    medium_term_recommendation_perf_notifications = \
-                        medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+        medium_term_recommendation_cost_notifications = \
+            medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+        medium_term_recommendation_perf_notifications = \
+            medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    check_optimised_codes(medium_term_recommendation_cost_notifications,
-                                          medium_term_recommendation_perf_notifications)
+        check_optimised_codes(medium_term_recommendation_cost_notifications,
+                              medium_term_recommendation_perf_notifications)
 
-                if j > 1439:
-                    long_term_recommendation_cost_notifications = \
-                        long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                    long_term_recommendation_perf_notifications = \
-                        long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    check_optimised_codes(long_term_recommendation_cost_notifications,
-                                          long_term_recommendation_perf_notifications)
+        long_term_recommendation_cost_notifications = \
+            long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+        long_term_recommendation_perf_notifications = \
+            long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+
+        check_optimised_codes(long_term_recommendation_cost_notifications,
+                              long_term_recommendation_perf_notifications)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -2963,6 +3001,106 @@ def test_list_recommendations_profile_notifications(test_name, num_days, logging
 
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message", pod_count_notifications)
+def test_list_recommendations_pod_count_notifications(test_name, num_days, logging, update_metrics, code, message,
+                                                    cluster_type: str):
+    """
+        Test Description: Check if notifications are generated at profile level if cpu_usage is less than millicore
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+    print("Test Name --- %s " % (test_name))
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 96 * num_days
+    list_of_result_json_arr = []
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        response = create_experiment(create_exp_json_file)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+        interval_start_time = get_datetime()
+        for j in range(num_res):
+            update_timestamps = True
+            update_metrics_json(find, result_json_file, update_results_json_file, i, update_metrics, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+            result_json_arr.append(result_json[0])
+        write_json_data_to_file(update_results_json_file, result_json_arr)
+        response = update_results(update_results_json_file, logging)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        validate_pod_count_notifications(experiment_name, end_time, code, message, data)
+
+        response = list_recommendations(experiment_name, rm=True)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        data = response.json()
+        validate_pod_count_notifications(experiment_name, end_time, code, message, data)
+
+    # Delete the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
+
+
+def validate_pod_count_notifications(experiment_name, end_time, code, message, data):
+    assert data[0]['experiment_name'] == experiment_name
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
+    short_term_recommendation = \
+        data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['data'][str(end_time)][
+            "recommendation_terms"][
+            "short_term"]
+    assert short_term_recommendation['notifications'][code]['message'] == message
 
 
 def validate_recommendations_notifications(experiment_name, end_time, code, message, data):
@@ -3093,6 +3231,7 @@ def test_list_recommendations_for_namespace_for_diff_reco_terms_with_only_latest
         update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
 
         result_json_arr = []
+        result_batch = []
         # Get the experiment name
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
@@ -3110,24 +3249,26 @@ def test_list_recommendations_for_namespace_for_diff_reco_terms_with_only_latest
             end_time = increment_timestamp_by_given_mins(start_time, 15)
             result_json[0]['interval_end_time'] = end_time
 
-            write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file, logging)
+            result_batch.append(result_json[0])
+            if (len(result_batch) == 100):  # Call updateResults API for every 100 datapoints
+                write_json_data_to_file(update_results_json_file, result_batch)
+                response = update_results(update_results_json_file, logging)
+                data = response.json()
+                print("message = ", data['message'])
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data['status'] == SUCCESS_STATUS
+                assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+                result_batch = []
 
+        if (len(result_batch) > 0): # Handle last batch of metrics datapoints
+            write_json_data_to_file(update_results_json_file, result_batch)
+            response = update_results(update_results_json_file, logging)
             data = response.json()
             print("message = ", data['message'])
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
-
-            update_recommendations(experiment_name, None, end_time)
-
-            # Get the experiment name
-            json_data = json.load(open(create_exp_json_file))
-            experiment_name = json_data[0]['experiment_name']
-
-            response = list_recommendations(experiment_name, rm=True)
-            assert response.status_code == SUCCESS_200_STATUS_CODE
 
         list_of_result_json_arr.append(result_json_arr)
 

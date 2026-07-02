@@ -193,6 +193,11 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO,
                 RecommendationConstants.RecommendationNotificationTypes.ERROR
         ),
+        ERROR_NOT_ENOUGH_DATA_FOR_POD_COUNT(
+                RecommendationConstants.NotificationCodes.ERROR_NOT_ENOUGH_DATA_FOR_POD_COUNT,
+                RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA_FOR_POD_COUNT,
+                RecommendationConstants.RecommendationNotificationTypes.ERROR
+        ),
         ERROR_NUM_PODS_CANNOT_BE_NEGATIVE(
                 RecommendationConstants.NotificationCodes.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE,
@@ -257,6 +262,16 @@ public class RecommendationConstants {
                 NotificationCodes.NOTICE_ACCELERATOR_NOT_SUPPORTED,
                 RecommendationConstants.RecommendationNotificationMsgConstant.ACCELERATOR_NOT_SUPPORTED,
                 RecommendationConstants.RecommendationNotificationTypes.NOTICE
+        ),
+        NOTICE_POD_COUNT_DERIVED_FROM_CPU(
+                NotificationCodes.NOTICE_POD_COUNT_DERIVED_FROM_CPU,
+                RecommendationNotificationMsgConstant.POD_COUNT_DERIVED_FROM_CPU,
+                RecommendationNotificationTypes.NOTICE
+        ),
+        NOTICE_POD_COUNT_DERIVED_FROM_MEMORY(
+                NotificationCodes.NOTICE_POD_COUNT_DERIVED_FROM_MEMORY,
+                RecommendationNotificationMsgConstant.POD_COUNT_DERIVED_FROM_MEMORY,
+                RecommendationNotificationTypes.NOTICE
         ),
         CRITICAL_CPU_REQUEST_NOT_SET(
                 RecommendationConstants.NotificationCodes.CRITICAL_CPU_REQUEST_NOT_SET,
@@ -393,6 +408,7 @@ public class RecommendationConstants {
         public static final int ERROR_NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
         public static final int ERROR_HOURS_CANNOT_BE_ZERO = 221003;
         public static final int ERROR_HOURS_CANNOT_BE_NEGATIVE = 221004;
+        public static final int ERROR_NOT_ENOUGH_DATA_FOR_POD_COUNT = 221005;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
         public static final int ERROR_AMOUNT_MISSING_IN_CPU_SECTION = 223001;
@@ -458,7 +474,11 @@ public class RecommendationConstants {
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_START = 328000;
         public static final int NOTICE_ACCELERATOR_NOT_SUPPORTED = 328001;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_ACCELERATOR_END = 328999;
+        // Pod count derivation notifications (321001-321002): Notifications when pod count is derived from other metrics
+        public static final int NOTICE_POD_COUNT_DERIVED_FROM_CPU = 321001;      // Pod count derived from CPU usage metrics
+        public static final int NOTICE_POD_COUNT_DERIVED_FROM_MEMORY = 321002;   // Pod count derived from Memory usage metrics
         public static final int SECTION_WARNING_START = 400000;
+
 
         // Section - Warning:               400000 - 499999
         //      SubSection - General Info:  410000 - 419999
@@ -715,6 +735,9 @@ public class RecommendationConstants {
         public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
         public static final String ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "Accelerator Recommendations are available";
         public static final String ACCELERATOR_NOT_SUPPORTED = "Accelerator is not supported by kruize";
+        public static final String POD_COUNT_DERIVED_FROM_CPU = "Pod count is derived from CPU usage metric data";
+        public static final String POD_COUNT_DERIVED_FROM_MEMORY = "Pod count is derived from Memory usage metric data";
+        public static final String NOT_ENOUGH_DATA_FOR_POD_COUNT = "Not enough data available to determine Pod Count";
 
         private RecommendationNotificationMsgConstant() {
 

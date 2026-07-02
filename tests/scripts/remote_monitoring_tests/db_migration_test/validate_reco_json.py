@@ -1,21 +1,18 @@
 import sys, getopt
 import datetime
 import json
+
 sys.path.append("../..")
 
-from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
-from helpers.kruize import *
-from helpers.list_reco_json_schema import *
-from helpers.medium_term_list_reco_json_schema import *
-from helpers.long_term_list_reco_json_schema import *
-from helpers.list_reco_json_validate import *
 from helpers.utils import *
 
 failed = 0
+api_version = "legacy"
 
 def validate_engine(terms_obj, cpu):
 	global failed
+	global api_version
 	cpu_format_type = "cores"
 	memory_format_type = "MiB"
 	engines_list = ["cost", "performance"]
@@ -29,6 +26,8 @@ def validate_engine(terms_obj, cpu):
 				if engine_entry in terms_obj["recommendation_engines"]:
 					engine_obj = terms_obj["recommendation_engines"][engine_entry]
 					reco_config = engine_obj["config"]
+					if api_version == "v1":
+						reco_config.update(reco_config.pop("resources"))
 					usage_list = ["requests", "limits"]
 					for usage in usage_list:
 						if cpu == True:
@@ -105,21 +104,24 @@ def validate_reco_json(json_file, end_time):
 			long_term_recommendation = data_section[end_time]["recommendation_terms"]["long_term"]
 
 def main(argv):
+	global api_version
 	json_file = ""
 	end_time = ""
 	try:
-		opts, args = getopt.getopt(argv,"h:f:e:")
+		opts, args = getopt.getopt(argv,"h:f:e:",["api-version="])
 	except getopt.GetoptError:
-		print("validate_reco_json.py -f <reco json file> -e <interval end time>")
+		print("validate_reco_json.py -f <reco json file> -e <interval end time> --api-version v1")
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt == '-h':
-			print("validate_reco_json.py -f <reco json file> -e <interval end time>")
+			print("validate_reco_json.py -f <reco json file> -e <interval end time> --api-version v1")
 			sys.exit(0)
 		elif opt == '-f':
 			json_file = arg
 		elif opt == '-e':
 			end_time = str(arg)
+		elif opt == '--api-version':
+			api_version = str(arg)
 
 	validate_reco_json(json_file, end_time)
 	if failed == 0:
