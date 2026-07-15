@@ -6,9 +6,9 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.11</version>
+    <version>0.11.1</version>
     <properties>
-        <fabric8-version>7.7.0</fabric8-version>
+        <fabric8-version>7.8.0</fabric8-version>
         <org-json-version>20260522</org-json-version>
         <jetty-version>12.1.7</jetty-version>
         <log4j-version>2.26.0</log4j-version>

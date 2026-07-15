@@ -48,7 +48,7 @@ initial_start_date="2023-12-20T00:00:00.000Z"
 query_db_interval=10
 db_backup_file="./db_backup.sql"
 
-replicas=10
+replicas=5
 
 target="crc"
 kruize_image_prev="quay.io/kruize/autotune_operator:0.0.19.5_rm"
@@ -144,8 +144,8 @@ ${KRUIZE_REPO_PATH}/scripts/enable_user_workload_monitoring_openshift.sh | tee -
 pushd ${SCALE_TEST} > /dev/null
 	echo "" | tee -a ${LOG}
 	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}" | tee -a ${LOG}
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a migration" | tee -a ${LOG}
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a "migration"
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a migration -g ${replicas} " | tee -a ${LOG}
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a "migration" -g ${replicas}
 popd > /dev/null 
 	echo "" | tee -a ${LOG}
 
@@ -154,9 +154,13 @@ total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 # Backup DB
 echo "" | tee -a ${LOG}
 echo "Backing up DB..." | tee -a ${LOG}
-db_backup_file="${LOG_DIR}/test_logs_50_15days/db_backup.sql"
-echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}" | tee -a ${LOG}
-kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
+kruize_db_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db | cut -d '/' -f2)
+db_backup_file="${LOG_DIR}/test_logs_50_15days/db_backup.dmp"
+db_file=$(basename ${db_backup_file})
+echo "kubectl -n ${NAMESPACE} exec -it `kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db` -- pg_dump -U admin -d kruizeDB -Fc -b -v -f ${db_file}" | tee -a ${LOG}
+kubectl -n ${NAMESPACE} exec -it `kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db` -- pg_dump -U admin -d kruizeDB -Fc -b -v -f ${db_file} | tee -a ${LOG}
+echo "kubectl cp ${NAMESPACE}/${kruize_db_pod}:${db_file} ${db_backup_file}" | tee -a ${LOG}
+kubectl cp ${NAMESPACE}/${kruize_db_pod}:${db_file} ${db_backup_file} | tee -a ${LOG}
 echo "Backing up DB...Done" | tee -a ${LOG}
 echo "" | tee -a ${LOG}
 
@@ -171,8 +175,8 @@ pushd ${SCALE_TEST} > /dev/null
 	restore_db=true
 	num_days_of_res=1
 
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration --api-version=${api_version}" | tee -a ${LOG}
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration" --api-version=${api_version}
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration -g ${replicas} --api-version=${api_version}" | tee -a ${LOG}
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration" -g ${replicas} --api-version=${api_version}
 
 	echo "" | tee -a ${LOG}
 	echo "" | tee -a ${LOG}

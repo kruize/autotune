@@ -48,13 +48,13 @@ db_backup_file="./db_backup.sql"
 replicas=10
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
+KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 hours=6
 total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [--api-version=<v1|legacy>]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [-g No. of kruize replicas. Default - 10] [--api-version=<v1|legacy>]"
 	echo
 	echo "API Version Parameter:"
 	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
@@ -118,7 +118,7 @@ function kruize_scale_test_remote_patch() {
 
 }
 
-while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:a:h:-: gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:a:g:h:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -172,6 +172,9 @@ do
 		;;
 	a)
 		testcase="${OPTARG}"
+		;;
+	g)
+		replicas="${OPTARG}"
 		;;
 	h)
 		usage

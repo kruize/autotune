@@ -42,7 +42,7 @@ query_db_interval=10
 
 kruize_setup=true
 
-replicas=10
+replicas=5
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
