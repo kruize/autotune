@@ -22,10 +22,9 @@ The following Kubernetes workload types are **supported** by Kruize:
 
 The following workload types are **not supported** by Kruize:
 
-- **DeploymentConfig** - OpenShift-specific deployment configuration (deprecated)
+- **DeploymentConfig**: Excluded because it is an OpenShift-specific deployment configuration that has been deprecated from [Red Hat OpenShift v4.14](https://access.redhat.com/articles/7041372) onwards. OpenShift users are encouraged to migrate to standard Kubernetes Deployments.
 
-The reason for excluding DeploymentConfig is that it is OpenShift-specific and has been deprecated from [Red Hat OpenShift v4.14](https://access.redhat.com/articles/7041372) onwards. OpenShift users are encouraged to migrate to standard Kubernetes Deployments.
-
+- **ConfigMap and CatalogSource**: Excluded because they are configuration and catalog resources, rather than actual executing containers that can be monitored to generate recommendations.
 ---
 
 ## CreateMetadataProfile
