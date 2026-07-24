@@ -98,14 +98,12 @@ progress of the job.
 - **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
   should be installed / created before invoking bulk API.
 
-- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field; if not
+  specified, `15min` is used as the default value.
 
-- **cluster_name:** (Optional) The cluster name to use for all experiments created in this bulk job. If provided, this 
+- **cluster_name:** (Optional) The cluster name to use for all experiments created in this bulk job. If provided, this
   overrides the cluster name from datasource metadata. If not provided, the cluster name from metadata will be used.
-  Must be non-empty and not exceed 253 characters.
-  
-- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not
-  specified `15min` as default measurement_duration value is considered.
+  Must be a non-empty string and must not exceed 253 characters.
 
 ### Success Response
 

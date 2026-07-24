@@ -31,7 +31,7 @@ Kruize supports connecting to various monitoring datasources (Prometheus, Thanos
 | `datasources[].provider`                         | string | Yes      | Provider type (e.g., "prometheus")                     |
 | `datasources[].url` OR `serviceName`+`namespace` | string | Yes      | Connection endpoint                                    |
 | `datasources[].authentication`                   | object | No       | Authentication configuration (defaults to "none")      |
-| `datasources[].clusters`                         | array  | No       | JSONB array of cluster names associated with this datasource |
+| `datasources[].clusters`                         | array  | No       | Array of cluster names associated with this datasource       |
 
 ### URL vs ServiceName
 
@@ -386,7 +386,8 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
 ```
 
 #### Multiple Clusters Example
-TBA
+
+> **ℹ️ Not yet supported**: Configuring multiple clusters per datasource is not yet implemented. Only a single entry in the `clusters` array is currently used. This section will be updated when full multi-cluster support is available.
 
 ### Behavior
 
