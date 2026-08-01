@@ -138,6 +138,8 @@ def validate_runtime_recommendations_if_present(recommendations_json):
     
     Raises:
         AssertionError: If any validation check fails, including:
+            - Missing or empty recommendations JSON
+            - Missing kubernetes_objects
             - Missing runtime notification codes
             - Incorrect notification messages
             - Invalid environment variable names
@@ -147,13 +149,15 @@ def validate_runtime_recommendations_if_present(recommendations_json):
     
     Note:
         - Only validates container experiment types
-        - Returns early without error if recommendations_json is empty or None
-        - Returns early if no kubernetes_objects are present
         - Validates ALL runtime recommendations, not just the first one found
         - Fails if runtime notification is present but no runtime envs are found
     """
     if not recommendations_json or len(recommendations_json) == 0:
-        return
+        raise AssertionError(
+            "ERROR: Recommendations JSON is empty or None. "
+            "This indicates that the experiment setup or data collection failed. "
+            "Ensure the workload is deployed, metrics are being exposed, and sufficient data points are available."
+        )
 
     rec = recommendations_json[0]
     if rec.get("experiment_type") != CONTAINER_EXPERIMENT_TYPE:
@@ -161,7 +165,11 @@ def validate_runtime_recommendations_if_present(recommendations_json):
 
     kubernetes_objects = rec.get("kubernetes_objects", [])
     if not kubernetes_objects:
-        return
+        raise AssertionError(
+            "ERROR: No kubernetes_objects found in recommendations. "
+            "This indicates that the experiment was not properly created or the workload is not running. "
+            "Verify that the application pods are running and metrics are being collected."
+        )
 
     has_runtime_notification = False
     runtime_env_vars_found = []
@@ -251,15 +259,16 @@ def _generate_and_list_recommendations_for_tfb(
     complete workflow for generating runtime recommendations for TechEmpower
     Quarkus JVM workload. The workflow includes:
     
-    1. Clone the benchmarks repository
-    2. Install the workload
-    3. Create and configure metric profiles (with JVM runtime metrics)
-    4. Create and configure metadata profiles
-    5. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
-    6. Create experiment using TFB configuration
-    7. Generate recommendations
-    8. List and validate recommendations
-    9. Clean up all created resources
+    1. Clone the benchmarks repository (prerequisite)
+    2. Install the workload (prerequisite)
+    3. Wait for sufficient data points (at least 2) to be available
+    4. Create and configure metric profiles (with JVM runtime metrics)
+    5. Create and configure metadata profiles
+    6. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
+    7. Create experiment using TFB configuration
+    8. Generate recommendations
+    9. List and validate recommendations
+    10. Clean up all created resources
     
     Args:
         cluster_type (str): The type of cluster to test against. Supported values:
@@ -293,6 +302,8 @@ def _generate_and_list_recommendations_for_tfb(
             - JSON schema validation failures
     
     Note:
+        - Application installation is a prerequisite and happens before profile creation
+        - Waits for at least 2 data points (20 mins) to ensure sufficient metric data
         - Uses temporary files for modified profiles to avoid affecting original files
         - Automatically cleans up all resources in the finally block
         - Deletes experiments, profiles, layers, and temporary files
@@ -475,15 +486,16 @@ def _generate_and_list_recommendations_for_petclinic(
     complete workflow for generating runtime recommendations for Spring Petclinic
     with OpenJ9/Semeru JVM workload. The workflow includes:
     
-    1. Clone the benchmarks repository
-    2. Install the workload
-    3. Create and configure metric profiles (with JVM runtime metrics)
-    4. Create and configure metadata profiles
-    5. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
-    6. Create experiment using Petclinic configuration
-    7. Generate recommendations
-    8. List and validate recommendations
-    9. Clean up all created resources
+    1. Clone the benchmarks repository (prerequisite)
+    2. Install the workload (prerequisite)
+    3. Wait for sufficient data points (at least 2) to be available
+    4. Create and configure metric profiles (with JVM runtime metrics)
+    5. Create and configure metadata profiles
+    6. Create runtime layers (Hotspot, Semeru, Quarkus, etc.)
+    7. Create experiment using Petclinic configuration
+    8. Generate recommendations
+    9. List and validate recommendations
+    10. Clean up all created resources
     
     Args:
         cluster_type (str): The type of cluster to test against. Supported values:
@@ -517,11 +529,14 @@ def _generate_and_list_recommendations_for_petclinic(
             - JSON schema validation failures
     
     Note:
+        - Application installation is a prerequisite and happens before profile creation
+        - Waits for at least 2 data points (20 mins) to ensure sufficient metric data
         - Uses temporary files for modified profiles to avoid affecting original files
         - Automatically cleans up all resources in the finally block
         - Deletes experiments, profiles, layers, and temporary files
         - Removes the cloned benchmarks directory
         - For non-minikube clusters, updates datasource from prometheus-1 to thanos-1
+        - Fails with clear error messages if application installation or setup fails
     
     Example:
         >>> def filter_semeru_only(path):
@@ -534,7 +549,7 @@ def _generate_and_list_recommendations_for_petclinic(
     # Wait for petclinic pod to be ready and metrics to be available
     # This is crucial for Semeru layer detection as Prometheus needs time to scrape metrics
     print("Waiting for petclinic pod to be ready and metrics to be scraped by Prometheus...")
-    time.sleep(30)  # Wait 30 seconds for pod readiness and initial metric scraping
+    time.sleep(1200)  # Wait 20 mins for pod readiness and initial metric scraping
     print("Wait complete, proceeding with experiment creation...")
 
     input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_petclinic_exp.json")
