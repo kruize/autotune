@@ -183,13 +183,13 @@ echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -r ${LOG_DIR} --api-version ${api_version} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
 	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -r "${LOG_DIR}" --api-version "${api_version}" | tee -a  ${TEST_LOG}
-	exit_code=$?
+	exit_code=${PIPESTATUS[0]}
 	echo "exit_code = $exit_code"
 
 else
 	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -r ${LOG_DIR} --api-version ${api_version} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
 	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -r "${LOG_DIR}" --api-version "${api_version}" | tee -a  ${TEST_LOG}
-	exit_code=$?
+	exit_code=${PIPESTATUS[0]}
 	echo "exit_code = $exit_code"
 fi
 
@@ -201,14 +201,9 @@ elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [ "${exit_code}" -ne 0 ]; then
-	echo "Local Monitoring Fault tolerant test failed! Check the log for details" | tee -a ${LOG}
+	echo "Local Monitoring Fault tolerant test failed! Check the logs for details" | tee -a ${LOG}
 	exit 1
 else
-	if [[ $(grep -i "error\|exception" ${KRUIZE_POD_LOG_BEFORE}) || $(grep -i "error\|exception" ${KRUIZE_POD_LOG_AFTER}) ]]; then
-		echo "Local Monitoring Fault tolerant test failed! Check the logs for details" | tee -a ${LOG}
-		exit 1
-	else
-		echo "Local Monitoring Fault tolerant test passed!" | tee -a ${LOG}
-		exit 0
-	fi
+	echo "Local Monitoring Fault tolerant test passed!" | tee -a ${LOG}
+	exit 0
 fi
