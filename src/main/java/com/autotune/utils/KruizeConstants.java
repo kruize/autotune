@@ -957,6 +957,7 @@ public class KruizeConstants {
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
         public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        public static final String LABEL_FILTER = "LABEL_FILTER";
         public static final String SUMMARY = "summary";
         public static final String SUMMARY_FILTER = "summaryFilter";
         public static final String EXPERIMENTS = "experiments";

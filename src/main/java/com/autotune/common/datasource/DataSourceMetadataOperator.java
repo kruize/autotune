@@ -67,7 +67,6 @@ public class DataSourceMetadataOperator {
      * Currently supported DataSourceProvider - Prometheus
      *
      * @param dataSourceInfo   The DataSourceInfo object containing information about the data source.
-     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
      * @param startTime        Get metadata from starttime to endtime
      * @param endTime          Get metadata from starttime to endtime
      * @param steps            the interval between data points in a range query
@@ -75,10 +74,10 @@ public class DataSourceMetadataOperator {
      * @param includeResources
      * @param excludeResources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+    public DataSourceMetadataInfo createDataSourceMetadata(String metadataProfileName, DataSourceInfo dataSourceInfo, long startTime,
                                                            long endTime, int steps,  int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, startTime,
                 endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
@@ -121,10 +120,10 @@ public class DataSourceMetadataOperator {
      *                                                                                                                                                                                                                                                                          TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(String metadataProfileName,DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+    public DataSourceMetadataInfo updateDataSourceMetadata(String metadataProfileName,DataSourceInfo dataSourceInfo, long startTime,
                                                            long endTime, int steps, int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws Exception {
-        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, startTime,
                 endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
@@ -158,7 +157,6 @@ public class DataSourceMetadataOperator {
      * DataSourceMetadataInfo object
      *
      * @param dataSourceInfo   The DataSourceInfo object containing information about the data source
-     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
      * @param startTime        Get metadata from starttime to endtime
      * @param endTime          Get metadata from starttime to endtime
      * @param steps            the interval between data points in a range query
@@ -167,7 +165,7 @@ public class DataSourceMetadataOperator {
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey,
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(String metadataProfileName, DataSourceInfo dataSourceInfo,
                                                                                   long startTime, long endTime, int steps, int measurementDuration,
                                                                                   Map<String, String> includeResources,
                                                                                   Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
@@ -193,17 +191,54 @@ public class DataSourceMetadataOperator {
 
         MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
 
+        if (null == metadataProfile) {
+            LOGGER.error("Metadata profile '{}' not found in MetadataProfileCollection", metadataProfileName);
+            return null;
+        }
+
+        // Determine if pod label filters are present — if so, use label-aware workload template
+        String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
+        String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
+        boolean hasLabelFilter = !includePodLabelFilter.isEmpty() || !excludePodLabelFilter.isEmpty();
+
+        String labelWorkloadTemplate = null;
+        if (hasLabelFilter) {
+            labelWorkloadTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, "workloadsWithPodLabelFilter");
+            if (labelWorkloadTemplate == null) {
+                LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile, falling back to standard query");
+                hasLabelFilter = false;
+            } else {
+                LOGGER.info("Label filter present — using workloadsWithPodLabelFilter template for workload query");
+            }
+        }
+
+        final boolean useLabelTemplate = hasLabelFilter;
+        final String finalLabelWorkloadTemplate = labelWorkloadTemplate;
+
         // Populate filters for each field
         fields.forEach(field -> {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field, metadataProfile);
+
+            // For the workload field, use the label-aware template when a label filter is present
+            String queryTemplate = (field.equals("workload") && useLabelTemplate)
+                    ? finalLabelWorkloadTemplate
+                    : getQueryTemplate(field, metadataProfile);
+
+            if (queryTemplate == null) {
+                LOGGER.error("Query template is null for field {}, cannot proceed", field);
+                queries.put(field, null);
+                return;
+            }
             String filteredQuery;
+            // For the label workload template, only allow %s substitution; avoid replacing
+            // the field!="" pattern which may legitimately appear inside PromQL label selectors.
+            boolean isLabelTemplate = useLabelTemplate && field.equals("workload");
             if (queryTemplate.contains("%s")) {
                 filteredQuery = String.format(queryTemplate, filter);
 
-            } else if (queryTemplate.contains(field + "!=\"\"")) {
+            } else if (!isLabelTemplate && queryTemplate.contains(field + "!=\"\"")) {
                 filteredQuery = queryTemplate.replace(
                     field + "!=\"\"",
                     filter.isEmpty() ? field + "!=\"\"" : filter
@@ -221,22 +256,24 @@ public class DataSourceMetadataOperator {
             queries.put(field, filteredQuery);
         });
 
+        // Abort if any required query template was missing
+        if (queries.containsValue(null)) {
+            LOGGER.error("One or more query templates could not be resolved for metadata profile '{}', aborting metadata fetch", metadataProfileName);
+            return null;
+        }
+
         // Construct queries
         String namespaceQuery = queries.get("namespace");
         String workloadQuery = queries.get("workload");
         String containerQuery = queries.get("container");
 
         String dataSourceName = dataSourceInfo.getName();
-        if (null != uniqueKey && !uniqueKey.isEmpty()) {
-            LOGGER.debug("uniquekey: {}", uniqueKey);
-            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-        } else {
-            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-        }
+
+        workloadQuery = substituteWorkloadQueryPlaceholders(
+                workloadQuery, includePodLabelFilter, excludePodLabelFilter, hasLabelFilter);
+
+        namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+        containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
 
         namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
         workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
@@ -279,6 +316,10 @@ public class DataSourceMetadataOperator {
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+            }
+            if (hasLabelFilter && datasourceWorkloads.isEmpty()) {
+                LOGGER.info("Label filter matched zero workloads — skipping experiment creation");
+                return null;
             }
             dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads);
@@ -337,6 +378,28 @@ public class DataSourceMetadataOperator {
         }
         LOGGER.info("filterBuilder: {}", filterBuilder);
         return filterBuilder.toString();
+    }
+
+    static String substituteWorkloadQueryPlaceholders(String workloadQuery,
+                                                         String includePodLabelFilter,
+                                                         String excludePodLabelFilter,
+                                                         boolean hasLabelFilter) {
+        if (hasLabelFilter) {
+            StringBuilder labelFilter = new StringBuilder();
+            if (!includePodLabelFilter.isEmpty()) labelFilter.append(",").append(includePodLabelFilter);
+            if (!excludePodLabelFilter.isEmpty()) {
+                labelFilter.append(",").append(excludePodLabelFilter);
+            }
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.LABEL_FILTER, labelFilter.toString());
+        } else {
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.LABEL_FILTER, "");
+        }
+
+        workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+
+        workloadQuery = workloadQuery.replaceAll("\\s{2,}", " ").replaceAll("\\s+}", "}").replaceAll("\\{\\s+", "{");
+
+        return workloadQuery;
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
