@@ -491,7 +491,9 @@ public class PerformanceProfileValidation {
                                 try {
                                     LOGGER.debug("MethodName = {}", methodName);
                                     Method getNameMethod = metricObj.getSloInfo().getClass().getMethod(methodName);
-                                    if (getNameMethod.invoke(metricObj.getSloInfo()) == null)
+                                   // check if SLO is null/empty
+                                    Object sloFieldValue = getNameMethod.invoke(metricObj.getSloInfo());
+                                    if (sloFieldValue == null || (sloFieldValue instanceof Collection && ((Collection<?>) sloFieldValue).isEmpty()))
                                         missingMandatoryFields.add(mField);
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                     LOGGER.error("Method name {} doesn't exist!", mField);
@@ -514,6 +516,10 @@ public class PerformanceProfileValidation {
                                     }
 
                                 });
+                        if (missingMandatoryFields.isEmpty() &&
+                                checkFunctionVariables(metricObj.getSloInfo().getFunctionVariables(), missingMandatoryFields)) {
+                            return buildValidationFailure(validationOutputData, missingMandatoryFields);
+                        }
                         String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
                         String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
                                 mandatoryObjFuncData.substring(1);
@@ -544,7 +550,7 @@ public class PerformanceProfileValidation {
                 validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s", missingMandatoryFields));
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorMsg);
             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);

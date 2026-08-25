@@ -455,44 +455,55 @@ public class Converters {
             PerformanceProfile metricProfile = null;
             if (inputData != null) {
                 JSONObject jsonObject = new JSONObject(inputData);
-                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
-                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+                String apiVersion = jsonObject.optString(AnalyzerConstants.API_VERSION, null);
+                String kind = jsonObject.optString(AnalyzerConstants.KIND, null);
 
-                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-                ObjectMapper objectMapper = new ObjectMapper();
-                ObjectNode metadata = objectMapper.readValue(metadataObject.toString(), ObjectNode.class);
-                metadata.put("name", metadataObject.getString("name"));
+                JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                ObjectNode metadata = null;
+                if (metadataObject != null) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    metadata = objectMapper.readValue(metadataObject.toString(), ObjectNode.class);
+                    metadata.put("name", metadataObject.optString("name", null));
+                }
 
                 Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
                 String k8sType = jsonObject.has(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) : null;
-                JSONObject sloJsonObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
-                JSONArray functionVariableArray = sloJsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
-                ArrayList<Metric> functionVariablesList = new ArrayList<>();
-                for (Object object : functionVariableArray) {
-                    JSONObject functionVarObj = (JSONObject) object;
-                    String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                    String datasource = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
-                    String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
-                    String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
-                    String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
-                    Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
-                    JSONArray aggrFunctionArray = functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
-                    HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
-                    for (Object innerObject : aggrFunctionArray) {
-                        JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
-                        String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
-                        String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
-                        String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
-                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
-                        aggregationFunctionsMap.put(function, aggregationFunctions);
+                SloInfo sloInfo = null;
+                JSONObject sloJsonObject = jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO) ? jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO) : null;
+                if (sloJsonObject != null) {
+                    JSONArray functionVariableArray = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES) ? sloJsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES) : null;
+                    ArrayList<Metric> functionVariablesList = new ArrayList<>();
+                    if (functionVariableArray != null) {
+                        for (Object object : functionVariableArray) {
+                            JSONObject functionVarObj = (JSONObject) object;
+                            String name = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                            String datasource = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE, null);
+                            String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
+                            String valueType = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, null);
+                            String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
+                            Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
+                            JSONArray aggrFunctionArray = functionVarObj.optJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
+                            if (aggrFunctionArray != null) {
+                                HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+                                for (Object innerObject : aggrFunctionArray) {
+                                    JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
+                                    String function = aggrFuncJsonObject.optString(AnalyzerConstants.FUNCTION, null);
+                                    String aggrFuncQuery = aggrFuncJsonObject.optString(KruizeConstants.JSONKeys.QUERY, null);
+                                    String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
+                                    AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                                    aggregationFunctionsMap.put(function, aggregationFunctions);
+                                }
+                                metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                            }
+                            functionVariablesList.add(metric);
+                        }
                     }
-                    metric.setAggregationFunctionsMap(aggregationFunctionsMap);
-                    functionVariablesList.add(metric);
+                    String sloClass = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS).toString() : null;
+                    String direction = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.DIRECTION) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.DIRECTION).toString() : null;
+                    JSONObject objectiveFunctionJson = sloJsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                    ObjectiveFunction objectiveFunction = objectiveFunctionJson != null ? new Gson().fromJson(objectiveFunctionJson.toString(), ObjectiveFunction.class) : null;
+                    sloInfo = new SloInfo(sloClass, objectiveFunction, direction, functionVariablesList);
                 }
-                String sloClass = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS).toString() : null;
-                String direction = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.DIRECTION) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.DIRECTION).toString() : null;
-                ObjectiveFunction objectiveFunction = new Gson().fromJson(sloJsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION).toString(), ObjectiveFunction.class);
-                SloInfo sloInfo = new SloInfo(sloClass, objectiveFunction, direction, functionVariablesList);
                 metricProfile = new PerformanceProfile(apiVersion, kind, metadata, profileVersion, k8sType, sloInfo);
             }
             return metricProfile;
