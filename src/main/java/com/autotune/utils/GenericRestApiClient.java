@@ -315,7 +315,7 @@ public class GenericRestApiClient {
 
     }
 
-    public class HttpResponseWrapper {
+    public static class HttpResponseWrapper {
         private int statusCode;
         private Object responseBody;
 
