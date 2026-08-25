@@ -17,10 +17,10 @@
 #
 
 # Get the path of the test dir
-LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
+CONFIG_TEST_DIR="${KRUIZE_REPO}/tests/config_tests"
 
 # Source the common functions scripts
-. ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
+. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
 APP_DEPLOYMENT="kruize"
 
@@ -33,7 +33,15 @@ tokens=(
   ["empty"]=""
 )
 # Tests to validate authentication types in Kruize
+# Note: Skipped on minikube/kind - the minikube YAML has no datasource authentication block,
+# and Prometheus on minikube typically does not require bearer auth. These tests only apply
+# to OpenShift where Prometheus enforces OAuth/bearer token authentication.
 function authentication_tests() {
+	if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
+		echo "Skipping authentication_tests: datasource auth is not configured on ${cluster_type} (Prometheus does not require bearer token)."
+		return 0
+	fi
+
 	start_time=$(get_date)
 	FAILED_CASES=()
 	TESTS=0
@@ -56,10 +64,10 @@ function authentication_tests() {
 
   if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
   	NAMESPACE="monitoring"
-  	YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
+  	YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
 	elif [ "$cluster_type" == "openshift" ]; then
   	NAMESPACE="openshift-tuning"
-		YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
+		YAML_FILE="${KRUIZE_REPO}/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
 	else
 		echo "Invalid cluster type found: ${cluster_type}"
 	fi
@@ -130,7 +138,7 @@ deploy_and_check_pod() {
   $kubectl_cmd wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT --timeout=120s > /dev/null
  # Check pod logs for errors
   echo "Checking logs for the pod..."
- 	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
+  POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
   echo "$kubectl_cmd logs -f ${POD_NAME} > ${POD_LOG} 2>&1 &"
 	$kubectl_cmd logs -f "${POD_NAME}" > "${POD_LOG}" 2>&1 &
   sleep 10

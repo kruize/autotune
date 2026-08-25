@@ -25,8 +25,8 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 # Source the test suite scripts
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
-. ${SCRIPTS_DIR}/local_monitoring_tests/authentication_tests.sh
-. ${SCRIPTS_DIR}/local_monitoring_tests/datasource_tests.sh
+. ${CURRENT_DIR}/config_tests/authentication_tests.sh
+. ${CURRENT_DIR}/config_tests/datasource_tests.sh
 
 
 resultsdir="${CURRENT_DIR}"
