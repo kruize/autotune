@@ -23,7 +23,7 @@ public class MetricsConfig {
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB, timerSaveBulkJobDB, timerAddBulkJob;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
     public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles, timerUpdateMetadataProfileDB;
-    public static Timer timerAddLayerDB, timerLoadAllLayers, timerLoadLayerByName;
+    public static Timer timerAddLayerDB, timerLoadAllLayers, timerLoadLayerByName, timerUpdateLayerDB, timerDeleteLayerDB;
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
@@ -44,7 +44,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBUpdateMetadataProfile;
     public static Timer timerUpdatePerfProfile;
     public static Timer.Builder timerBUpdatePerfProfile;
-    public static Timer.Builder timerBAddLayerDB, timerBLoadAllLayers, timerBLoadLayerByName;
+    public static Timer.Builder timerBAddLayerDB, timerBLoadAllLayers, timerBLoadLayerByName, timerBUpdateLayerDB, timerBDeleteLayerDB;
 
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
@@ -111,6 +111,8 @@ public class MetricsConfig {
         timerBAddLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addLayerToDB");
         timerBLoadAllLayers = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllLayers");
         timerBLoadLayerByName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadLayerByName");
+        timerBUpdateLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateLayerToDB");
+        timerBDeleteLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "deleteLayerByName");
 
         timerBPOSTRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "POST");
         timerBGETRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "GET");
