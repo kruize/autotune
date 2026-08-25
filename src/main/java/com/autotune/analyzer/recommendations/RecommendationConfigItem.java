@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.recommendations;
 
-public class RecommendationConfigItem {
+public class RecommendationConfigItem implements ResourceRecommendation {
     private Double amount;
     private String format;
     private String errorMsg;
