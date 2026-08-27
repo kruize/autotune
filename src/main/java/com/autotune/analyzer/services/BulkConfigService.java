@@ -24,6 +24,8 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.KruizeBulkConfigEntry;
 import com.autotune.utils.GenericRestApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +50,9 @@ import java.util.stream.Collectors;
 public class BulkConfigService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkConfigService.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private ExperimentDAO experimentDAO;
 
     @Override
@@ -75,8 +79,8 @@ public class BulkConfigService extends HttpServlet {
                 // Get specific config
                 handleGetConfig(configName, resp, out);
             } else {
-                // List all configs
-                handleListConfigs(resp, out);
+                // List all configs (optionally filtered by ?enabled=true)
+                handleListConfigs(req, resp, out);
             }
         } catch (Exception e) {
             LOGGER.error("Error processing GET request: {}", e.getMessage(), e);
@@ -364,10 +368,16 @@ public class BulkConfigService extends HttpServlet {
     }
 
     /**
-     * Handle GET request to list all configs
+     * Handle GET request to list all configs (or only enabled ones)
      */
-    private void handleListConfigs(HttpServletResponse resp, PrintWriter out) throws Exception {
-        List<KruizeBulkConfigEntry> configEntries = experimentDAO.loadAllBulkConfigs();
+    private void handleListConfigs(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) throws Exception {
+        String enabledParam = req.getParameter("enabled");
+        List<KruizeBulkConfigEntry> configEntries;
+        if (enabledParam != null && Boolean.parseBoolean(enabledParam)) {
+            configEntries = experimentDAO.loadEnabledBulkConfigs();
+        } else {
+            configEntries = experimentDAO.loadAllBulkConfigs();
+        }
         List<BulkConfig> configs = new ArrayList<>();
 
         for (KruizeBulkConfigEntry entry : configEntries) {
