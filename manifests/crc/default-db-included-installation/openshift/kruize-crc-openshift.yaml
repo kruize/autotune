@@ -262,9 +262,44 @@ data:
                 "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
               }
           }
+        },
+        {
+          "name": "cryostat",
+          "provider": "cryostat",
+          "serviceName": "",
+          "namespace": "",
+          "url": "https://cryostat.cryostat.svc.cluster.local:4180",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+          }
         }
       ]
     }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cryostat-access-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-cryostat-access
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cryostat-access-role
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -614,3 +649,15 @@ spec:
         - name: nginx-config-volume
           configMap:
             name: nginx-config
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kruize-route
+  namespace: openshift-tuning
+spec:
+  to:
+    kind: Service
+    name: kruize
+  port:
+    targetPort: kruize-port
