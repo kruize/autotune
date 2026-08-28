@@ -297,6 +297,8 @@ public class AnalyzerConstants {
         REPLICATION_CONTROLLER,
         DAEMONSET,
         JOB,
+        CRONJOB,
+        CATALOGSOURCE,
     }
 
     public enum RegisterRecommendationModelStatus {
@@ -997,6 +999,9 @@ public class AnalyzerConstants {
             public static final String REPLICATION_CONTROLLER = "replicationController";
             public static final String DAEMONSET = "daemonset";
             public static final String JOB = "job";
+            public static final String CONFIGMAP = "ConfigMap";
+            public static final String CATALOGSOURCE = "CatalogSource";
+
 
             private Types() {
 
@@ -1135,7 +1140,9 @@ public class AnalyzerConstants {
     public static String getUnsupportedWorkloadTypesFilter() {
         // List of unsupported K8S object types
         List<K8S_OBJECT_TYPES> unsupportedTypes = Arrays.asList(
-            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG
+            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
+            K8S_OBJECT_TYPES.CRONJOB,
+            K8S_OBJECT_TYPES.CATALOGSOURCE
         );
         
         // Build the filter string with case-insensitive regex matching
