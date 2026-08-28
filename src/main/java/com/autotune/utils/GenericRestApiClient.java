@@ -33,6 +33,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -96,6 +97,11 @@ public class GenericRestApiClient {
             HttpRequestBase httpRequestBase;
             if (methodType.equalsIgnoreCase("GET")) {
                 httpRequestBase = new HttpGet(baseURL + URLEncoder.encode(queryString, StandardCharsets.UTF_8));
+            } else if (methodType.equalsIgnoreCase("POST")) {
+                HttpPost httpPost = new HttpPost(baseURL);
+                httpPost.setEntity(new StringEntity(queryString, ContentType.APPLICATION_JSON));
+                httpRequestBase = httpPost;
+                LOGGER.debug("Request body: {}", EntityUtils.toString(((HttpPost) httpRequestBase).getEntity(), StandardCharsets.UTF_8));
             } else {
                 throw new UnsupportedOperationException("Unsupported method type: " + methodType);
             }
@@ -115,22 +121,27 @@ public class GenericRestApiClient {
             // Get the response body if needed
             jsonResponse = new StringResponseHandler().handleResponse(response);
 
-            // Parse the JSON response
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(jsonResponse);
-            JsonNode resultNode = rootNode.path("data").path("result");
-            JsonNode warningsNode = rootNode.path("warnings");
+            if (!methodType.equalsIgnoreCase("POST")) {
+                // Parse the JSON response
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(jsonResponse);
+                JsonNode resultNode = rootNode.path("data").path("result");
+                JsonNode warningsNode = rootNode.path("warnings");
 
-            // Check if the result is empty and if there are specific warnings
-            if (resultNode.isArray() && resultNode.size() == 0) {
-                for (JsonNode warning : warningsNode) {
-                    String warningMessage = warning.asText();
-                    if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
-                        LOGGER.warn("Warning detected: {}", warningMessage);
-                        throw new IOException(warningMessage);
+                // Check if the result is empty and if there are specific warnings
+                if (resultNode.isArray() && resultNode.isEmpty()) {
+                    for (JsonNode warning : warningsNode) {
+                        String warningMessage = warning.asText();
+                        if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                            LOGGER.warn("Warning detected: {}", warningMessage);
+                            throw new IOException(warningMessage);
+                        }
                     }
                 }
             }
+        }
+        if (jsonResponse == null || jsonResponse.isBlank()) {
+            throw new IOException("Received null or empty JSON response");
         }
         return new JSONObject(jsonResponse);
     }

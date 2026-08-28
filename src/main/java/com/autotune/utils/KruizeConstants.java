@@ -395,9 +395,14 @@ public class KruizeConstants {
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
         public static final String THANOS = "thanos";
+        public static final String CRYOSTAT = "cryostat";
 
         private SupportedDatasources() {
         }
+    }
+
+    public static class PromQueries {
+        public static final String GET_PODS_WITH_NS_CONTAINER = "sum by (pod) (container_cpu_usage_seconds_total{})";
     }
 
     public static class HttpConstants {
