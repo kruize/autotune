@@ -686,6 +686,7 @@ public class AnalyzerConstants {
         // PromQL label names used in query-based presence detection
         public static final String LABEL_NAMESPACE = "namespace";
         public static final String LABEL_CONTAINER = "container";
+        public static final String LABEL_POD = "pod";
 
         // Supported Layers
         public static final String CONTAINER_LAYER = "container";
