@@ -231,7 +231,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert datasources for config: " + configName, e);
         }
-        
+
         // Required field: namespaces
         if (this.namespaces == null) {
             throw new IllegalStateException("Namespaces cannot be null for config: " + configName);
@@ -245,7 +245,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert namespaces for config: " + configName, e);
         }
-        
+
         // Optional field: labels
         if (this.labels != null) {
             try {
@@ -258,7 +258,7 @@ public class KruizeBulkConfigEntry {
                 throw new RuntimeException("Failed to convert labels for config: " + configName, e);
             }
         }
-        
+
         // Required field: experiment types
         if (this.experimentTypes == null) {
             throw new IllegalStateException("Experiment types cannot be null for config: " + configName);
@@ -272,7 +272,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert experiment types for config: " + configName, e);
         }
-        
+
         config.setMetadataProfile(this.metadataProfile);
         config.setPerformanceProfile(this.performanceProfile);
 
@@ -288,7 +288,7 @@ public class KruizeBulkConfigEntry {
                 throw new RuntimeException("Failed to convert trial settings for config: " + configName, e);
             }
         }
-        
+
         // Required field: recommendation settings
         if (this.recommendationSettings == null) {
             throw new IllegalStateException("Recommendation settings cannot be null for config: " + configName);
@@ -302,17 +302,17 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert recommendation settings for config: " + configName, e);
         }
-        
+
         config.setWebhookUrl(this.webhookUrl);
         config.setEnabled(this.enabled);
-        
+
         if (this.createdAt != null) {
             config.setCreatedAt(this.createdAt.toInstant());
         }
         if (this.updatedAt != null) {
             config.setUpdatedAt(this.updatedAt.toInstant());
         }
-        
+
         return config;
     }
 
@@ -341,7 +341,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert datasources for config: " + config.getConfigName(), e);
         }
-        
+
         // Required field: namespaces
         if (config.getNamespaces() == null) {
             throw new IllegalArgumentException("Namespaces cannot be null for config: " + config.getConfigName());
@@ -351,7 +351,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert namespaces for config: " + config.getConfigName(), e);
         }
-        
+
         // Optional field: labels
         if (config.getLabels() != null) {
             try {
@@ -360,7 +360,7 @@ public class KruizeBulkConfigEntry {
                 throw new RuntimeException("Failed to convert labels for config: " + config.getConfigName(), e);
             }
         }
-        
+
         // Required field: experiment types
         if (config.getExperimentTypes() == null) {
             throw new IllegalArgumentException("Experiment types cannot be null for config: " + config.getConfigName());
@@ -370,7 +370,7 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert experiment types for config: " + config.getConfigName(), e);
         }
-        
+
         entry.setMetadataProfile(config.getMetadataProfile());
         entry.setPerformanceProfile(config.getPerformanceProfile());
 
@@ -382,7 +382,7 @@ public class KruizeBulkConfigEntry {
                 throw new RuntimeException("Failed to convert trial settings for config: " + config.getConfigName(), e);
             }
         }
-        
+
         // Required field: recommendation settings
         if (config.getRecommendationSettings() == null) {
             throw new IllegalArgumentException("Recommendation settings cannot be null for config: " + config.getConfigName());
@@ -392,17 +392,17 @@ public class KruizeBulkConfigEntry {
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert recommendation settings for config: " + config.getConfigName(), e);
         }
-        
+
         entry.setWebhookUrl(config.getWebhookUrl());
         entry.setEnabled(config.getEnabled());
-        
+
         if (config.getCreatedAt() != null) {
             entry.setCreatedAt(Timestamp.from(config.getCreatedAt()));
         }
         if (config.getUpdatedAt() != null) {
             entry.setUpdatedAt(Timestamp.from(config.getUpdatedAt()));
         }
-        
+
         return entry;
     }
 
