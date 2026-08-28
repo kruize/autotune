@@ -72,4 +72,5 @@ public class ServerContext {
 
     //Bulk Service
     public static final String BULK_SERVICE = ROOT_CONTEXT + "bulk";
+    public static final String BULK_CONFIG_SERVICE = ROOT_CONTEXT + "bulkConfigs";
 }
