@@ -1468,15 +1468,17 @@ public class DBHelpers {
                     kruizeAuthenticationEntry = new KruizeAuthenticationEntry();
                     kruizeAuthenticationEntry.setAuthenticationType(authenticationConfig.getType().toString());
                     // set the authentication details
-                    String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    JsonNode credentials;
-                    try {
-                        credentials = objectMapper.readTree(credentialsString);
-                    } catch (JsonProcessingException e) {
-                        throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                    if (authenticationConfig.getCredentials() != null) {
+                        String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode credentials;
+                        try {
+                            credentials = objectMapper.readTree(credentialsString);
+                        } catch (JsonProcessingException e) {
+                            throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                        }
+                        kruizeAuthenticationEntry.setCredentials(credentials);
                     }
-                    kruizeAuthenticationEntry.setCredentials(credentials);
                     kruizeAuthenticationEntry.setServiceType(serviceType);
                 } catch (Exception e) {
                     kruizeAuthenticationEntry = null;
