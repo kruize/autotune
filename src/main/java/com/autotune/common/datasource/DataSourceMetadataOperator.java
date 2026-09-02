@@ -205,11 +205,10 @@ public class DataSourceMetadataOperator {
         if (hasLabelFilter) {
             labelWorkloadTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, "workloadsWithPodLabelFilter");
             if (labelWorkloadTemplate == null) {
-                LOGGER.warn("workloadsWithPodLabelFilter query not found in metadata profile, falling back to standard query");
-                hasLabelFilter = false;
-            } else {
-                LOGGER.info("Label filter present — using workloadsWithPodLabelFilter template for workload query");
+                LOGGER.error("Pod label filtering requested but 'workloadsWithPodLabelFilter' query not found in metadata profile '{}'", metadataProfileName);
+                return null;
             }
+            LOGGER.info("Label filter present — using workloadsWithPodLabelFilter template for workload query");
         }
 
         final boolean useLabelTemplate = hasLabelFilter;
@@ -236,7 +235,9 @@ public class DataSourceMetadataOperator {
             // the field!="" pattern which may legitimately appear inside PromQL label selectors.
             boolean isLabelTemplate = useLabelTemplate && field.equals("workload");
             if (queryTemplate.contains("%s")) {
-                filteredQuery = String.format(queryTemplate, filter);
+                // Use default field!="" filter if no regex provided
+                String filterToUse = filter.isEmpty() ? field + "!=\"\"" : filter;
+                filteredQuery = String.format(queryTemplate, filterToUse);
 
             } else if (!isLabelTemplate && queryTemplate.contains(field + "!=\"\"")) {
                 filteredQuery = queryTemplate.replace(
@@ -319,6 +320,8 @@ public class DataSourceMetadataOperator {
             }
             if (hasLabelFilter && datasourceWorkloads.isEmpty()) {
                 LOGGER.info("Label filter matched zero workloads — skipping experiment creation");
+                // Clear singleton to avoid leaving partial state (namespaces populated but no workloads/containers)
+                this.dataSourceMetadataInfo = null;
                 return null;
             }
             dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
@@ -355,9 +358,9 @@ public class DataSourceMetadataOperator {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
 
         return switch (field) {
-            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE);
-            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD);
-            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER);
+            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
+            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD_METADATA_QUERY);
+            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER_METADATA_QUERY);
             default -> throw new IllegalArgumentException("Unknown field: " + field);
         };
     }
