@@ -110,9 +110,9 @@ public class AnalyzerConstants {
     public static final String CONTAINER = "container";
 
     // Metadata query constants - exact metric names in metadata profiles
-    public static final String WORKLOAD_METADATA_QUERY = "workloadsAcrossCluster";
-    public static final String NAMESPACE_METADATA_QUERY = "namespacesAcrossCluster";
-    public static final String CONTAINER_METADATA_QUERY = "containersAcrossCluster";
+    public static final String WORKLOAD_METADATA_QUERY = "workloadsForAdditionalLabel";
+    public static final String NAMESPACE_METADATA_QUERY = "namespacesForAdditionalLabel";
+    public static final String CONTAINER_METADATA_QUERY = "containersForAdditionalLabel";
 
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
     public static final String KRUIZE_PROFILE_FILTER = "kruize";
