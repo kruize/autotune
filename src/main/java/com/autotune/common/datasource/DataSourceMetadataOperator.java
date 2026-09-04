@@ -203,12 +203,13 @@ public class DataSourceMetadataOperator {
 
         String labelWorkloadTemplate = null;
         if (hasLabelFilter) {
-            labelWorkloadTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, "workloadsWithPodLabelFilter");
+            labelWorkloadTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
             if (labelWorkloadTemplate == null) {
-                LOGGER.error("Pod label filtering requested but 'workloadsWithPodLabelFilter' query not found in metadata profile '{}'", metadataProfileName);
+                LOGGER.error("Pod label filtering requested but '{}' query not found in metadata profile '{}'",
+                    AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER, metadataProfileName);
                 return null;
             }
-            LOGGER.info("Label filter present — using workloadsWithPodLabelFilter template for workload query");
+            LOGGER.info("Label filter present — using {} template for workload query", AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
         }
 
         final boolean useLabelTemplate = hasLabelFilter;

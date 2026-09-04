@@ -111,6 +111,7 @@ public class AnalyzerConstants {
 
     // Metadata query constants - exact metric names in metadata profiles
     public static final String WORKLOAD_METADATA_QUERY = "workloadsForAdditionalLabel";
+    public static final String WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER = "workloadsWithPodLabelFilter";
     public static final String NAMESPACE_METADATA_QUERY = "namespacesForAdditionalLabel";
     public static final String CONTAINER_METADATA_QUERY = "containersForAdditionalLabel";
 
