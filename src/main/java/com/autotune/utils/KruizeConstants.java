@@ -958,6 +958,11 @@ public class KruizeConstants {
         public static final String STEPS = "steps";
         public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
         public static final String LABEL_FILTER = "LABEL_FILTER";
+        // Named filter placeholders for query templates
+        public static final String NAMESPACE_FILTERS = "NAMESPACE_FILTERS";
+        public static final String WORKLOAD_FILTERS = "WORKLOAD_FILTERS";
+        public static final String CONTAINER_FILTERS = "CONTAINER_FILTERS";
+        public static final String LABELS = "LABELS";
         public static final String SUMMARY = "summary";
         public static final String SUMMARY_FILTER = "summaryFilter";
         public static final String EXPERIMENTS = "experiments";

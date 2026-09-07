@@ -196,86 +196,55 @@ public class DataSourceMetadataOperator {
             return null;
         }
 
+        // Get query templates for each field
+        String namespaceQueryTemplate = getQueryTemplate("namespace", metadataProfile);
+        String workloadQueryTemplate;
+        String containerQueryTemplate = getQueryTemplate("container", metadataProfile);
+
         // Determine if pod label filters are present — if so, use label-aware workload template
         String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
         String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
         boolean hasLabelFilter = !includePodLabelFilter.isEmpty() || !excludePodLabelFilter.isEmpty();
 
-        String labelWorkloadTemplate = null;
         if (hasLabelFilter) {
-            labelWorkloadTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
-            if (labelWorkloadTemplate == null) {
+            workloadQueryTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
+            if (workloadQueryTemplate == null) {
                 LOGGER.error("Pod label filtering requested but '{}' query not found in metadata profile '{}'",
                     AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER, metadataProfileName);
                 return null;
             }
             LOGGER.info("Label filter present — using {} template for workload query", AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
+        } else {
+            workloadQueryTemplate = getQueryTemplate("workload", metadataProfile);
         }
 
-        final boolean useLabelTemplate = hasLabelFilter;
-        final String finalLabelWorkloadTemplate = labelWorkloadTemplate;
-
-        // Populate filters for each field
-        fields.forEach(field -> {
-            String includeRegex = includeResources.getOrDefault(field + "Regex", "");
-            String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
-            String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-
-            // For the workload field, use the label-aware template when a label filter is present
-            String queryTemplate = (field.equals("workload") && useLabelTemplate)
-                    ? finalLabelWorkloadTemplate
-                    : getQueryTemplate(field, metadataProfile);
-
-            if (queryTemplate == null) {
-                LOGGER.error("Query template is null for field {}, cannot proceed", field);
-                queries.put(field, null);
-                return;
-            }
-            String filteredQuery;
-            // For the label workload template, only allow %s substitution; avoid replacing
-            // the field!="" pattern which may legitimately appear inside PromQL label selectors.
-            boolean isLabelTemplate = useLabelTemplate && field.equals("workload");
-            if (queryTemplate.contains("%s")) {
-                // Use default field!="" filter if no regex provided
-                String filterToUse = filter.isEmpty() ? field + "!=\"\"" : filter;
-                filteredQuery = String.format(queryTemplate, filterToUse);
-
-            } else if (!isLabelTemplate && queryTemplate.contains(field + "!=\"\"")) {
-                filteredQuery = queryTemplate.replace(
-                    field + "!=\"\"",
-                    filter.isEmpty() ? field + "!=\"\"" : filter
-                );
-
-            } else {
-                LOGGER.warn(
-                    "No injectable filter placeholder found for field {} in queryTemplate={}",
-                    field,
-                    queryTemplate
-                );
-                filteredQuery = queryTemplate; // fallback
-            }
-
-            queries.put(field, filteredQuery);
-        });
-
-        // Abort if any required query template was missing
-        if (queries.containsValue(null)) {
+        // Validate all templates are present
+        if (namespaceQueryTemplate == null || workloadQueryTemplate == null || containerQueryTemplate == null) {
             LOGGER.error("One or more query templates could not be resolved for metadata profile '{}', aborting metadata fetch", metadataProfileName);
             return null;
         }
 
-        // Construct queries
-        String namespaceQuery = queries.get("namespace");
-        String workloadQuery = queries.get("workload");
-        String containerQuery = queries.get("container");
+        // Build named filters for each query type
+        String namespaceFilters = buildNamespaceFilters(includeResources, excludeResources);
+        String workloadFilters = buildWorkloadFilters(includeResources, excludeResources);
+        String containerFilters = buildContainerFilters(includeResources, excludeResources);
+        String labels = buildLabels(includeResources, excludeResources);
+
+        // Replace named placeholders in queries
+        String namespaceQuery = namespaceQueryTemplate
+                .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, namespaceFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
+
+        String workloadQuery = workloadQueryTemplate
+                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
+
+        String containerQuery = containerQueryTemplate
+                .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, containerFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
         String dataSourceName = dataSourceInfo.getName();
-
-        workloadQuery = substituteWorkloadQueryPlaceholders(
-                workloadQuery, includePodLabelFilter, excludePodLabelFilter, hasLabelFilter);
-
-        namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-        containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
 
         namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
         workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
@@ -384,26 +353,60 @@ public class DataSourceMetadataOperator {
         return filterBuilder.toString();
     }
 
-    static String substituteWorkloadQueryPlaceholders(String workloadQuery,
-                                                         String includePodLabelFilter,
-                                                         String excludePodLabelFilter,
-                                                         boolean hasLabelFilter) {
-        if (hasLabelFilter) {
-            StringBuilder labelFilter = new StringBuilder();
-            if (!includePodLabelFilter.isEmpty()) labelFilter.append(",").append(includePodLabelFilter);
-            if (!excludePodLabelFilter.isEmpty()) {
-                labelFilter.append(",").append(excludePodLabelFilter);
-            }
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.LABEL_FILTER, labelFilter.toString());
-        } else {
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.LABEL_FILTER, "");
+    /**
+     * Build NAMESPACE_FILTERS placeholder value
+     */
+    private String buildNamespaceFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
+        String includeRegex = includeResources.getOrDefault("namespaceRegex", "");
+        String excludeRegex = excludeResources.getOrDefault("namespaceRegex", "");
+        return constructDynamicFilter("namespace", includeRegex, excludeRegex);
+    }
+
+    /**
+     * Build WORKLOAD_FILTERS placeholder value (includes workload name + pod labels)
+     */
+    private String buildWorkloadFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
+        StringBuilder filters = new StringBuilder();
+
+        // Add workload name filter
+        String workloadIncludeRegex = includeResources.getOrDefault("workloadRegex", "");
+        String workloadExcludeRegex = excludeResources.getOrDefault("workloadRegex", "");
+        String workloadFilter = constructDynamicFilter("workload", workloadIncludeRegex, workloadExcludeRegex);
+        filters.append(workloadFilter);
+
+        // Add pod label filters
+        String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
+        String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
+
+        if (!includePodLabelFilter.isEmpty()) {
+            if (filters.length() > 0) filters.append(", ");
+            filters.append(includePodLabelFilter);
+        }
+        if (!excludePodLabelFilter.isEmpty()) {
+            if (filters.length() > 0) filters.append(", ");
+            filters.append(excludePodLabelFilter);
         }
 
-        workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+        return filters.toString();
+    }
 
-        workloadQuery = workloadQuery.replaceAll("\\s{2,}", " ").replaceAll("\\s+}", "}").replaceAll("\\{\\s+", "{");
+    /**
+     * Build CONTAINER_FILTERS placeholder value
+     */
+    private String buildContainerFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
+        String includeRegex = includeResources.getOrDefault("containerRegex", "");
+        String excludeRegex = excludeResources.getOrDefault("containerRegex", "");
+        return constructDynamicFilter("container", includeRegex, excludeRegex);
+    }
 
-        return workloadQuery;
+    /**
+     * Build LABELS placeholder value (global labels like cluster_id, org_id)
+     * Currently returns empty string - can be enhanced to support labels from request
+     */
+    private String buildLabels(Map<String, String> includeResources, Map<String, String> excludeResources) {
+        // TODO: Support labels from request (cluster_id, org_id, etc.)
+        // For now, return empty string
+        return "";
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
