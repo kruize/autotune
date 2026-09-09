@@ -16,7 +16,11 @@
       "aggregation_functions": [
         {
           "function": "sum",
+<<<<<<< Updated upstream
           "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{NAMESPACE_FILTERS LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+=======
+          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{$NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+>>>>>>> Stashed changes
         }
       ]
     },
@@ -28,19 +32,31 @@
       "aggregation_functions": [
         {
           "function": "sum",
+<<<<<<< Updated upstream
           "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{WORKLOAD_FILTERS, $UNSUPPORTED_WORKLOAD_TYPES$ LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+=======
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+>>>>>>> Stashed changes
         }
       ]
     },
     {
+<<<<<<< Updated upstream
       "name":  "workloadsWithPodLabelFilter",
+=======
+      "name": "workloadsWithPodLabelFilter",
+>>>>>>> Stashed changes
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {
           "function": "sum",
+<<<<<<< Updated upstream
           "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{pod!=\"\" WORKLOAD_FILTERS LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{WORKLOAD_FILTERS, $UNSUPPORTED_WORKLOAD_TYPES$ LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+=======
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+>>>>>>> Stashed changes
         }
       ]
     },
@@ -52,7 +68,11 @@
       "aggregation_functions": [
         {
           "function": "sum",
+<<<<<<< Updated upstream
           "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{CONTAINER_FILTERS LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{WORKLOAD_FILTERS, $UNSUPPORTED_WORKLOAD_TYPES$ LABELS}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+=======
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$CONTAINER_FILTERS$ $NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$WORKLOAD_FILTERS$ $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+>>>>>>> Stashed changes
         }
       ]
     }
