@@ -100,6 +100,7 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationCon
  */
 public class BulkJobManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
+
     ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
     ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
     private String jobID;
@@ -154,9 +155,9 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude(), false);
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude(), true);
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -192,7 +193,9 @@ public class BulkJobManager implements Runnable {
                         //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
                         jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
                         jobData.getSummary().setProcessed_experiments(0);
-                        if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                        if (createExperimentAPIObjectMap.isEmpty()) {
+                            setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
+                        } else if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                         } else {
                             if (!KruizeDeploymentInfo.test_use_only_cache_job_in_mem) {                       // Todo Try to avoid this check in multiple places
@@ -547,34 +550,31 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
-        String uniqueKey = null;
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
-                StringBuilder includeLabelsBuilder = new StringBuilder();
-                Map<String, String> includeLabels = filter.getInclude().getLabels();
+                Map<String, Object> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
-                    );
-                    // Remove trailing comma
-                    if (!includeLabelsBuilder.isEmpty()) {
-                        includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
-                    }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
-                    uniqueKey = includeLabelsBuilder.toString();
+                    StringBuilder sb = new StringBuilder();
+                    includeLabels.forEach((key, value) -> {
+                        if (value == null) return;
+                        String val = (value instanceof List) ?
+                                ((List<?>) value).stream().findFirst().map(Object::toString).orElse("") :
+                                value.toString();
+                        if (val.isEmpty()) return;
+                        sb.append(key).append("=\"").append(val).append("\",");
+                    });
+                    if (sb.length() > 0) sb.setLength(sb.length() - 1);
+                    return sb.toString();
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_EXPERIMENT_NAME_ERROR, e.getMessage(), e);
         }
-        return uniqueKey;
+        return null;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter, boolean exclude) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
@@ -583,8 +583,92 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            if (filter.getLabels() != null && !filter.getLabels().isEmpty()) {
+                String labelFilter = buildLabelFilters(filter.getLabels(), exclude);
+                if (labelFilter.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_ALL_INVALID);
+                } else {
+                    resourceFilters.put("podLabelFilter", labelFilter);
+                }
+            }
         }
         return resourceFilters;
+    }
+
+    private String buildLabelFilters(Map<String, Object> labels, boolean exclude) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Object> entry : labels.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (key == null || key.isBlank()) {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_KEY);
+                continue;
+            }
+            if (value == null) {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_VALUE, key);
+                continue;
+            }
+
+            String promKey = "label_" + key.replace(".", "_").replace("/", "_");
+
+            if (value instanceof List<?> listValue) {
+                List<String> values = new ArrayList<>();
+                for (Object item : listValue) {
+                    if (item == null) {
+                        LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_LIST_ENTRY, key);
+                        continue;
+                    }
+                    if (!(item instanceof String)) {
+                        LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NON_STRING_ENTRY, key, item.getClass().getSimpleName());
+                        continue;
+                    }
+                    String str = ((String) item).trim();
+                    if (!str.isEmpty()) {
+                        values.add(str);
+                    }
+                }
+                if (values.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NO_VALID_VALUES, key);
+                    continue;
+                }
+                if (sb.length() > 0) sb.append(",");
+                if (values.size() == 1) {
+                    sb.append(promKey).append(exclude ? "!=" : "=")
+                            .append("\"").append(escapePromQLLabelValue(values.get(0))).append("\"");
+                } else {
+                    String regex = values.stream()
+                            .map(BulkJobManager::escapePromQLRegexValue)
+                            .collect(Collectors.joining("|"));
+                    sb.append(promKey).append(exclude ? "!~" : "=~")
+                            .append("\"").append(regex).append("\"");
+                }
+            } else if (value instanceof String strValue) {
+                String trimmed = strValue.trim();
+                if (trimmed.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_EMPTY_VALUE, key);
+                    continue;
+                }
+                if (sb.length() > 0) sb.append(",");
+                String escaped = escapePromQLLabelValue(trimmed);
+                sb.append(promKey).append(exclude ? "!=" : "=")
+                        .append("\"").append(escaped).append("\"");
+            } else {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_UNSUPPORTED_TYPE, key, value.getClass().getSimpleName());
+            }
+        }
+        return sb.toString();
+    }
+
+    static String escapePromQLLabelValue(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n");
+    }
+
+    static String escapePromQLRegexValue(String value) {
+        return escapePromQLLabelValue(value)
+                .replaceAll("([.+*?^${}()\\[\\]|])", "\\\\$1");
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {

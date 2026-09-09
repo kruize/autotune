@@ -217,7 +217,7 @@ public class KruizeBulkConfigEntry {
         BulkConfig config = new BulkConfig();
         config.setConfigName(this.configName);
         config.setClusterName(this.clusterName);
-        
+
         // Required field: datasources
         if (this.datasources == null) {
             throw new IllegalStateException("Datasources cannot be null for config: " + configName);
@@ -275,7 +275,7 @@ public class KruizeBulkConfigEntry {
         
         config.setMetadataProfile(this.metadataProfile);
         config.setPerformanceProfile(this.performanceProfile);
-        
+
         // Optional field: trial settings
         if (this.trialSettings != null) {
             try {
@@ -327,11 +327,11 @@ public class KruizeBulkConfigEntry {
         if (config == null) {
             throw new IllegalArgumentException("BulkConfig cannot be null");
         }
-        
+
         KruizeBulkConfigEntry entry = new KruizeBulkConfigEntry();
         entry.setConfigName(config.getConfigName());
         entry.setClusterName(config.getClusterName());
-        
+
         // Required field: datasources
         if (config.getDatasources() == null) {
             throw new IllegalArgumentException("Datasources cannot be null for config: " + config.getConfigName());
@@ -373,7 +373,7 @@ public class KruizeBulkConfigEntry {
         
         entry.setMetadataProfile(config.getMetadataProfile());
         entry.setPerformanceProfile(config.getPerformanceProfile());
-        
+
         // Optional field: trial settings
         if (config.getTrialSettings() != null) {
             try {
