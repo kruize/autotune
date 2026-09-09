@@ -64,6 +64,13 @@ progress of the job.
     "container",
     "namespace"
   ],
+  "cluster_name": "prod-cluster",
+  "model_settings": {
+    "models": ["performance", "cost"]
+  },
+  "term_settings": {
+    "terms": ["short", "medium", "long"]
+  },
   "webhook": {
     "url": "http://127.0.0.1:8080/webhook"
   }

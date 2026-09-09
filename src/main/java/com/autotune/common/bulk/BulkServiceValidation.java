@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.bulk;
 
+import com.autotune.analyzer.kruizeObject.ModelSettings;
+import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -27,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utility class that performs validation for bulk service requests.
@@ -44,6 +48,17 @@ import java.time.format.DateTimeParseException;
 public class BulkServiceValidation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkServiceValidation.class);
+
+    // Valid model and term names (case-insensitive)
+    private static final List<String> VALID_MODELS = Arrays.asList(
+            KruizeConstants.JSONKeys.PERFORMANCE,
+            KruizeConstants.JSONKeys.COST
+    );
+    private static final List<String> VALID_TERMS = Arrays.asList(
+            KruizeConstants.JSONKeys.SHORT,
+            KruizeConstants.JSONKeys.MEDIUM,
+            KruizeConstants.JSONKeys.LONG
+    );
 
     /**
      * Validates the bulk request payload and returns the corresponding validation output.
@@ -78,6 +93,14 @@ public class BulkServiceValidation {
         }
         // null means the field was not supplied (optional); a non-null trimmed value is written back.
         payload.setCluster_name(normalizedClusterName);
+
+        // Validate model_settings if provided
+        validationOutputData = buildErrorOutput(validateModelSettings(payload.getModel_settings()), jobID);
+        if (validationOutputData != null) return validationOutputData;
+
+        // Validate term_settings if provided
+        validationOutputData = buildErrorOutput(validateTermSettings(payload.getTerm_settings()), jobID);
+        if (validationOutputData != null) return validationOutputData;
 
         if (payload.getDatasource() != null) {
             validationOutputData = buildErrorOutput(validateDatasourceConnection(payload.getDatasource()), jobID);
@@ -215,6 +238,58 @@ public class BulkServiceValidation {
             return null;
         }
         return trimmed; // Normalized value
+    }
+
+    /**
+     * Validates the model_settings field if provided.
+     * Checks that models array is not null/empty and all names are valid (case-insensitive).
+     *
+     * @param modelSettings the model settings to validate (can be null)
+     * @return an error message if validation fails; otherwise an empty string
+     */
+    public static String validateModelSettings(ModelSettings modelSettings) {
+        if (modelSettings == null) {
+            return ""; // Optional field
+        }
+        List<String> models = modelSettings.getModels();
+        if (models == null || models.isEmpty()) {
+            return "model_settings.models cannot be null or empty";
+        }
+        for (String model : models) {
+            if (model == null || model.trim().isEmpty()) {
+                return "model_settings.models contains null or empty model name";
+            }
+            if (!VALID_MODELS.contains(model.toLowerCase())) {
+                return "Invalid model name: " + model + ". Valid models are: " + VALID_MODELS;
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Validates the term_settings field if provided.
+     * Checks that terms array is not null/empty and all names are valid (case-insensitive).
+     *
+     * @param termSettings the term settings to validate (can be null)
+     * @return an error message if validation fails; otherwise an empty string
+     */
+    public static String validateTermSettings(TermSettings termSettings) {
+        if (termSettings == null) {
+            return ""; // Optional field
+        }
+        List<String> terms = termSettings.getTerms();
+        if (terms == null || terms.isEmpty()) {
+            return "term_settings.terms cannot be null or empty";
+        }
+        for (String term : terms) {
+            if (term == null || term.trim().isEmpty()) {
+                return "term_settings.terms contains null or empty term name";
+            }
+            if (!VALID_TERMS.contains(term.toLowerCase())) {
+                return "Invalid term name: " + term + ". Valid terms are: " + VALID_TERMS;
+            }
+        }
+        return "";
     }
 
 }

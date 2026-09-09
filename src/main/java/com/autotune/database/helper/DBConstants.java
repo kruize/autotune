@@ -87,6 +87,10 @@ public class DBConstants {
         public static final String SELECT_FROM_METADATA_PROFILE_BY_NAME = "from KruizeLMMetadataProfileEntry k WHERE k.name = :name";
         public static final String SELECT_FROM_LAYER = "from KruizeLMLayerEntry";
         public static final String SELECT_FROM_LAYER_BY_NAME = "from KruizeLMLayerEntry k WHERE k.layer_name = :layerName";
+        public static final String SELECT_FROM_BULK_CONFIG = "from KruizeBulkConfigEntry";
+        public static final String SELECT_FROM_BULK_CONFIG_BY_NAME = "from KruizeBulkConfigEntry k WHERE k.configName = :configName";
+        public static final String LOAD_ALL_ENABLED_BULK_CONFIGS = "FROM KruizeBulkConfigEntry WHERE enabled = true ORDER BY configName";
+        public static final String DELETE_BULK_CONFIG_BY_NAME = "DELETE FROM KruizeBulkConfigEntry k WHERE k.configName = :configName";
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
@@ -121,6 +125,17 @@ public class DBConstants {
                 "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
                 "WHERE km.name = :metadataProfileName";
         public static final String DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME = "DELETE FROM KruizePerformanceProfileEntry kpp WHERE kpp.name = :perfProfileName";
+    }
+
+    public static final class BULK_CONFIG_MESSAGES {
+        public static final String BULK_CONFIG_ALREADY_EXISTS = "Bulk config with name %s already exists";
+        public static final String ERROR_SAVING_BULK_CONFIG = "Not able to save bulk config due to %s";
+        public static final String ERROR_LOADING_BULK_CONFIG = "Error loading bulk config: %s";
+        public static final String ERROR_LOADING_BULK_CONFIGS = "Error loading bulk configs: %s";
+        public static final String ERROR_LOADING_ENABLED_BULK_CONFIGS = "Error loading enabled bulk configs: %s";
+        public static final String ERROR_UPDATING_BULK_CONFIG = "Not able to update bulk config due to %s";
+        public static final String ERROR_DELETING_BULK_CONFIG = "Not able to delete bulk config due to %s";
+        public static final String BULK_CONFIG_NOT_FOUND = "Bulk config not found: %s";
     }
 
     public static final class TABLE_NAMES {

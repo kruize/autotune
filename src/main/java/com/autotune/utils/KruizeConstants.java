@@ -1096,6 +1096,18 @@ public class KruizeConstants {
 
 
         }
+
+        public static class LabelFilterConstants {
+            public static final String LOG_LABEL_EXPERIMENT_NAME_ERROR = "Error building label string for experiment name: {}";
+            public static final String LOG_LABEL_ALL_INVALID = "All label entries were invalid or empty — no pod label filter will be applied";
+            public static final String LOG_LABEL_NULL_KEY = "Skipping label with null or empty key";
+            public static final String LOG_LABEL_NULL_VALUE = "Skipping label '{}' with null value";
+            public static final String LOG_LABEL_NULL_LIST_ENTRY = "Skipping null entry in label '{}' list";
+            public static final String LOG_LABEL_NON_STRING_ENTRY = "Skipping non-string entry in label '{}' list: {}";
+            public static final String LOG_LABEL_NO_VALID_VALUES = "Label '{}' has no valid values after filtering, skipping";
+            public static final String LOG_LABEL_EMPTY_VALUE = "Skipping label '{}' with empty string value";
+            public static final String LOG_LABEL_UNSUPPORTED_TYPE = "Skipping label '{}' with unsupported value type: {}";
+        }
     }
 
     public static final class MetadataProfileConstants {
