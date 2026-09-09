@@ -544,6 +544,7 @@ def test_bulk_api_combined_custom_settings(cluster_type, caplog):
     (["CONTAINER"], SUCCESS_200_STATUS_CODE, None),
     (["Namespace"], SUCCESS_200_STATUS_CODE, None),
     ([], SUCCESS_200_STATUS_CODE, None),
+    (None, SUCCESS_200_STATUS_CODE, None),
     (["invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
     (["container", "invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
     (["", "container"], ERROR_STATUS_CODE, "experiment_types contains a null or empty value"),
@@ -583,7 +584,6 @@ def test_bulk_api_backward_compatibility(cluster_type, caplog):
     Ensures existing workflows are not broken.
     """
     form_kruize_url(cluster_type)
-    URL = get_kruize_url()
 
     # Use base payload without cluster_name, model_settings, or term_settings
     payload = base_payload()
@@ -603,4 +603,4 @@ def test_bulk_api_backward_compatibility(cluster_type, caplog):
         job_id = response.json()["job_id"]
 
         # Validate job status
-        validate_job_status(job_id, URL, caplog)
+        validate_job_status(job_id, get_kruize_url(), caplog)

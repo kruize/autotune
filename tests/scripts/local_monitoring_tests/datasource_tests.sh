@@ -156,7 +156,7 @@ run_datasource_scenario() {
         ((TESTS_FAILED++))
       else
         echo "Startup succeeded as expected"
-        if validate_datasource_clusters "${PROM_DS_NAME}" "${THANOS_DS_NAME}"; then
+        if validate_datasource_clusters "$scenario" "${PROM_DS_NAME}" "${THANOS_DS_NAME}"; then
           ((TESTS_PASSED++))
         else
           ((TESTS_FAILED++))
@@ -202,13 +202,13 @@ update_yaml_with_datasources() {
 	/"name": *"prometheus-1"/,/}/{
 		s/"name": *"[^"]*"/"name": "'"$PROM_DS_NAME"'"/
 		s/"serviceName": *"[^"]*"/"serviceName": "'"$prom_service"'"/
-		/"url": *""/a\
+		/"url":/a\
 	         "cluster": ["default"],
 	}
 	/"name": *"thanos-1"/,/}/{
 		s/"name": *"[^"]*"/"name": "'"$THANOS_DS_NAME"'"/
 		s/"serviceName": *"[^"]*"/"serviceName": "'"$thanos_service"'"/
-		/"url": *""/a\
+		/"url":/a\
 	         "cluster": ["cluster-1", "cluster-2"],
 	}
 	' "$YAML_FILE"
@@ -227,8 +227,9 @@ update_yaml_with_datasources() {
 }
 
 validate_datasource_clusters() {
-	local prom_ds_name=$1
-	local thanos_ds_name=$2
+	local scenario=$1
+	local prom_ds_name=$2
+	local thanos_ds_name=$3
 	local datasource_url
 	local response
 	local python_output
@@ -254,33 +255,42 @@ validate_datasource_clusters() {
 		return 1
 	fi
 
-	python_output=$(python3 - "$response" "$prom_ds_name" "$thanos_ds_name" <<'PY'
+	python_output=$(printf '%s' "$response" | python3 - "$scenario" "$prom_ds_name" "$thanos_ds_name" <<'PY'
 import json
 import sys
 
-payload = json.loads(sys.argv[1])
+payload = json.load(sys.stdin)
+scenario = sys.argv[1]
 prom_name = sys.argv[2]
 thanos_name = sys.argv[3]
-expected = {
+
+all_expected = {
     prom_name: ["default"],
     thanos_name: ["cluster-1", "cluster-2"],
 }
 
+# Determine which datasources are expected to be reachable and present based on scenario
+if scenario == "both-valid":
+    expected = all_expected
+elif scenario == "prom-valid-thanos-invalid":
+    expected = {prom_name: all_expected[prom_name]}
+elif scenario == "prom-invalid-thanos-valid":
+    expected = {thanos_name: all_expected[thanos_name]}
+else:
+    expected = {}
+
 found = {}
 for item in payload:
     name = item.get("name")
-    if name in expected:
+    if name in all_expected:
         clusters = item.get("clusters") or item.get("cluster") or []
         found[name] = clusters
 
-if prom_name not in found:
-    raise SystemExit(f"Missing datasource in response: {prom_name}")
-
-for name, clusters in expected.items():
+for name, expected_clusters in expected.items():
     if name not in found:
-        continue
-    if found[name] != clusters:
-        raise SystemExit(f"Unexpected clusters for {name}: expected {clusters}, got {found[name]}")
+        raise SystemExit(f"Missing expected datasource in response: {name}")
+    if found[name] != expected_clusters:
+        raise SystemExit(f"Unexpected clusters for {name}: expected {expected_clusters}, got {found[name]}")
 
 print("Datasource cluster validation passed")
 PY
