@@ -31,7 +31,7 @@ Kruize supports connecting to various monitoring datasources (Prometheus, Thanos
 | `datasources[].provider`                         | string | Yes      | Provider type (e.g., "prometheus")                     |
 | `datasources[].url` OR `serviceName`+`namespace` | string | Yes      | Connection endpoint                                    |
 | `datasources[].authentication`                   | object | No       | Authentication configuration (defaults to "none")      |
-| `datasources[].clusters`                         | array  | No       | Array of cluster names associated with this datasource       |
+| `datasources[].clusters`                         | JSON array (stored as JSONB) | No       | Array of cluster name strings associated with this datasource. In JSON configuration this is a plain array of strings (e.g. `["cluster-a"]`); in the database it is persisted as a JSONB column. |
 
 ### URL vs ServiceName
 
@@ -365,7 +365,7 @@ spec:
 
 Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
 
-> **⚠️ Current Limitation**: While the API supports multiple clusters in the configuration, the current implementation only supports **single cluster** per datasource. Full multi-cluster support will be added in a future release.
+> **ℹ️ Note**: The implementation parses, stores, and iterates over all configured clusters. However, this workflow has been designed and validated primarily with single-cluster configurations. Full multi-cluster support is planned for a future release.
 
 ### Configuration
 
@@ -387,7 +387,7 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
 
 #### Multiple Clusters Example
 
-> **ℹ️ Not yet supported**: Configuring multiple clusters per datasource is not yet implemented. Only a single entry in the `clusters` array is currently used. This section will be updated when full multi-cluster support is available.
+> **ℹ️ Preview**: Multiple clusters per datasource are parsed, stored, and iterated during bulk processing. However, this configuration has been validated primarily with a single cluster. Full multi-cluster support is planned for a future release.
 
 ### Behavior
 
@@ -404,7 +404,9 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
 
 ### API Response
 
-When listing datasources or fetching metadata, the cluster information is included in the response:
+#### `/datasources` — List Datasources
+
+Returns datasource configurations with clusters as a flat string array:
 
 ```json
 {
@@ -418,6 +420,44 @@ When listing datasources or fetching metadata, the cluster information is includ
       "clusters": ["default"]
     }
   ]
+}
+```
+
+> The `clusters` field is only included when the list is non-empty.
+
+#### `/dsmetadata` — Datasource Metadata
+
+Returns discovered infrastructure metadata with clusters as a keyed object containing namespaces, workloads, and containers:
+
+```json
+{
+  "datasources": {
+    "prometheus-1": {
+      "datasource_name": "prometheus-1",
+      "clusters": {
+        "default": {
+          "cluster_name": "default",
+          "namespaces": {
+            "my-namespace": {
+              "namespace": "my-namespace",
+              "workloads": {
+                "my-deployment(deployment)": {
+                  "workload_name": "my-deployment",
+                  "workload_type": "deployment",
+                  "containers": {
+                    "my-container": {
+                      "container_name": "my-container",
+                      "container_image_name": "quay.io/example/my-app:latest"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
