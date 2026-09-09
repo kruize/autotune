@@ -25,6 +25,8 @@ LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
 APP_DEPLOYMENT="kruize"
 
 # Datasource serviceName overrides to simulate reachability
+DATASOURCE_API_TIMEOUT=30
+
 declare -A datasource_scenarios
 datasource_scenarios=(
   ["both-invalid"]="invalid invalid"
@@ -154,10 +156,14 @@ run_datasource_scenario() {
         ((TESTS_FAILED++))
       else
         echo "Startup succeeded as expected"
-        ((TESTS_PASSED++))
+        if validate_datasource_clusters "$scenario" "${PROM_DS_NAME}" "${THANOS_DS_NAME}"; then
+          ((TESTS_PASSED++))
+        else
+          ((TESTS_FAILED++))
+        fi
       fi
     fi
-	else
+ else
 		echo "Kruize Pod failed to come up"
 	fi
 
@@ -196,10 +202,14 @@ update_yaml_with_datasources() {
 	/"name": *"prometheus-1"/,/}/{
 		s/"name": *"[^"]*"/"name": "'"$PROM_DS_NAME"'"/
 		s/"serviceName": *"[^"]*"/"serviceName": "'"$prom_service"'"/
+		/"url":/a\
+	         "cluster": ["default"],
 	}
 	/"name": *"thanos-1"/,/}/{
 		s/"name": *"[^"]*"/"name": "'"$THANOS_DS_NAME"'"/
 		s/"serviceName": *"[^"]*"/"serviceName": "'"$thanos_service"'"/
+		/"url":/a\
+	         "cluster": ["cluster-1", "cluster-2"],
 	}
 	' "$YAML_FILE"
 
@@ -214,6 +224,80 @@ update_yaml_with_datasources() {
 		}
 	}' "${YAML_FILE}.ds.bak"
   echo "Updated image in YAML to $AUTOTUNE_IMAGE"
+}
+
+validate_datasource_clusters() {
+	local scenario=$1
+	local prom_ds_name=$2
+	local thanos_ds_name=$3
+	local datasource_url
+	local response
+	local python_output
+
+	if [ "$cluster_type" == "openshift" ]; then
+		datasource_url=$($kubectl_cmd get route kruize -o jsonpath='http://{.spec.host}')/datasources
+	else
+		local node_port
+		local node_ip
+		node_port=$($kubectl_cmd get svc kruize -o jsonpath='{.spec.ports[0].nodePort}')
+		if [ "$cluster_type" == "minikube" ]; then
+			node_ip=$(minikube ip)
+		else
+			node_ip=$(docker inspect kind-control-plane --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+		fi
+		datasource_url="http://${node_ip}:${node_port}/datasources"
+	fi
+
+	echo "Validating datasource cluster information from ${datasource_url}"
+	response=$(curl -s --max-time ${DATASOURCE_API_TIMEOUT} "${datasource_url}")
+	if [ -z "$response" ]; then
+		echo "Failed to fetch datasource list"
+		return 1
+	fi
+
+	python_output=$(printf '%s' "$response" | python3 - "$scenario" "$prom_ds_name" "$thanos_ds_name" <<'PY'
+import json
+import sys
+
+payload = json.load(sys.stdin)
+scenario = sys.argv[1]
+prom_name = sys.argv[2]
+thanos_name = sys.argv[3]
+
+all_expected = {
+    prom_name: ["default"],
+    thanos_name: ["cluster-1", "cluster-2"],
+}
+
+# Determine which datasources are expected to be reachable and present based on scenario
+if scenario == "both-valid":
+    expected = all_expected
+elif scenario == "prom-valid-thanos-invalid":
+    expected = {prom_name: all_expected[prom_name]}
+elif scenario == "prom-invalid-thanos-valid":
+    expected = {thanos_name: all_expected[thanos_name]}
+else:
+    expected = {}
+
+found = {}
+for item in payload:
+    name = item.get("name")
+    if name in all_expected:
+        clusters = item.get("clusters") or item.get("cluster") or []
+        found[name] = clusters
+
+for name, expected_clusters in expected.items():
+    if name not in found:
+        raise SystemExit(f"Missing expected datasource in response: {name}")
+    if found[name] != expected_clusters:
+        raise SystemExit(f"Unexpected clusters for {name}: expected {expected_clusters}, got {found[name]}")
+
+print("Datasource cluster validation passed")
+PY
+)
+	local rc=$?
+	echo "$python_output"
+	return $rc
 }
 
 restore_yaml() {

@@ -398,21 +398,21 @@ def test_bulk_api_cluster_name_validation(cluster_type, cluster_name, expected_s
     Tests valid formats, invalid formats, and edge cases.
     """
     form_kruize_url(cluster_type)
-    
+
     payload = base_payload()
     payload["cluster_name"] = cluster_name
     payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
     payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
-    
+
     delete_and_create_metric_profile()
     delete_and_create_metadata_profile()
-    
+
     with caplog.at_level(logging.INFO):
         response = post_bulk_api(payload, logging)
-        
+
         assert response.status_code == expected_status, \
             f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
-        
+
         if expected_error:
             assert expected_error in response.json()["message"], \
                 f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
@@ -440,22 +440,22 @@ def test_bulk_api_model_settings_validation(cluster_type, model_settings, omit_m
     Tests valid models, invalid models, and edge cases.
     """
     form_kruize_url(cluster_type)
-    
+
     payload = base_payload()
     if not omit_model_settings:
         payload["model_settings"] = model_settings
     payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
     payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
-    
+
     delete_and_create_metric_profile()
     delete_and_create_metadata_profile()
-    
+
     with caplog.at_level(logging.INFO):
         response = post_bulk_api(payload, logging)
-        
+
         assert response.status_code == expected_status, \
             f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
-        
+
         if expected_error:
             assert expected_error in response.json()["message"], \
                 f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
@@ -484,22 +484,22 @@ def test_bulk_api_term_settings_validation(cluster_type, term_settings, omit_ter
     Tests valid terms, invalid terms, and edge cases.
     """
     form_kruize_url(cluster_type)
-    
+
     payload = base_payload()
     if not omit_term_settings:
         payload["term_settings"] = term_settings
     payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
     payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
-    
+
     delete_and_create_metric_profile()
     delete_and_create_metadata_profile()
-    
+
     with caplog.at_level(logging.INFO):
         response = post_bulk_api(payload, logging)
-        
+
         assert response.status_code == expected_status, \
             f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
-        
+
         if expected_error:
             assert expected_error in response.json()["message"], \
                 f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
@@ -516,24 +516,91 @@ def test_bulk_api_combined_custom_settings(cluster_type, caplog):
     can be used together in a single bulk API request.
     """
     form_kruize_url(cluster_type)
-    
+
     payload = base_payload()
     payload["cluster_name"] = "test-cluster"
     payload["model_settings"] = {"models": ["performance"]}
     payload["term_settings"] = {"terms": ["short", "medium"]}
     payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
     payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
-    
+
     delete_and_create_metric_profile()
     delete_and_create_metadata_profile()
-    
+
     with caplog.at_level(logging.INFO):
         response = post_bulk_api(payload, logging)
-        
+
         assert response.status_code == SUCCESS_200_STATUS_CODE, \
             f"Expected status {SUCCESS_200_STATUS_CODE} but got {response.status_code}. Response: {response.json()}"
-        
+
         # Should successfully create a job with all custom settings
         assert "job_id" in response.json(), "Expected job_id in response for combined custom settings"
 
-    
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.parametrize("experiment_types, expected_status, expected_error", [
+    (["container"], SUCCESS_200_STATUS_CODE, None),
+    (["namespace"], SUCCESS_200_STATUS_CODE, None),
+    (["CONTAINER"], SUCCESS_200_STATUS_CODE, None),
+    (["Namespace"], SUCCESS_200_STATUS_CODE, None),
+    ([], SUCCESS_200_STATUS_CODE, None),
+    (None, SUCCESS_200_STATUS_CODE, None),
+    (["invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
+    (["container", "invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
+    (["", "container"], ERROR_STATUS_CODE, "experiment_types contains a null or empty value"),
+])
+def test_bulk_api_experiment_types_validation(cluster_type, experiment_types, expected_status, expected_error, caplog):
+    """
+    Validates experiment_types field validation in Bulk API.
+    Tests supported types, defaulting behavior, and invalid values.
+    """
+    form_kruize_url(cluster_type)
+
+    payload = base_payload()
+    payload["experiment_types"] = experiment_types
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+
+        assert response.status_code == expected_status, \
+            f"Expected status {expected_status} but got {response.status_code}. Response: {response.json()}"
+
+        if expected_error:
+            assert expected_error in response.json()["message"], \
+                f"Expected error message to contain '{expected_error}' but got: {response.json()['message']}"
+        else:
+            assert "job_id" in response.json(), "Expected job_id in response for valid experiment_types"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_bulk_api_backward_compatibility(cluster_type, caplog):
+    """
+    Validates that bulk API works without new fields (backward compatibility).
+    Ensures existing workflows are not broken.
+    """
+    form_kruize_url(cluster_type)
+
+    # Use base payload without cluster_name, model_settings, or term_settings
+    payload = base_payload()
+    payload["time_range"]["start"] = "2025-01-01T00:00:00Z"
+    payload["time_range"]["end"] = "2025-01-02T00:00:00Z"
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+
+        assert response.status_code == SUCCESS_200_STATUS_CODE, \
+            f"Backward compatibility test failed. Status: {response.status_code}, Response: {response.json()}"
+
+        assert "job_id" in response.json(), "Expected job_id in response for backward compatible payload"
+        job_id = response.json()["job_id"]
+
+        # Validate job status
+        validate_job_status(job_id, get_kruize_url(), caplog)
