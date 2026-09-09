@@ -554,6 +554,7 @@ public class BulkJobManager implements Runnable {
     private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         try {
             if (filter.getInclude() != null) {
+<<<<<<< Updated upstream
                 Map<String, Object> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
@@ -564,6 +565,14 @@ public class BulkJobManager implements Runnable {
                                 value.toString();
                         if (val.isEmpty()) return;
                         sb.append(key).append("=\"").append(val).append("\",");
+=======
+                Map<String, String> includeLabels = filter.getInclude().getLabels();
+                if (includeLabels != null && !includeLabels.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    includeLabels.forEach((key, value) -> {
+                        if (value == null || value.isEmpty()) return;
+                        sb.append(key).append("=\"").append(value).append("\",");
+>>>>>>> Stashed changes
                     });
                     if (sb.length() > 0) sb.setLength(sb.length() - 1);
                     return sb.toString();
@@ -596,11 +605,19 @@ public class BulkJobManager implements Runnable {
         return resourceFilters;
     }
 
+<<<<<<< Updated upstream
     private String buildLabelFilters(Map<String, Object> labels, boolean exclude) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, Object> entry : labels.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
+=======
+    String buildLabelFilters(Map<String, String> labels, boolean exclude) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : labels.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+>>>>>>> Stashed changes
 
             if (key == null || key.isBlank()) {
                 LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_KEY);
@@ -611,6 +628,7 @@ public class BulkJobManager implements Runnable {
                 continue;
             }
 
+<<<<<<< Updated upstream
             String promKey = "label_" + key.replace(".", "_").replace("/", "_");
 
             if (value instanceof List<?> listValue) {
@@ -657,6 +675,19 @@ public class BulkJobManager implements Runnable {
             } else {
                 LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_UNSUPPORTED_TYPE, key, value.getClass().getSimpleName());
             }
+=======
+            String trimmed = value.trim();
+            if (trimmed.isEmpty()) {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_EMPTY_VALUE, key);
+                continue;
+            }
+
+            String promKey = "label_" + key.replace(".", "_").replace("/", "_");
+            if (sb.length() > 0) sb.append(",");
+            String escaped = escapePromQLLabelValue(trimmed);
+            sb.append(promKey).append(exclude ? "!=" : "=")
+                    .append("\"").append(escaped).append("\"");
+>>>>>>> Stashed changes
         }
         return sb.toString();
     }
