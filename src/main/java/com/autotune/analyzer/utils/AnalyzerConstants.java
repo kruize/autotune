@@ -1168,6 +1168,8 @@ public class AnalyzerConstants {
             filter.append("workload_type!~").append("\"(?i)").append(typeString).append("\"");
         }
         
-        return filter.toString();
+        // Add leading comma for chaining with other filters in PromQL selectors
+        String result = filter.toString();
+        return result.isEmpty() ? "" : ", " + result;
     }
 }

@@ -236,11 +236,14 @@ public class DataSourceMetadataOperator {
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
         String workloadQuery = workloadQueryTemplate
+                .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, namespaceFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, containerFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
         String containerQuery = containerQueryTemplate
                 .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, containerFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, namespaceFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
@@ -254,6 +257,14 @@ public class DataSourceMetadataOperator {
         String unsupportedWorkloadTypesFilter = AnalyzerConstants.getUnsupportedWorkloadTypesFilter();
         workloadQuery = workloadQuery.replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, unsupportedWorkloadTypesFilter);
         containerQuery = containerQuery.replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, unsupportedWorkloadTypesFilter);
+
+        // Clean up label selector formatting (from filter chaining with leading commas)
+        // Remove leading commas: {, filter} -> {filter}
+        // Remove trailing commas: {filter, } -> {filter}
+        // Normalize spacing: filter , filter -> filter, filter
+        namespaceQuery = namespaceQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
+        workloadQuery = workloadQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
+        containerQuery = containerQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
 
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
@@ -354,12 +365,13 @@ public class DataSourceMetadataOperator {
     }
 
     /**
-     * Build NAMESPACE_FILTERS placeholder value
+     * Build NAMESPACE_FILTERS placeholder value with leading comma for chaining
      */
     private String buildNamespaceFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
         String includeRegex = includeResources.getOrDefault("namespaceRegex", "");
         String excludeRegex = excludeResources.getOrDefault("namespaceRegex", "");
-        return constructDynamicFilter("namespace", includeRegex, excludeRegex);
+        String filter = constructDynamicFilter("namespace", includeRegex, excludeRegex);
+        return filter.isEmpty() ? "" : ", " + filter;
     }
 
     /**
@@ -387,25 +399,28 @@ public class DataSourceMetadataOperator {
             filters.append(excludePodLabelFilter);
         }
 
-        return filters.toString();
+        String result = filters.toString();
+        return result.isEmpty() ? "" : ", " + result;
     }
 
     /**
-     * Build CONTAINER_FILTERS placeholder value
+     * Build CONTAINER_FILTERS placeholder value with leading comma for chaining
      */
     private String buildContainerFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
         String includeRegex = includeResources.getOrDefault("containerRegex", "");
         String excludeRegex = excludeResources.getOrDefault("containerRegex", "");
-        return constructDynamicFilter("container", includeRegex, excludeRegex);
+        String filter = constructDynamicFilter("container", includeRegex, excludeRegex);
+        return filter.isEmpty() ? "" : ", " + filter;
     }
 
     /**
      * Build LABELS placeholder value (global labels like cluster_id, org_id)
+     * Returns with leading comma for chaining
      * Currently returns empty string - can be enhanced to support labels from request
      */
     private String buildLabels(Map<String, String> includeResources, Map<String, String> excludeResources) {
         // TODO: Support labels from request (cluster_id, org_id, etc.)
-        // For now, return empty string
+        // For now, return empty string (no leading comma needed for empty)
         return "";
     }
 
