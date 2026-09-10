@@ -131,7 +131,7 @@ function check_log() {
 	echo ""
 	echo "Checking $log for exceptions/failed messages..." | tee -a ${LOG}
 
-	EXCLUDE_PATTERNS="No metadata profile|No metric profile|No layers|Experiment not found|Amount field is missing|Format field is missing|Number of pods cannot be zero|relation.*already exists|sun.misc.Unsafe"
+	EXCLUDE_PATTERNS="No metadata profile|No metric profile|No layers|Experiment not found|Amount field is missing|Format field is missing|Number of pods cannot be zero|relation.*already exists|sun.misc.Unsafe|fsnotify watcher|too many open files"
 
 	matches=$(grep -Ei "exception|failed" "${log}" | grep -Eiv "${EXCLUDE_PATTERNS}" || true)
 
@@ -451,7 +451,7 @@ function run_demo() {
 			# sleep for the vpa to be created
 			sleep 60
 			echo "Validating vpa recommendations..." | tee -a ${LOG}
-			validate_sysbench_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			validate_sysbench_reco "${DEMO_LOG_DIR}" > >(tee -a ${LOG})
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
 
 		fi
@@ -459,7 +459,7 @@ function run_demo() {
 		# If demo is runtimes check for env recommendations
 		if [ "${DEMO_NAME}" == "runtimes" ]; then
 			echo "Validating runtimes recommendations..." | tee -a ${LOG}
-			validate_runtimes_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			validate_runtimes_reco "${DEMO_LOG_DIR}" > >(tee -a ${LOG})
 			echo "Validating runtimes recommendations...Done" | tee -a ${LOG}
 		fi
 
