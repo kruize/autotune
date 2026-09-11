@@ -1199,4 +1199,58 @@ public class KruizeConstants {
         public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
 
     }
+
+    /**
+     * Constants for the /health endpoint and its sub-checkers.
+     */
+    public static final class HealthConstants {
+
+        private HealthConstants() {
+        }
+
+        /** Overall health status values returned in the JSON response. */
+        public static final class OverallStatus {
+            public static final String UP       = "UP";
+            public static final String DEGRADED = "DEGRADED";
+            public static final String DOWN     = "DOWN";
+
+            private OverallStatus() {
+            }
+        }
+
+        /** Component-level status values (database, individual datasource). */
+        public static final class ComponentStatus {
+            public static final String UP   = "UP";
+            public static final String DOWN = "DOWN";
+
+            private ComponentStatus() {
+            }
+        }
+
+        /** Safe, non-leaky messages used in datasource health results. */
+        public static final class Messages {
+            public static final String CONNECTION_SUCCESSFUL   = "Connection successful";
+            public static final String CONNECTION_TIMEOUT      = "Connection timeout";
+            public static final String AUTHENTICATION_FAILED   = "Authentication failed";
+            public static final String CONNECTION_REFUSED      = "Connection refused";
+            public static final String UNKNOWN_HOST            = "Unknown host";
+            public static final String CHECK_FAILED            = "Health check failed";
+            public static final String NO_CHECKER_AVAILABLE    = "No health checker available for this provider";
+
+            private Messages() {
+            }
+        }
+
+        /** SQL probe used by the database health checker. */
+        public static final String DB_LIVENESS_QUERY = "SELECT 1";
+
+        /** Database type label reported in the health response. */
+        public static final String DB_TYPE = "PostgreSQL";
+
+        /** Per-datasource check timeout in seconds. */
+        public static final int DATASOURCE_CHECK_TIMEOUT_SECONDS = 10;
+
+        /** Thread-pool size for parallel datasource checks. */
+        public static final int HEALTH_CHECK_THREAD_POOL_SIZE = 5;
+    }
 }
