@@ -41,6 +41,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/postgresql/backup
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "0.5"
+            limits:
+              memory: "100Mi"
+              cpu: "0.5"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -172,6 +179,13 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "0.7"
+            limits:
+              memory: "768Mi"
+              cpu: "0.7"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -334,6 +348,13 @@ spec:
           env:
             - name: KRUIZE_UI_ENV
               value: "production"
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "0.002"
+            limits:
+              memory: "10Mi"
+              cpu: "0.002"
           volumeMounts:
             - name: nginx-config-volume
               mountPath: /etc/nginx/nginx.conf

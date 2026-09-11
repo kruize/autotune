@@ -116,6 +116,13 @@ spec:
               value: "summary"
             - name: KAFKA_RESPONSE_FILTER_EXCLUDE
               value: ""
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "0.7"
+            limits:
+              memory: "768Mi"
+              cpu: "0.7"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -237,6 +244,13 @@ spec:
           env:
             - name: KRUIZE_UI_ENV
               value: "production"
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "0.002"
+            limits:
+              memory: "10Mi"
+              cpu: "0.002"
           volumeMounts:
             - name: nginx-config-volume
               mountPath: /etc/nginx/nginx.conf

@@ -35,6 +35,13 @@ spec:
                 name: autotune-config
                 key: root_logging_level
                 optional: true
+        resources:
+          requests:
+            memory: "768Mi"
+            cpu: "0.7"
+          limits:
+            memory: "768Mi"
+            cpu: "0.7"
       - name: autotune
         image: "{{ AUTOTUNE_IMAGE }}"
         imagePullPolicy: Always
@@ -91,6 +98,13 @@ spec:
         envFrom: 
           - configMapRef:
               name: autotune-config
+        resources:
+          requests:
+            memory: "768Mi"
+            cpu: "0.7"
+          limits:
+            memory: "768Mi"
+            cpu: "0.7"
         ports:
          - name: autotune-port
            containerPort: 8080
