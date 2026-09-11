@@ -17,6 +17,7 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.TermSettings;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Map;
@@ -32,25 +33,32 @@ public class BulkInput {
     private String metadata_profile;
     private String measurement_duration;
     private String requestId; //TODO: to be used for the Kafka consumer case to map requestID with jobID
-    
+
     /**
      * Cluster name to use for all experiments in this bulk job.
      * If provided, overrides cluster name from datasource metadata.
      * If not provided, cluster name from metadata will be used.
      */
     private String cluster_name;
-    
+
     /**
      * Optional model settings to customize which recommendation models to generate.
      * If not provided, all models will be generated.
      */
     private ModelSettings model_settings;
-    
+
     /**
      * Optional term settings to customize which recommendation terms to generate.
      * If not provided, all terms will be generated.
      */
     private TermSettings term_settings;
+
+    /**
+     * Experiment types to create in this bulk job (e.g. CONTAINER, NAMESPACE).
+     * If provided, only experiments of the specified type(s) will be created.
+     * If not provided or empty, defaults to container experiments.
+     */
+    private List<AnalyzerConstants.ExperimentType> experiment_types;
 
     // Getters and Setters
 
@@ -68,7 +76,8 @@ public class BulkInput {
     @JsonIgnore
     public boolean isEmpty() {
         return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
-                && datasource == null && cluster_name == null && model_settings == null && term_settings == null);
+                && datasource == null && cluster_name == null && model_settings == null && term_settings == null
+                && experiment_types == null);
     }
 
     public TimeRange getTime_range() {
@@ -133,6 +142,17 @@ public class BulkInput {
 
     public void setTerm_settings(TermSettings term_settings) {
         this.term_settings = term_settings;
+    }
+
+
+    public List<AnalyzerConstants.ExperimentType> getExperiment_types() {
+        return experiment_types;
+    }
+
+    public void setExperiment_types(List<AnalyzerConstants.ExperimentType> experiment_types) {
+        if (experiment_types != null && !experiment_types.isEmpty()) {
+            this.experiment_types = experiment_types;
+        }
     }
 
     // Nested class for FilterWrapper that contains 'exclude' and 'include'
