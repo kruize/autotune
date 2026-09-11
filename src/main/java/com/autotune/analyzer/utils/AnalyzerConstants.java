@@ -107,6 +107,13 @@ public class AnalyzerConstants {
     public static final String METADATA_PROFILE = "metadataProfile";
     public static final String WORKLOAD = "workload";
     public static final String CONTAINER = "container";
+
+    // Metadata query constants - exact metric names in metadata profiles
+    public static final String WORKLOAD_METADATA_QUERY = "workloadsForAdditionalLabel";
+    public static final String WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER = "workloadsWithPodLabelFilter";
+    public static final String NAMESPACE_METADATA_QUERY = "namespacesForAdditionalLabel";
+    public static final String CONTAINER_METADATA_QUERY = "containersForAdditionalLabel";
+
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
     public static final String KRUIZE_PROFILE_FILTER = "kruize";
     public static final String NAMESPACE_PROFILE_FILTER = "openshift-tuning|monitoring";
@@ -1150,6 +1157,8 @@ public class AnalyzerConstants {
             filter.append("workload_type!~").append("\"(?i)").append(typeString).append("\"");
         }
         
-        return filter.toString();
+        // Add leading comma for chaining with other filters in PromQL selectors
+        String result = filter.toString();
+        return result.isEmpty() ? "" : ", " + result;
     }
 }

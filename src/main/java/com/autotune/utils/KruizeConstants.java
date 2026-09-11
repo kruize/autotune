@@ -956,7 +956,12 @@ public class KruizeConstants {
         public static final String START_TIME = "start_time";
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
-        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        // Named filter placeholders for query templates ($ wrapped for consistency)
+        public static final String NAMESPACE_FILTERS = "$NAMESPACE_FILTERS$";
+        public static final String WORKLOAD_FILTERS = "$WORKLOAD_FILTERS$";
+        public static final String CONTAINER_FILTERS = "$CONTAINER_FILTERS$";
+        public static final String LABELS = "$LABELS$";
+
         public static final String SUMMARY = "summary";
         public static final String SUMMARY_FILTER = "summaryFilter";
         public static final String EXPERIMENTS = "experiments";
@@ -1002,6 +1007,18 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
+        }
+
+        public static class LabelFilterConstants {
+            public static final String LOG_LABEL_EXPERIMENT_NAME_ERROR = "Error building label string for experiment name: {}";
+            public static final String LOG_LABEL_ALL_INVALID = "All label entries were invalid or empty — no pod label filter will be applied";
+            public static final String LOG_LABEL_NULL_KEY = "Skipping label with null or empty key";
+            public static final String LOG_LABEL_NULL_VALUE = "Skipping label '{}' with null value";
+            public static final String LOG_LABEL_NULL_LIST_ENTRY = "Skipping null entry in label '{}' list";
+            public static final String LOG_LABEL_NON_STRING_ENTRY = "Skipping non-string entry in label '{}' list: {}";
+            public static final String LOG_LABEL_NO_VALID_VALUES = "Label '{}' has no valid values after filtering, skipping";
+            public static final String LOG_LABEL_EMPTY_VALUE = "Skipping label '{}' with empty string value";
+            public static final String LOG_LABEL_UNSUPPORTED_TYPE = "Skipping label '{}' with unsupported value type: {}";
         }
 
         public static class NotificationConstants {
@@ -1097,17 +1114,6 @@ public class KruizeConstants {
 
         }
 
-        public static class LabelFilterConstants {
-            public static final String LOG_LABEL_EXPERIMENT_NAME_ERROR = "Error building label string for experiment name: {}";
-            public static final String LOG_LABEL_ALL_INVALID = "All label entries were invalid or empty — no pod label filter will be applied";
-            public static final String LOG_LABEL_NULL_KEY = "Skipping label with null or empty key";
-            public static final String LOG_LABEL_NULL_VALUE = "Skipping label '{}' with null value";
-            public static final String LOG_LABEL_NULL_LIST_ENTRY = "Skipping null entry in label '{}' list";
-            public static final String LOG_LABEL_NON_STRING_ENTRY = "Skipping non-string entry in label '{}' list: {}";
-            public static final String LOG_LABEL_NO_VALID_VALUES = "Label '{}' has no valid values after filtering, skipping";
-            public static final String LOG_LABEL_EMPTY_VALUE = "Skipping label '{}' with empty string value";
-            public static final String LOG_LABEL_UNSUPPORTED_TYPE = "Skipping label '{}' with unsupported value type: {}";
-        }
     }
 
     public static final class MetadataProfileConstants {
