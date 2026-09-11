@@ -24,13 +24,14 @@ Kruize supports connecting to various monitoring datasources (Prometheus, Thanos
 
 ### Required Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `datasources` | array | Yes | Array of datasource configurations |
-| `datasources[].name` | string | Yes | Name of the datasource instance |
-| `datasources[].provider` | string | Yes | Provider type (e.g., "prometheus") |
-| `datasources[].url` OR `serviceName`+`namespace` | string | Yes | Connection endpoint |
-| `datasources[].authentication` | object | No | Authentication configuration (defaults to "none") |
+| Field                                            | Type   | Required | Description                                            |
+|--------------------------------------------------|--------|----------|--------------------------------------------------------|
+| `datasources`                                    | array  | Yes      | Array of datasource configurations                     |
+| `datasources[].name`                             | string | Yes      | Name of the datasource instance                        |
+| `datasources[].provider`                         | string | Yes      | Provider type (e.g., "prometheus")                     |
+| `datasources[].url` OR `serviceName`+`namespace` | string | Yes      | Connection endpoint                                    |
+| `datasources[].authentication`                   | object | No       | Authentication configuration (defaults to "none")      |
+| `datasources[].clusters`                         | JSON array (stored as JSONB) | No       | Array of cluster name strings associated with this datasource. In JSON configuration this is a plain array of strings (e.g. `["cluster-a"]`); in the database it is persisted as a JSONB column. |
 
 ### URL vs ServiceName
 
@@ -358,11 +359,120 @@ spec:
           secretName: kruize-mtls-certs
 ```
 
+## Cluster Configuration
+
+### Overview
+
+Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
+
+> **ℹ️ Note**: The implementation parses, stores, and iterates over all configured clusters. However, this workflow has been designed and validated primarily with single-cluster configurations. Full multi-cluster support is planned for a future release.
+
+### Configuration
+
+#### Single Cluster Example
+
+```json
+{
+  "datasources": [
+    {
+      "name": "prometheus-1",
+      "provider": "prometheus",
+      "serviceName": "prometheus-k8s",
+      "namespace": "openshift-monitoring",
+      "clusters": ["default"]
+    }
+  ]
+}
+```
+
+#### Multiple Clusters Example
+
+> **ℹ️ Preview**: Multiple clusters per datasource are parsed, stored, and iterated during bulk processing. However, this configuration has been validated primarily with a single cluster. Full multi-cluster support is planned for a future release.
+
+### Behavior
+
+- **Optional Field**: If the `clusters` field is omitted, the datasource works without cluster association
+- **Multiple Clusters**: Supports an array of cluster names
+- **Backward Compatible**: Existing configurations without the clusters field continue to work
+- **Empty Array**: An empty clusters array `[]` is treated the same as omitting the field
+
+### Use Cases
+
+1. **Multi-Cluster Monitoring**: A single Prometheus instance monitoring multiple Kubernetes clusters
+2. **Environment Separation**: Different clusters for dev, stage, and production environments
+3. **Cluster-Specific Recommendations**: Generate recommendations specific to each cluster's workload
+
+### API Response
+
+#### `/datasources` — List Datasources
+
+Returns datasource configurations with clusters as a flat string array:
+
+```json
+{
+  "datasources": [
+    {
+      "name": "prometheus-1",
+      "provider": "prometheus",
+      "serviceName": "prometheus-k8s",
+      "namespace": "openshift-monitoring",
+      "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9090",
+      "clusters": ["default"]
+    }
+  ]
+}
+```
+
+> The `clusters` field is only included when the list is non-empty.
+
+#### `/dsmetadata` — Datasource Metadata
+
+Returns discovered infrastructure metadata with clusters as a keyed object containing namespaces, workloads, and containers:
+
+```json
+{
+  "datasources": {
+    "prometheus-1": {
+      "datasource_name": "prometheus-1",
+      "clusters": {
+        "default": {
+          "cluster_name": "default",
+          "namespaces": {
+            "my-namespace": {
+              "namespace": "my-namespace",
+              "workloads": {
+                "my-deployment(deployment)": {
+                  "workload_name": "my-deployment",
+                  "workload_type": "deployment",
+                  "containers": {
+                    "my-container": {
+                      "container_name": "my-container",
+                      "container_image_name": "quay.io/example/my-app:latest"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Integration with Kruize Optimizer
+
+The cluster information is used by kruize-optimizer to:
+1. Fetch cluster-specific metadata via the `/dsmetadata` API
+2. Construct bulk API payloads with appropriate cluster context
+3. Generate cluster-aware recommendations
+
 ## Related Documentation
 
 - [Kruize Local API](./KruizeLocalAPI.md)
 
 ---
 
-**Last Updated:** 2026-02-11  
-**Version:** 1.0
+**Last Updated:** 2026-06-18
+**Version:** 1.1
