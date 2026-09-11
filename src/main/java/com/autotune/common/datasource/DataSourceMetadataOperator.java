@@ -375,32 +375,13 @@ public class DataSourceMetadataOperator {
     }
 
     /**
-     * Build WORKLOAD_FILTERS placeholder value (includes workload name + pod labels)
+     * Build WORKLOAD_FILTERS placeholder value (workload name filters only)
      */
     private String buildWorkloadFilters(Map<String, String> includeResources, Map<String, String> excludeResources) {
-        StringBuilder filters = new StringBuilder();
-
-        // Add workload name filter
         String workloadIncludeRegex = includeResources.getOrDefault("workloadRegex", "");
         String workloadExcludeRegex = excludeResources.getOrDefault("workloadRegex", "");
         String workloadFilter = constructDynamicFilter("workload", workloadIncludeRegex, workloadExcludeRegex);
-        filters.append(workloadFilter);
-
-        // Add pod label filters
-        String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
-        String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
-
-        if (!includePodLabelFilter.isEmpty()) {
-            if (filters.length() > 0) filters.append(", ");
-            filters.append(includePodLabelFilter);
-        }
-        if (!excludePodLabelFilter.isEmpty()) {
-            if (filters.length() > 0) filters.append(", ");
-            filters.append(excludePodLabelFilter);
-        }
-
-        String result = filters.toString();
-        return result.isEmpty() ? "" : ", " + result;
+        return workloadFilter.isEmpty() ? "" : ", " + workloadFilter;
     }
 
     /**
@@ -414,14 +395,26 @@ public class DataSourceMetadataOperator {
     }
 
     /**
-     * Build LABELS placeholder value (global labels like cluster_id, org_id)
+     * Build LABELS placeholder value (pod label filters)
      * Returns with leading comma for chaining
-     * Currently returns empty string - can be enhanced to support labels from request
      */
     private String buildLabels(Map<String, String> includeResources, Map<String, String> excludeResources) {
-        // TODO: Support labels from request (cluster_id, org_id, etc.)
-        // For now, return empty string (no leading comma needed for empty)
-        return "";
+        StringBuilder filters = new StringBuilder();
+
+        // Add pod label filters
+        String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
+        String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
+
+        if (!includePodLabelFilter.isEmpty()) {
+            filters.append(includePodLabelFilter);
+        }
+        if (!excludePodLabelFilter.isEmpty()) {
+            if (filters.length() > 0) filters.append(", ");
+            filters.append(excludePodLabelFilter);
+        }
+
+        String result = filters.toString();
+        return result.isEmpty() ? "" : ", " + result;
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
