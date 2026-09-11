@@ -372,7 +372,6 @@ public class Autotune {
             for (Path sqlFilePath : sqlFiles) {
                 LOGGER.debug("Applying SQL file: {}", sqlFilePath.toString());
                 String sqlStatement = Files.readString(sqlFilePath, StandardCharsets.UTF_8);
-                Transaction transaction = session.beginTransaction();
                 String trimmed = sqlStatement.trim();
                 // skip blank and comment-only statements
                 if (trimmed.isEmpty()
@@ -382,8 +381,10 @@ public class Autotune {
                     continue;
                 }
 
+                Transaction transaction = session.beginTransaction();
                 try {
                     session.createNativeQuery(trimmed).executeUpdate();
+                    transaction.commit();
                 } catch (Exception e) {
                     String msg = Optional.ofNullable(e.getMessage()).orElse("");
                     if (msg.contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
@@ -394,19 +395,12 @@ public class Autotune {
                         LOGGER.error("sql: {} failed due to : {}", trimmed, msg);
                     }
 
-                    // Commit current transaction and begin a new one
+                    // Roll back the failed transaction so the session is clean for the next file
                     try {
-                        transaction.commit();
-                    } catch (Exception ignore) {
+                        transaction.rollback();
+                    } catch (Exception ex) {
+                        LOGGER.warn("Failed to rollback transaction after failure of SQL: {}", trimmed, ex);
                     }
-                    transaction = session.beginTransaction();
-                }
-
-                // commit file-level transaction
-                try {
-                    transaction.commit();
-                } catch (Exception e) {
-                    LOGGER.error("Failed to commit transaction after processing file {}: {}", sqlFilePath, e.getMessage());
                 }
             }
 
