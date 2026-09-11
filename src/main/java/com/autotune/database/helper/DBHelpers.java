@@ -1198,8 +1198,7 @@ public class DBHelpers {
                                 }
                                 authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
                             } catch (Exception e) {
-                                e.printStackTrace();
-                                LOGGER.error("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
+                                LOGGER.error("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject", e);
                             }
                         }
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
@@ -1468,20 +1467,21 @@ public class DBHelpers {
                     kruizeAuthenticationEntry = new KruizeAuthenticationEntry();
                     kruizeAuthenticationEntry.setAuthenticationType(authenticationConfig.getType().toString());
                     // set the authentication details
-                    String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    JsonNode credentials;
-                    try {
-                        credentials = objectMapper.readTree(credentialsString);
-                    } catch (JsonProcessingException e) {
-                        throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                    if (authenticationConfig.getCredentials() != null) {
+                        String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode credentials;
+                        try {
+                            credentials = objectMapper.readTree(credentialsString);
+                        } catch (JsonProcessingException e) {
+                            throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                        }
+                        kruizeAuthenticationEntry.setCredentials(credentials);
                     }
-                    kruizeAuthenticationEntry.setCredentials(credentials);
                     kruizeAuthenticationEntry.setServiceType(serviceType);
                 } catch (Exception e) {
                     kruizeAuthenticationEntry = null;
-                    LOGGER.error("Error while converting Auth details Object to KruizeAuthentication table : {}", e.getMessage());
-                    e.printStackTrace();
+                    LOGGER.error("Error while converting Auth details Object to KruizeAuthentication table : {}", e.getMessage(), e);
                 }
                 return kruizeAuthenticationEntry;
             }

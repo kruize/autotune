@@ -22,10 +22,13 @@ import com.autotune.analyzer.serviceObjects.ListDatasourcesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.micrometer.core.instrument.Timer;
@@ -153,6 +156,17 @@ public class ListDatasources extends HttpServlet {
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                .addSerializationExclusionStrategy(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return f.getDeclaringClass() == DataSourceInfo.class
+                                && f.getName().equals("authenticationConfig");
+                    }
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return AuthenticationConfig.class.isAssignableFrom(clazz);
+                    }
+                })
                 .create();
     }
 

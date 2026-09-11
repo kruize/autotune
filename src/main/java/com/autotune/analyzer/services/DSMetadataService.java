@@ -19,12 +19,12 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.data.system.info.device.DeviceDetails;
@@ -38,6 +38,8 @@ import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -263,13 +265,7 @@ public class DSMetadataService extends HttpServlet {
 
         String gsonStr = "";
         if (null != dataSourceMetadata) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                    .create();
+            Gson gsonObj = createGsonObject();
             gsonStr = gsonObj.toJson(dataSourceMetadata);
         }
         response.getWriter().println(gsonStr);
@@ -447,6 +443,17 @@ public class DSMetadataService extends HttpServlet {
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                .addSerializationExclusionStrategy(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return f.getDeclaringClass() == DataSourceInfo.class
+                                && f.getName().equals("authenticationConfig");
+                    }
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return AuthenticationConfig.class.isAssignableFrom(clazz);
+                    }
+                })
                 .create();
     }
     private boolean isValidBooleanValue(String value) {

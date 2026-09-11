@@ -98,7 +98,7 @@ class BasicAuthCredentials extends Credentials {
 
 class BearerTokenCredentials extends Credentials {
     private String tokenFilePath;
-    private String token;
+    private transient String token;
     public String getTokenFilePath() {
         return tokenFilePath;
     }
