@@ -395,6 +395,7 @@ public class KruizeConstants {
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
         public static final String THANOS = "thanos";
+        public static final String CRYOSTAT = "cryostat";
 
         private SupportedDatasources() {
         }
