@@ -1,9 +1,8 @@
 package com.autotune.database.table;
 
+import com.autotune.database.helper.EncryptedJsonConverter;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "kruize_authentication")
@@ -16,7 +15,8 @@ public class KruizeAuthenticationEntry {
     @Column(name = "authentication_type")
     private String authenticationType;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Convert(converter = EncryptedJsonConverter.class)
+    @Column(name = "credentials", columnDefinition = "TEXT")
     private JsonNode credentials;
 
     @Column(name = "service_type")
