@@ -33,9 +33,7 @@ import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -52,7 +50,9 @@ public final class KruizeObject implements ExperimentTypeAware {
     @SerializedName("cluster_name")
     private String clusterName;
     @SerializedName("datasource")
-    private String datasource;
+    private String datasource; // DEPRECATED - kept for backward compatibility
+    @SerializedName("datasources")
+    private List<String> datasources; // NEW - list of datasource names for multi-datasource support
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
     @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
@@ -368,9 +368,51 @@ public final class KruizeObject implements ExperimentTypeAware {
     public String getDataSource() {
         return datasource;
     }
+    /**
+     * Get list of datasources configured for this experiment.
+     * Provides backward compatibility by converting single datasource to list.
+     * 
+     * @return List of datasource names, never null
+     */
+    public List<String> getDatasources() {
+        // Backward compatibility: if datasources is null but datasource is set
+        if (datasources == null && datasource != null) {
+            return Arrays.asList(datasource);
+        }
+        return datasources != null ? datasources : Collections.emptyList();
+    }
 
+    /**
+     * Set list of datasources for this experiment.
+     * Also updates the deprecated datasource field with the first datasource for backward compatibility.
+     *
+     * @param datasources List of datasource names
+     */
+    public void setDatasources(List<String> datasources) {
+        this.datasources = datasources;
+        // Maintain backward compatibility: sync deprecated datasource field
+        if (datasources != null && !datasources.isEmpty()) {
+            this.datasource = datasources.getFirst();
+        } else {
+            this.datasource = null;
+        }
+    }
+
+
+    /**
+     * Set single datasource for this experiment (deprecated).
+     * Also updates the datasources list to maintain consistency.
+     *
+     * @param datasource Single datasource name
+     */
     public void setDataSource(String datasource) {
         this.datasource = datasource;
+        // Maintain consistency: sync datasources list
+        if (datasource != null) {
+            this.datasources = List.of(datasource);
+        } else {
+            this.datasources = null;
+        }
     }
 
     public AnalyzerConstants.ExperimentType getExperimentType() {
