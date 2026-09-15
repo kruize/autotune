@@ -9,8 +9,10 @@ import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
+import io.micrometer.core.instrument.Clock;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,7 +56,7 @@ public class MetricsConfig {
     public static Gauge.Builder timerBBulkRunJobs;
 
     private MetricsConfig() {
-        meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM);
         meterRegistry.config().commonTags("application", "Kruize");
 
         timerBListRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listRecommendations").tag("method", "GET");
