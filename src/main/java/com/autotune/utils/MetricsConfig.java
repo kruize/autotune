@@ -2,8 +2,10 @@ package com.autotune.utils;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
@@ -114,6 +116,9 @@ public class MetricsConfig {
         timerBPOSTRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "POST");
         timerBGETRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "GET");
 
+        new ProcessorMetrics().bindTo(meterRegistry);
+        new JvmGcMetrics().bindTo(meterRegistry);
+        new JvmMemoryMetrics().bindTo(meterRegistry);
     }
 
     public static PrometheusMeterRegistry meterRegistry() {
