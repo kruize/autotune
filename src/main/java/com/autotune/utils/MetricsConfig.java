@@ -4,10 +4,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
-import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
-import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
-import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
@@ -58,6 +54,7 @@ public class MetricsConfig {
     private MetricsConfig() {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM);
         meterRegistry.config().commonTags("application", "Kruize");
+        meterRegistry.config().namingConvention(NamingConvention.dot);
 
         timerBListRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listRecommendations").tag("method", "GET");
         timerBListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listExperiments").tag("method", "GET");
@@ -117,11 +114,6 @@ public class MetricsConfig {
         timerBPOSTRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "POST");
         timerBGETRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "recommendations").tag("method", "GET");
 
-        new ClassLoaderMetrics().bindTo(meterRegistry);
-        new ProcessorMetrics().bindTo(meterRegistry);
-        new JvmGcMetrics().bindTo(meterRegistry);
-        new JvmMemoryMetrics().bindTo(meterRegistry);
-        meterRegistry.config().namingConvention(NamingConvention.dot);
     }
 
     public static PrometheusMeterRegistry meterRegistry() {
