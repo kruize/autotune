@@ -5,6 +5,8 @@ containers, namespaces, etc., for a cluster connected via the datasource integra
 be configured using filters like exclude/include namespaces, workloads, containers, or labels for generating
 recommendations. It also has settings to generate recommendations at both the container or namespace level, or both.
 
+> **Note**: Currently, only pod labels are supported for filtering.
+
 Bulk returns a `job_id` as a response to track the job status. The user can use the `job_id` to monitor the
 progress of the job.
 

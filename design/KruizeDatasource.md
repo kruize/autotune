@@ -361,15 +361,11 @@ spec:
 
 ## Cluster Configuration
 
-### Overview
-
 Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
 
 > **ℹ️ Note**: The implementation parses, stores, and iterates over all configured clusters. However, this workflow has been designed and validated primarily with single-cluster configurations. Full multi-cluster support is planned for a future release.
 
-### Configuration
-
-#### Single Cluster Example
+### Single Cluster Example
 
 ```json
 {
@@ -384,10 +380,6 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
   ]
 }
 ```
-
-#### Multiple Clusters Example
-
-> **ℹ️ Preview**: Multiple clusters per datasource are parsed, stored, and iterated during bulk processing. However, this configuration has been validated primarily with a single cluster. Full multi-cluster support is planned for a future release.
 
 ### Behavior
 
@@ -460,13 +452,6 @@ Returns discovered infrastructure metadata with clusters as a keyed object conta
   }
 }
 ```
-
-### Integration with Kruize Optimizer
-
-The cluster information is used by kruize-optimizer to:
-1. Fetch cluster-specific metadata via the `/dsmetadata` API
-2. Construct bulk API payloads with appropriate cluster context
-3. Generate cluster-aware recommendations
 
 ## Related Documentation
 
