@@ -8,6 +8,7 @@ This document describes the datasource configuration options, supported authenti
 2. [Datasource Configuration Structure](#datasource-configuration-structure)
 3. [Supported Authentication Methods](#supported-authentication-methods)
 4. [Certificate Requirements](#certificate-requirements)
+5. [Cluster Configuration](#cluster-configuration)
 ---
 
 ## Overview
@@ -380,19 +381,6 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
   ]
 }
 ```
-
-### Behavior
-
-- **Optional Field**: If the `clusters` field is omitted, the datasource works without cluster association
-- **Multiple Clusters**: Supports an array of cluster names
-- **Backward Compatible**: Existing configurations without the clusters field continue to work
-- **Empty Array**: An empty clusters array `[]` is treated the same as omitting the field
-
-### Use Cases
-
-1. **Multi-Cluster Monitoring**: A single Prometheus instance monitoring multiple Kubernetes clusters
-2. **Environment Separation**: Different clusters for dev, stage, and production environments
-3. **Cluster-Specific Recommendations**: Generate recommendations specific to each cluster's workload
 
 ### API Response
 
