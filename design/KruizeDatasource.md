@@ -360,6 +360,8 @@ spec:
           secretName: kruize-mtls-certs
 ```
 
+---
+
 ## Cluster Configuration
 
 Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
@@ -379,65 +381,6 @@ Associate multiple clusters with a single datasource to enable cluster-specific 
       "clusters": ["default"]
     }
   ]
-}
-```
-
-### API Response
-
-#### `/datasources` — List Datasources
-
-Returns datasource configurations with clusters as a flat string array:
-
-```json
-{
-  "datasources": [
-    {
-      "name": "prometheus-1",
-      "provider": "prometheus",
-      "serviceName": "prometheus-k8s",
-      "namespace": "openshift-monitoring",
-      "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9090",
-      "clusters": ["default"]
-    }
-  ]
-}
-```
-
-> The `clusters` field is only included when the list is non-empty.
-
-#### `/dsmetadata` — Datasource Metadata
-
-Returns discovered infrastructure metadata with clusters as a keyed object containing namespaces, workloads, and containers:
-
-```json
-{
-  "datasources": {
-    "prometheus-1": {
-      "datasource_name": "prometheus-1",
-      "clusters": {
-        "default": {
-          "cluster_name": "default",
-          "namespaces": {
-            "my-namespace": {
-              "namespace": "my-namespace",
-              "workloads": {
-                "my-deployment(deployment)": {
-                  "workload_name": "my-deployment",
-                  "workload_type": "deployment",
-                  "containers": {
-                    "my-container": {
-                      "container_name": "my-container",
-                      "container_image_name": "quay.io/example/my-app:latest"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
 ```
 
