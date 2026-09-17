@@ -23,7 +23,7 @@
         <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
         <micrometer-version>1.17.0</micrometer-version>
-        <awssdk-version>2.54.13</awssdk-version>
+        <awssdk-version>2.54.18</awssdk-version>
         <jackson-version>2.22.1</jackson-version>
         <evalex-version>3.6.2</evalex-version>
         <mockito-version>5.23.0</mockito-version>
@@ -202,7 +202,7 @@
             <dependency>
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.11.1</version>
+                <version>1.11.3</version>
             </dependency>
             <!--
             Force com.mchange:c3p0 of version 0.14.0 to fix CVE-2026-55153 & CVE-2026-55223 with hibernate-c3p0 library.
@@ -211,7 +211,7 @@
             <dependency>
                 <groupId>com.mchange</groupId>
                 <artifactId>c3p0</artifactId>
-                <version>0.14.0</version>
+                <version>0.14.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
