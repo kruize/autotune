@@ -11,7 +11,7 @@
         <fabric8-version>7.8.0</fabric8-version>
         <org-json-version>20260522</org-json-version>
         <jetty-version>12.1.10</jetty-version>
-        <log4j-version>2.26.0</log4j-version>
+        <log4j-version>2.26.1</log4j-version>
         <java-version>25</java-version>
         <prometheus-metrics-version>1.8.0</prometheus-metrics-version>
         <gson-version>2.14.0</gson-version>
@@ -19,11 +19,11 @@
         <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
         <appassembler-maven-plugin-version>2.1.0</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.14</apachehttpclient-version>
-        <postgresql-version>42.7.11</postgresql-version>
+        <postgresql-version>42.7.13</postgresql-version>
         <hibernate-version>6.6.45.Final</hibernate-version>
         <hibernate-Validator>8.0.3.Final</hibernate-Validator>
         <micrometer-version>1.17.0</micrometer-version>
-        <awssdk-version>2.46.5</awssdk-version>
+        <awssdk-version>2.54.18</awssdk-version>
         <jackson-version>2.22.1</jackson-version>
         <evalex-version>3.6.2</evalex-version>
         <mockito-version>5.23.0</mockito-version>
@@ -195,18 +195,23 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Force Netty 4.1.136.Final across all transitive dependencies to fix CVE-2026-55833 -->
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-bom</artifactId>
-                <version>4.1.136.Final</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
+            <!--
+            Force at.yawk.lz4:lz4-java of version 1.11.1 with kafka-clients library.
+            Remove this override when kafka-clients is upgraded to version that has at.yawk.lz4:lz4-java of version >= 1.11.1
+            -->
             <dependency>
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.11.1</version>
+                <version>1.11.3</version>
+            </dependency>
+            <!--
+            Force com.mchange:c3p0 of version 0.14.0 to fix CVE-2026-55153 & CVE-2026-55223 with hibernate-c3p0 library.
+            Remove this override when hibernate-c3p0 is upgraded to version that has com.mchange:c3p0 of version >= 0.14.0
+            -->
+            <dependency>
+                <groupId>com.mchange</groupId>
+                <artifactId>c3p0</artifactId>
+                <version>0.14.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
