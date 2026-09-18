@@ -5,6 +5,8 @@ containers, namespaces, etc., for a cluster connected via the datasource integra
 be configured using filters like exclude/include namespaces, workloads, containers, or labels for generating
 recommendations. It also has settings to generate recommendations at both the container or namespace level, or both.
 
+> **Note**: Currently, only pod labels are supported for filtering.
+
 Bulk returns a `job_id` as a response to track the job status. The user can use the `job_id` to monitor the
 progress of the job.
 
@@ -59,6 +61,7 @@ progress of the job.
   "datasource": "Cbank1Xyz",
   "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min",
+  "cluster_name": "production-cluster",
   "experiment_types": [
     "container"
   ],
@@ -105,8 +108,12 @@ progress of the job.
 - **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
   should be installed / created before invoking bulk API.
 
-- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
-  specified `15min` as default measurement_duration value is considered.
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field; if not
+  specified, `15min` is used as the default value.
+
+- **cluster_name:** (Optional) The cluster name to use for all experiments created in this bulk job. If provided, this
+  overrides the cluster name from datasource metadata. If not provided, the cluster name from metadata will be used.
+  Must be a non-empty string and must not exceed 253 characters.
 
 ### Success Response
 
@@ -148,8 +155,8 @@ container or namespace level. Ensure that:
 #### 3. **Request Payload with both `include` and `exclude` filter specified:**
 
 - **`include`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` but
-  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for
-  the `openshift-tuning` namespace.
+  includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for the `openshift-tuning` namespace.
+
 
 ### GET Request:
 
