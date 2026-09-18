@@ -626,7 +626,7 @@ public class BulkJobManager implements Runnable {
                 continue;
             }
 
-            String promKey = "label_" + key.replace(".", "_").replace("/", "_");
+            String promKey = "label_" + key.replaceAll("[^a-zA-Z0-9_]", "_");
 
             if (value instanceof List<?> listValue) {
                 List<String> values = new ArrayList<>();
@@ -676,13 +676,13 @@ public class BulkJobManager implements Runnable {
         return sb.toString();
     }
 
-    static String escapePromQLLabelValue(String value) {
+    public static String escapePromQLLabelValue(String value) {
         return value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n");
     }
 
-    static String escapePromQLRegexValue(String value) {
+    public static String escapePromQLRegexValue(String value) {
         return escapePromQLLabelValue(value)
                 .replaceAll("([.+*?^${}()\\[\\]|])", "\\\\$1");
     }
