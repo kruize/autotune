@@ -545,9 +545,9 @@ def test_bulk_api_combined_custom_settings(cluster_type, caplog):
     (["Namespace"], SUCCESS_200_STATUS_CODE, None),
     ([], SUCCESS_200_STATUS_CODE, None),
     (None, SUCCESS_200_STATUS_CODE, None),
-    (["invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
-    (["container", "invalid"], ERROR_STATUS_CODE, "Invalid experiment type(s): [invalid]. Supported values are [container, namespace]"),
-    (["", "container"], ERROR_STATUS_CODE, "experiment_types contains a null or empty value"),
+    (["invalid"], ERROR_STATUS_CODE, "experiment_types contains a null value"),
+    (["container", "invalid"], ERROR_STATUS_CODE, "experiment_types accepts at most one value per bulk job"),
+    (["", "container"], ERROR_STATUS_CODE, "experiment_types accepts at most one value per bulk job"),
 ])
 def test_bulk_api_experiment_types_validation(cluster_type, experiment_types, expected_status, expected_error, caplog):
     """
