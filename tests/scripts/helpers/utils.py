@@ -289,6 +289,23 @@ SUPPORTED_GPUS = [
 ]
 PERF_PROFILE_NAME = "resource-optimization-openshift"
 
+EXPECTED_API_TIMER_METRICS = [
+    "kruizeAPI_count",
+    "kruizeAPI_sum",
+    "kruizeAPI_max",
+]
+
+EXPECTED_DB_TIMER_METRICS = [
+    "kruizeDB_count",
+    "kruizeDB_sum",
+    "kruizeDB_max",
+]
+
+EXPECTED_GAUGE_METRICS = [
+    "kruizeAPI_active_jobs_count",
+]
+
+
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -2411,3 +2428,20 @@ def validate_current(current_config, experiment_type):
         assert "replicas" in current_config, MISSING_REPLICA_OBJECT
         assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
         assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+
+def scrape_metrics():
+    """Fetch the /metrics endpoint and return the response text."""
+    url = get_kruize_url() + "/metrics"
+    response = requests.get(url)
+    return response
+
+
+def parse_metric_names(metrics_text):
+    """Extract unique metric names (without labels) from Prometheus scrape output."""
+    names = set()
+    for line in metrics_text.split("\n"):
+        if line.startswith("#") or not line.strip():
+            continue
+        metric_name = line.split("{")[0].split(" ")[0]
+        names.add(metric_name)
+    return names
