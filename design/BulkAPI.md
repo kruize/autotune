@@ -60,8 +60,7 @@ progress of the job.
   "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min",
   "experiment_types": [
-    "container",
-    "namespace"
+    "container"
   ],
   "cluster_name": "prod-cluster",
   "model_settings": {
@@ -94,7 +93,9 @@ progress of the job.
 
 - **datasource:** The data source, e.g., `"Cbank1Xyz"`.
 
-- **experiment_types:** Specifies the type(s) of experiments to run, e.g., `"container"` or `"namespace"`.
+- **experiment_types:** Specifies the type of experiment to create for this bulk job. Currently, only a single value is
+  supported per request — either `"container"` (default) or `"namespace"`. Support for specifying multiple experiment
+  types in one request will be added in a future release.
 
 - **webhook:** The `webhook` parameter allows the system to notify an external service or consumer about the completion
   status of

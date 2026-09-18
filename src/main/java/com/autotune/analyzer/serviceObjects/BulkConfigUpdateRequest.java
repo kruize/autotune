@@ -28,10 +28,13 @@ public class BulkConfigUpdateRequest {
     @JsonProperty("cluster_name")
     private String clusterName;
 
+    @JsonProperty("datasources")
     private List<String> datasources;
 
+    @JsonProperty("namespaces")
     private List<String> namespaces;
 
+    @JsonProperty("labels")
     private Map<String, String> labels;
 
     @JsonProperty("experiment_types")
@@ -52,6 +55,7 @@ public class BulkConfigUpdateRequest {
     @JsonProperty("webhook_url")
     private String webhookUrl;
 
+    @JsonProperty("enabled")
     private Boolean enabled;
 
     public BulkConfigUpdateRequest() {
