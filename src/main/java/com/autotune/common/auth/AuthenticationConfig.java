@@ -16,13 +16,15 @@
 package com.autotune.common.auth;
 
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Type;
 import java.util.Objects;
 
-public class AuthenticationConfig {
+public class AuthenticationConfig implements JsonSerializer<AuthenticationConfig> {
     private AuthType type;
     private Credentials credentials;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationConfig.class);
@@ -111,5 +113,13 @@ public class AuthenticationConfig {
     @Override
     public int hashCode() {
         return Objects.hash(type, credentials);
+    }
+
+    @Override
+    public JsonElement serialize(AuthenticationConfig src, Type typeOfSrc, JsonSerializationContext context) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("type", src.type != null ? src.type.name() : null);
+        obj.addProperty("credentials", "[REDACTED]");
+        return obj;
     }
 }

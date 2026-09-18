@@ -39,17 +39,17 @@ import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
 import com.autotune.utils.CloudWatchAppender;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.ServerContext;
-import com.autotune.utils.filter.KruizeCORSFilter;
-import io.prometheus.client.exporter.MetricsServlet;
-import io.prometheus.client.hotspot.DefaultExports;
+import com.autotune.utils.filter.KruizeCORSHandler;
+import io.prometheus.metrics.exporter.servlet.javax.PrometheusMetricsServlet;
+import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.server.handler.CrossOriginHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -57,8 +57,6 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.DispatcherType;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -105,17 +103,14 @@ public class Autotune {
         context = new ServletContextHandler();
         context.setContextPath(ServerContext.ROOT_CONTEXT);
         context.setErrorHandler(new KruizeErrorHandler());
-        context.addFilter(
-                KruizeCORSFilter.getFilter(),
-                KruizeConstants.CORSConstants.PATH_WILDCARD,
-                EnumSet.of(DispatcherType.REQUEST)
-        );
         /**
          *  Adding Listener to initiate variables during server start.
          */
         InitiateListener contextListener = new InitiateListener();
         context.addEventListener(contextListener);
-        server.setHandler(context);
+        CrossOriginHandler corsHandler = KruizeCORSHandler.getHandler();
+        corsHandler.setHandler(context);
+        server.setHandler(corsHandler);
         server.addBean(new KruizeErrorHandler());
 
 
@@ -299,11 +294,10 @@ public class Autotune {
     private static void addAutotuneServlets(ServletContextHandler context) {
         context.addServlet(HealthService.class, ServerContext.HEALTH_SERVICE);
         // Start the Prometheus end point (/metrics) for Autotune
+        JvmMetrics.builder().register();
         context.addServlet(
-                new ServletHolder(
-                    new MetricsServlet(MetricsConfig.meterRegistry().getPrometheusRegistry())
-                ), ServerContext.METRICS_SERVICE);
-        DefaultExports.initialize();
+                new ServletHolder(new PrometheusMetricsServlet()),
+                ServerContext.METRICS_SERVICE);
     }
 
     private static void disableServerLogging() {

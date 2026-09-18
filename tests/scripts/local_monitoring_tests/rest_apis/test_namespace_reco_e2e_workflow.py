@@ -18,15 +18,11 @@ import json
 
 import pytest
 import sys
-import time
-import shutil
 sys.path.append("../../")
 
 from helpers.fixtures import *
 from helpers.list_datasources_json_validate import *
 from helpers.utils import *
-from helpers.utils import benchmarks_install
-from helpers.utils import clone_repo
 from helpers.utils import validate_local_monitoring_reco_json
 from helpers.list_metadata_json_validate import *
 from helpers.list_metadata_json_schema import *
@@ -48,16 +44,6 @@ def test_list_recommendations_namespace_exps(cluster_type):
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
-    clone_repo("https://github.com/kruize/benchmarks")
-
-    create_namespace("ns1")
-    create_namespace("ns2")
-    create_namespace("ns3")
-
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns1")
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns2")
-    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns3")
-
     # list all datasources
     form_kruize_url(cluster_type)
 
@@ -269,9 +255,6 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the threshold for short term recommendations
-    time.sleep(300)
-
     # generate recommendations
     json_file = open(ns1_exp_json_file, "r")
     input_json = json.loads(json_file.read())
@@ -354,6 +337,3 @@ def test_list_recommendations_namespace_exps(cluster_type):
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
-
-    # Remove benchmarks directory
-    shutil.rmtree("benchmarks")

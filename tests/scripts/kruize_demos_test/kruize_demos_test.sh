@@ -349,6 +349,10 @@ function run_demo() {
 		fi
 	fi
 
+	if [ "${DEMO_NAME}" == "optimizer" ]; then
+		CMD+=( --skip-app)
+	fi
+
 	CLEANUP_CMD="${CMD[@]} -t"
 
 	DEMO_LOG_DIR="${LOG_DIR}/${DEMO_NAME}"

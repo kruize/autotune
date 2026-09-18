@@ -63,15 +63,276 @@ function get_kruize_pod_log() {
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
+# check_jmeter_results <jtl_csv> <stats_log>
+# Three checks are performed in order; the first failure encountered marks the
+# overall result as FAIL but all three checks always run so every issue is
+# reported in a single pass.
+#
+#  1. Per-sampler HTTP pass/fail table from the JTL CSV (jmeter -l output).
+#  2. "Recommendations Are Available" present in every reco JSON saved under
+#     ${JMETER_LOG_DIR}/reco_jsons/.
+#  3. No lines matching ERROR|FAILED|EXCEPTION (case-insensitive) in the
+#     JMeter stats log (jmeter -j) or the top-level jmeter.log.
+#
+# Exits 0 when all three checks pass, exits 1 otherwise.
+function check_jmeter_results() {
+	local jtl_file="$1"
+	local stats_file="$2"
+	local reco_dir="${JMETER_LOG_DIR}/reco_jsons"
+	local overall_rc=0
+
+	echo "" | tee -a ${LOG}
+	echo "============================================================" | tee -a ${LOG}
+	echo "  JMeter Results Check" | tee -a ${LOG}
+	echo "============================================================" | tee -a ${LOG}
+	echo "Results directory : ${LOG_DIR}" | tee -a ${LOG}
+	echo "JTL log           : ${jtl_file}" | tee -a ${LOG}
+	echo "Stats log         : ${stats_file}" | tee -a ${LOG}
+	echo "Reco JSONs dir    : ${reco_dir}" | tee -a ${LOG}
+	echo "" | tee -a ${LOG}
+
+	# ------------------------------------------------------------------
+	# CHECK 1 — JTL sampler pass/fail
+	# ------------------------------------------------------------------
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+	echo "CHECK 1: JTL sampler results" | tee -a ${LOG}
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+
+	if [ ! -f "${jtl_file}" ]; then
+		echo "ERROR: JTL result file not found: ${jtl_file}" | tee -a ${LOG}
+		exit 1
+	fi
+
+	local line_count
+	line_count=$(wc -l < "${jtl_file}")
+	if [ "${line_count}" -le 1 ]; then
+		echo "ERROR: JTL result file is empty (no samples recorded): ${jtl_file}" | tee -a ${LOG}
+		exit 1
+	fi
+
+	# JTL CSV columns (17 total, 1-based):
+	#   1=timeStamp  2=elapsed  3=label  4=responseCode  5=responseMessage
+	#   6=threadName  7=dataType  8=success  9=failureMessage  10=bytes
+	#   11=sentBytes  12=grpThreads  13=allThreads  14=URL  15=Latency
+	#   16=IdleTime  17=Connect
+	# Rows with URL==null are internal JSR223 samplers — skip them.
+
+	printf "  %-55s %8s %8s %8s %8s\n" "Sampler" "Total" "Pass" "Fail" "Fail%" | tee -a ${LOG}
+	printf "  %-55s %8s %8s %8s %8s\n" \
+		"-------------------------------------------------------" "-----" "-----" "-----" "-----" | tee -a ${LOG}
+
+	local awk_output
+	awk_output=$(awk -F',' '
+		NR == 1 { next }
+		$14 == "null" { next }
+		{
+			label = $3
+			ok    = $8
+			total[label]++
+			if (ok == "true") pass[label]++
+			else              fail[label]++
+		}
+		END {
+			for (lbl in total) {
+				t = total[lbl]
+				p = pass[lbl] + 0
+				f = fail[lbl] + 0
+				pct = (t > 0) ? (f * 100.0 / t) : 0
+				printf "%s|%d|%d|%d|%.1f\n", lbl, t, p, f, pct
+			}
+		}
+	' "${jtl_file}" | sort)
+
+	local grand_total=0 total_pass=0 total_fail=0 has_failures=0
+	while IFS='|' read -r lbl t p f pct; do
+		printf "  %-55s %8d %8d %8d %7s%%\n" "${lbl}" "${t}" "${p}" "${f}" "${pct}" | tee -a ${LOG}
+		grand_total=$((grand_total + t))
+		total_pass=$((total_pass + p))
+		total_fail=$((total_fail + f))
+		if [ "${f}" -gt 0 ]; then
+			has_failures=1
+		fi
+	done <<< "${awk_output}"
+
+	local fail_pct=0
+	if [ "${grand_total}" -gt 0 ]; then
+		fail_pct=$(awk "BEGIN {printf \"%.1f\", ${total_fail} * 100.0 / ${grand_total}}")
+	fi
+	printf "  %-55s %8s %8s %8s %8s\n" \
+		"-------------------------------------------------------" "-----" "-----" "-----" "-----" | tee -a ${LOG}
+	printf "  %-55s %8d %8d %8d %7s%%\n" \
+		"TOTAL" "${grand_total}" "${total_pass}" "${total_fail}" "${fail_pct}" | tee -a ${LOG}
+	echo "" | tee -a ${LOG}
+
+	echo "JMeter summariser:" | tee -a ${LOG}
+	if [ -f "${stats_file}" ]; then
+		grep "Summariser: summary =" "${stats_file}" | tail -1 | tee -a ${LOG}
+	else
+		echo "  (stats file not found: ${stats_file})" | tee -a ${LOG}
+	fi
+	echo "" | tee -a ${LOG}
+
+	if [ "${has_failures}" -eq 1 ]; then
+		echo "CHECK 1 RESULT: FAIL - one or more HTTP samplers recorded failures." | tee -a ${LOG}
+		overall_rc=1
+	else
+		echo "CHECK 1 RESULT: PASS - all HTTP samplers succeeded." | tee -a ${LOG}
+	fi
+
+	# ------------------------------------------------------------------
+	# CHECK 2 — "Recommendations Are Available" in every reco JSON
+	# ------------------------------------------------------------------
+	echo "" | tee -a ${LOG}
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+	echo "CHECK 2: Recommendations Are Available in reco JSONs" | tee -a ${LOG}
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+
+	local reco_total=0 reco_pass=0 reco_fail=0
+	local reco_failed_files=()
+
+	if [ ! -d "${reco_dir}" ]; then
+		echo "ERROR: reco_jsons directory not found: ${reco_dir}" | tee -a ${LOG}
+		echo "CHECK 2 RESULT: FAIL - reco_jsons directory missing." | tee -a ${LOG}
+		overall_rc=1
+	else
+		local json_files
+		mapfile -t json_files < <(find "${reco_dir}" -maxdepth 1 -name "*.json" | sort)
+		reco_total=${#json_files[@]}
+
+		if [ "${reco_total}" -eq 0 ]; then
+			echo "ERROR: No JSON files found in ${reco_dir}" | tee -a ${LOG}
+			echo "CHECK 2 RESULT: FAIL - no reco JSON files present." | tee -a ${LOG}
+			overall_rc=1
+		else
+			for json_file in "${json_files[@]}"; do
+				if grep -qi "Recommendations Are Available" "${json_file}"; then
+					reco_pass=$((reco_pass + 1))
+				else
+					reco_fail=$((reco_fail + 1))
+					reco_failed_files+=("$(basename "${json_file}")")
+				fi
+			done
+
+			echo "  Reco JSONs checked : ${reco_total}" | tee -a ${LOG}
+			echo "  With recommendations: ${reco_pass}" | tee -a ${LOG}
+			echo "  Missing recommendations: ${reco_fail}" | tee -a ${LOG}
+
+			if [ "${reco_fail}" -gt 0 ]; then
+				echo "" | tee -a ${LOG}
+				echo "  Files missing 'Recommendations Are Available':" | tee -a ${LOG}
+				for f in "${reco_failed_files[@]}"; do
+					echo "    - ${f}" | tee -a ${LOG}
+				done
+				echo "" | tee -a ${LOG}
+				echo "CHECK 2 RESULT: FAIL - ${reco_fail} of ${reco_total} reco JSON(s) missing 'Recommendations Are Available'." | tee -a ${LOG}
+				overall_rc=1
+			else
+				echo "" | tee -a ${LOG}
+				echo "CHECK 2 RESULT: PASS - all ${reco_total} reco JSON(s) contain 'Recommendations Are Available'." | tee -a ${LOG}
+			fi
+		fi
+	fi
+
+	# ------------------------------------------------------------------
+	# CHECK 3 — No ERROR / FAILED / EXCEPTION in JMeter log files
+	# ------------------------------------------------------------------
+	echo "" | tee -a ${LOG}
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+	echo "CHECK 3: No errors or exceptions in JMeter logs" | tee -a ${LOG}
+	echo "------------------------------------------------------------" | tee -a ${LOG}
+
+	# Scan the stats log (jmeter -j), the JMeter stdout log, and the default
+	# jmeter.log written by JMeter to the working directory.
+	# Match lines where the JMeter log level is ERROR (3rd field on a timestamped
+	# log line), or stack-trace continuation lines containing "exception" or
+	# "failed".  This deliberately excludes the benign INFO-level phrase
+	# "Thread will continue on error" which appears in every normal run.
+	local log_scan_files=()
+	[ -f "${stats_file}" ] && log_scan_files+=("${stats_file}")
+	[ -f "${JMETER_LOG}" ] && log_scan_files+=("${JMETER_LOG}")
+	[ -f "${CURRENT_DIR}/jmeter.log" ] && log_scan_files+=("${CURRENT_DIR}/jmeter.log")
+
+	local log_has_errors=0
+	for scan_file in "${log_scan_files[@]}"; do
+		local matches
+		matches=$(grep -in "^[0-9-]* [0-9:,]* ERROR\|exception\|failed" "${scan_file}" 2>/dev/null)
+		if [ -n "${matches}" ]; then
+			log_has_errors=1
+			local match_count
+			match_count=$(echo "${matches}" | wc -l)
+			echo "  Issues found in: $(basename "${scan_file}") (${match_count} line(s))" | tee -a ${LOG}
+			echo "${matches}" | head -10 | while IFS= read -r line; do
+				echo "    ${line}" | tee -a ${LOG}
+			done
+			if [ "${match_count}" -gt 10 ]; then
+				echo "    ... (${match_count} total matching lines — see full log for details)" | tee -a ${LOG}
+			fi
+			echo "" | tee -a ${LOG}
+		else
+			echo "  No issues in: $(basename "${scan_file}")" | tee -a ${LOG}
+		fi
+	done
+
+	echo "" | tee -a ${LOG}
+	if [ "${log_has_errors}" -eq 1 ]; then
+		echo "CHECK 3 RESULT: FAIL - ERROR/FAILED/EXCEPTION found in JMeter logs." | tee -a ${LOG}
+		overall_rc=1
+	else
+		echo "CHECK 3 RESULT: PASS - no errors or exceptions in JMeter logs." | tee -a ${LOG}
+	fi
+
+	# ------------------------------------------------------------------
+	# Overall verdict
+	# ------------------------------------------------------------------
+	echo "" | tee -a ${LOG}
+	echo "============================================================" | tee -a ${LOG}
+	if [ "${overall_rc}" -eq 1 ]; then
+		echo "OVERALL RESULT: FAIL" | tee -a ${LOG}
+	else
+		echo "OVERALL RESULT: PASS" | tee -a ${LOG}
+	fi
+	echo "============================================================" | tee -a ${LOG}
+	exit ${overall_rc}
+}
+
+function java21_install() {
+	JAVA_VERSION=21.0.11_10
+	JAVA_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11+10/OpenJDK21U-jdk_x64_linux_hotspot_${JAVA_VERSION}.tar.gz"
+	JAVA_INSTALL_DIR=/tmp/temurin21
+
+	# Check if Temurin 21 is already installed at the expected location
+	if [ -x "${JAVA_INSTALL_DIR}/bin/java" ]; then
+		echo "Java is already installed at ${JAVA_INSTALL_DIR}." | tee -a ${LOG}
+	else
+		echo "Java not found. Downloading from ${JAVA_URL} ..." | tee -a ${LOG}
+		local tarball
+		tarball=$(mktemp --suffix=.tar.gz)
+		if ! wget -q -O "${tarball}" "${JAVA_URL}"; then
+			echo "ERROR: Failed to download Java from ${JAVA_URL}" | tee -a ${LOG}
+			rm -f "${tarball}"
+			exit 1
+		fi
+		mkdir -p "${JAVA_INSTALL_DIR}"
+		tar -xzf "${tarball}" --strip-components=1 -C "${JAVA_INSTALL_DIR}"
+		rm -f "${tarball}"
+		echo "Java installation complete." | tee -a ${LOG}
+	fi
+
+	export JAVA_HOME="${JAVA_INSTALL_DIR}"
+	export PATH="${JAVA_HOME}/bin:${PATH}"
+	echo "JAVA_HOME set to ${JAVA_HOME}" | tee -a ${LOG}
+	java -version 2>&1 | tee -a ${LOG}
+}
+
 function jmeter_setup() {
-	JMETER_VERSION="5.5"
+	JMETER_VERSION="5.6.3"
 
 	if [ ! -d ${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION} ]; then
 		echo "Downloading jmeter..." | tee -a ${LOG}
 		wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz
 		tar -xzf apache-jmeter-${JMETER_VERSION}.tgz
 		rm apache-jmeter-${JMETER_VERSION}.tgz
-	else 
+	else
 		echo "Skipping jmeter install as it is already present here - ${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION}"
 	fi
 	export JMETER_HOME=${CURRENT_DIR}/apache-jmeter-${JMETER_VERSION}
@@ -142,6 +403,10 @@ fi
 
 JMETER_LOG_DIR="${LOG_DIR}/jmeter_logs" 
 mkdir -p ${JMETER_LOG_DIR}
+
+echo "Installing Java 21 prerequisite for jmeter..." | tee -a ${LOG}
+java21_install
+echo "Installing Java 21 prerequisite for jmeter...done" | tee -a ${LOG}
 
 echo "Invoking jmeter setup" | tee -a ${LOG}
 jmeter_setup
@@ -248,7 +513,7 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	fi
 
 	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
-	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
+	jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
 
 else
 	echo ""
@@ -269,4 +534,5 @@ else
 	${cmd} > ${JMETER_LOG}
 
 fi
-		
+
+check_jmeter_results "${kruize_log}" "${kruize_stats}"
