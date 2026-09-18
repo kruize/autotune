@@ -18,6 +18,7 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -350,13 +351,13 @@ public class DataSourceMetadataOperator {
             filterBuilder.append(String.format("%s!=''", field));
         }
         if (!includeRegex.isEmpty()) {
-            filterBuilder.append(String.format("%s=~\"%s\"", field, includeRegex));
+            filterBuilder.append(String.format("%s=~\"%s\"", field, BulkJobManager.escapePromQLRegexValue(includeRegex)));
         }
         if (!excludeRegex.isEmpty()) {
             if (!filterBuilder.isEmpty()) {
                 filterBuilder.append(",");
             }
-            filterBuilder.append(String.format("%s!~\"%s\"", field, excludeRegex));
+            filterBuilder.append(String.format("%s!~\"%s\"", field, BulkJobManager.escapePromQLRegexValue(excludeRegex)));
         }
         LOGGER.info("filterBuilder: {}", filterBuilder);
         return filterBuilder.toString();
