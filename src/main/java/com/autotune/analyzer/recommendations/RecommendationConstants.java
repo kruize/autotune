@@ -131,7 +131,7 @@ public class RecommendationConstants {
                 RecommendationConstants.NotificationCodes.INFO_FLEX_TERM_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.FLEX_TERM_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
-        )
+        ),
         INFO_COST_RECOMMENDATIONS_AVAILABLE(
                 RecommendationConstants.NotificationCodes.INFO_COST_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.COST_RECOMMENDATIONS_AVAILABLE,
