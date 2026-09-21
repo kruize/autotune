@@ -50,19 +50,6 @@ The solution should:
 8. Define the behavior for encryption-key rotation.
 9. Provide a safe migration path for existing plaintext credentials.
 
----
-
-## 4. Non-Goals
-
-The following are outside the scope of this ADR:
-
-- Replacing the datasource credential storage mechanism with an external secrets manager.
-- Introducing a cloud-provider-specific KMS dependency.
-- Defining the detailed Java/JPA implementation.
-- Defining specific annotations, converters, or Hibernate configuration.
-- Redesigning the datasource authentication model.
-- Changing the public datasource API contract unless required to prevent credential exposure.
-
 The implementation mechanism can be decided separately after this architectural decision is approved.
 
 ---
@@ -75,12 +62,12 @@ The implementation will maintain a mapping between the supported authentication 
 
 Conceptually:
 
-| Authentication Type | Sensitive Fields |
-|---|---|
-| Basic Authentication | Password / authentication secret |
-| Token Authentication | Token |
-| API Key Authentication | API key |
-| Client Credential Authentication | Client secret |
+| Authentication Type                  | Sensitive Fields                      |
+|--------------------------------------|---------------------------------------|
+| Basic Authentication                 | Password / authentication secret      |
+| Token Authentication                 | Token                                 |
+| API Key Authentication               | API key                               |
+| Client Credential Authentication     | Client secret                         |
 | Other supported authentication types | Authentication-specific secret fields |
 
 The exact field names are determined by the datasource authentication schema.
@@ -304,17 +291,17 @@ This is a potential long-term option but is outside the current scope because it
 
 ## 8. Approach Comparison
 
-| Consideration | Encrypt Entire JSON | Encrypt Sensitive Fields | External Secrets / Vault |
-|---|---|---|---|
-| Credentials protected at rest | Yes | Yes | Yes |
-| Existing JSON/JSONB representation | No | Yes | No / reference-based |
-| Database schema change | Required / likely | No | Likely |
-| Sensitive-field mapping | Not required | Required | Not required |
-| New authentication type | Automatically covered | Mapping must be updated | Automatically covered |
-| Key rotation | Requires re-encryption | Can use eager re-encryption | Built-in depending on provider |
-| Infrastructure dependency | Low | Low | High |
-| ROS impact | Moderate–Significant | **Minimal** | Significant |
-| Current scope fit | Moderate | **High** | Low |
+| Consideration                      | Encrypt Entire JSON    | Encrypt Sensitive Fields    | External Secrets / Vault       |
+|------------------------------------|------------------------|-----------------------------|--------------------------------|
+| Credentials protected at rest      | Yes                    | Yes                         | Yes                            |
+| Existing JSON/JSONB representation | No                     | Yes                         | No / reference-based           |
+| Database schema change             | Required / likely      | No                          | Likely                         |
+| Sensitive-field mapping            | Not required           | Required                    | Not required                   |
+| New authentication type            | Automatically covered  | Mapping must be updated     | Automatically covered          |
+| Key rotation                       | Requires re-encryption | Can use eager re-encryption | Built-in depending on provider |
+| Infrastructure dependency          | Low                    | Low                         | High                           |
+| ROS impact                         | Moderate–Significant   | **Minimal**                 | Significant                    |
+| Current scope fit                  | Moderate               | **High**                    | Low                            |
 
 ---
 
@@ -470,27 +457,7 @@ The exact transactional/batching strategy will be defined during implementation.
 
 ---
 
-## 14. Existing Plaintext Credentials
-
-Existing installations may already contain plaintext credentials.
-
-The encryption rollout must therefore include a migration strategy.
-
-The migration process should:
-
-1. Identify existing plaintext sensitive fields.
-2. Encrypt them using the configured encryption key.
-3. Persist the encrypted values.
-4. Store the appropriate key version.
-5. Ensure subsequent writes use encryption automatically.
-
-Existing plaintext credentials must not remain indefinitely simply because the encryption feature has been enabled.
-
-The exact migration mechanism — startup migration, explicit migration utility, or another controlled migration process — is an implementation decision.
-
----
-
-## 15. Backward Compatibility
+## 14. Backward Compatibility
 
 The solution should minimize impact to deployments that do not use credential-backed datasources.
 
@@ -505,7 +472,7 @@ The encryption/decryption should remain internal to datasource credential handli
 
 ---
 
-## 16. API Security
+## 15. API Security (When the datasource creation API is added in future)
 
 Encryption at rest does not replace API-level credential protection.
 
@@ -533,7 +500,7 @@ The plaintext credential should only exist in application memory when it is requ
 
 ---
 
-## 17. Consequences
+## 16. Consequences
 
 ### Positive
 
@@ -558,7 +525,7 @@ The plaintext credential should only exist in application memory when it is requ
 
 ---
 
-## 18. Risks and Mitigations
+## 17. Risks and Mitigations
 
 ### Risk: New authentication type introduces an unencrypted secret
 
@@ -587,27 +554,7 @@ Re-encryption should be performed using a controlled, retryable process that doe
 
 ---
 
-## 19. Implementation Considerations
-
-The following are intentionally implementation-level decisions and should be addressed separately:
-
-- JPA `AttributeConverter` versus another persistence mechanism.
-- Exact Java classes and annotations.
-- Encryption/decryption utility implementation.
-- Cipher configuration.
-- Database serialization format for encrypted values.
-- Migration utility implementation.
-- Transaction/batch strategy for key rotation.
-- Startup ordering and readiness behavior.
-- Automated tests for each authentication type.
-- Tests validating that new authentication types cannot persist known sensitive fields in plaintext.
-- Exact ConfigMap property name and key representation.
-
-These details should not change the architectural decision described in this ADR.
-
----
-
-## 20. Final Decision Summary
+## 18. Final Decision Summary
 
 The decision was made after considering three primary approaches:
 
