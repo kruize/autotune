@@ -153,6 +153,9 @@ public class KruizeConstants {
         public static final RecommendationTunables PERFORMANCE_RECOMMENDATION_TUNABLES = new RecommendationTunables(PERFORMANCE_CPU_PERCENTILE, PERFORMANCE_MEMORY_PERCENTILE, PERFORMANCE_ACCELERATOR_PERCENTILE);
 
     }
+    public static final class StabilityBasedRecommendationConstants {
+        public static final RecommendationTunables STABILITY_RECOMMENDATION_TUNABLES = new RecommendationTunables(STABILITY_CPU_PERCENTILE, STABILITY_MEMORY_PERCENTILE, STABILITY_ACCELERATOR_PERCENTILE);
+    }
 
     public static final class JSONKeys {
         public static final String QUESTION_MARK = "?";
@@ -297,6 +300,7 @@ public class KruizeConstants {
         public static final String PROFILE_BASED = "profile_based";
         public static final String COST = "cost";
         public static final String PERFORMANCE = "performance";
+        public static final String STABILITY = "stability";
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String RECOMMENDATION_MODELS = "recommendation_models";
