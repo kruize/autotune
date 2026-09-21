@@ -338,7 +338,7 @@ public class ExperimentValidation {
                 // common check for terms and models
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
-                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG, KruizeConstants.JSONKeys.FLEX);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
@@ -358,11 +358,21 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
+
+                    // V-3: flex cannot be combined with other terms
+                    List<String> requestedTerms = expObj.getRecommendation_settings().getTermSettings().getTerms();
+                    if (requestedTerms.contains(KruizeConstants.JSONKeys.FLEX) && requestedTerms.size() > 1) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_CANNOT_COMBINE_WITH_OTHER_TERMS;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
+                    }
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
                         expObj.getRecommendation_settings().getModelSettings().getModels() != null) {
-                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE);
+                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE, KruizeConstants.JSONKeys.STABILITY);
 
                     for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
                         if (model == null || model.trim().isEmpty()) {
@@ -379,6 +389,30 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
+                    }
+
+                    // V-1: stability must be paired only with flex term
+                    // V-2: flex must be paired only with stability model
+                    List<String> reqTerms = expObj.getRecommendation_settings().getTermSettings() != null
+                            ? expObj.getRecommendation_settings().getTermSettings().getTerms() : Collections.emptyList();
+                    List<String> reqModels = expObj.getRecommendation_settings().getModelSettings().getModels();
+
+                    boolean hasFlex      = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
+                    boolean hasStability = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
+
+                    if (hasStability && !hasFlex) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_REQUIRES_FLEX_TERM;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
+                    }
+                    if (hasFlex && !hasStability) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_REQUIRES_STABILITY_MODEL;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
                     }
                 }
 
