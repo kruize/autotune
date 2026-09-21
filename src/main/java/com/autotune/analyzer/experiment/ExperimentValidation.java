@@ -338,7 +338,7 @@ public class ExperimentValidation {
                 // common check for terms and models
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
-                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG, KruizeConstants.JSONKeys.FLEX);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
@@ -357,6 +357,16 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
+                    }
+
+                    // V-3: flex cannot be combined with other terms
+                    List<String> requestedTerms = expObj.getRecommendation_settings().getTermSettings().getTerms();
+                    if (requestedTerms.contains(KruizeConstants.JSONKeys.FLEX) && requestedTerms.size() > 1) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_CANNOT_COMBINE_WITH_OTHER_TERMS;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
                     }
                 }
 
