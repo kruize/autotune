@@ -341,7 +341,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
             }
 
-            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList);
+            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList, extractCurrentAccelerators(currentConfig));
         } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
@@ -364,6 +364,18 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 })
                 .max(Double::compareTo).get();
         return (int) Math.ceil(max_pods_cpu);
+    }
+
+    private static MultiResourceRecommendation extractCurrentAccelerators(Config currentConfig) {
+        if (currentConfig == null || currentConfig.getLimits() == null) {
+            return null;
+        }
+        ResourceRecommendation resourceRecommendation =
+                currentConfig.getLimits().get(AnalyzerConstants.RecommendationItem.ACCELERATORS);
+        if (resourceRecommendation instanceof MultiResourceRecommendation multiResourceRecommendation) {
+            return multiResourceRecommendation;
+        }
+        return null;
     }
 
     /**

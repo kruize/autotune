@@ -483,6 +483,7 @@ public class RecommendationEngine implements RecommendationEngineService {
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
      * @param runtimeListToPopulate                The Object to populate runtime recommendations.
+     * @param currentAccelerators                  Current accelerator config for variation calculation (can be null)
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     public boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -493,7 +494,8 @@ public class RecommendationEngine implements RecommendationEngineService {
                                    double cpuThreshold,
                                    double memoryThreshold,
                                    Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
-                                   List<RecommendationConfigEnv> runtimeListToPopulate) {
+                                   List<RecommendationConfigEnv> runtimeListToPopulate,
+                                   MultiResourceRecommendation currentAccelerators) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1114,6 +1116,16 @@ public class RecommendationEngine implements RecommendationEngineService {
         // Set Limits variation map
         if (!limitsVariationMap.isEmpty()) {
             variation.setLimits(limitsVariationMap);
+        }
+
+        // Accelerator variation (percentage deltas vs current) under limits.accelerators
+        MultiResourceRecommendation acceleratorVariation =
+                RecommendationUtils.buildAcceleratorVariation(currentAccelerators, recommendationAcceleratorRequestMap);
+        if (acceleratorVariation != null) {
+            if (variation.getLimits() == null) {
+                variation.setLimits(new HashMap<>());
+            }
+            variation.getLimits().put(AnalyzerConstants.RecommendationItem.ACCELERATORS, acceleratorVariation);
         }
 
         // Set Variation

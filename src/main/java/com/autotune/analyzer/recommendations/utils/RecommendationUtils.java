@@ -20,6 +20,7 @@ import com.autotune.common.data.system.info.device.accelerator.NvidiaAccelerator
 import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
 import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.*;
@@ -970,6 +971,115 @@ public class RecommendationUtils {
                 compute,
                 memory
         );
+    }
+
+    /**
+     * Build variation accelerators entry: percentage delta of recommended vs current
+     * compute/memory (same semantics as CPU/memory variation).
+     */
+    public static MultiResourceRecommendation buildAcceleratorVariation(
+            MultiResourceRecommendation currentAccelerators,
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendedAcceleratorMap) {
+
+        if (currentAccelerators == null
+                || currentAccelerators.getAcceleratorRecommendationItems() == null
+                || currentAccelerators.getAcceleratorRecommendationItems().isEmpty()) {
+            return null;
+        }
+        if (recommendedAcceleratorMap == null || recommendedAcceleratorMap.isEmpty()) {
+            return null;
+        }
+
+        AcceleratorRecommendationItem currentItem = currentAccelerators.getAcceleratorRecommendationItems().get(0);
+        if (currentItem == null || currentItem.getModel() == null) {
+            return null;
+        }
+
+        AcceleratorRecommendationItem recommendedItem =
+                fromRecommendedAcceleratorMap(recommendedAcceleratorMap, currentItem.getModel());
+        if (recommendedItem == null) {
+            return null;
+        }
+
+        Double currentCompute = currentItem.getCompute() != null ? currentItem.getCompute().getAmount() : null;
+        Double recommendedCompute = recommendedItem.getCompute() != null ? recommendedItem.getCompute().getAmount() : null;
+        Double currentMemory = currentItem.getMemory() != null ? currentItem.getMemory().getAmount() : null;
+        Double recommendedMemory = recommendedItem.getMemory() != null ? recommendedItem.getMemory().getAmount() : null;
+
+        if (currentCompute == null || recommendedCompute == null
+                || currentMemory == null || recommendedMemory == null
+                || currentCompute == 0.0 || currentMemory == 0.0) {
+            return null;
+        }
+
+        double computeVariationPct = roundToTwoDecimals(CommonUtils.getPercentage(recommendedCompute, currentCompute));
+        double memoryVariationPct = roundToTwoDecimals(CommonUtils.getPercentage(recommendedMemory, currentMemory));
+
+        AcceleratorRecommendationItem variationItem = new AcceleratorRecommendationItem(
+                currentItem.getModel(),
+                null,
+                null,
+                new RecommendationConfigItem(computeVariationPct, "percentage"),
+                new RecommendationConfigItem(memoryVariationPct, "percentage")
+        );
+
+        MultiResourceRecommendation variation = new MultiResourceRecommendation();
+        variation.addAcceleratorRecommendationItem(variationItem);
+        return variation;
+    }
+
+    /**
+     * Convert recommended MIG/GPU resource map (e.g. nvidia.com/mig-3g.40gb -> 1 core)
+     * into an AcceleratorRecommendationItem for comparison with current.
+     */
+    public static AcceleratorRecommendationItem fromRecommendedAcceleratorMap(
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendedAcceleratorMap,
+            String model) {
+
+        if (recommendedAcceleratorMap == null || recommendedAcceleratorMap.isEmpty() || model == null) {
+            return null;
+        }
+
+        for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry
+                : recommendedAcceleratorMap.entrySet()) {
+            AnalyzerConstants.RecommendationItem recommendationItem = entry.getKey();
+            if (recommendationItem == null
+                    || recommendationItem == AnalyzerConstants.RecommendationItem.ACCELERATORS
+                    || recommendationItem == AnalyzerConstants.RecommendationItem.CPU
+                    || recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
+                continue;
+            }
+
+            Integer count = 1;
+            if (entry.getValue() != null && entry.getValue().getAmount() != null) {
+                count = (int) Math.round(entry.getValue().getAmount());
+            }
+
+            String partition = extractMigProfile(recommendationItem.toString());
+            RecommendationConfigItem compute;
+            RecommendationConfigItem memory;
+
+            if (partition != null && !partition.isBlank()) {
+                compute = getComputeFromProfile(partition);
+                memory = getMemoryFromProfile(partition);
+            } else if (recommendationItem == AnalyzerConstants.RecommendationItem.NVIDIA_GPU) {
+                compute = getFullGpuCompute(model);
+                memory = getFullGpuMemory(model);
+            } else {
+                continue;
+            }
+
+            if (compute == null || memory == null) {
+                return null;
+            }
+
+            return new AcceleratorRecommendationItem(model, partition, count, compute, memory);
+        }
+        return null;
+    }
+
+    private static double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
 }
