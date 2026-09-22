@@ -113,8 +113,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentRequestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentLimitsMap = new HashMap<>();
 
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
@@ -131,7 +131,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         }
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
-            for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+            for (AnalyzerConstants.RecommendationItem recommendationItem : List.of(
+                    AnalyzerConstants.RecommendationItem.CPU,
+                    AnalyzerConstants.RecommendationItem.MEMORY)) {
 
                 AnalyzerConstants.MetricName metricName = getMetricName(resourceSetting, recommendationItem);
                 configItem = RecommendationUtils.getCurrentValue(lastDatapoint, metricName, notifications);
@@ -149,6 +151,13 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                     currentLimitsMap.put(recommendationItem, configItem);
                 }
             }
+        }
+
+        // Accelerator settings apply to limits (same shape as recommended config)
+        MultiResourceRecommendation currentAccelerators =
+                RecommendationUtils.getCurrentValueForAccelerators(filteredResultsMap, monitoringEndTime);
+        if (currentAccelerators != null) {
+            currentLimitsMap.put(AnalyzerConstants.RecommendationItem.ACCELERATORS, currentAccelerators);
         }
 
         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {

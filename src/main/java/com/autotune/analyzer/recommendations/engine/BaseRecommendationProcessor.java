@@ -20,6 +20,7 @@ import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.ResourceRecommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
@@ -175,18 +176,25 @@ public abstract class BaseRecommendationProcessor {
         RecommendationConfigItem currentMemRequest = null;
         RecommendationConfigItem currentMemLimit = null;
 
-        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = currentConfig.getRequests();
-        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = currentConfig.getLimits();
+        Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests = currentConfig.getRequests();
+        Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits = currentConfig.getLimits();
         if (null != requests) {
-            currentCPURequest = requests.get(AnalyzerConstants.RecommendationItem.CPU);
-            currentMemRequest = requests.get(AnalyzerConstants.RecommendationItem.MEMORY);
+            currentCPURequest = asRecommendationConfigItem(requests.get(AnalyzerConstants.RecommendationItem.CPU));
+            currentMemRequest = asRecommendationConfigItem(requests.get(AnalyzerConstants.RecommendationItem.MEMORY));
         }
         if (null != limits) {
-            currentCPULimit = limits.get(AnalyzerConstants.RecommendationItem.CPU);
-            currentMemLimit = limits.get(AnalyzerConstants.RecommendationItem.MEMORY);
+            currentCPULimit = asRecommendationConfigItem(limits.get(AnalyzerConstants.RecommendationItem.CPU));
+            currentMemLimit = asRecommendationConfigItem(limits.get(AnalyzerConstants.RecommendationItem.MEMORY));
         }
 
         return new CurrentConfigValues(currentCPURequest, currentCPULimit, currentMemRequest, currentMemLimit);
+    }
+
+    protected static RecommendationConfigItem asRecommendationConfigItem(ResourceRecommendation resourceRecommendation) {
+        if (resourceRecommendation instanceof RecommendationConfigItem recommendationConfigItem) {
+            return recommendationConfigItem;
+        }
+        return null;
     }
 
     /**

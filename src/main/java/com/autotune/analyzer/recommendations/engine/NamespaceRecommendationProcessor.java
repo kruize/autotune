@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -119,14 +120,16 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
 
         Config currentNamespaceConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceRequestsMap = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentNamespaceLimitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentNamespaceRequestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentNamespaceLimitsMap = new HashMap<>();
 
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
-            for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+            for (AnalyzerConstants.RecommendationItem recommendationItem : List.of(
+                    AnalyzerConstants.RecommendationItem.CPU,
+                    AnalyzerConstants.RecommendationItem.MEMORY)) {
                 RecommendationConfigItem configItem = RecommendationUtils.getCurrentValueForNamespace(namespaceData.getResults(), monitoringEndTime, resourceSetting, recommendationItem, notifications);
 
                 // Use base class validation method

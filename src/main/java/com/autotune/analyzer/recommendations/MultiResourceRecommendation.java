@@ -43,4 +43,9 @@ public final class MultiResourceRecommendation implements ResourceRecommendation
     public void setAcceleratorRecommendationItems(List<AcceleratorRecommendationItem> acceleratorRecommendationItems) {
         this.acceleratorRecommendationItems = acceleratorRecommendationItems;
     }
+
+    public void addAcceleratorRecommendationItem(AcceleratorRecommendationItem acceleratorRecommendationItem) {
+        if (null != acceleratorRecommendationItem)
+            acceleratorRecommendationItems.add(acceleratorRecommendationItem);
+    }
 }

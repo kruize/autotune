@@ -17,7 +17,7 @@ package com.autotune.analyzer.recommendations;
 
 import java.util.Objects;
 
-public class AcceleratorRecommendationItem implements ResourceRecommendation {
+public class AcceleratorRecommendationItem {
     private String model;
     private String partition;
     private Integer count;
