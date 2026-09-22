@@ -142,7 +142,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(metadataProfileName, dataSource, 0, 0, 0, measurementDuration, new HashMap<>(), new HashMap<>());
+            dataSourceMetadataOperator.updateDataSourceMetadata(metadataProfileName, dataSource, "", 0, 0, 0, measurementDuration, null, null);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
