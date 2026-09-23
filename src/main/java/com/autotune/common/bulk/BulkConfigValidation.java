@@ -27,8 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -465,16 +466,37 @@ public class BulkConfigValidation {
      */
     private static ValidationOutputData validateWebhookUrl(String webhookUrl) {
         try {
-            URL url = new URL(webhookUrl);
-            String protocol = url.getProtocol();
-            if (!protocol.equals("http") && !protocol.equals("https")) {
+            URI uri = URI.create(webhookUrl);
+            String scheme = uri.getScheme();
+            if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
                 return new ValidationOutputData(false,
                         "webhook_url must use http or https protocol",
                         HttpServletResponse.SC_BAD_REQUEST);
             }
-        } catch (MalformedURLException e) {
+
+            String host = uri.getHost();
+            if (host == null || host.isEmpty()) {
+                return new ValidationOutputData(false,
+                        "webhook_url must contain a valid hostname",
+                        HttpServletResponse.SC_BAD_REQUEST);
+            }
+
+            InetAddress address = InetAddress.getByName(host);
+            if (address.isLoopbackAddress()
+                    || address.isLinkLocalAddress()
+                    || address.isSiteLocalAddress()
+                    || address.isAnyLocalAddress()) {
+                return new ValidationOutputData(false,
+                        "webhook_url must not point to a private or internal network address",
+                        HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } catch (IllegalArgumentException e) {
             return new ValidationOutputData(false,
                     "Invalid webhook_url format: " + e.getMessage(),
+                    HttpServletResponse.SC_BAD_REQUEST);
+        } catch (UnknownHostException e) {
+            return new ValidationOutputData(false,
+                    "webhook_url hostname cannot be resolved: " + e.getMessage(),
                     HttpServletResponse.SC_BAD_REQUEST);
         }
 
