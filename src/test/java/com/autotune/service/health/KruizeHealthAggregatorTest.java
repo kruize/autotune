@@ -232,7 +232,31 @@ class KruizeHealthAggregatorTest {
     }
 
     // -------------------------------------------------------------------------
-    // Scenario 7 — empty datasource list (explicitly empty, DB up)
+    // Scenario 7 — datasource checker throws → CHECK_FAILED
+    // -------------------------------------------------------------------------
+    @Test
+    @DisplayName("DEGRADED — datasource checker throws unexpected exception")
+    void shouldReturnDegradedWhenDatasourceCheckerThrows() {
+        // Given
+        DataSourceInfo ds = fakeDatasource("broken-ds", "prometheus");
+        DataSourceCollection.getInstance().getDataSourcesCollection().put(ds.getName(), ds);
+
+        when(mockDbChecker.check()).thenReturn(dbUp());
+        when(mockDsChecker.check(ds)).thenThrow(new RuntimeException("boom"));
+
+        // When
+        HealthReport report = aggregator.collectHealth();
+
+        // Then
+        assertEquals(KruizeConstants.HealthConstants.OverallStatus.DEGRADED, report.getOverallStatus());
+        assertEquals(1, report.getDatasources().size());
+        DatasourceHealthResult r = report.getDatasources().get(0);
+        assertEquals(KruizeConstants.HealthConstants.ComponentStatus.DOWN, r.getStatus());
+        assertEquals(KruizeConstants.HealthConstants.Messages.CHECK_FAILED, r.getMessage());
+    }
+
+    // -------------------------------------------------------------------------
+    // Scenario 8 — empty datasource list (explicitly empty, DB up)
     // -------------------------------------------------------------------------
     @Test
     @DisplayName("UP — healthy DB, datasource list explicitly empty")
