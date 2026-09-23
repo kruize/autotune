@@ -869,6 +869,9 @@ public class RecommendationUtils {
 
     private static RecommendationConfigItem getFullGpuCompute(String modelName) {
         String supported = getSupportedModelBasedOnModelName(modelName);
+        if (supported == null) {
+            return null;
+        }
 
         return switch (supported) {
             case AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB,
@@ -885,10 +888,13 @@ public class RecommendationUtils {
     }
 
     private static RecommendationConfigItem getFullGpuMemory(String modelName) {
-        double memoryGiB = getFrameBufferBasedOnModel(modelName) / 1024.0;
+        double frameBufferMiB = getFrameBufferBasedOnModel(modelName);
+        if (frameBufferMiB < 0) {
+            return null;
+        }
 
         return new RecommendationConfigItem(
-                memoryGiB,
+                frameBufferMiB / 1024.0,
                 "GiB"
         );
     }
@@ -907,17 +913,17 @@ public class RecommendationUtils {
     }
 
     private static RecommendationConfigItem getMemoryFromProfile(String profile) {
-        String lower = profile.toLowerCase();
+        if (profile == null || profile.isBlank()) {
+            return null;
+        }
 
-        int gIndex = lower.indexOf('g');
-        int gbIndex = lower.indexOf("gb");
-
-        double memory = Double.parseDouble(
-                lower.substring(gIndex + 1, gbIndex)
-        );
+        Matcher matcher = Pattern.compile("(\\d+)g\\.(\\d+)gb").matcher(profile.toLowerCase());
+        if (!matcher.find()) {
+            return null;
+        }
 
         return new RecommendationConfigItem(
-                memory,
+                Double.parseDouble(matcher.group(2)),
                 "GiB"
         );
     }
