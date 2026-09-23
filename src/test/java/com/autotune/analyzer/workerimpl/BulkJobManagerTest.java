@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
-import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
 import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
 import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
 import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
@@ -60,7 +59,7 @@ class BulkJobManagerMockedTest {
     private BulkInput bulkInput;
     private BulkJobStatus jobStatus;
 
-    private DataSourceCluster cluster;
+    private String clusterName;
     private DataSourceNamespace namespace;
     private DataSourceWorkload workload;
     private DataSourceContainer container;
@@ -78,8 +77,7 @@ class BulkJobManagerMockedTest {
 
         jobStatus = mock(BulkJobStatus.class);
 
-        cluster = mock(DataSourceCluster.class);
-        when(cluster.getDataSourceClusterName()).thenReturn("cluster1");
+        clusterName = "cluster1";
 
         namespace = mock(DataSourceNamespace.class);
         when(namespace.getNamespace()).thenReturn("default");
@@ -108,7 +106,7 @@ class BulkJobManagerMockedTest {
     void shouldFrameExperimentNameWithoutLabels() {
         // When
         String experimentName = bulkJobManager.frameExperimentName(
-                null, cluster, namespace, workload, container
+                null, clusterName, namespace, workload, container
         );
 
         // Then
@@ -129,7 +127,7 @@ class BulkJobManagerMockedTest {
 
         // When
         String experimentName = bulkJobManager.frameExperimentName(
-                labelString, cluster, namespace, workload, container
+                labelString, clusterName, namespace, workload, container
         );
 
         // Then

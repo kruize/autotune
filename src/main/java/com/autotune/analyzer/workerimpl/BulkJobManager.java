@@ -100,6 +100,7 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationCon
  */
 public class BulkJobManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
+
     ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
     ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
     private String jobID;
@@ -154,9 +155,9 @@ public class BulkJobManager implements Runnable {
             Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
                 if (this.bulkInput.getFilter() != null) {
-                    labelString = getLabels(this.bulkInput.getFilter());
-                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+                    labelString = getLabelsForExperimentName(this.bulkInput.getFilter());
+                    includeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getInclude(), false);
+                    excludeResourcesMap = buildResourceFilters(this.bulkInput.getFilter().getExclude(), true);
                 }
                 if (null == this.bulkInput.getDatasource()) {
                     this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
@@ -188,11 +189,13 @@ public class BulkJobManager implements Runnable {
                         setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                     } else {
                         jobData.setMetadata(metadataInfo);
-                        Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                        Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts
                         //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
                         jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
                         jobData.getSummary().setProcessed_experiments(0);
-                        if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                        if (createExperimentAPIObjectMap.isEmpty()) {
+                            setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
+                        } else if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                         } else {
                             if (!KruizeDeploymentInfo.test_use_only_cache_job_in_mem) {                       // Todo Try to avoid this check in multiple places
@@ -508,26 +511,44 @@ public class BulkJobManager implements Runnable {
         String statusValue = "failure";
         Timer.Sample timerGetExpMap = Timer.start(MetricsConfig.meterRegistry());
         try {
+            List<AnalyzerConstants.ExperimentType> experimentTypes = this.bulkInput.getExperiment_types();
+            AnalyzerConstants.ExperimentType experimentType = (experimentTypes == null || experimentTypes.isEmpty())
+                    ? AnalyzerConstants.ExperimentType.CONTAINER
+                    : experimentTypes.get(0);
+
             Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
             Collection<DataSource> dataSourceCollection = metadataInfo.getDatasources().values();
             for (DataSource ds : dataSourceCollection) {
                 HashMap<String, DataSourceCluster> clusterHashMap = ds.getClusters();
                 for (DataSourceCluster dsc : clusterHashMap.values()) {
+                    String clusterName = this.bulkInput.getCluster_name() != null
+                            ? this.bulkInput.getCluster_name()
+                            : dsc.getDataSourceClusterName();
                     HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getNamespaces();
                     for (DataSourceNamespace namespace : namespaceHashMap.values()) {
-                        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getWorkloads();
-                        if (dataSourceWorkloadHashMap != null) {
-                            for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
-                                HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getContainers();
-                                if (dataSourceContainerHashMap != null) {
-                                    for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
-                                        // Experiment name - dynamically constructed
-                                        String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
-                                        // create JSON to be passed in the createExperimentAPI
-                                        List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
-                                        CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
-                                                experiment_name, createExperimentAPIObjectList);
-                                        createExperimentAPIObjectMap.put(experiment_name, apiObject);
+                        if (experimentType == AnalyzerConstants.ExperimentType.NAMESPACE) {
+                            // One namespace experiment per namespace
+                            String experiment_name = frameNamespaceExperimentName(labelString, clusterName, namespace);
+                            List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
+                            CreateExperimentAPIObject apiObject = prepareNamespaceExperimentJSONInput(clusterName, namespace,
+                                    experiment_name, createExperimentAPIObjectList);
+                            createExperimentAPIObjectMap.put(experiment_name, apiObject);
+                        } else {
+                            // Default: one container experiment per container
+                            HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getWorkloads();
+                            if (dataSourceWorkloadHashMap != null) {
+                                for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
+                                    HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getContainers();
+                                    if (dataSourceContainerHashMap != null) {
+                                        for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
+                                            // Experiment name - dynamically constructed
+                                            String experiment_name = frameExperimentName(labelString, clusterName, namespace, dsw, dc);
+                                            // create JSON to be passed in the createExperimentAPI
+                                            List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
+                                            CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, clusterName, dsw, namespace,
+                                                    experiment_name, createExperimentAPIObjectList);
+                                            createExperimentAPIObjectMap.put(experiment_name, apiObject);
+                                        }
                                     }
                                 }
                             }
@@ -544,34 +565,31 @@ public class BulkJobManager implements Runnable {
         }
     }
 
-    private String getLabels(BulkInput.FilterWrapper filter) {
-        String uniqueKey = null;
+    private String getLabelsForExperimentName(BulkInput.FilterWrapper filter) {
         try {
-            // Process labels in the 'include' section
             if (filter.getInclude() != null) {
-                // Initialize StringBuilder for uniqueKey
-                StringBuilder includeLabelsBuilder = new StringBuilder();
-                Map<String, String> includeLabels = filter.getInclude().getLabels();
+                Map<String, Object> includeLabels = filter.getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
-                    includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
-                    );
-                    // Remove trailing comma
-                    if (!includeLabelsBuilder.isEmpty()) {
-                        includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
-                    }
-                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
-                    uniqueKey = includeLabelsBuilder.toString();
+                    StringBuilder sb = new StringBuilder();
+                    includeLabels.forEach((key, value) -> {
+                        if (value == null) return;
+                        String val = (value instanceof List) ?
+                                ((List<?>) value).stream().findFirst().map(Object::toString).orElse("") :
+                                value.toString();
+                        if (val.isEmpty()) return;
+                        sb.append(key).append("=\"").append(val).append("\",");
+                    });
+                    if (sb.length() > 0) sb.setLength(sb.length() - 1);
+                    return sb.toString();
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(e.getMessage());
+            LOGGER.error(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_EXPERIMENT_NAME_ERROR, e.getMessage(), e);
         }
-        return uniqueKey;
+        return null;
     }
 
-    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+    private Map<String, String> buildResourceFilters(BulkInput.Filter filter, boolean exclude) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
@@ -580,8 +598,92 @@ public class BulkJobManager implements Runnable {
                     filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
                     filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            if (filter.getLabels() != null && !filter.getLabels().isEmpty()) {
+                String labelFilter = buildLabelFilters(filter.getLabels(), exclude);
+                if (labelFilter.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_ALL_INVALID);
+                } else {
+                    resourceFilters.put("podLabelFilter", labelFilter);
+                }
+            }
         }
         return resourceFilters;
+    }
+
+    private String buildLabelFilters(Map<String, Object> labels, boolean exclude) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Object> entry : labels.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (key == null || key.isBlank()) {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_KEY);
+                continue;
+            }
+            if (value == null) {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_VALUE, key);
+                continue;
+            }
+
+            String promKey = "label_" + key.replace(".", "_").replace("/", "_");
+
+            if (value instanceof List<?> listValue) {
+                List<String> values = new ArrayList<>();
+                for (Object item : listValue) {
+                    if (item == null) {
+                        LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NULL_LIST_ENTRY, key);
+                        continue;
+                    }
+                    if (!(item instanceof String)) {
+                        LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NON_STRING_ENTRY, key, item.getClass().getSimpleName());
+                        continue;
+                    }
+                    String str = ((String) item).trim();
+                    if (!str.isEmpty()) {
+                        values.add(str);
+                    }
+                }
+                if (values.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_NO_VALID_VALUES, key);
+                    continue;
+                }
+                if (sb.length() > 0) sb.append(",");
+                if (values.size() == 1) {
+                    sb.append(promKey).append(exclude ? "!=" : "=")
+                            .append("\"").append(escapePromQLLabelValue(values.get(0))).append("\"");
+                } else {
+                    String regex = values.stream()
+                            .map(BulkJobManager::escapePromQLRegexValue)
+                            .collect(Collectors.joining("|"));
+                    sb.append(promKey).append(exclude ? "!~" : "=~")
+                            .append("\"").append(regex).append("\"");
+                }
+            } else if (value instanceof String strValue) {
+                String trimmed = strValue.trim();
+                if (trimmed.isEmpty()) {
+                    LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_EMPTY_VALUE, key);
+                    continue;
+                }
+                if (sb.length() > 0) sb.append(",");
+                String escaped = escapePromQLLabelValue(trimmed);
+                sb.append(promKey).append(exclude ? "!=" : "=")
+                        .append("\"").append(escaped).append("\"");
+            } else {
+                LOGGER.warn(KruizeConstants.KRUIZE_BULK_API.LabelFilterConstants.LOG_LABEL_UNSUPPORTED_TYPE, key, value.getClass().getSimpleName());
+            }
+        }
+        return sb.toString();
+    }
+
+    static String escapePromQLLabelValue(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n");
+    }
+
+    static String escapePromQLRegexValue(String value) {
+        return escapePromQLLabelValue(value)
+                .replaceAll("([.+*?^${}()\\[\\]|])", "\\\\$1");
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
@@ -609,14 +711,14 @@ public class BulkJobManager implements Runnable {
 
     /**
      * @param dc                         DataSourceContainer object to get the container details
-     * @param dsc                        DataSourceCluster object to get the cluster details
+     * @param clusterName                resolved cluster name (user override or data source cluster name)
      * @param dsw                        DataSourceWorkload object to get the workload details
      * @param namespace                  DataSourceNamespace object to get the namespace details
      * @param createExperimentAPIObjects
      * @return Json string to be sent to the createExperimentAPI for experiment creation
      * @throws JsonProcessingException
      */
-    private CreateExperimentAPIObject prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
+    private CreateExperimentAPIObject prepareCreateExperimentJSONInput(DataSourceContainer dc, String clusterName, DataSourceWorkload dsw,
                                                                        DataSourceNamespace namespace, String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
 
         CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
@@ -625,7 +727,7 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
         createExperimentAPIObject.setExperimentName(experiment_name);
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
-        createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
+        createExperimentAPIObject.setClusterName(clusterName);
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
         createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
@@ -638,8 +740,19 @@ public class BulkJobManager implements Runnable {
         kubernetesAPIObject.setNamespace(namespace.getNamespace());
         kubernetesAPIObjectList.add(kubernetesAPIObject);
         createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+
+        // Create recommendation settings with threshold
         RecommendationSettings rs = new RecommendationSettings();
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
+
+        // Pass through model_settings and term_settings from bulk payload if provided
+        if (bulkInput.getModel_settings() != null) {
+            rs.setModelSettings(bulkInput.getModel_settings());
+        }
+        if (bulkInput.getTerm_settings() != null) {
+            rs.setTermSettings(bulkInput.getTerm_settings());
+        }
+
         createExperimentAPIObject.setRecommendationSettings(rs);
         TrialSettings trialSettings = new TrialSettings();
         trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
@@ -654,18 +767,108 @@ public class BulkJobManager implements Runnable {
         return createExperimentAPIObject;
     }
 
+
+    /**
+     * Builds a CreateExperimentAPIObject for a namespace-level experiment.
+     * The kubernetes_objects entry contains only a namespaces block (no
+     * workload name/type or containers), matching the payload expected by
+     * CreateExperiment for experiment_type "namespace".
+     *
+     * @param clusterName                resolved cluster name (user override or data source cluster name)
+     * @param namespace                  DataSourceNamespace whose namespace is being tracked
+     * @param experiment_name            pre-framed experiment name
+     * @param createExperimentAPIObjects accumulator list
+     * @return the constructed CreateExperimentAPIObject
+     */
+    private CreateExperimentAPIObject prepareNamespaceExperimentJSONInput(String clusterName, DataSourceNamespace namespace,
+                                                                          String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
+        CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
+        createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
+        createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
+        createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
+        createExperimentAPIObject.setExperimentName(experiment_name);
+        createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
+        createExperimentAPIObject.setClusterName(clusterName);
+        createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
+        createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
+
+        // Namespace experiment: kubernetes_objects has only a namespaces block, no containers
+        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+        KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
+        NamespaceAPIObject namespaceAPIObject = new NamespaceAPIObject(namespace.getNamespace(), null, null);
+        kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+        kubernetesAPIObjectList.add(kubernetesAPIObject);
+        createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+
+        // Recommendation settings
+        RecommendationSettings rs = new RecommendationSettings();
+        rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
+        if (this.bulkInput.getModel_settings() != null) {
+            rs.setModelSettings(this.bulkInput.getModel_settings());
+        }
+        if (this.bulkInput.getTerm_settings() != null) {
+            rs.setTermSettings(this.bulkInput.getTerm_settings());
+        }
+        createExperimentAPIObject.setRecommendationSettings(rs);
+
+        TrialSettings trialSettings = new TrialSettings();
+        trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
+        createExperimentAPIObject.setTrialSettings(trialSettings);
+
+        createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
+        createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+        createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.NAMESPACE);
+
+        createExperimentAPIObjects.add(createExperimentAPIObject);
+        return createExperimentAPIObject;
+    }
+
+    /**
+     * Frames the experiment name for a namespace-level experiment.
+     * Uses datasource, cluster name, and namespace — workload/container
+     * segments are not meaningful for namespace experiments.
+     *
+     * @param labelString  label filter string (may be null)
+     * @param clusterName  resolved cluster name (user override or data source cluster name)
+     * @param namespace    namespace metadata
+     * @return framed experiment name
+     */
+    public String frameNamespaceExperimentName(String labelString, String clusterName,
+                                               DataSourceNamespace namespace) {
+        String datasource = this.bulkInput.getDatasource();
+        String namespaceName = namespace.getNamespace();
+
+        // Namespace experiment name: datasource|clustername|namespace
+        String experimentName = KruizeDeploymentInfo.namespace_experiment_name_format
+                .replace("%datasource%", datasource)
+                .replace("%clustername%", clusterName)
+                .replace("%namespace%", namespaceName);
+
+        if (null != labelString) {
+            Map<String, String> labelsMap = parseLabelString(labelString);
+            Pattern labelPattern = Pattern.compile("%label:([a-zA-Z0-9_]+)%");
+            Matcher matcher = labelPattern.matcher(experimentName);
+            while (matcher.find()) {
+                String labelKey = matcher.group(1);
+                String labelValue = labelsMap.getOrDefault(labelKey, "unknown" + labelKey);
+                experimentName = experimentName.replace(matcher.group(), labelValue != null ? labelValue : "unknown" + labelKey);
+            }
+        }
+        LOGGER.debug("Namespace experiment name: {}", experimentName);
+        return experimentName;
+    }
+
     /**
      * @param labelString
-     * @param dataSourceCluster
+     * @param clusterName
      * @param dataSourceNamespace
      * @param dataSourceWorkload
      * @param dataSourceContainer
      * @return
      */
-    public String frameExperimentName(String labelString, DataSourceCluster dataSourceCluster, DataSourceNamespace dataSourceNamespace, DataSourceWorkload dataSourceWorkload, DataSourceContainer dataSourceContainer) {
+    public String frameExperimentName(String labelString, String clusterName, DataSourceNamespace dataSourceNamespace, DataSourceWorkload dataSourceWorkload, DataSourceContainer dataSourceContainer) {
 
         String datasource = this.bulkInput.getDatasource();
-        String clusterName = dataSourceCluster.getDataSourceClusterName();
         String namespace = dataSourceNamespace.getNamespace();
         String workloadName = dataSourceWorkload.getWorkloadName();
         String workloadType = dataSourceWorkload.getWorkloadType();

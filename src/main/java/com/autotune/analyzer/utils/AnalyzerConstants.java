@@ -17,6 +17,7 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import java.util.Map;
 import java.util.*;
@@ -326,7 +327,17 @@ public class AnalyzerConstants {
         CONTAINER,  // For container-level experiments
         NAMESPACE,  // For namespace-level experiments
         CLUSTER,    // For cluster-wide experiments
-        WORKLOAD // For application-specific experiments
+        WORKLOAD; // For application-specific experiments
+
+        @JsonCreator
+        public static ExperimentType fromString(String value) {
+            if (value == null || value.trim().isEmpty()) return null;
+            try {
+                return ExperimentType.valueOf(value.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
     }
 
     /**

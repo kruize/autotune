@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS kruize_optimiser_bulk_config (
+CREATE TABLE IF NOT EXISTS kruize_optimizer_bulk_config (
     config_name VARCHAR(255) PRIMARY KEY,
     cluster_name VARCHAR(255) NOT NULL,
     datasources JSONB NOT NULL,

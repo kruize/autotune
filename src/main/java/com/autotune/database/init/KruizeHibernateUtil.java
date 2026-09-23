@@ -16,7 +16,15 @@
 package com.autotune.database.init;
 
 
-import com.autotune.database.table.*;
+import com.autotune.database.table.KruizeAuthenticationEntry;
+import com.autotune.database.table.KruizeDataSourceEntry;
+import com.autotune.database.table.KruizeDSMetadataEntry;
+import com.autotune.database.table.KruizeExperimentEntry;
+import com.autotune.database.table.KruizeMetricProfileEntry;
+import com.autotune.database.table.KruizePerformanceProfileEntry;
+import com.autotune.database.table.KruizeRecommendationEntry;
+import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.lm.KruizeBulkConfigEntry;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMLayerEntry;
@@ -70,6 +78,7 @@ public class KruizeHibernateUtil {
                 configuration.addAnnotatedClass(KruizeAuthenticationEntry.class);
                 configuration.addAnnotatedClass(KruizeLMMetadataProfileEntry.class);
                 configuration.addAnnotatedClass(KruizeBulkJobEntry.class);
+                configuration.addAnnotatedClass(KruizeBulkConfigEntry.class);
                 configuration.addAnnotatedClass(KruizeLMLayerEntry.class);
             }
             LOGGER.info("DB is trying to connect to {}", connectionURL);

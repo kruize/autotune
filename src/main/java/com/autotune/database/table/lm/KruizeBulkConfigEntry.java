@@ -15,23 +15,34 @@
  *******************************************************************************/
 package com.autotune.database.table.lm;
 
+import com.autotune.analyzer.serviceObjects.BulkConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Database entity to store Kruize optimiser bulk configuration.
+ * Database entity to store Kruize optimizer bulk configuration.
  * Aligned with CreateExperiment structure for consistency.
  */
 @Entity
-@Table(name = "kruize_optimiser_bulk_config")
+@Table(name = "kruize_optimizer_bulk_config")
 public class KruizeBulkConfigEntry {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeBulkConfigEntry.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Id
     @Column(name = "config_name", columnDefinition = "VARCHAR(255)")
@@ -56,7 +67,7 @@ public class KruizeBulkConfigEntry {
     @Column(name = "experiment_types", columnDefinition = "jsonb", nullable = false)
     private JsonNode experimentTypes;
 
-    @Column(name = "metadata_profile", columnDefinition = "VARCHAR(255)", nullable = false)
+    @Column(name = "metadata_profile", columnDefinition = "VARCHAR(255)")
     private String metadataProfile;
 
     @Column(name = "performance_profile", columnDefinition = "VARCHAR(255)", nullable = false)
@@ -70,7 +81,7 @@ public class KruizeBulkConfigEntry {
     @Column(name = "recommendation_settings", columnDefinition = "jsonb", nullable = false)
     private JsonNode recommendationSettings;
 
-    @Column(name = "webhook_url", columnDefinition = "VARCHAR(500)", nullable = false)
+    @Column(name = "webhook_url", columnDefinition = "VARCHAR(500)")
     private String webhookUrl;
 
     @Column(name = "enabled", nullable = false)
@@ -198,6 +209,202 @@ public class KruizeBulkConfigEntry {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Convert this entity to a BulkConfig service object
+     * @throws RuntimeException if required fields are null or conversion fails
+     */
+    public BulkConfig toBulkConfig() {
+        BulkConfig config = new BulkConfig();
+        config.setConfigName(this.configName);
+        config.setClusterName(this.clusterName);
+
+        // Required field: datasources
+        if (this.datasources == null) {
+            throw new IllegalStateException("Datasources cannot be null for config: " + configName);
+        }
+        try {
+            List<String> datasourceList = objectMapper.convertValue(
+                this.datasources,
+                new TypeReference<List<String>>() {}
+            );
+            config.setDatasources(datasourceList);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert datasources for config: " + configName, e);
+        }
+        
+        // Required field: namespaces
+        if (this.namespaces == null) {
+            throw new IllegalStateException("Namespaces cannot be null for config: " + configName);
+        }
+        try {
+            List<String> namespaceList = objectMapper.convertValue(
+                this.namespaces,
+                new TypeReference<List<String>>() {}
+            );
+            config.setNamespaces(namespaceList);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert namespaces for config: " + configName, e);
+        }
+        
+        // Optional field: labels
+        if (this.labels != null) {
+            try {
+                Map<String, String> labelsMap = objectMapper.convertValue(
+                    this.labels,
+                    new TypeReference<Map<String, String>>() {}
+                );
+                config.setLabels(labelsMap);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to convert labels for config: " + configName, e);
+            }
+        }
+        
+        // Required field: experiment types
+        if (this.experimentTypes == null) {
+            throw new IllegalStateException("Experiment types cannot be null for config: " + configName);
+        }
+        try {
+            List<String> experimentTypeList = objectMapper.convertValue(
+                this.experimentTypes,
+                new TypeReference<List<String>>() {}
+            );
+            config.setExperimentTypes(experimentTypeList);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert experiment types for config: " + configName, e);
+        }
+        
+        config.setMetadataProfile(this.metadataProfile);
+        config.setPerformanceProfile(this.performanceProfile);
+
+        // Optional field: trial settings
+        if (this.trialSettings != null) {
+            try {
+                BulkConfig.TrialSettings trialSettings = objectMapper.convertValue(
+                    this.trialSettings,
+                    BulkConfig.TrialSettings.class
+                );
+                config.setTrialSettings(trialSettings);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to convert trial settings for config: " + configName, e);
+            }
+        }
+        
+        // Required field: recommendation settings
+        if (this.recommendationSettings == null) {
+            throw new IllegalStateException("Recommendation settings cannot be null for config: " + configName);
+        }
+        try {
+            BulkConfig.RecommendationSettings recSettings = objectMapper.convertValue(
+                this.recommendationSettings,
+                BulkConfig.RecommendationSettings.class
+            );
+            config.setRecommendationSettings(recSettings);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert recommendation settings for config: " + configName, e);
+        }
+        
+        config.setWebhookUrl(this.webhookUrl);
+        config.setEnabled(this.enabled);
+        
+        if (this.createdAt != null) {
+            config.setCreatedAt(this.createdAt.toInstant());
+        }
+        if (this.updatedAt != null) {
+            config.setUpdatedAt(this.updatedAt.toInstant());
+        }
+        
+        return config;
+    }
+
+    /**
+     * Create an entity from a BulkConfig service object
+     * @param config the BulkConfig object to convert
+     * @return KruizeBulkConfigEntry entity
+     * @throws IllegalArgumentException if config is null or required fields are null
+     * @throws RuntimeException if conversion fails
+     */
+    public static KruizeBulkConfigEntry fromBulkConfig(BulkConfig config) {
+        if (config == null) {
+            throw new IllegalArgumentException("BulkConfig cannot be null");
+        }
+
+        KruizeBulkConfigEntry entry = new KruizeBulkConfigEntry();
+        entry.setConfigName(config.getConfigName());
+        entry.setClusterName(config.getClusterName());
+
+        // Required field: datasources
+        if (config.getDatasources() == null) {
+            throw new IllegalArgumentException("Datasources cannot be null for config: " + config.getConfigName());
+        }
+        try {
+            entry.setDatasources(objectMapper.valueToTree(config.getDatasources()));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert datasources for config: " + config.getConfigName(), e);
+        }
+        
+        // Required field: namespaces
+        if (config.getNamespaces() == null) {
+            throw new IllegalArgumentException("Namespaces cannot be null for config: " + config.getConfigName());
+        }
+        try {
+            entry.setNamespaces(objectMapper.valueToTree(config.getNamespaces()));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert namespaces for config: " + config.getConfigName(), e);
+        }
+        
+        // Optional field: labels
+        if (config.getLabels() != null) {
+            try {
+                entry.setLabels(objectMapper.valueToTree(config.getLabels()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to convert labels for config: " + config.getConfigName(), e);
+            }
+        }
+        
+        // Required field: experiment types
+        if (config.getExperimentTypes() == null) {
+            throw new IllegalArgumentException("Experiment types cannot be null for config: " + config.getConfigName());
+        }
+        try {
+            entry.setExperimentTypes(objectMapper.valueToTree(config.getExperimentTypes()));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert experiment types for config: " + config.getConfigName(), e);
+        }
+        
+        entry.setMetadataProfile(config.getMetadataProfile());
+        entry.setPerformanceProfile(config.getPerformanceProfile());
+
+        // Optional field: trial settings
+        if (config.getTrialSettings() != null) {
+            try {
+                entry.setTrialSettings(objectMapper.valueToTree(config.getTrialSettings()));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to convert trial settings for config: " + config.getConfigName(), e);
+            }
+        }
+        
+        // Required field: recommendation settings
+        if (config.getRecommendationSettings() == null) {
+            throw new IllegalArgumentException("Recommendation settings cannot be null for config: " + config.getConfigName());
+        }
+        try {
+            entry.setRecommendationSettings(objectMapper.valueToTree(config.getRecommendationSettings()));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert recommendation settings for config: " + config.getConfigName(), e);
+        }
+        
+        entry.setWebhookUrl(config.getWebhookUrl());
+        entry.setEnabled(config.getEnabled());
+        
+        if (config.getCreatedAt() != null) {
+            entry.setCreatedAt(Timestamp.from(config.getCreatedAt()));
+        }
+        if (config.getUpdatedAt() != null) {
+            entry.setUpdatedAt(Timestamp.from(config.getUpdatedAt()));
+        }
+        
+        return entry;
+    }
 
     @Override
     public String toString() {

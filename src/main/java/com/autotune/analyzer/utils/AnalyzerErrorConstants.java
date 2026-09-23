@@ -215,6 +215,7 @@ public class AnalyzerErrorConstants {
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+            public static final String BULK_INVALID_EXPERIMENT_TYPES = "Invalid experiment_types value(s): %s. Valid values are: container, namespace";
 
             private CreateExperimentAPI() {
 

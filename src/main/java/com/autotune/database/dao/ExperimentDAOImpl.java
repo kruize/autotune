@@ -24,11 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.KruizeBulkJobEntry;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
-import com.autotune.database.table.lm.KruizeLMLayerEntry;
-import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
+import com.autotune.database.table.lm.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
@@ -2055,5 +2051,228 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Adds BulkConfig to database
+     *
+     * @param kruizeBulkConfigEntry Bulk Config Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addBulkConfigToDB(KruizeBulkConfigEntry kruizeBulkConfigEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeBulkConfigEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (ConstraintViolationException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.BULK_CONFIG_ALREADY_EXISTS,
+                        kruizeBulkConfigEntry.getConfigName());
+                LOGGER.error(errorMsg);
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(errorMsg);
+                validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_SAVING_BULK_CONFIG,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_SAVING_BULK_CONFIG,
+                    e.getMessage());
+            LOGGER.error(errorMsg, e);
+            validationOutputData.setMessage(errorMsg);
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Load a single bulk config by name
+     *
+     * @param configName Name of the bulk config to load
+     * @return KruizeBulkConfigEntry or null if not found
+     */
+    @Override
+    public KruizeBulkConfigEntry loadBulkConfigByName(String configName) throws Exception {
+        KruizeBulkConfigEntry kruizeBulkConfigEntry = null;
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query<KruizeBulkConfigEntry> query = session.createQuery(
+                        DBConstants.SQLQUERY.SELECT_FROM_BULK_CONFIG_BY_NAME,
+                        KruizeBulkConfigEntry.class);
+                query.setParameter("configName", configName);
+                kruizeBulkConfigEntry = query.uniqueResult();
+                tx.commit();
+            } catch (NoResultException e) {
+                LOGGER.debug("Bulk config {} not found", configName);
+                if (tx != null) tx.rollback();
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_BULK_CONFIG,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                throw new Exception(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_BULK_CONFIG,
+                    e.getMessage());
+            LOGGER.error(errorMsg, e);
+            throw new Exception(errorMsg);
+        }
+        return kruizeBulkConfigEntry;
+    }
+
+    /**
+     * Load all bulk configs
+     *
+     * @return List of all bulk configs
+     */
+    @Override
+    public List<KruizeBulkConfigEntry> loadAllBulkConfigs() throws Exception {
+        List<KruizeBulkConfigEntry> bulkConfigs = new ArrayList<>();
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query<KruizeBulkConfigEntry> query = session.createQuery(
+                        DBConstants.SQLQUERY.SELECT_FROM_BULK_CONFIG + " k ORDER BY k.configName",
+                        KruizeBulkConfigEntry.class);
+                bulkConfigs = query.list();
+                tx.commit();
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_BULK_CONFIGS,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                throw new Exception(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_BULK_CONFIGS,
+                        e.getMessage());
+            LOGGER.error(errorMsg, e);
+            throw new Exception(errorMsg);
+        }
+        return bulkConfigs;
+    }
+
+    /**
+     * Update an existing bulk config
+     *
+     * @param kruizeBulkConfigEntry Bulk Config Database object to be updated
+     * @return validationOutputData contains the status of the DB update operation
+     */
+    @Override
+    public ValidationOutputData updateBulkConfigToDB(KruizeBulkConfigEntry kruizeBulkConfigEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.merge(kruizeBulkConfigEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_UPDATING_BULK_CONFIG,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_UPDATING_BULK_CONFIG,
+                    e.getMessage());
+            LOGGER.error(errorMsg, e);
+            validationOutputData.setMessage(errorMsg);
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Delete a bulk config by name
+     *
+     * @param configName Name of the bulk config to delete
+     * @return validationOutputData contains the status of the DB delete operation
+     */
+    @Override
+    public ValidationOutputData deleteBulkConfigByName(String configName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(
+                        DELETE_BULK_CONFIG_BY_NAME, null);
+                query.setParameter("configName", configName);
+                int result = query.executeUpdate();
+                tx.commit();
+
+                if (result > 0) {
+                    validationOutputData.setSuccess(true);
+                } else {
+                    String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.BULK_CONFIG_NOT_FOUND,
+                            configName);
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorMsg);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
+                }
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_DELETING_BULK_CONFIG,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_DELETING_BULK_CONFIG,
+                    e.getMessage());
+            LOGGER.error(errorMsg, e);
+            validationOutputData.setMessage(errorMsg);
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Load all enabled bulk configs
+     *
+     * @return List of enabled bulk configs
+     */
+    @Override
+    public List<KruizeBulkConfigEntry> loadEnabledBulkConfigs() throws Exception {
+        List<KruizeBulkConfigEntry> bulkConfigs = new ArrayList<>();
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query<KruizeBulkConfigEntry> query = session.createQuery(
+                        LOAD_ALL_ENABLED_BULK_CONFIGS,
+                        KruizeBulkConfigEntry.class);
+                bulkConfigs = query.list();
+                tx.commit();
+            } catch (HibernateException e) {
+                String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_ENABLED_BULK_CONFIGS,
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                if (tx != null) tx.rollback();
+                throw new Exception(errorMsg);
+            }
+        } catch (Exception e) {
+            String errorMsg = String.format(DBConstants.BULK_CONFIG_MESSAGES.ERROR_LOADING_ENABLED_BULK_CONFIGS,
+                        e.getMessage());
+            LOGGER.error(errorMsg, e);
+            throw new Exception(errorMsg);
+        }
+        return bulkConfigs;
     }
 }

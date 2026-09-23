@@ -974,6 +974,16 @@ public class KruizeConstants {
         public static final String INVALID_DATE_FORMAT = "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)";
         public static final String TIME_RANGE_EXCEPTION = "Exception occurred while validating the time range";
 
+        // cluster_name validation
+        /**
+         * Maximum allowed length for a cluster_name value.
+         * 253 is the maximum length of a DNS subdomain as defined in RFC 1123,
+         * which Kubernetes adopts as the upper bound for cluster-scoped identifiers.
+         */
+        public static final int MAX_CLUSTER_NAME_LENGTH = 253;
+        public static final String CLUSTER_NAME_EMPTY = "cluster_name cannot be an empty string";
+        public static final String CLUSTER_NAME_TOO_LONG = "cluster_name is too long (max %d characters, got %d)";
+
 
 
         // TODO : Bulk API Create Experiments defaults
@@ -1085,6 +1095,18 @@ public class KruizeConstants {
             }
 
 
+        }
+
+        public static class LabelFilterConstants {
+            public static final String LOG_LABEL_EXPERIMENT_NAME_ERROR = "Error building label string for experiment name: {}";
+            public static final String LOG_LABEL_ALL_INVALID = "All label entries were invalid or empty — no pod label filter will be applied";
+            public static final String LOG_LABEL_NULL_KEY = "Skipping label with null or empty key";
+            public static final String LOG_LABEL_NULL_VALUE = "Skipping label '{}' with null value";
+            public static final String LOG_LABEL_NULL_LIST_ENTRY = "Skipping null entry in label '{}' list";
+            public static final String LOG_LABEL_NON_STRING_ENTRY = "Skipping non-string entry in label '{}' list: {}";
+            public static final String LOG_LABEL_NO_VALID_VALUES = "Label '{}' has no valid values after filtering, skipping";
+            public static final String LOG_LABEL_EMPTY_VALUE = "Skipping label '{}' with empty string value";
+            public static final String LOG_LABEL_UNSUPPORTED_TYPE = "Skipping label '{}' with unsupported value type: {}";
         }
     }
 
