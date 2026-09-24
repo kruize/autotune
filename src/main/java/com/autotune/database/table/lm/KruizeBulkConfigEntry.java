@@ -29,8 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -307,10 +306,10 @@ public class KruizeBulkConfigEntry {
         config.setEnabled(this.enabled);
         
         if (this.createdAt != null) {
-            config.setCreatedAt(this.createdAt.toInstant());
+            config.setCreatedAt(this.createdAt.toInstant().toString());
         }
         if (this.updatedAt != null) {
-            config.setUpdatedAt(this.updatedAt.toInstant());
+            config.setUpdatedAt(this.updatedAt.toInstant().toString());
         }
         
         return config;
@@ -397,10 +396,10 @@ public class KruizeBulkConfigEntry {
         entry.setEnabled(config.getEnabled());
         
         if (config.getCreatedAt() != null) {
-            entry.setCreatedAt(Timestamp.from(config.getCreatedAt()));
+            entry.setCreatedAt(Timestamp.from(Instant.parse(config.getCreatedAt())));
         }
         if (config.getUpdatedAt() != null) {
-            entry.setUpdatedAt(Timestamp.from(config.getUpdatedAt()));
+            entry.setUpdatedAt(Timestamp.from(Instant.parse(config.getUpdatedAt())));
         }
         
         return entry;

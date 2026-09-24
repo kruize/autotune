@@ -24,8 +24,6 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.KruizeBulkConfigEntry;
 import com.autotune.utils.GenericRestApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +50,7 @@ import java.util.stream.Collectors;
 public class BulkConfigService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkConfigService.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private ExperimentDAO experimentDAO;
 
     @Override
@@ -123,7 +119,7 @@ public class BulkConfigService extends HttpServlet {
             }
 
             // Stamp creation and update timestamps before persisting
-            Instant now = Instant.now();
+            String now = Instant.now().toString();
             bulkConfig.setCreatedAt(now);
             bulkConfig.setUpdatedAt(now);
 
@@ -276,7 +272,7 @@ public class BulkConfigService extends HttpServlet {
             }
 
             // Stamp the update timestamp before persisting
-            existingConfig.setUpdatedAt(Instant.now());
+            existingConfig.setUpdatedAt(Instant.now().toString());
 
             // Convert back to database entity and update
             KruizeBulkConfigEntry updatedEntry = KruizeBulkConfigEntry.fromBulkConfig(existingConfig);
