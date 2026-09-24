@@ -28,7 +28,10 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentCache;
 import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
@@ -58,9 +61,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
  */
@@ -68,6 +68,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+    
+    private static final ExperimentCache experimentCache = new ExperimentCache();
+    private static final Gson gson = new Gson();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -97,12 +100,20 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(
-                    new Gson().fromJson(inputData, CreateExperimentAPIObject[].class)
-            );
-
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(gson.fromJson(inputData, CreateExperimentAPIObject[].class));
+            
             // check for bulk entries and respond accordingly
             ServiceHelpers.checkForBulk(createExperimentAPIObjects);
+
+            // Check if experiment already exists before processing
+            for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                String experimentName = createExperimentAPIObject.getExperimentName();
+                if (experimentCache.isExists(experimentName)) {
+                    LOGGER.debug("Experiment {} already exists, returning 409", experimentName);
+                    sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                    return;
+                }
+            }
 
             List<KruizeObject> kruizeExpList = ServiceHelpers.normalizeAndValidateExperimentTypes(
                     createExperimentAPIObjects
@@ -112,7 +123,7 @@ public class CreateExperiment extends HttpServlet {
             //TODO: UX needs to be modified - Handle response for the multiple objects
             KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
             if (null == invalidKruizeObject) {
-                ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
+                ValidationOutputData addedToDB = null;
                 for (KruizeObject ko : kruizeExpList) {
                     CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
                             .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
@@ -126,6 +137,18 @@ public class CreateExperiment extends HttpServlet {
                         ServiceHelpers.detectLayers(validAPIObj);
                     }
                     addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                    
+                    if (addedToDB.isSuccess()) {
+                        experimentCache.add(ko.getExperimentName());
+                    } else {
+                        // Check if experiment already exists
+                        if (addedToDB.getMessage() != null && addedToDB.getMessage().contains("already exists")) {
+                            LOGGER.debug("Experiment {} already exists, returning 409", ko.getExperimentName());
+                            experimentCache.add(ko.getExperimentName());
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            return;
+                        }
+                    }
                 }
                 if (addedToDB.isSuccess()) {
                     sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
@@ -219,7 +242,7 @@ public class CreateExperiment extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
+                gson.toJson(
                         new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
