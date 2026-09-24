@@ -157,7 +157,7 @@ public class DSMetadataService extends HttpServlet {
                 }
 
                 DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName,
-                        datasource,"",0, 0, 0, measurementDuration, new HashMap<>(), new HashMap<>());
+                        datasource, 0, 0, 0, measurementDuration, new HashMap<>(), new HashMap<>());
 
                 // Validate imported metadataInfo object
                 DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
