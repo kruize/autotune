@@ -533,7 +533,7 @@ public class BulkConfigValidation {
         try {
             ExperimentDBService dbService = new ExperimentDBService();
             Map<String, PerformanceProfile> performanceProfileMap = new HashMap<>();
-            dbService.loadPerformanceProfileFromDBByName(performanceProfileMap, performanceProfileName);
+            dbService.loadMetricProfileFromDBByName(performanceProfileMap, performanceProfileName);
 
             if (!performanceProfileMap.containsKey(performanceProfileName)) {
                 return new ValidationOutputData(false,
