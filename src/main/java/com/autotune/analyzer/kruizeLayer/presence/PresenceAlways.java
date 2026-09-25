@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+import java.util.List;
 
 /**
  * Implementation for layers that are always present
@@ -31,7 +32,7 @@ public class PresenceAlways implements LayerPresenceDetector {
     }
 
     @Override
-    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
+    public boolean detectPresence(String namespace, String containerName, List<String> datasourceNames) throws Exception {
         // Layers with ALWAYS presence type are always detected
         return true;
     }
