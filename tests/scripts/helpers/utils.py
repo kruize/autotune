@@ -213,8 +213,42 @@ NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE = "328001"
 
 CPU_REQUEST_OPTIMISED_CODE = "323004"
 CPU_LIMIT_OPTIMISED_CODE = "323005"
+CPU_REQUEST_UNDER_PROVISIONED_CODE = "323006"
+CPU_REQUEST_OVER_PROVISIONED_CODE = "323007"
+CPU_LIMIT_UNDER_PROVISIONED_CODE = "323008"
+CPU_LIMIT_OVER_PROVISIONED_CODE = "323009"
 MEMORY_REQUEST_OPTIMISED_CODE = "324003"
 MEMORY_LIMIT_OPTIMISED_CODE = "324004"
+MEMORY_REQUEST_UNDER_PROVISIONED_CODE = "324005"
+MEMORY_REQUEST_OVER_PROVISIONED_CODE = "324006"
+MEMORY_LIMIT_UNDER_PROVISIONED_CODE = "324007"
+MEMORY_LIMIT_OVER_PROVISIONED_CODE = "324008"
+
+CPU_REQUEST_UNDER_PROVISIONED_MSG = "Workload is under-provisioned for CPU. Kruize recommends increasing CPU allocation."
+CPU_REQUEST_OVER_PROVISIONED_MSG = "Workload is over-provisioned for CPU. Kruize recommends reducing CPU allocation to optimize costs."
+CPU_LIMIT_UNDER_PROVISIONED_MSG = "Workload is under-provisioned for CPU LIMITS. Kruize recommends increasing CPU limit allocation."
+CPU_LIMIT_OVER_PROVISIONED_MSG = "Workload is over-provisioned for CPU LIMITS. Kruize recommends reducing CPU limit allocation to optimize costs."
+MEMORY_REQUEST_UNDER_PROVISIONED_MSG = "Workload is under-provisioned for Memory. Kruize recommends increasing Memory allocation."
+MEMORY_REQUEST_OVER_PROVISIONED_MSG = "Workload is over-provisioned for Memory. Kruize recommends reducing Memory allocation to optimize costs."
+MEMORY_LIMIT_UNDER_PROVISIONED_MSG = "Workload is under-provisioned for Memory LIMITS. Kruize recommends increasing Memory limit allocation."
+MEMORY_LIMIT_OVER_PROVISIONED_MSG = "Workload is over-provisioned for Memory LIMITS. Kruize recommends reducing Memory limit allocation to optimize costs."
+
+# All provisioning-state notification codes (optimised + under + over) grouped for use in
+# validation helpers and tests.
+ALL_PROVISIONING_CODES = {
+    CPU_REQUEST_OPTIMISED_CODE,
+    CPU_REQUEST_UNDER_PROVISIONED_CODE,
+    CPU_REQUEST_OVER_PROVISIONED_CODE,
+    CPU_LIMIT_OPTIMISED_CODE,
+    CPU_LIMIT_UNDER_PROVISIONED_CODE,
+    CPU_LIMIT_OVER_PROVISIONED_CODE,
+    MEMORY_REQUEST_OPTIMISED_CODE,
+    MEMORY_REQUEST_UNDER_PROVISIONED_CODE,
+    MEMORY_REQUEST_OVER_PROVISIONED_CODE,
+    MEMORY_LIMIT_OPTIMISED_CODE,
+    MEMORY_LIMIT_UNDER_PROVISIONED_CODE,
+    MEMORY_LIMIT_OVER_PROVISIONED_CODE,
+}
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -1623,6 +1657,95 @@ def check_optimised_codes(cost_notifications, perf_notifications):
 
     assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
     assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications
+
+
+def check_provisioning_notification_exclusive(notifications: dict, resource_key: str, code_under: str, code_over: str, code_optimised: str):
+    """Assert that for a given resource dimension exactly one provisioning/optimised notification is present.
+
+    Exactly one of {code_under, code_over, code_optimised} must be in *notifications*.
+    resource_key is used only for the assertion message (e.g. "CPU request").
+    """
+    present = [c for c in (code_under, code_over, code_optimised) if c in notifications]
+    assert len(present) == 1, (
+        f"{resource_key}: expected exactly one of "
+        f"[{code_optimised}, {code_under}, {code_over}] in notifications, "
+        f"but found: {present}"
+    )
+
+
+def check_provisioning_notification_message(notifications: dict, code: str, expected_msg: str):
+    """Assert that a notification *code* is present and has the expected message text."""
+    assert code in notifications, f"Notification code {code} not found in {list(notifications.keys())}"
+    actual_msg = notifications[code].get("message", "")
+    assert actual_msg == expected_msg, (
+        f"Notification {code}: expected message '{expected_msg}', got '{actual_msg}'"
+    )
+
+
+def validate_provisioning_notifications(engine_notifications: dict):
+    """Validate that each resource dimension in engine-level notifications carries exactly one
+    provisioning-state code (optimised OR under-provisioned OR over-provisioned) with the
+    correct message text.
+
+    This covers all four dimensions:
+      - CPU request  (323004 / 323006 / 323007)
+      - CPU limit    (323005 / 323008 / 323009)
+      - Memory request (324003 / 324005 / 324006)
+      - Memory limit   (324004 / 324007 / 324008)
+
+    Dimensions whose codes are entirely absent are skipped (e.g. when no current resource
+    value is set for that dimension).
+    """
+    _DIMENSIONS = [
+        (
+            "CPU request",
+            CPU_REQUEST_OPTIMISED_CODE,
+            CPU_REQUEST_UNDER_PROVISIONED_CODE,
+            CPU_REQUEST_OVER_PROVISIONED_CODE,
+            CPU_REQUEST_UNDER_PROVISIONED_MSG,
+            CPU_REQUEST_OVER_PROVISIONED_MSG,
+        ),
+        (
+            "CPU limit",
+            CPU_LIMIT_OPTIMISED_CODE,
+            CPU_LIMIT_UNDER_PROVISIONED_CODE,
+            CPU_LIMIT_OVER_PROVISIONED_CODE,
+            CPU_LIMIT_UNDER_PROVISIONED_MSG,
+            CPU_LIMIT_OVER_PROVISIONED_MSG,
+        ),
+        (
+            "Memory request",
+            MEMORY_REQUEST_OPTIMISED_CODE,
+            MEMORY_REQUEST_UNDER_PROVISIONED_CODE,
+            MEMORY_REQUEST_OVER_PROVISIONED_CODE,
+            MEMORY_REQUEST_UNDER_PROVISIONED_MSG,
+            MEMORY_REQUEST_OVER_PROVISIONED_MSG,
+        ),
+        (
+            "Memory limit",
+            MEMORY_LIMIT_OPTIMISED_CODE,
+            MEMORY_LIMIT_UNDER_PROVISIONED_CODE,
+            MEMORY_LIMIT_OVER_PROVISIONED_CODE,
+            MEMORY_LIMIT_UNDER_PROVISIONED_MSG,
+            MEMORY_LIMIT_OVER_PROVISIONED_MSG,
+        ),
+    ]
+
+    for label, code_opt, code_under, code_over, msg_under, msg_over in _DIMENSIONS:
+        relevant_codes = {code_opt, code_under, code_over}
+        present_codes = relevant_codes & set(engine_notifications.keys())
+
+        if not present_codes:
+            # Dimension not evaluated (e.g. no current value set for this resource)
+            continue
+
+        check_provisioning_notification_exclusive(engine_notifications, label, code_under, code_over, code_opt)
+
+        # Validate message for under/over-provisioned codes when present
+        if code_under in engine_notifications:
+            check_provisioning_notification_message(engine_notifications, code_under, msg_under)
+        if code_over in engine_notifications:
+            check_provisioning_notification_message(engine_notifications, code_over, msg_over)
 
 
 def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
