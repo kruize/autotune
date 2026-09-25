@@ -172,12 +172,23 @@ public class ExperimentValidation {
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }
-                        // check if the provided datasource name exists
-                        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(kruizeObject.getDataSource());
-                        if (dataSourceInfo != null) {
-                            LOGGER.debug("DataSource {} exists", kruizeObject.getDataSource());
+                        // check if the provided datasource name(s) exist
+                        List<String> datasources = kruizeObject.getDatasources();
+                        if (datasources != null && !datasources.isEmpty()) {
+                            Map<String, DataSourceInfo> dataSourcesCollection = DataSourceCollection.getInstance().getDataSourcesCollection();
+                            for (String datasourceName : datasources) {
+                                DataSourceInfo dataSourceInfo = dataSourcesCollection.get(datasourceName);
+                                if (dataSourceInfo != null) {
+                                    LOGGER.debug("DataSource {} exists", datasourceName);
+                                } else {
+                                    errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, datasourceName);
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    proceed = false;
+                                    break;
+                                }
+                            }
                         } else {
-                            errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, kruizeObject.getDataSource());
+                            errorMsg = KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.NO_DATASOURCE_SERVICEABLE;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }
@@ -401,7 +412,8 @@ public class ExperimentValidation {
                         }
                     }
                 } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
-                    if (null == expObj.getDataSource()) {
+                    // Check both single datasource and datasources list
+                    if (null == expObj.getDataSource() && (null == expObj.getDatasources() || expObj.getDatasources().isEmpty())) {
                         errorMsg = errorMsg.concat(String.format(LOCAL_MONITORING_DATASOURCE_MANDATORY, expObj.getExperimentName()));
                         missingLocalDatasource = true;
                     }
