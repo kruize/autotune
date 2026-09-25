@@ -35,8 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -392,16 +390,6 @@ public class BulkConfigService extends HttpServlet {
     private void triggerWebhook(BulkConfig config) {
         try {
             String webhookUrl = config.getWebhookUrl();
-
-            // Defense-in-depth: re-check at request time since DNS can change after validation
-            URI uri = URI.create(webhookUrl);
-            InetAddress address = InetAddress.getByName(uri.getHost());
-            if (address.isLoopbackAddress() || address.isLinkLocalAddress()
-                    || address.isSiteLocalAddress() || address.isAnyLocalAddress()) {
-                LOGGER.error("Blocked webhook to internal address for config: {}", config.getConfigName());
-                return;
-            }
-
             String payload = objectMapper.writeValueAsString(config);
 
             LOGGER.info("Triggering webhook for config: {} to URL: {}", config.getConfigName(), webhookUrl);
