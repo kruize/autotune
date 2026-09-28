@@ -2182,6 +2182,148 @@ def validate_limits_map_for_accelerator(limits: dict):
             assert resource_obj.get("format") == "cores", f"Resource '{resource}' has an invalid format: {resource_obj.get('format')}"
 
 
+# Full-card memory for models in SUPPORTED_GPUS. Matches getFrameBufferBasedOnModel / 1024.
+FULL_GPU_MEMORY_GIB = {
+    "NVIDIA-A100-SXM4-40GB": 40,
+    "NVIDIA-A100-SXM4-80GB": 80,
+    "NVIDIA-A100-PCIE-40GB": 40,
+    "NVIDIA-A100-PCIE-80GB": 80,
+    "NVIDIA-H100-SXM5-80GB": 80,
+    "NVIDIA-H100-SXM5-94GB": 94,
+    "NVIDIA-H100-SXM5-96GB": 96,
+    "NVIDIA-H100-PCIE-80GB": 80,
+    "NVIDIA-H100-PCIE-94GB": 94,
+    "NVIDIA-H100-PCIE-96GB": 96,
+    "NVIDIA-H200-PCIE-141GB": 141,
+}
+
+_MIG_SLICES_GIB_PATTERN = re.compile(r"(\d+)g\.(\d+)gb", re.IGNORECASE)
+
+
+def _java_round_two_decimals(value):
+    """Match Java Math.round(value * 100.0) / 100.0."""
+    return math.floor(value * 100.0 + 0.5) / 100.0
+
+
+def _accelerator_variation_percent(recommended, current):
+    return _java_round_two_decimals(((recommended - current) / current) * 100)
+
+
+def mig_key_to_slices_and_gib(mig_key):
+    match = _MIG_SLICES_GIB_PATTERN.search(mig_key or "")
+    assert match, f"Could not parse MIG slices and memory from '{mig_key}'"
+    return int(match.group(1)), int(match.group(2))
+
+
+def assert_current_full_gpu(current_limits, model, memory_gib):
+    assert isinstance(current_limits, dict), "current.limits expected"
+    assert isinstance(current_limits.get("cpu"), dict), "current.limits.cpu expected"
+    assert isinstance(current_limits.get("memory"), dict), "current.limits.memory expected"
+
+    accelerators = current_limits.get("accelerators")
+    assert isinstance(accelerators, list), "current.limits.accelerators must be a JSON array"
+    assert len(accelerators) == 1, f"Expected one current accelerator, got {accelerators}"
+    assert "acceleratorRecommendationItems" not in current_limits
+
+    item = accelerators[0]
+    assert item.get("model") == model, f"current accelerator model {item.get('model')} != {model}"
+    assert item.get("partition") in (None, ""), "full GPU current should not set partition"
+    assert item.get("count") == 1, f"full GPU current count expected 1, got {item.get('count')}"
+
+    compute = item.get("compute") or {}
+    memory = item.get("memory") or {}
+    assert compute.get("amount") == 7, f"full GPU compute expected 7 slices, got {compute}"
+    assert compute.get("format") == "slices", f"full GPU compute format expected slices, got {compute}"
+    assert memory.get("amount") == memory_gib, f"full GPU memory expected {memory_gib} GiB, got {memory}"
+    assert memory.get("format") == "GiB", f"full GPU memory format expected GiB, got {memory}"
+
+
+def assert_accelerator_variation(variation_limits, model, mig_key, current_compute, current_memory):
+    assert isinstance(variation_limits, dict), "variation.limits expected"
+    assert isinstance(variation_limits.get("cpu"), dict), "variation.limits.cpu expected"
+    assert isinstance(variation_limits.get("memory"), dict), "variation.limits.memory expected"
+
+    accelerators = variation_limits.get("accelerators")
+    assert isinstance(accelerators, list), "variation.limits.accelerators must be a JSON array"
+    assert len(accelerators) == 1, f"Expected one variation accelerator, got {accelerators}"
+
+    recommended_slices, recommended_gib = mig_key_to_slices_and_gib(mig_key)
+    expected_compute = _accelerator_variation_percent(recommended_slices, current_compute)
+    expected_memory = _accelerator_variation_percent(recommended_gib, current_memory)
+
+    item = accelerators[0]
+    assert item.get("model") == model, f"variation accelerator model {item.get('model')} != {model}"
+    assert item.get("partition") in (None, ""), "variation accelerator must not include partition"
+    assert item.get("count") in (None, ""), "variation accelerator must not include count"
+
+    compute = item.get("compute") or {}
+    memory = item.get("memory") or {}
+    assert compute.get("format") == "percentage", f"variation compute format expected percentage, got {compute}"
+    assert memory.get("format") == "percentage", f"variation memory format expected percentage, got {memory}"
+    assert compute.get("amount") == expected_compute, (
+        f"variation compute {compute.get('amount')} != {expected_compute} for {mig_key}"
+    )
+    assert memory.get("amount") == expected_memory, (
+        f"variation memory {memory.get('amount')} != {expected_memory} for {mig_key}"
+    )
+
+
+def assert_list_reco_full_gpu_current_and_variation(list_reco_json, gpu_name):
+    memory_gib = FULL_GPU_MEMORY_GIB[gpu_name]
+    containers = list_reco_json[0]["kubernetes_objects"][0]["containers"]
+    assert containers, "Containers array expected"
+
+    for container in containers:
+        data = container["recommendations"]["data"]
+        assert data, "Recommendations data expected"
+        checked = 0
+        for interval in data.values():
+            short_term = (interval.get("recommendation_terms") or {}).get("short_term")
+            if not short_term:
+                continue
+            cost = (short_term.get("recommendation_engines") or {}).get("cost") or {}
+            cost_limits = (cost.get("config") or {}).get("limits") or {}
+            mig_keys = [key for key in cost_limits if _MIG_SLICES_GIB_PATTERN.search(key)]
+            if not mig_keys:
+                continue
+            current_limits = (interval.get("current") or {}).get("limits") or {}
+            assert_current_full_gpu(current_limits, gpu_name, memory_gib)
+            variation_limits = (cost.get("variation") or {}).get("limits") or {}
+            assert_accelerator_variation(variation_limits, gpu_name, mig_keys[0], 7.0, float(memory_gib))
+            checked += 1
+        assert checked > 0, f"No short-term cost MIG recommendation found to check accelerators for {gpu_name}"
+
+
+def assert_limits_omit_accelerators(limits, label):
+    assert isinstance(limits, dict), f"{label} expected"
+    assert "accelerators" not in limits, f"{label} should not include accelerators"
+    assert isinstance(limits.get("cpu"), dict), f"{label} cpu expected"
+    assert isinstance(limits.get("memory"), dict), f"{label} memory expected"
+
+
+def assert_list_reco_omits_accelerators(list_reco_json):
+    containers = list_reco_json[0]["kubernetes_objects"][0]["containers"]
+    assert containers, "Containers array expected"
+
+    for container in containers:
+        data = container["recommendations"]["data"]
+        assert data, "Recommendations data expected"
+        checked = 0
+        for interval in data.values():
+            short_term = (interval.get("recommendation_terms") or {}).get("short_term")
+            if not short_term:
+                continue
+            cost = (short_term.get("recommendation_engines") or {}).get("cost") or {}
+            if not (cost.get("config") or {}).get("limits"):
+                continue
+            current_limits = (interval.get("current") or {}).get("limits") or {}
+            variation_limits = (cost.get("variation") or {}).get("limits") or {}
+            assert_limits_omit_accelerators(current_limits, "current.limits")
+            assert_limits_omit_accelerators(variation_limits, "variation.limits")
+            checked += 1
+        assert checked > 0, "No short-term cost recommendation found to check missing accelerators"
+
+
 
 def validate_accelerator_recommendations_for_container(recommendations_json):
     if 'experiment_type' in recommendations_json[0]:
