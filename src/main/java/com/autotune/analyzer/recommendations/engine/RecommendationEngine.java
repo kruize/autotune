@@ -503,12 +503,13 @@ public class RecommendationEngine implements RecommendationEngineService {
         // Remove whitespaces
         recommendationTerm = recommendationTerm.trim();
 
-        // Check if term is not empty and also must be one of short, medium or long term
+        // Check if term is not empty and also must be one of short, medium, long or flex term
         if (recommendationTerm.isEmpty() ||
                 (
                         !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM) &&
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.FLEX_TERM)
                 )
         ) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
