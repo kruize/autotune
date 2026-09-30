@@ -2289,7 +2289,8 @@ def assert_list_reco_full_gpu_current_and_variation(list_reco_json, gpu_name):
             current_limits = (interval.get("current") or {}).get("limits") or {}
             assert_current_full_gpu(current_limits, gpu_name, memory_gib)
             variation_limits = (cost.get("variation") or {}).get("limits") or {}
-            assert_accelerator_variation(variation_limits, gpu_name, mig_keys[0], 7.0, float(memory_gib))
+            for mig_key in mig_keys:
+                assert_accelerator_variation(variation_limits, gpu_name, mig_key, 7.0, float(memory_gib))
             checked += 1
         assert checked > 0, f"No short-term cost MIG recommendation found to check accelerators for {gpu_name}"
 
@@ -2313,15 +2314,19 @@ def assert_list_reco_omits_accelerators(list_reco_json):
             short_term = (interval.get("recommendation_terms") or {}).get("short_term")
             if not short_term:
                 continue
-            cost = (short_term.get("recommendation_engines") or {}).get("cost") or {}
-            if not (cost.get("config") or {}).get("limits"):
-                continue
+            engines = short_term.get("recommendation_engines") or {}
             current_limits = (interval.get("current") or {}).get("limits") or {}
-            variation_limits = (cost.get("variation") or {}).get("limits") or {}
             assert_limits_omit_accelerators(current_limits, "current.limits")
-            assert_limits_omit_accelerators(variation_limits, "variation.limits")
+            for engine_name in ("cost", "performance"):
+                engine = engines.get(engine_name) or {}
+                config_limits = (engine.get("config") or {}).get("limits")
+                if config_limits:
+                    assert_limits_omit_accelerators(config_limits, f"{engine_name}.config.limits")
+                variation_limits = (engine.get("variation") or {}).get("limits")
+                if variation_limits:
+                    assert_limits_omit_accelerators(variation_limits, f"{engine_name}.variation.limits")
             checked += 1
-        assert checked > 0, "No short-term cost recommendation found to check missing accelerators"
+        assert checked > 0, "No short-term recommendation found to check missing accelerators"
 
 
 
