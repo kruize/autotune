@@ -111,6 +111,17 @@ public class MappedRecommendationForTimestamp {
         }
     }
 
+    public TermRecommendations getFlexTermRecommendations() {
+        if (null != this.recommendationForTermHashMap && this.recommendationForTermHashMap.containsKey(KruizeConstants.JSONKeys.FLEX_TERM))
+            return this.recommendationForTermHashMap.get(KruizeConstants.JSONKeys.FLEX_TERM);
+        return null;
+    }
+
+    public void setFlexTermRecommendations(TermRecommendations flexTermRecommendations) {
+        if (null != flexTermRecommendations && null != recommendationForTermHashMap)
+            this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.FLEX_TERM, flexTermRecommendations);
+    }
+
     public HashMap<String, TermRecommendations> getRecommendationForTermHashMap() {
         return recommendationForTermHashMap;
     }
