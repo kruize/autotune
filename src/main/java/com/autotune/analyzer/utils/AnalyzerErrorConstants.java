@@ -213,6 +213,7 @@ public class AnalyzerErrorConstants {
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
             public static final String FLEX_CANNOT_COMBINE_WITH_OTHER_TERMS = "flex term cannot be combined with other terms.";
+            public static final String FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED = "When combining flex with other terms (short/medium/long), no model should be specified. Remove the model or use a single term with its required model.";
             public static final String STABILITY_REQUIRES_FLEX_TERM  = "stability profile only supports the flex term.";
             public static final String FLEX_REQUIRES_STABILITY_MODEL = "flex term only supports the stability profile.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
