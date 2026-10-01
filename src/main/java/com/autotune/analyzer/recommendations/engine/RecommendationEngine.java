@@ -96,6 +96,18 @@ public class RecommendationEngine implements RecommendationEngineService {
         registerModel(performanceBasedRecommendationModel);
     }
 
+    /**
+     * Loads all three models (cost, performance, stability) for the mixed-term case where
+     * flex is combined with other terms (short/medium/long) and no explicit model is specified.
+     * The processors will apply per-term filtering: stability for flex_term, cost+perf for others.
+     */
+    private void loadAllRecommendationModels() {
+        recommendationModels = new ArrayList<>();
+        registerModel(new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES));
+        registerModel(new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES));
+        registerModel(new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES));
+    }
+
     private void loadDefaultRecommendationModelForAutoAndRecreate() {
         // create performance model by default
         recommendationModels = new ArrayList<>();
@@ -346,9 +358,21 @@ public class RecommendationEngine implements RecommendationEngineService {
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
-                    // recommendation setting are null -> use default values
-                    // both cost and perf model to be called
-                    loadDefaultRecommendationModels();
+                    // No model specified — check if this is the mixed flex+other-terms case.
+                    // If so, load all three models; processors will filter per-term.
+                    List<String> configuredTerms = (kruizeObject.getRecommendation_settings() != null
+                            && kruizeObject.getRecommendation_settings().getTermSettings() != null
+                            && kruizeObject.getRecommendation_settings().getTermSettings().getTerms() != null)
+                            ? kruizeObject.getRecommendation_settings().getTermSettings().getTerms()
+                            : Collections.emptyList();
+                    boolean isMixedFlexCase = configuredTerms.contains(KruizeConstants.JSONKeys.FLEX)
+                            && configuredTerms.size() > 1;
+                    if (isMixedFlexCase) {
+                        loadAllRecommendationModels();
+                    } else {
+                        // default: both cost and perf model
+                        loadDefaultRecommendationModels();
+                    }
                 } else {
                     // models present
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
