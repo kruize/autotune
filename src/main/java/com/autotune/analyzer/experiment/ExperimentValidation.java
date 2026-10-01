@@ -357,6 +357,25 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
+
+                    // V-3: flex combined with other terms
+                    List<String> requestedTerms = expObj.getRecommendation_settings().getTermSettings().getTerms();
+                    boolean flexWithOtherTerms = requestedTerms.contains(KruizeConstants.JSONKeys.FLEX) && requestedTerms.size() > 1;
+                    if (flexWithOtherTerms) {
+                        // flex + other terms is allowed only when NO model is specified.
+                        // If the user has also specified a model, reject with a clear error.
+                        boolean modelSpecified = expObj.getRecommendation_settings().getModelSettings() != null
+                                && expObj.getRecommendation_settings().getModelSettings().getModels() != null
+                                && !expObj.getRecommendation_settings().getModelSettings().getModels().isEmpty();
+                        if (modelSpecified) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        // flex + other terms with no model is valid — skip further model cross-checks for this case
+                    }
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
@@ -373,6 +392,34 @@ public class ExperimentValidation {
                         }
                         if (!validModels.contains(model.toLowerCase())) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                    }
+
+                    List<String> reqTerms = expObj.getRecommendation_settings().getTermSettings() != null
+                            ? expObj.getRecommendation_settings().getTermSettings().getTerms() : Collections.emptyList();
+                    List<String> reqModels = expObj.getRecommendation_settings().getModelSettings().getModels();
+
+                    boolean hasFlex      = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
+                    boolean hasStability = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
+
+                    // V-1: stability must be paired only with flex term (single-term check only)
+                    // V-2: flex must be paired only with stability model (single-term check only)
+                    // These checks are skipped when flex is combined with other terms (handled above).
+                    boolean flexWithOtherTerms = hasFlex && reqTerms.size() > 1;
+                    if (!flexWithOtherTerms) {
+                        if (hasStability && !hasFlex) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_REQUIRES_FLEX_TERM;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        if (hasFlex && !hasStability) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_REQUIRES_STABILITY_MODEL;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
