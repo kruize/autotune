@@ -606,6 +606,13 @@ spec:
           env:
             - name: KRUIZE_UI_ENV
               value: "production"
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "0.002"
+            limits:
+              memory: "10Mi"
+              cpu: "0.002"
           volumeMounts:
             - name: nginx-config-volume
               mountPath: /etc/nginx/nginx.conf
