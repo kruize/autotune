@@ -52,6 +52,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
 import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationConstants.PERFORMANCE_RECOMMENDATION_TUNABLES;
+import static com.autotune.utils.KruizeConstants.StabilityBasedRecommendationConstants.STABILITY_RECOMMENDATION_TUNABLES;
 
 public class RecommendationEngine implements RecommendationEngineService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
@@ -125,6 +126,9 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // Todo: add custom performance parameters over here from the user inputs
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
+            }  else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
+                StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES);
+                registerModel(stabilityBasedRecommendationModel);
             } else {
                 // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
@@ -499,12 +503,13 @@ public class RecommendationEngine implements RecommendationEngineService {
         // Remove whitespaces
         recommendationTerm = recommendationTerm.trim();
 
-        // Check if term is not empty and also must be one of short, medium or long term
+        // Check if term is not empty and also must be one of short, medium, long or flex term
         if (recommendationTerm.isEmpty() ||
                 (
                         !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM) &&
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.FLEX_TERM)
                 )
         ) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
