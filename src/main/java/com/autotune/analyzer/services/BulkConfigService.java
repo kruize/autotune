@@ -41,8 +41,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * REST API service for Bulk Config management
- * Provides CRUD operations for bulk configs and webhook notifications
+ * REST API service for Bulk Config management.
+ * Provides CRUD operations for bulk configs and webhook notifications.
+ *
+ * <p>When a config is updated via {@link #doPut}, a webhook notification is sent to the
+ * configured {@code webhook_url} using {@code PATCH /webhook/config} on the optimizer.</p>
  */
 @WebServlet(asyncSupported = true)
 public class BulkConfigService extends HttpServlet {

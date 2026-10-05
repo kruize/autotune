@@ -29,6 +29,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -207,28 +209,38 @@ public class GenericRestApiClient {
     }
 
     /**
-     * Method to call the Experiment API (e.g., to create an experiment) using POST request.
+     * Calls the Kruize API using an HTTP POST request.
+     * Delegates to {@link #callKruizeAPI(String, String)}.
      *
-     * @param payload JSON payload containing the experiment details
-     * @return API response code
+     * @param payload JSON payload containing the request details
+     * @return {@link HttpResponseWrapper} with the response status code and body
      * @throws IOException
      */
     public HttpResponseWrapper callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return callKruizeAPI(KruizeConstants.HttpConstants.MethodType.POST, payload);
+    }
+
+    /**
+     * Calls the Kruize API using the specified HTTP method with the given JSON payload.
+     * Supported methods: {@code POST}, {@code PATCH}.
+     *
+     * @param method  HTTP method — {@code "POST"} or {@code "PATCH"}
+     * @param payload JSON payload to include in the request body (may be {@code null})
+     * @return {@link HttpResponseWrapper} with the response status code and body
+     * @throws IOException
+     */
+    public HttpResponseWrapper callKruizeAPI(String method, String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        HttpEntityEnclosingRequestBase request = KruizeConstants.HttpConstants.MethodType.PATCH.equalsIgnoreCase(method)
+                ? new HttpPatch(baseURL) : new HttpPost(baseURL);
+        request.setHeader("Content-Type", "application/json");
+        request.setHeader("Accept", "application/json");
+        if (payload != null) {
+            request.setEntity(new StringEntity(payload, StandardCharsets.UTF_8));
+        }
         HttpResponseWrapper httpResponseWrapper = null;
         // Create an HTTP client
         try (CloseableHttpClient httpclient = setupHttpClient()) {
-            // Prepare the HTTP POST request
-            HttpPost httpPost = new HttpPost(baseURL);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setHeader("Accept", "application/json");
-            // If payload is present, set it in the request body
-            if (payload != null) {
-                StringEntity entity = new StringEntity(payload, StandardCharsets.UTF_8);
-                httpPost.setEntity(entity);
-            }
-            // Execute the request and return the response code
-            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                // Get the status code from the response
+            try (CloseableHttpResponse response = httpclient.execute(request)) {
                 int responseCode = response.getStatusLine().getStatusCode();
                 LOGGER.debug("Response code: {}", responseCode);
                 if (response.getEntity() != null) {

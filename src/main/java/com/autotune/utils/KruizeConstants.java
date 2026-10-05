@@ -406,6 +406,8 @@ public class KruizeConstants {
 
         public static class MethodType {
             public static final String GET = "GET";
+            public static final String POST = "POST";
+            public static final String PATCH = "PATCH";
 
             private MethodType() {
             }
