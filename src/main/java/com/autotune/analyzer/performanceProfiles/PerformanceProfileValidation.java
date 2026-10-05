@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -228,37 +227,35 @@ public class PerformanceProfileValidation {
 
         try {
             // Validate top-level mandatory fields
-            if (checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields)) {
-                return buildValidationFailure(validationOutputData, missingMandatoryFields);
-            }
+            boolean topLevelMissing = checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields);
+
             // Validate version
             if (perfObj.getProfile_version() == AnalyzerConstants.PerformanceProfileConstants.ZERO_VALUE) {
-                return buildValidationFailure(validationOutputData, List.of(AnalyzerConstants.PROFILE_VERSION));
-            }
-            // Validate SLO fields
-            if (checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields)) {
-                return buildValidationFailure(validationOutputData, missingMandatoryFields);
+                missingMandatoryFields.add(AnalyzerConstants.PROFILE_VERSION);
             }
 
-            // Validate function variables
-            for (Metric metric : perfObj.getSloInfo().getFunctionVariables()) {
-                if (checkMandatoryFields(metric, mandatoryFuncVariables, missingMandatoryFields)) {
-                    return buildValidationFailure(validationOutputData, missingMandatoryFields);
+            // If SLO is missing, skip child validations that depend on it
+            if (!topLevelMissing && perfObj.getSloInfo() != null) {
+                checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields);
+
+                // Validate individual function variables if the list is present
+                List<Metric> functionVariables = perfObj.getSloInfo().getFunctionVariables();
+                if (!functionVariables.isEmpty()) {
+                    for (Metric metric : functionVariables) {
+                        checkMandatoryFields(metric, mandatoryFuncVariables, missingMandatoryFields);
+                    }
+                    checkFunctionVariables(functionVariables, missingMandatoryFields);
+                }
+
+                // Validate objective function type if objective function is present
+                if (perfObj.getSloInfo().getObjectiveFunction() != null) {
+                    String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
+                    checkMandatoryFields(perfObj.getSloInfo().getObjectiveFunction(),
+                            List.of(mandatoryObjFuncData), missingMandatoryFields);
                 }
             }
-            // Validate aggregationFunction/query objects
-            if (checkFunctionVariables(perfObj.getSloInfo().getFunctionVariables(), missingMandatoryFields)) {
-                return buildValidationFailure(validationOutputData, missingMandatoryFields);
-            }
 
-            // Validate objective function
-            if (perfObj.getSloInfo().getObjectiveFunction() == null) {
-                return buildValidationFailure(validationOutputData, List.of(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION));
-            }
-
-            String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
-            if (checkMandatoryFields(perfObj.getSloInfo().getObjectiveFunction(), List.of(mandatoryObjFuncData),
-                    missingMandatoryFields)) {
+            if (!missingMandatoryFields.isEmpty()) {
                 return buildValidationFailure(validationOutputData, missingMandatoryFields);
             }
 
@@ -286,6 +283,7 @@ public class PerformanceProfileValidation {
      * @return true if all fields are valid;  false otherwise
      */
     private boolean checkMandatoryFields(Object obj, List<String> fields, List<String> missingMandatoryFields) {
+        boolean hasMissing = false;
         for (String field : fields) {
             String methodName = "get" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
             try {
@@ -295,16 +293,16 @@ public class PerformanceProfileValidation {
                 if (isNullOrEmpty(value)) {
                     missingMandatoryFields.add(field);
                     LOGGER.warn("Field '{}' is missing or empty on {}", field, obj.getClass().getSimpleName());
-                    return true;
+                    hasMissing = true;
                 }
 
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 LOGGER.error("Method {} doesn't exist on class {}", methodName, obj.getClass().getSimpleName());
                 missingMandatoryFields.add(field);
-                return true;
+                hasMissing = true;
             }
         }
-        return false;
+        return hasMissing;
     }
 
 
@@ -358,8 +356,6 @@ public class PerformanceProfileValidation {
             return ((String) value).isEmpty();
         } else if (value instanceof Collection<?>) {
             return ((Collection<?>) value).isEmpty();
-        } else if (value.getClass().isArray()) {
-            return Array.getLength(value) == 0;
         }
         return false;
     }
@@ -468,6 +464,7 @@ public class PerformanceProfileValidation {
                             missingMandatoryFields.add(mField);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         LOGGER.error("Method name {} doesn't exist!", mField);
+                        missingMandatoryFields.add(mField);
                     }
                 }
         );
@@ -491,10 +488,13 @@ public class PerformanceProfileValidation {
                                 try {
                                     LOGGER.debug("MethodName = {}", methodName);
                                     Method getNameMethod = metricObj.getSloInfo().getClass().getMethod(methodName);
-                                    if (getNameMethod.invoke(metricObj.getSloInfo()) == null)
+                                   // check if SLO is null/empty
+                                    Object sloFieldValue = getNameMethod.invoke(metricObj.getSloInfo());
+                                    if (sloFieldValue == null || (sloFieldValue instanceof Collection && ((Collection<?>) sloFieldValue).isEmpty()))
                                         missingMandatoryFields.add(mField);
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                     LOGGER.error("Method name {} doesn't exist!", mField);
+                                    missingMandatoryFields.add(mField);
                                 }
 
                             });
@@ -511,9 +511,14 @@ public class PerformanceProfileValidation {
                                     } catch (NoSuchMethodException | IllegalAccessException |
                                              InvocationTargetException e) {
                                         LOGGER.error("Method name {} doesn't exist!", mField);
+                                        missingMandatoryFields.add(mField);
                                     }
 
                                 });
+                        if (missingMandatoryFields.isEmpty() &&
+                                checkFunctionVariables(metricObj.getSloInfo().getFunctionVariables(), missingMandatoryFields)) {
+                            return buildValidationFailure(validationOutputData, missingMandatoryFields);
+                        }
                         String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
                         String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
                                 mandatoryObjFuncData.substring(1);
@@ -525,6 +530,7 @@ public class PerformanceProfileValidation {
                                 missingMandatoryFields.add(mandatoryObjFuncData);
                         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                             LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
+                            missingMandatoryFields.add(mandatoryObjFuncData);
                         }
                         validationOutputData.setSuccess(true);
                     }
@@ -544,7 +550,7 @@ public class PerformanceProfileValidation {
                 validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s", missingMandatoryFields));
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorMsg);
             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
