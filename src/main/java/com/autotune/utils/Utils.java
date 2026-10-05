@@ -19,6 +19,8 @@ package com.autotune.utils;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.adapters.ResourceRecommendationAdapter;
+import com.autotune.analyzer.recommendations.ResourceRecommendation;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.metrics.MetricMetadata;
@@ -175,6 +177,7 @@ public class Utils {
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                .registerTypeAdapter(ResourceRecommendation.class, new ResourceRecommendationAdapter())
                 .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                 .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                 .create();
