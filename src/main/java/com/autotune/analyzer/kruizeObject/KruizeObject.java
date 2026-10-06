@@ -162,6 +162,34 @@ public final class KruizeObject implements ExperimentTypeAware {
         kruizeObject.setTerms(terms);
 
     }
+    /**
+     * Sets all four terms (short, medium, long, flex) in the KruizeObject.
+     * Used for the mixed-stability case: stability + cost/performance models with no explicit term setting.
+     * The recommendation processors will route each term to its appropriate model
+     * (stability for flex_term, cost/performance for the regular terms).
+     */
+    public static void setAllTermsIncludingFlex(Map<String, Terms> terms, KruizeObject kruizeObject) {
+        setDefaultTerms(terms, kruizeObject);  // adds short, medium, long
+        terms.put(KruizeConstants.JSONKeys.FLEX_TERM, new Terms(
+                KruizeConstants.JSONKeys.FLEX_TERM,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS,
+                getTermThresholdInDays(KruizeConstants.JSONKeys.FLEX_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                15, 1));
+        kruizeObject.setTerms(terms);
+    }
+
+    /**
+     * Sets only the flex term in the KruizeObject.
+     * Used when stability model is specified alone with no explicit term — auto-defaults to flex.
+     */
+    public static void setFlexTerm(Map<String, Terms> terms, KruizeObject kruizeObject) {
+        terms.put(KruizeConstants.JSONKeys.FLEX_TERM, new Terms(
+                KruizeConstants.JSONKeys.FLEX_TERM,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS,
+                getTermThresholdInDays(KruizeConstants.JSONKeys.FLEX_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                15, 1));
+        kruizeObject.setTerms(terms);
+    }
 
     public static void setDefaultTermsForAutoAndRecreate(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // for auto and recreate mode

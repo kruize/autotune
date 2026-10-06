@@ -319,8 +319,28 @@ public class RecommendationEngine implements RecommendationEngineService {
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
-                    // default for monitoring
-                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                    // No term specified — derive the right term set from the requested models.
+                    List<String> configuredModels = (kruizeObject.getRecommendation_settings() != null
+                            && kruizeObject.getRecommendation_settings().getModelSettings() != null
+                            && kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null)
+                            ? kruizeObject.getRecommendation_settings().getModelSettings().getModels()
+                            : Collections.emptyList();
+                    boolean hasStability = configuredModels.contains(KruizeConstants.JSONKeys.STABILITY);
+                    boolean hasOtherModels = configuredModels.stream().anyMatch(m ->
+                            KruizeConstants.JSONKeys.COST.equalsIgnoreCase(m) ||
+                            KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(m));
+
+                    if (hasStability && hasOtherModels) {
+                        // stability + cost/perf with no terms → all four terms (short/medium/long + flex);
+                        // processors route stability→flex_term, cost/perf→regular terms.
+                        KruizeObject.setAllTermsIncludingFlex(terms, kruizeObject);
+                    } else if (hasStability) {
+                        // stability-only with no term → auto-default to flex term.
+                        KruizeObject.setFlexTerm(terms, kruizeObject);
+                    } else {
+                        // default for monitoring (cost/perf or no model specified)
+                        KruizeObject.setDefaultTerms(terms, kruizeObject);
+                    }
                 } else {
                     // Process terms
                     KruizeObject.setCustomTerms(terms, kruizeObject);
@@ -358,8 +378,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
-                    // No model specified — check if this is the mixed flex+other-terms case.
-                    // If so, load all three models; processors will filter per-term.
+                    // No model specified — derive the right model set from the requested terms.
                     List<String> configuredTerms = (kruizeObject.getRecommendation_settings() != null
                             && kruizeObject.getRecommendation_settings().getTermSettings() != null
                             && kruizeObject.getRecommendation_settings().getTermSettings().getTerms() != null)
@@ -367,8 +386,15 @@ public class RecommendationEngine implements RecommendationEngineService {
                             : Collections.emptyList();
                     boolean isMixedFlexCase = configuredTerms.contains(KruizeConstants.JSONKeys.FLEX)
                             && configuredTerms.size() > 1;
+                    boolean isFlexOnlyTerm = configuredTerms.size() == 1
+                            && configuredTerms.contains(KruizeConstants.JSONKeys.FLEX);
                     if (isMixedFlexCase) {
+                        // flex + other terms, no model → load all three; processors filter per-term.
                         loadAllRecommendationModels();
+                    } else if (isFlexOnlyTerm) {
+                        // flex-only term, no model → auto-default to stability model.
+                        loadCustomRecommendationModels(
+                                Collections.singletonList(KruizeConstants.JSONKeys.STABILITY), Collections.emptyMap());
                     } else {
                         // default: both cost and perf model
                         loadDefaultRecommendationModels();

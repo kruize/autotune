@@ -400,33 +400,28 @@ public class ExperimentValidation {
                         }
                     }
 
-                    List<String> reqTerms = expObj.getRecommendation_settings().getTermSettings() != null
+                    List<String> reqTerms = (expObj.getRecommendation_settings().getTermSettings() != null
+                            && expObj.getRecommendation_settings().getTermSettings().getTerms() != null)
                             ? expObj.getRecommendation_settings().getTermSettings().getTerms() : Collections.emptyList();
                     List<String> reqModels = expObj.getRecommendation_settings().getModelSettings().getModels();
 
-                    boolean hasFlex      = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
-                    boolean hasStability = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
+                    boolean hasFlex        = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
+                    boolean hasStability   = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
+                    boolean hasOtherModels = reqModels.stream().anyMatch(m ->
+                            KruizeConstants.JSONKeys.COST.equalsIgnoreCase(m) ||
+                            KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(m));
 
-                    // V-1: stability must be paired only with flex term (single-term check only)
-                    // V-2: flex must be paired only with stability model (single-term check only)
-                    // These checks are skipped when flex is combined with other terms (handled above).
-                    boolean flexWithOtherTerms = hasFlex && reqTerms.size() > 1;
-                    if (!flexWithOtherTerms) {
-                        if (hasStability && !hasFlex) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_REQUIRES_FLEX_TERM;
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            validationOutputData.setSuccess(false);
-                            validationOutputData.setMessage(errorMsg);
-                            return validationOutputData;
-                        }
-                        if (hasFlex && !hasStability) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_REQUIRES_STABILITY_MODEL;
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            validationOutputData.setSuccess(false);
-                            validationOutputData.setMessage(errorMsg);
-                            return validationOutputData;
-                        }
+                    // stability combined with cost/performance models is only allowed when NO term is specified.
+                    // If any term is given alongside the mixed models, reject it.
+                    if (hasStability && hasOtherModels && !reqTerms.isEmpty()) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
                     }
+                    // All other combinations (stability-only, flex-only, stability+cost/perf no term)
+                    // are valid — the engine will auto-default the missing counterpart.
                 }
 
                 String depType = "";

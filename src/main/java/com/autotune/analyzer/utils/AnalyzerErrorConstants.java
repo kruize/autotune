@@ -216,6 +216,7 @@ public class AnalyzerErrorConstants {
             public static final String FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED = "When combining flex with other terms (short/medium/long), no model should be specified. Remove the model or use a single term with its required model.";
             public static final String STABILITY_REQUIRES_FLEX_TERM  = "stability profile only supports the flex term.";
             public static final String FLEX_REQUIRES_STABILITY_MODEL = "flex term only supports the stability profile.";
+            public static final String STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED = "When combining stability with other models (cost/performance), no term should be specified. Remove the term setting or use stability alone with the flex term.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
