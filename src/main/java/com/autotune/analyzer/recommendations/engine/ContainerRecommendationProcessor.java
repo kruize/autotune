@@ -216,6 +216,13 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 mappedRecommendationForTerm.addMetricsInfo(KruizeConstants.JSONKeys.POD_COUNT, podCountAggrInfo);
 
                 for (RecommendationModel model : engineService.getModels()) {
+                    // Per-term model filtering for the mixed flex+other-terms case:
+                    // flex_term gets only the stability model; regular terms get only cost/performance.
+                    boolean isFlexTerm = KruizeConstants.JSONKeys.FLEX_TERM.equalsIgnoreCase(recommendationTerm);
+                    boolean isStabilityModel = model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY);
+                    if (isFlexTerm && !isStabilityModel) continue;
+                    if (!isFlexTerm && isStabilityModel) continue;
+
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime, model, containerData, monitoringEndTime, kruizeObject, currentConfig, termsEntry);
 
@@ -234,6 +241,10 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE);
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY)) {
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_STABILITY_RECOMMENDATIONS_AVAILABLE);
                     } else if (null != model.getModelName()) {
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
