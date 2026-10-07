@@ -176,6 +176,13 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : engineService.getModels()) {
+                    // Per-term model filtering for the mixed flex+other-terms case:
+                    // flex_term gets only the stability model; regular terms get only cost/performance.
+                    boolean isFlexTerm = KruizeConstants.JSONKeys.FLEX_TERM.equalsIgnoreCase(recommendationTerm);
+                    boolean isStabilityModel = model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY);
+                    if (isFlexTerm && !isStabilityModel) continue;
+                    if (!isFlexTerm && isStabilityModel) continue;
+
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
                             monitoringStartTime, model, namespaceData, monitoringEndTime, kruizeObject.getRecommendation_settings(), currentConfig, termsEntry);
 
@@ -195,6 +202,10 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE);
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY)) {
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_STABILITY_RECOMMENDATIONS_AVAILABLE);
                     } else if (null != model.getModelName()) {
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
