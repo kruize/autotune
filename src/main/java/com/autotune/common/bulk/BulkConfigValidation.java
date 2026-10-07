@@ -27,9 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -480,23 +478,9 @@ public class BulkConfigValidation {
                         "webhook_url must contain a valid hostname",
                         HttpServletResponse.SC_BAD_REQUEST);
             }
-
-            InetAddress address = InetAddress.getByName(host);
-            if (address.isLoopbackAddress()
-                    || address.isLinkLocalAddress()
-                    || address.isSiteLocalAddress()
-                    || address.isAnyLocalAddress()) {
-                return new ValidationOutputData(false,
-                        "webhook_url must not point to a private or internal network address",
-                        HttpServletResponse.SC_BAD_REQUEST);
-            }
         } catch (IllegalArgumentException e) {
             return new ValidationOutputData(false,
                     "Invalid webhook_url format: " + e.getMessage(),
-                    HttpServletResponse.SC_BAD_REQUEST);
-        } catch (UnknownHostException e) {
-            return new ValidationOutputData(false,
-                    "webhook_url hostname cannot be resolved: " + e.getMessage(),
                     HttpServletResponse.SC_BAD_REQUEST);
         }
 

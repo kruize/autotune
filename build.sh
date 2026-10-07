@@ -22,7 +22,7 @@ AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 DEV_MODE=0
-BUILD_PARAMS="--pull --no-cache"
+BUILD_PARAMS="--pull --no-cache --platform linux/amd64"
 
 function usage() {
 	echo "Usage: $0 [-d] [-v version_string] [-i autotune_docker_image]"
@@ -88,14 +88,14 @@ fi
 echo ${BUILD_PARAMS}
 
 BUILDTMPFILE=/tmp/docker_build_log.$$
-BUILDER="docker"
+BUILDER="podman"
 
-${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
+${BUILDER} build ${BUILD_PARAMS} --platform linux/amd64 --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
 build_error=$(grep 'Error:\|unknown flag:' ${BUILDTMPFILE})
 
 if [ -n "${build_error}" ]; then
 	echo '--format=docker not supported'
-	${BUILDER} build ${BUILD_PARAMS} --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
+	${BUILDER} build ${BUILD_PARAMS} --platform linux/amd64 --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} .
 	check_err "Docker build of ${AUTOTUNE_DOCKER_IMAGE} failed."
 fi
 
