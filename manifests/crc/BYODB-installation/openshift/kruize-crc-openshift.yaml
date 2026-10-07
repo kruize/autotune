@@ -142,6 +142,8 @@ spec:
               value: "summary"
             - name: KAFKA_RESPONSE_FILTER_EXCLUDE
               value: ""
+            - name: ALLOWED_WEBHOOK_HOSTS
+              value: "kruize-optimizer"
           resources:
             requests:
               memory: "768Mi"
