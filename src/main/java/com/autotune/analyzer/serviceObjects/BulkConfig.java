@@ -17,7 +17,6 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,10 +64,10 @@ public class BulkConfig {
     private Boolean enabled = true;
 
     @JsonProperty("created_at")
-    private Instant createdAt;
+    private String createdAt;
 
     @JsonProperty("updated_at")
-    private Instant updatedAt;
+    private String updatedAt;
 
     public BulkConfig() {
     }
@@ -177,19 +176,19 @@ public class BulkConfig {
         this.enabled = enabled;
     }
 
-    public Instant getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Instant updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
 
