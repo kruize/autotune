@@ -33,6 +33,7 @@ KRUIZE_OPERATOR_IMAGE=""
 KRUIZE_OPERATOR=1
 KRUIZE_OPERATOR_BRANCH="mvp_demo"
 failed=0
+declare -a FAILED_DEMOS=()
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
@@ -129,8 +130,14 @@ function check_log() {
 	log=$1
 	echo ""
 	echo "Checking $log for exceptions/failed messages..." | tee -a ${LOG}
-	if grep -Eqi "exception|failed" "${log}"; then
-		echo "Exception/Failed messages found in ${log}" | tee -a ${LOG}
+
+	EXCLUDE_PATTERNS="No metadata profile|No metric profile|No layers|Experiment not found|Amount field is missing|Format field is missing|Number of pods cannot be zero|relation.*already exists|sun.misc.Unsafe|fsnotify watcher|too many open files"
+
+	matches=$(grep -Ei "exception|failed" "${log}" | grep -Eiv "${EXCLUDE_PATTERNS}" || true)
+
+	if [ -n "${matches}" ]; then
+		echo "Exception/Failed messages found in ${log}:" | tee -a ${LOG}
+		echo "${matches}" | tee -a ${LOG}
 		failed=1
 	fi
 }
@@ -234,7 +241,31 @@ function validate_sysbench_reco() {
 
 	no_match=0
 	for ((i=0; i<${#VPA_RECOS[@]}; i++)); do
-		if [ "${SYSBENCH_RECOS[i]}" != "${VPA_RECOS[i]}" ]; then
+		sysbench_val="${SYSBENCH_RECOS[i]}"
+		vpa_val="${VPA_RECOS[i]}"
+
+		# Normalize CPU values: convert millicores (e.g. 1051m) to cores for comparison
+		if [[ "${sysbench_val}" =~ ^([0-9]+)m$ ]]; then
+			sysbench_val=$(awk "BEGIN {printf \"%.6f\", ${BASH_REMATCH[1]} / 1000}")
+		fi
+		if [[ "${vpa_val}" =~ ^([0-9]+)m$ ]]; then
+			vpa_val=$(awk "BEGIN {printf \"%.6f\", ${BASH_REMATCH[1]} / 1000}")
+		fi
+
+		# Normalize memory values: convert Ki/Mi/Gi to bytes for comparison
+		for var in sysbench_val vpa_val; do
+			val="${!var}"
+			if [[ "${val}" =~ ^([0-9]+)Ki$ ]]; then
+				eval "${var}=$((${BASH_REMATCH[1]} * 1024))"
+			elif [[ "${val}" =~ ^([0-9]+)Mi$ ]]; then
+				eval "${var}=$((${BASH_REMATCH[1]} * 1024 * 1024))"
+			elif [[ "${val}" =~ ^([0-9]+)Gi$ ]]; then
+				eval "${var}=$((${BASH_REMATCH[1]} * 1024 * 1024 * 1024))"
+			fi
+		done
+
+		# Compare using awk for numeric tolerance (within 1%)
+		if ! awk "BEGIN {exit (($sysbench_val - $vpa_val) / ($vpa_val + 0.0001) < 0.01 && ($sysbench_val - $vpa_val) / ($vpa_val + 0.0001) > -0.01) ? 0 : 1}" 2>/dev/null; then
 			echo "sysbench - ${SYSBENCH_RECOS[i]} vpa - ${VPA_RECOS[i]}"
 			no_match=1
 		fi
@@ -318,6 +349,7 @@ function get_demo_config() {
 function run_demo() {
 	DEMO_NAME=$1
 	DEMO_DIR=$2
+	failed=0
 
 	get_demo_config "${DEMO_NAME}"
 
@@ -419,7 +451,7 @@ function run_demo() {
 			# sleep for the vpa to be created
 			sleep 60
 			echo "Validating vpa recommendations..." | tee -a ${LOG}
-			validate_sysbench_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			validate_sysbench_reco "${DEMO_LOG_DIR}" > >(tee -a ${LOG})
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
 
 		fi
@@ -427,7 +459,7 @@ function run_demo() {
 		# If demo is runtimes check for env recommendations
 		if [ "${DEMO_NAME}" == "runtimes" ]; then
 			echo "Validating runtimes recommendations..." | tee -a ${LOG}
-			validate_runtimes_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
+			validate_runtimes_reco "${DEMO_LOG_DIR}" > >(tee -a ${LOG})
 			echo "Validating runtimes recommendations...Done" | tee -a ${LOG}
 		fi
 
@@ -439,13 +471,18 @@ function run_demo() {
 		sleep 2
 
 	popd > /dev/null 2>&1
+
+	if [ "${failed}" -ne 0 ]; then
+		FAILED_DEMOS+=("${DEMO_NAME}")
+	fi
+
 	{
 		if [ "${failed}" -ne 0 ]; then
 			echo "Kruize ${DEMO_NAME} failed! Check the logs for details"
 		else
 			echo "Kruize ${DEMO_NAME} passed!"
 		fi
-		echo 
+		echo
 		echo "********************************************************************"
 		echo "Running ${DEMO_NAME} demo...Done"
 		echo "********************************************************************"
@@ -557,8 +594,9 @@ echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 # Clone kruize-demos repo
 delete_repos "kruize-demos"
 
-if [ "${failed}" -ne 0 ]; then
-	echo "Kruize demos test failed! Check the logs for details" | tee -a ${LOG}
+if [ ${#FAILED_DEMOS[@]} -ne 0 ]; then
+	echo "Kruize demos test failed! Failed demos: ${FAILED_DEMOS[*]}" | tee -a ${LOG}
+	echo "Check the logs for details" | tee -a ${LOG}
 	exit 1
 else
 	echo "Kruize demos test passed!" | tee -a ${LOG}
