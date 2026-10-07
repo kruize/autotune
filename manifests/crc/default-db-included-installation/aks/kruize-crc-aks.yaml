@@ -172,6 +172,8 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
+            - name: ALLOWED_WEBHOOK_HOSTS
+              value: "kruize-optimizer"
           ports:
             - name: kruize-port
               containerPort: 8080

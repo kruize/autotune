@@ -56,6 +56,18 @@ public class BulkConfigValidation {
             KruizeConstants.JSONKeys.NAMESPACE
     ));
 
+    // Trusted internal hosts that are allowed as webhook destinations even if they resolve to private addresses.
+    // Configured via the ALLOWED_WEBHOOK_HOSTS env var (comma-separated). Example: "kruize-optimizer,kruize"
+    private static final Set<String> ALLOWED_WEBHOOK_HOSTS;
+    static {
+        String envValue = System.getenv("ALLOWED_WEBHOOK_HOSTS");
+        if (envValue != null && !envValue.trim().isEmpty()) {
+            ALLOWED_WEBHOOK_HOSTS = new HashSet<>(Arrays.asList(envValue.trim().split("\\s*,\\s*")));
+        } else {
+            ALLOWED_WEBHOOK_HOSTS = Collections.emptySet();
+        }
+    }
+
     // Regex pattern for scheduling format: number + unit (e.g., "24h", "30min", "7days")
     // Supports: h, hr, hrs, hour, hours, m, min, mins, minute, minutes, d, day, days
     private static final String SCHEDULING_PATTERN = "^[1-9]\\d*\\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|d|day|days)$";
@@ -481,23 +493,28 @@ public class BulkConfigValidation {
                         HttpServletResponse.SC_BAD_REQUEST);
             }
 
-            InetAddress address = InetAddress.getByName(host);
-            if (address.isLoopbackAddress()
-                    || address.isLinkLocalAddress()
-                    || address.isSiteLocalAddress()
-                    || address.isAnyLocalAddress()) {
-                return new ValidationOutputData(false,
-                        "webhook_url must not point to a private or internal network address",
-                        HttpServletResponse.SC_BAD_REQUEST);
+            if (!ALLOWED_WEBHOOK_HOSTS.contains(host)) {
+                InetAddress address = InetAddress.getByName(host);
+                if (address.isLoopbackAddress()
+                        || address.isLinkLocalAddress()
+                        || address.isSiteLocalAddress()
+                        || address.isAnyLocalAddress()) {
+                    return new ValidationOutputData(false,
+                            "webhook_url must not point to a private or internal network address. " +
+                                    "To allow internal hosts, add them to the ALLOWED_WEBHOOK_HOSTS environment variable.",
+                            HttpServletResponse.SC_BAD_REQUEST);
+                }
             }
         } catch (IllegalArgumentException e) {
             return new ValidationOutputData(false,
                     "Invalid webhook_url format: " + e.getMessage(),
                     HttpServletResponse.SC_BAD_REQUEST);
         } catch (UnknownHostException e) {
-            return new ValidationOutputData(false,
-                    "webhook_url hostname cannot be resolved: " + e.getMessage(),
-                    HttpServletResponse.SC_BAD_REQUEST);
+            if (!ALLOWED_WEBHOOK_HOSTS.contains(URI.create(webhookUrl).getHost())) {
+                return new ValidationOutputData(false,
+                        "webhook_url hostname cannot be resolved: " + e.getMessage(),
+                        HttpServletResponse.SC_BAD_REQUEST);
+            }
         }
 
         return new ValidationOutputData(true, null, HttpServletResponse.SC_OK);
