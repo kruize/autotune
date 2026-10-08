@@ -283,3 +283,150 @@ def test_non_runtime_supported_datasource_logs_message(cluster_type):
 
     assert RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE in logs, \
         "Expected log message not found when using non-runtime-supported datasource"
+
+# ===========================================================================
+# flex + stability term/model validation tests
+# ===========================================================================
+
+def _flex_build_exp_json(experiment_name, terms, models):
+    """Render the experiment template and return parsed JSON."""
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template    = environment.get_template("create_exp_template.json")
+    content = template.render(
+        version="v2.0",
+        experiment_name=experiment_name,
+        cluster_name="default",
+        performance_profile="resource-optimization-local-monitoring",
+        metadata_profile="cluster-metadata-local-monitoring",
+        mode="monitor",
+        target_cluster="local",
+        datasource="prometheus-1",
+        experiment_type="container",
+        kubernetes_obj_type="deployment",
+        name="sysbench",
+        namespace="default",
+        namespace_name=None,
+        container_image_name="quay.io/kruizehub/sysbench:latest",
+        container_name="sysbench",
+        measurement_duration="2min",
+        threshold="0.1",
+        terms=terms,
+        models=models,
+    )
+    json_content = json.loads(content)
+    if "namespaces" in json_content[0]["kubernetes_objects"][0]:
+        json_content[0]["kubernetes_objects"][0].pop("namespaces", None)
+    return json_content
+
+
+def _flex_setup(cluster_type, experiment_name, terms, models):
+    """Write temp file, setup metadata profile, clean up stale experiment."""
+    json_content = _flex_build_exp_json(experiment_name, terms, models)
+    tmp_file = f"/tmp/create_exp_flex_stab_{experiment_name}.json"
+    with open(tmp_file, "w", encoding="utf-8") as f:
+        json.dump(json_content, f, indent=4)
+    form_kruize_url(cluster_type)
+    delete_and_create_metadata_profile()
+    delete_experiment(tmp_file, rm=False)
+    return tmp_file
+
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, terms, models", [
+    ("flex_only_no_model",               ["flex"],                              None),
+    ("stability_only_no_term",           None,                                  ["stability"]),
+    ("flex_and_stability_explicit",      ["flex"],                              ["stability"]),
+    ("stability_cost_no_term",           None,                                  ["stability", "cost"]),
+    ("stability_perf_no_term",           None,                                  ["stability", "performance"]),
+    ("all_models_no_term",               None,                                  ["stability", "cost", "performance"]),
+    ("flex_short_no_model",              ["flex", "short"],                     None),
+    ("flex_short_medium_no_model",       ["flex", "short", "medium"],           None),
+    ("flex_all_terms_no_model",          ["flex", "short", "medium", "long"],   None),
+    ("short_no_model",                   ["short"],                             None),
+    ("medium_no_model",                  ["medium"],                            None),
+    ("long_no_model",                    ["long"],                              None),
+    ("short_cost",                       ["short"],                             ["cost"]),
+    ("short_performance",                ["short"],                             ["performance"]),
+    ("medium_cost",                      ["medium"],                            ["cost"]),
+    ("long_performance",                 ["long"],                              ["performance"]),
+    ("no_terms_no_models",               None,                                  None),
+])
+def test_create_exp_valid_term_model(test_name, terms, models, cluster_type):
+    """Valid term/model combinations must be accepted with HTTP 201."""
+    exp_name = f"flex-stab-valid-{test_name}"
+    tmp_file = _flex_setup(cluster_type, exp_name, terms, models)
+    try:
+        response = create_experiment(tmp_file)
+        data = response.json()
+        print(f"[{test_name}] {response.status_code} — {data.get('message')}")
+        assert response.status_code == SUCCESS_STATUS_CODE, \
+            f"[{test_name}] Expected 201, got {response.status_code}: {data.get('message')}"
+        assert data["status"] == SUCCESS_STATUS
+        assert data["message"] == CREATE_EXP_SUCCESS_MSG
+    finally:
+        delete_experiment(tmp_file, rm=False)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, terms, models, expected_error", [
+    ("flex_short_with_stability",
+     ["flex", "short"], ["stability"],
+     FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED),
+    ("flex_medium_with_cost",
+     ["flex", "medium"], ["cost"],
+     FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED),
+    ("flex_long_with_performance",
+     ["flex", "long"], ["performance"],
+     FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED),
+    ("flex_short_medium_with_stability",
+     ["flex", "short", "medium"], ["stability"],
+     FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED),
+    ("stability_cost_with_flex_term",
+     ["flex"], ["stability", "cost"],
+     STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED),
+    ("stability_cost_with_short_term",
+     ["short"], ["stability", "cost"],
+     STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED),
+    ("stability_perf_with_medium_term",
+     ["medium"], ["stability", "performance"],
+     STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED),
+    ("stability_cost_perf_with_long_term",
+     ["long"], ["stability", "cost", "performance"],
+     STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED),
+    ("stability_cost_perf_with_flex_term",
+     ["flex"], ["stability", "cost", "performance"],
+     STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED),
+    ("invalid_term_name",
+     ["quarterly"], None,
+     INVALID_TERM_NAME),
+    ("invalid_term_name_garbage",
+     ["foo_bar"], None,
+     INVALID_TERM_NAME),
+    ("invalid_model_name",
+     None, ["turbo"],
+     INVALID_MODEL_NAME),
+    ("invalid_model_name_garbage",
+     None, ["cost_and_perf"],
+     INVALID_MODEL_NAME),
+    ("blank_term",
+     [""], None,
+     EMPTY_NOT_ALLOWED),
+    ("blank_model",
+     None, [""],
+     EMPTY_NOT_ALLOWED),
+])
+def test_create_exp_invalid_term_model(test_name, terms, models, expected_error, cluster_type):
+    """Invalid term/model combinations must be rejected with HTTP 400 and the exact error message."""
+    exp_name = f"flex-stab-invalid-{test_name}"
+    tmp_file = _flex_setup(cluster_type, exp_name, terms, models)
+    try:
+        response = create_experiment(tmp_file)
+        data = response.json()
+        print(f"[{test_name}] {response.status_code} — {data.get('message')}")
+        assert response.status_code == ERROR_STATUS_CODE, \
+            f"[{test_name}] Expected 400, got {response.status_code}: {data.get('message')}"
+        assert data["status"] == ERROR_STATUS
+        assert data["message"] == expected_error, \
+            f"[{test_name}]\n  expected: {expected_error}\n  got:      {data.get('message')}"
+    finally:
+        delete_experiment(tmp_file, rm=False)
