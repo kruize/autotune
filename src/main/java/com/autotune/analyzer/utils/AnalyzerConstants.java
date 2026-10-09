@@ -297,7 +297,7 @@ public class AnalyzerConstants {
         REPLICATION_CONTROLLER,
         DAEMONSET,
         JOB,
-        CRONJOB,
+        CONFIGMAP,
         CATALOGSOURCE,
     }
 
@@ -1141,7 +1141,7 @@ public class AnalyzerConstants {
         // List of unsupported K8S object types
         List<K8S_OBJECT_TYPES> unsupportedTypes = Arrays.asList(
             K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
-            K8S_OBJECT_TYPES.CRONJOB,
+            K8S_OBJECT_TYPES.CONFIGMAP,
             K8S_OBJECT_TYPES.CATALOGSOURCE
         );
         
