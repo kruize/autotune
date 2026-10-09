@@ -811,3 +811,142 @@ def delete_layer_from_db(layer_name):
     except Exception as e:
         print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
         return False
+
+
+# Description: This function creates a bulk config using the Kruize bulkConfigs API
+# Input Parameters: bulk config json (can be dict or file path)
+def create_bulk_config(bulk_config_json, logging=True):
+    """
+    Create a bulk config using POST /bulkConfigs API
+    
+    Args:
+        bulk_config_json: Either a dict or path to JSON file
+        logging: Whether to print detailed logs
+    
+    Returns:
+        Response object from the API call
+    """
+    if isinstance(bulk_config_json, str):
+        # It's a file path
+        json_file = open(bulk_config_json, "r")
+        config_json = json.loads(json_file.read())
+    else:
+        # It's already a dict
+        config_json = bulk_config_json
+    
+    if logging:
+        print("\nCreating bulk config...")
+        print("\n************************************************************")
+        pretty_json_str = json.dumps(config_json, indent=4)
+        print(pretty_json_str)
+        print("\n************************************************************")
+    
+    url = URL + "/bulkConfigs"
+    print("URL = ", url)
+    
+    response = requests.post(url, json=config_json)
+    print("Response status code = ", response.status_code)
+    if logging:
+        print(response.text)
+    return response
+
+
+# Description: This function lists bulk configs using the Kruize bulkConfigs API
+# Input Parameters: config_name (optional)
+def list_bulk_configs(config_name=None, logging=True):
+    """
+    List bulk configs using GET /bulkConfigs API
+    
+    Args:
+        config_name: Optional config name to filter
+        logging: Whether to print detailed logs
+    
+    Returns:
+        Response object from the API call
+    """
+    print("\nListing bulk configs...")
+    
+    query_params = {}
+    if config_name is not None:
+        query_params['config_name'] = config_name
+    
+    url = URL + "/bulkConfigs"
+    if query_params:
+        query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+        url += "?" + query_string
+    
+    print("URL = ", url)
+    response = requests.get(url)
+    
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response
+
+
+# Description: This function updates a bulk config using the Kruize bulkConfigs API
+# Input Parameters: config_name, update json (can be dict or file path)
+def update_bulk_config(config_name, update_json, logging=True):
+    """
+    Update a bulk config using PUT /bulkConfigs API
+    
+    Args:
+        config_name: Name of the config to update
+        update_json: Either a dict or path to JSON file with update data
+        logging: Whether to print detailed logs
+    
+    Returns:
+        Response object from the API call
+    """
+    if isinstance(update_json, str):
+        # It's a file path
+        json_file = open(update_json, "r")
+        config_json = json.loads(json_file.read())
+    else:
+        # It's already a dict
+        config_json = update_json
+    
+    if logging:
+        print(f"\nUpdating bulk config '{config_name}'...")
+        print("\n************************************************************")
+        pretty_json_str = json.dumps(config_json, indent=4)
+        print(pretty_json_str)
+        print("\n************************************************************")
+    
+    url = URL + f"/bulkConfigs?config_name={config_name}"
+    print("URL = ", url)
+    
+    response = requests.put(url, json=config_json)
+    print("Response status code = ", response.status_code)
+    if logging:
+        print(response.text)
+    return response
+
+
+# Description: This function deletes a bulk config using the Kruize bulkConfigs API
+# Input Parameters: config_name
+def delete_bulk_config(config_name, logging=True):
+    """
+    Delete a bulk config using DELETE /bulkConfigs API
+    
+    Args:
+        config_name: Name of the config to delete
+        logging: Whether to print detailed logs
+    
+    Returns:
+        Response object from the API call
+    """
+    if logging:
+        print(f"\nDeleting bulk config '{config_name}'...")
+    
+    url = URL + f"/bulkConfigs?config_name={config_name}"
+    print("URL = ", url)
+    
+    response = requests.delete(url)
+    print("Response status code = ", response.status_code)
+    if logging:
+        print(response.text)
+    return response
+
