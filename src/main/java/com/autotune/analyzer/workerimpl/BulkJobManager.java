@@ -179,11 +179,12 @@ public class BulkJobManager implements Runnable {
                 if (null != datasource) {
                     JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
                     if (null != daterange) {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
-                                (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource,
+                                (Long) daterange.get(START_TIME), (Long) daterange.get(END_TIME),
+                                (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
                     } else {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
-                                0, measurementDuration, includeResourcesMap, excludeResourcesMap);
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource,
+                                0L, 0L, 0, measurementDuration, includeResourcesMap, excludeResourcesMap);
                     }
                     if (null == metadataInfo) {
                         setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
@@ -625,7 +626,7 @@ public class BulkJobManager implements Runnable {
                 continue;
             }
 
-            String promKey = "label_" + key.replace(".", "_").replace("/", "_");
+            String promKey = "label_" + key.replaceAll("[^a-zA-Z0-9_]", "_");
 
             if (value instanceof List<?> listValue) {
                 List<String> values = new ArrayList<>();
@@ -675,13 +676,13 @@ public class BulkJobManager implements Runnable {
         return sb.toString();
     }
 
-    static String escapePromQLLabelValue(String value) {
+    public static String escapePromQLLabelValue(String value) {
         return value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n");
     }
 
-    static String escapePromQLRegexValue(String value) {
+    public static String escapePromQLRegexValue(String value) {
         return escapePromQLLabelValue(value)
                 .replaceAll("([.+*?^${}()\\[\\]|])", "\\\\$1");
     }

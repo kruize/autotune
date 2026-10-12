@@ -75,8 +75,8 @@ public class BulkConfigService extends HttpServlet {
                 // Get specific config
                 handleGetConfig(configName, resp, out);
             } else {
-                // List all configs
-                handleListConfigs(resp, out);
+                // List all configs (optionally filtered by ?enabled=true)
+                handleListConfigs(req, resp, out);
             }
         } catch (Exception e) {
             LOGGER.error("Error processing GET request: {}", e.getMessage(), e);
@@ -117,7 +117,7 @@ public class BulkConfigService extends HttpServlet {
             }
 
             // Stamp creation and update timestamps before persisting
-            Instant now = Instant.now();
+            String now = Instant.now().toString();
             bulkConfig.setCreatedAt(now);
             bulkConfig.setUpdatedAt(now);
 
@@ -270,7 +270,7 @@ public class BulkConfigService extends HttpServlet {
             }
 
             // Stamp the update timestamp before persisting
-            existingConfig.setUpdatedAt(Instant.now());
+            existingConfig.setUpdatedAt(Instant.now().toString());
 
             // Convert back to database entity and update
             KruizeBulkConfigEntry updatedEntry = KruizeBulkConfigEntry.fromBulkConfig(existingConfig);
@@ -364,10 +364,16 @@ public class BulkConfigService extends HttpServlet {
     }
 
     /**
-     * Handle GET request to list all configs
+     * Handle GET request to list all configs (or only enabled ones)
      */
-    private void handleListConfigs(HttpServletResponse resp, PrintWriter out) throws Exception {
-        List<KruizeBulkConfigEntry> configEntries = experimentDAO.loadAllBulkConfigs();
+    private void handleListConfigs(HttpServletRequest req, HttpServletResponse resp, PrintWriter out) throws Exception {
+        String enabledParam = req.getParameter("enabled");
+        List<KruizeBulkConfigEntry> configEntries;
+        if (enabledParam != null && Boolean.parseBoolean(enabledParam)) {
+            configEntries = experimentDAO.loadEnabledBulkConfigs();
+        } else {
+            configEntries = experimentDAO.loadAllBulkConfigs();
+        }
         List<BulkConfig> configs = new ArrayList<>();
 
         for (KruizeBulkConfigEntry entry : configEntries) {
