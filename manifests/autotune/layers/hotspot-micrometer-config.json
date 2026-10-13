@@ -37,6 +37,11 @@
         "datasource": "prometheus",
         "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
         "key": "pod"
+      },
+      {
+        "datasource": "cryostat",
+        "query": "{\"query\":\"{ environmentNodes(filter:{ nodeTypes:[\\\"Pod\\\"] name:\\\"$POD_NAME$\\\" }) { name descendantTargets { name target { alias id jvmId } } } }\"}",
+        "key": "pod"
       }
     ]
   },
