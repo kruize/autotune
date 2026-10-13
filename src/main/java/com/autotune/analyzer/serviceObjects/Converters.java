@@ -577,6 +577,10 @@ public class Converters {
                         JSONArray queriesArray = layerPresenceObject.getJSONArray("queries");
                         queries = new ArrayList<>();
                         for (Object queryObj : queriesArray) {
+                            // Check for null elements in queries array
+                            if (queryObj == null || queryObj == JSONObject.NULL) {
+                                throw new IllegalArgumentException("Queries array contains null elements");
+                            }
                             JSONObject queryJsonObject = (JSONObject) queryObj;
                             String datasource = queryJsonObject.getString("datasource");
                             String query = queryJsonObject.getString("query");
@@ -590,7 +594,12 @@ public class Converters {
                     if (layerPresenceObject.has("label")) {
                         JSONArray labelArray = layerPresenceObject.getJSONArray("label");
                         if (labelArray.length() > 0) {
-                            JSONObject labelObject = labelArray.getJSONObject(0);
+                            Object labelObj = labelArray.get(0);
+                            // Check for null element in label array
+                            if (labelObj == null || labelObj == JSONObject.NULL) {
+                                throw new IllegalArgumentException("Label array contains null elements");
+                            }
+                            JSONObject labelObject = (JSONObject) labelObj;
                             labelName = labelObject.getString("name");
                             labelValue = labelObject.getString("value");
                         }
@@ -603,6 +612,10 @@ public class Converters {
                 if (tunablesArray != null) {
                     tunables = new ArrayList<>();
                     for (Object tunableObj : tunablesArray) {
+                        // Check for null elements in tunables array
+                        if (tunableObj == null || tunableObj == JSONObject.NULL) {
+                            throw new IllegalArgumentException("Tunables array contains null elements");
+                        }
                         JSONObject tunableJsonObject = (JSONObject) tunableObj;
                         Tunable tunable = new Gson().fromJson(tunableJsonObject.toString(), Tunable.class);
                         tunables.add(tunable);
