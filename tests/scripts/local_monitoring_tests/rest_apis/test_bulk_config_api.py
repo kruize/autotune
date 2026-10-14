@@ -265,9 +265,6 @@ def test_create_bulk_config_missing_cluster_name(cluster_type):
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_MISSING_CLUSTER_NAME
-    
-    # Cleanup
-    delete_bulk_config("test-missing-cluster", logging=False)
 
 
 @pytest.mark.negative
@@ -286,9 +283,6 @@ def test_create_bulk_config_missing_datasources(cluster_type):
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_MISSING_DATASOURCES
-    
-    # Cleanup
-    delete_bulk_config("test-missing-datasources", logging=False)
 
 
 @pytest.mark.negative
@@ -308,9 +302,6 @@ def test_create_bulk_config_invalid_datasource(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_DATASOURCE_NOT_EXIST % "non-existent-datasource"
 
-    # Cleanup
-    delete_bulk_config("test-invalid-datasource", logging=False)
-
 
 @pytest.mark.negative
 def test_create_bulk_config_missing_metadata_profile(cluster_type):
@@ -328,9 +319,6 @@ def test_create_bulk_config_missing_metadata_profile(cluster_type):
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_MISSING_METADATA_PROFILE
-
-    # Cleanup
-    delete_bulk_config("test-missing-metadata", logging=False)
 
 
 @pytest.mark.negative
@@ -350,9 +338,6 @@ def test_create_bulk_config_invalid_metadata_profile(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_METADATA_PROFILE_NOT_EXIST % "non-existent-metadata-profile"
 
-    # Cleanup
-    delete_bulk_config("test-invalid-metadata", logging=False)
-
 
 @pytest.mark.negative
 def test_create_bulk_config_invalid_performance_profile(cluster_type):
@@ -370,9 +355,6 @@ def test_create_bulk_config_invalid_performance_profile(cluster_type):
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
     assert response.json().get("error", "") == BULK_CONFIG_PERFORMANCE_PROFILE_NOT_EXIST % "non-existent-performance-profile"
-
-    # Cleanup
-    delete_bulk_config("test-invalid-performance", logging=False)
 
 
 @pytest.mark.negative
