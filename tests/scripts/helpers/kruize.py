@@ -827,20 +827,18 @@ def create_bulk_config(bulk_config_json, logging=True):
         Response object from the API call
     """
     if isinstance(bulk_config_json, str):
-        # It's a file path
-        json_file = open(bulk_config_json, "r")
-        config_json = json.loads(json_file.read())
+        with open(bulk_config_json, "r") as json_file:
+            config_json = json.loads(json_file.read())
     else:
-        # It's already a dict
         config_json = bulk_config_json
-    
+
     if logging:
         print("\nCreating bulk config...")
         print("\n************************************************************")
         pretty_json_str = json.dumps(config_json, indent=4)
         print(pretty_json_str)
         print("\n************************************************************")
-    
+
     url = URL + "/bulkConfigs"
     print("URL = ", url)
     
@@ -901,11 +899,9 @@ def update_bulk_config(config_name, update_json, logging=True):
         Response object from the API call
     """
     if isinstance(update_json, str):
-        # It's a file path
-        json_file = open(update_json, "r")
-        config_json = json.loads(json_file.read())
+        with open(update_json, "r") as json_file:
+            config_json = json.loads(json_file.read())
     else:
-        # It's already a dict
         config_json = update_json
     
     if logging:

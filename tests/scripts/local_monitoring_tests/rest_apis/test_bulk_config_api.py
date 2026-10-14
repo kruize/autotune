@@ -13,20 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import logging
 import pytest
 import sys
-import json
-import copy
 
 sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
-
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # Helper function to create a valid bulk config payload
 def create_valid_bulk_config(config_name="test-bulk-config"):
@@ -110,7 +103,7 @@ def test_create_duplicate_bulk_config(cluster_type):
     # Try to create again - should fail
     response2 = create_bulk_config(bulk_config, logging=False)
     assert response2.status_code == ERROR_409_STATUS_CODE
-    assert "already exists" in response2.json().get("error", "").lower()
+    assert response2.json().get("error", "") == BULK_CONFIG_EXISTS_MSG % config_name
     
     # Cleanup
     delete_bulk_config(config_name, logging=False)
@@ -231,7 +224,7 @@ def test_delete_bulk_config(cluster_type):
     # Delete config
     response = delete_bulk_config(config_name, logging=True)
     assert response.status_code == SUCCESS_200_STATUS_CODE
-    assert "deleted successfully" in response.json().get("message", "").lower()
+    assert response.json().get("message", "") == DELETE_BULK_CONFIG_SUCCESS_MSG
     
     # Verify deletion
     list_response = list_bulk_configs(config_name=config_name, logging=False)
@@ -253,7 +246,7 @@ def test_create_bulk_config_missing_config_name(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "config_name" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_MISSING_CONFIG_NAME
 
 
 @pytest.mark.negative
@@ -271,7 +264,7 @@ def test_create_bulk_config_missing_cluster_name(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "cluster_name" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_MISSING_CLUSTER_NAME
     
     # Cleanup
     delete_bulk_config("test-missing-cluster", logging=False)
@@ -292,7 +285,7 @@ def test_create_bulk_config_missing_datasources(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "datasource" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_MISSING_DATASOURCES
     
     # Cleanup
     delete_bulk_config("test-missing-datasources", logging=False)
@@ -313,7 +306,8 @@ def test_create_bulk_config_invalid_datasource(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    
+    assert response.json().get("error", "") == BULK_CONFIG_DATASOURCE_NOT_EXIST % "non-existent-datasource"
+
     # Cleanup
     delete_bulk_config("test-invalid-datasource", logging=False)
 
@@ -333,8 +327,8 @@ def test_create_bulk_config_missing_metadata_profile(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "metadata_profile" in response.json().get("error", "").lower()
-    
+    assert response.json().get("error", "") == BULK_CONFIG_MISSING_METADATA_PROFILE
+
     # Cleanup
     delete_bulk_config("test-missing-metadata", logging=False)
 
@@ -354,8 +348,8 @@ def test_create_bulk_config_invalid_metadata_profile(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "does not exist" in response.json().get("error", "").lower()
-    
+    assert response.json().get("error", "") == BULK_CONFIG_METADATA_PROFILE_NOT_EXIST % "non-existent-metadata-profile"
+
     # Cleanup
     delete_bulk_config("test-invalid-metadata", logging=False)
 
@@ -375,8 +369,8 @@ def test_create_bulk_config_invalid_performance_profile(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "does not exist" in response.json().get("error", "").lower()
-    
+    assert response.json().get("error", "") == BULK_CONFIG_PERFORMANCE_PROFILE_NOT_EXIST % "non-existent-performance-profile"
+
     # Cleanup
     delete_bulk_config("test-invalid-performance", logging=False)
 
@@ -395,7 +389,7 @@ def test_create_bulk_config_invalid_config_name_format(cluster_type):
     
     response = create_bulk_config(bulk_config, logging=False)
     assert response.status_code == ERROR_STATUS_CODE
-    assert "alphanumeric" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_INVALID_CONFIG_NAME
 
 
 @pytest.mark.negative
@@ -409,7 +403,7 @@ def test_update_non_existent_bulk_config(cluster_type):
     
     response = update_bulk_config("non-existent-config", update_data, logging=False)
     assert response.status_code == ERROR_404_STATUS_CODE
-    assert "not found" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_NOT_FOUND_MSG % "non-existent-config"
 
 
 @pytest.mark.negative
@@ -421,7 +415,7 @@ def test_delete_non_existent_bulk_config(cluster_type):
     
     response = delete_bulk_config("non-existent-config", logging=False)
     assert response.status_code == ERROR_404_STATUS_CODE
-    assert "not found" in response.json().get("error", "").lower()
+    assert response.json().get("error", "") == BULK_CONFIG_NOT_FOUND_MSG % "non-existent-config"
 
 
 @pytest.mark.negative
