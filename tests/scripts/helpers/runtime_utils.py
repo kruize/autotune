@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import os
-import shutil
 import tempfile
-import time
 from pathlib import Path
 
 from helpers.kruize import *
@@ -32,8 +30,6 @@ from helpers.utils import (
     CREATE_LAYER_SUCCESS_MSG,
     CREATE_EXP_SUCCESS_MSG,
     CONTAINER_EXPERIMENT_TYPE,
-    clone_repo,
-    benchmarks_install,
     get_metric_profile_dir,
     get_layer_dir,
     get_metadata_profile_dir,
@@ -446,10 +442,6 @@ def _generate_and_list_recommendations_for_tfb(
             delete_layer_from_db(layer_name)
             print(f"delete layer '{layer_name}' = done")
 
-        # Remove benchmarks directory
-        if os.path.isdir("benchmarks"):
-            shutil.rmtree("benchmarks")
-
         # Clean up temp experiment JSON file
         if temp_input_json_file and os.path.exists(temp_input_json_file):
             os.unlink(temp_input_json_file)
@@ -531,12 +523,6 @@ def _generate_and_list_recommendations_for_petclinic(
         ...     layer_filter=filter_semeru_only
         ... )
     """
-    # Wait for petclinic pod to be ready and metrics to be available
-    # This is crucial for Semeru layer detection as Prometheus needs time to scrape metrics
-    print("Waiting for petclinic pod to be ready and metrics to be scraped by Prometheus...")
-    time.sleep(30)  # Wait 30 seconds for pod readiness and initial metric scraping
-    print("Wait complete, proceeding with experiment creation...")
-
     input_json_path = (Path(__file__).resolve().parents[1]/ "local_monitoring_tests"/ "json_files"/ "create_petclinic_exp.json")
     input_json_file = str(input_json_path)
     with open(input_json_path) as f:
@@ -667,10 +653,6 @@ def _generate_and_list_recommendations_for_petclinic(
         for layer_name in created_layer_names:
             delete_layer_from_db(layer_name)
             print(f"delete layer '{layer_name}' = done")
-
-        # Remove benchmarks directory
-        if os.path.isdir("benchmarks"):
-            shutil.rmtree("benchmarks")
 
         # Clean up temp experiment JSON file
         if temp_input_json_file and os.path.exists(temp_input_json_file):
