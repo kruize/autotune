@@ -41,6 +41,7 @@ total_time=0
 matched=0
 setup=1
 skip_setup=0
+skip_benchmark_setup=0
 
 cleanup_prometheus=0
 
@@ -1339,8 +1340,7 @@ function benchmarks_install() {
 			  kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
         check_err "ERROR: TechEmpower app failed to start, exiting"
       popd >/dev/null
-    fi
-    if [ ${BENCHMARK} == "petclinic" ]; then
+    elif [ ${BENCHMARK} == "petclinic" ]; then
 			echo "Installing spring petclinic benchmark into cluster"
 			pushd spring-petclinic >/dev/null
         if [ "${MANIFESTS}" != "default_manifests" ]; then
@@ -1350,7 +1350,17 @@ function benchmarks_install() {
         fi
         check_err "ERROR: spring petclinic failed to start, exiting"
 			popd >/dev/null
-		fi
+    elif [ ${BENCHMARK} == "sysbench" ]; then
+   echo "Installing sysbench benchmark into cluster"
+   pushd sysbench >/dev/null
+        if [ "${MANIFESTS}" != "default_manifests" ]; then
+          kubectl apply -f manifests/${MANIFESTS} -n ${APP_NAMESPACE}
+        else
+          kubectl apply -f manifests/*.yaml -n ${APP_NAMESPACE}
+        fi
+        check_err "ERROR: sysbench failed to start, exiting"
+   popd >/dev/null
+  fi
   popd >/dev/null
 	echo "#######################################"
 	echo
