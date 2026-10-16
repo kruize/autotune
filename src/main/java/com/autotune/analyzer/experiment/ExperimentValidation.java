@@ -382,29 +382,6 @@ public class ExperimentValidation {
                         }
                     }
 
-                    // V-1: stability must be paired only with flex term
-                    // V-2: flex must be paired only with stability model
-                    List<String> reqTerms = expObj.getRecommendation_settings().getTermSettings() != null
-                            ? expObj.getRecommendation_settings().getTermSettings().getTerms() : Collections.emptyList();
-                    List<String> reqModels = expObj.getRecommendation_settings().getModelSettings().getModels();
-
-                    boolean hasFlex      = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
-                    boolean hasStability = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
-
-                    if (hasStability && !hasFlex) {
-                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_REQUIRES_FLEX_TERM;
-                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        validationOutputData.setSuccess(false);
-                        validationOutputData.setMessage(errorMsg);
-                        return validationOutputData;
-                    }
-                    if (hasFlex && !hasStability) {
-                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_REQUIRES_STABILITY_MODEL;
-                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        validationOutputData.setSuccess(false);
-                        validationOutputData.setMessage(errorMsg);
-                        return validationOutputData;
-                    }
                 }
 
                 String depType = "";
