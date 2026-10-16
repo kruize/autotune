@@ -59,6 +59,8 @@ public class RecommendationNotification {
             recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
         } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())) {
             recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.FLEX_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_FLEX_TERM_RECOMMENDATIONS_AVAILABLE);
         }
         return recommendationNotification;
     }
