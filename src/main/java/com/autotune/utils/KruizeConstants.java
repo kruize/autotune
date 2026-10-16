@@ -695,7 +695,7 @@ public class KruizeConstants {
          * Wildcard to match all the Paths (Endpoints)
          */
         public static final String PATH_WILDCARD = "/*";
-        public static final String ALLOWED_ORIGINS = "*";
+        public static final String ALLOWED_ORIGINS = System.getenv().getOrDefault("KRUIZE_ALLOWED_ORIGINS", "");
         public static final String ALLOWED_METHODS = "POST, GET";
         public static final String ALLOWED_HEADERS = "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept";
         public static final String MAX_AGE = "1728000";
