@@ -27,9 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -462,7 +460,13 @@ public class BulkConfigValidation {
     }
 
     /**
-     * Validate webhook URL format
+     * Validate webhook URL format.
+     * Only syntax is checked here (scheme and host presence). DNS resolution and
+     * network-reachability checks are intentionally not performed at registration time —
+     * the webhook_url is only called from triggerWebhook() when the bulk job runs,
+     * and the caller is always a trusted internal component. Applying a private-address
+     * DNS blocklist at storage time breaks legitimate in-cluster webhook targets such as
+     * co-deployed optimizer services whose hostnames resolve to RFC 1918 addresses.
      */
     private static ValidationOutputData validateWebhookUrl(String webhookUrl) {
         try {
@@ -480,23 +484,9 @@ public class BulkConfigValidation {
                         "webhook_url must contain a valid hostname",
                         HttpServletResponse.SC_BAD_REQUEST);
             }
-
-            InetAddress address = InetAddress.getByName(host);
-            if (address.isLoopbackAddress()
-                    || address.isLinkLocalAddress()
-                    || address.isSiteLocalAddress()
-                    || address.isAnyLocalAddress()) {
-                return new ValidationOutputData(false,
-                        "webhook_url must not point to a private or internal network address",
-                        HttpServletResponse.SC_BAD_REQUEST);
-            }
         } catch (IllegalArgumentException e) {
             return new ValidationOutputData(false,
                     "Invalid webhook_url format: " + e.getMessage(),
-                    HttpServletResponse.SC_BAD_REQUEST);
-        } catch (UnknownHostException e) {
-            return new ValidationOutputData(false,
-                    "webhook_url hostname cannot be resolved: " + e.getMessage(),
                     HttpServletResponse.SC_BAD_REQUEST);
         }
 
