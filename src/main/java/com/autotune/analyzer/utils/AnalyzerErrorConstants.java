@@ -212,7 +212,6 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
-            public static final String FLEX_CANNOT_COMBINE_WITH_OTHER_TERMS = "flex term cannot be combined with other terms.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";

@@ -359,15 +359,6 @@ public class ExperimentValidation {
                         }
                     }
 
-                    // V-3: flex cannot be combined with other terms
-                    List<String> requestedTerms = expObj.getRecommendation_settings().getTermSettings().getTerms();
-                    if (requestedTerms.contains(KruizeConstants.JSONKeys.FLEX) && requestedTerms.size() > 1) {
-                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_CANNOT_COMBINE_WITH_OTHER_TERMS;
-                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        validationOutputData.setSuccess(false);
-                        validationOutputData.setMessage(errorMsg);
-                        return validationOutputData;
-                    }
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
