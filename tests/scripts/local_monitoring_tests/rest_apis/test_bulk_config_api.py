@@ -340,6 +340,24 @@ def test_create_bulk_config_invalid_metadata_profile(cluster_type):
 
 
 @pytest.mark.negative
+def test_create_bulk_config_missing_performance_profile(cluster_type):
+    """
+    Test Description: Validate error when performance_profile is missing
+    """
+    form_kruize_url(cluster_type)
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    bulk_config = create_valid_bulk_config("test-missing-performance")
+    del bulk_config["performance_profile"]
+
+    response = create_bulk_config(bulk_config, logging=False)
+    assert response.status_code == ERROR_STATUS_CODE
+    assert response.json().get("error", "") == BULK_CONFIG_MISSING_PERFORMANCE_PROFILE
+
+
+@pytest.mark.negative
 def test_create_bulk_config_invalid_performance_profile(cluster_type):
     """
     Test Description: Validate error when performance_profile doesn't exist
@@ -428,6 +446,7 @@ def test_create_bulk_config_with_minimal_fields(cluster_type):
         "datasources": ["prometheus-1"],
         "experiment_types": ["container"],
         "metadata_profile": "cluster-metadata-local-monitoring",
+        "performance_profile": "resource-optimization-local-monitoring",
         "recommendation_settings": {
             "scheduling": "24h",
             "terms": ["short"],
