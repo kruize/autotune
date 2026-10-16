@@ -338,7 +338,7 @@ public class ExperimentValidation {
                 // common check for terms and models
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
-                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG, KruizeConstants.JSONKeys.FLEX);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
@@ -358,6 +358,7 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
+
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&

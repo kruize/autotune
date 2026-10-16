@@ -198,6 +198,14 @@ public final class KruizeObject implements ExperimentTypeAware {
                             KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
                             getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
+                } else if (KruizeConstants.JSONKeys.FLEX.equalsIgnoreCase(userInputTerm)) {
+                    terms.put(KruizeConstants.JSONKeys.FLEX_TERM, new Terms(
+                            KruizeConstants.JSONKeys.FLEX_TERM,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS,
+                            Math.max(
+                                    getTermThresholdInDays(KruizeConstants.JSONKeys.FLEX_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS_THRESHOLD),
+                            15, 1));
                 } else {
                     throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
@@ -450,6 +458,9 @@ public final class KruizeObject implements ExperimentTypeAware {
                 break;
             case KruizeConstants.JSONKeys.LONG_TERM:
                 minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_MIN_DATAPOINTS;
+                break;
+            case KruizeConstants.JSONKeys.FLEX_TERM:
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_MIN_DATAPOINTS;
                 break;
         }
 
