@@ -131,8 +131,15 @@ function increment_timestamp_by_days() {
 }
 
 function time_diff() {
-	ssec=`date --utc --date "$1" +%s`
-	esec=`date --utc --date "$2" +%s`
+	if date --utc --date "$1" +%s >/dev/null 2>&1; then
+		# GNU date
+		ssec=`date --utc --date "$1" +%s`
+		esec=`date --utc --date "$2" +%s`
+	else
+		# BSD/macOS date (input format: "%Y-%m-%d %H:%M:%S")
+		ssec=`date -j -u -f "%Y-%m-%d %H:%M:%S" "$1" +%s`
+		esec=`date -j -u -f "%Y-%m-%d %H:%M:%S" "$2" +%s`
+	fi
 
 	diffsec=$(($esec-$ssec))
 	echo $diffsec

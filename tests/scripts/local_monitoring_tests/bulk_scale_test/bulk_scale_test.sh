@@ -29,12 +29,11 @@ APP_NAME=kruize
 CLUSTER_TYPE=openshift
 
 NAMESPACE=openshift-tuning
-workers=5
+workers=20
 days_of_res=15
 interval_hours=6
 initial_end_date="2024-12-10T11:50:00.000Z"
-org_ids=10
-cluster_ids=10
+configs_file="configs.json"
 
 skip_setup=0
 prometheus_ds=0
@@ -43,13 +42,13 @@ replicas=3
 ds_url="http://thanos-query-frontend-example-query.thanos-operator-system.svc.cluster.local:9090/"
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
+KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-w No. of parallel workers (default - 10)] [-d No. of days of res (default - 15)] [-t interval hours (default - 2)] [-s Initial end date of tsdb block (default - 2024-11-11T00:00:00.000Z)]"
-	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
-	echo "[--url Datasource url (default - ${ds_url}] [-o No. of orgs (default - 10)] [-c No. of clusters / org (default - 10)]"
+	echo "Usage: [-i Kruize image] [-w No. of parallel workers (default - 20)] [-d No. of days of res (default - 15)] [-t interval hours (default - 6)] [-s Initial end date of tsdb block (default - 2024-12-10T11:50:00.000Z)]"
+	echo "[-a kruize replicas (default - 3)] [-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
+	echo "[--url Datasource url (default - ${ds_url})] [-k <configs json file> (default - configs.json)]"
 	exit 1
 }
 
@@ -80,25 +79,33 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
+# Portable in-place sed (works with both GNU and BSD/macOS sed)
+function sed_inplace() {
+	local expr=$1
+	local file=$2
+	sed -e "${expr}" "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
+}
+
 function kruize_local_config_patch() {
-        CRC_DIR="./manifests/crc/default-db-included-installation"
-        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
- 
-        if [[ "${prometheus_ds}" == 0 ]]; then
-	    sed -i 's#"experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#"experimentNameFormat" : "%label:org_id%|%label:cluster_id%|%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	    sed -i 's/"name": "prometheus-1"/"name": "thanos"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	    sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-            sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	    sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+
+	if [[ "${prometheus_ds}" == 0 ]]; then
+		sed_inplace 's#"experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#"experimentNameFormat" : "%label:org_id%|%label:cluster_id%|%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#g' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+		sed_inplace 's/"name": "prometheus-1"/"name": "thanos"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+		sed_inplace 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+		sed_inplace 's/"namespace": "openshift-monitoring"/"namespace": ""/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+		sed_inplace 's#"url": ""#"url": "'"${ds_url}"'"#' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	fi
 
-        sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	#sed_inplace 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9][0-9]*/"bulkapilimit" : 10000/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+	sed_inplace 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9][0-9]*Mi/\1\2 1Gi/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+	sed_inplace 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 }
 
 
-while getopts r:i:d:w:s:t:a:o:c:zh:-: gopts
+while getopts r:i:d:w:s:t:a:k:zh:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -109,6 +116,9 @@ do
 			skipsetup)
 				skip_setup=1
 				;;
+			configs=*)
+				configs_file=${OPTARG#*=}
+				;;
 			*)
 	                        echo "Unknown option: --${OPTARG}"
                                 exit 1
@@ -116,10 +126,10 @@ do
 		esac
 		;;
 	r)
-		RESULTS_DIR="${OPTARG}"		
+		RESULTS_DIR="${OPTARG}"
 		;;
 	i)
-		KRUIZE_IMAGE="${OPTARG}"		
+		KRUIZE_IMAGE="${OPTARG}"
 		;;
   w)
 		workers="${OPTARG}"
@@ -131,16 +141,13 @@ do
 		initial_end_date="${OPTARG}"
 		;;
 	t)
-		interval_hours="${OPTARG}"		
+		interval_hours="${OPTARG}"
 		;;
 	a)
 		replicas="${OPTARG}"
 		;;
-  o)
-		org_ids="${OPTARG}"
-		;;
-  c)
-    cluster_ids="${OPTARG}"
+	k)
+		configs_file="${OPTARG}"
 		;;
 	z)
 		prometheus_ds=1
@@ -214,8 +221,13 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-echo "python3 bulk_scale_test.py --workers ${workers} --org_ids ${org_ids} --cluster_ids ${cluster_ids} --days_of_res ${days_of_res} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} --prometheus ${prometheus_ds}" | tee -a ${LOG}
-python3 bulk_scale_test.py --workers "${workers}" --org_ids "${org_ids}" --cluster_ids "${cluster_ids}" --days_of_res "${days_of_res}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" | tee -a ${LOG}
+configs_cmd=""
+if [ -n "${configs_file}" ]; then
+	configs_cmd="--configs ${configs_file}"
+fi
+
+echo "python3 bulk_scale_test.py --workers ${workers} --days_of_res ${days_of_res} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} --prometheus ${prometheus_ds} ${configs_cmd}" | tee -a ${LOG}
+python3 bulk_scale_test.py --workers "${workers}" --days_of_res "${days_of_res}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" ${configs_cmd} | tee -a ${LOG}
 status=$?
 
 end_time=$(get_date)
