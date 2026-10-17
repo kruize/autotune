@@ -62,28 +62,57 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
-def update_bulk_config(org_id, cluster_id, current_start_time, current_end_time):
-    org_value = "org-" + str(org_id)
-    cluster_value = "eu-" + str(org_id) + "-" + str(cluster_id)
+def build_bulk_configs(workers, configs_file):
+    """
+    Build the list of bulk configurations. Each configuration has a "name", "labels",
+    and optional custom filter / datasource to be included in the bulk input json.
+    - configs_file: json file containing a list of {"name": <optional>, "labels": {...}, "filter": {...}}
+    - prometheus: labels are not used, so one configuration per worker
+    """
+    if prometheus != 0:
+        return [{"name": f"default-{i}", "labels": {}} for i in range(1, workers + 1)]
 
-    new_labels = {
-        "org_id": org_value,
-        "cluster_id": cluster_value
-    }
+    if not configs_file:
+        configs_file = "configs.json"
 
+    if os.path.exists(configs_file):
+        with open(configs_file, "r") as f:
+            configs = json.load(f)
+        return [{
+            "name": c.get("name", f"config-{i}"),
+            "labels": c.get("labels", {}),
+            "filter": c.get("filter", {}),
+            "datasource": c.get("datasource")
+        } for i, c in enumerate(configs, start=1)]
+
+    print(f"Error: Configurations file '{configs_file}' not found!")
+    sys.exit(1)
+
+def update_bulk_config(config, current_start_time, current_end_time):
     # Update time range in the bulk input json
     bulk_json_file = "../json_files/bulk_input_timerange.json"
 
-    json_file = open(bulk_json_file, "r")
-    bulk_json = json.loads(json_file.read())
+    with open(bulk_json_file, "r") as json_file:
+        bulk_json = json.load(json_file)
 
     bulk_json['time_range']['start'] = current_start_time
     bulk_json['time_range']['end'] = current_end_time
     if prometheus == 0:
-        bulk_json['filter']['include']['labels'].update(new_labels)
+        if 'labels' in config and config['labels']:
+            bulk_json['filter']['include']['labels'].update(config['labels'])
+        if 'filter' in config and config['filter']:
+            for filter_type in ['include', 'exclude']:
+                if filter_type in config['filter']:
+                    for key in ['namespace', 'workload', 'containers']:
+                        if key in config['filter'][filter_type]:
+                            bulk_json['filter'][filter_type][key] = config['filter'][filter_type][key]
+                    if 'labels' in config['filter'][filter_type]:
+                        bulk_json['filter'][filter_type]['labels'].update(config['filter'][filter_type]['labels'])
+        if config.get('datasource'):
+            bulk_json['datasource'] = config['datasource']
     else:
         bulk_json['datasource'] = "prometheus-1"
-    
+
     return bulk_json
 
 def fetch_bulk_recommendations(job_status_json, logger):
@@ -119,44 +148,46 @@ def fetch_bulk_recommendations(job_status_json, logger):
                     logger.info("Recommendations is not available!")
                     reco_failures += 1
 
-            if reco_failures != 0:
-                logger.info(
-                    f"Bulk recommendations failed for some of the experiments, check the logs for details!")
-                return -1
-            else:
-                return 0
+        # Evaluate the status only after all the experiments are checked
+        if reco_failures != 0:
+            logger.info("Bulk recommendations failed for some of the experiments, check the logs for details!")
+            return -1
+        return 0
     else:
         logger.error("Something went wrong! There are no experiments with recommendations!")
         return -1
 
-def fetch_bulk_job_status(job_id, worker_number, logger):
+def fetch_bulk_job_status(job_id, log_id, logger):
     # Get the bulk job status using the job id
     include = "summary,experiments"
-    bulk_job_response = get_bulk_job_status(job_id, include, logger)
-    job_status_json = bulk_job_response.json()
+    deadline = time.time() + job_timeout
 
-    # Loop until job status is COMPLETED
-    job_status = job_status_json['summary']['status']
-
-    while job_status != "COMPLETED":
+    # Loop until job status is COMPLETED / FAILED or the timeout expires
+    while True:
         bulk_job_response = get_bulk_job_status(job_id, include, logger)
         job_status_json = bulk_job_response.json()
         job_status = job_status_json['summary']['status']
         total_exps = job_status_json['summary']['total_experiments']
         processed_exps = job_status_json['summary']['processed_experiments']
         logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
+        if job_status == "COMPLETED":
+            break
         if job_status == "FAILED":
             logger.info("Job FAILED!")
             break
+        if time.time() > deadline:
+            logger.error(f"Job {job_id} did not complete within {job_timeout} seconds!")
+            job_status = "FAILED"
+            break
         sleep(5)
 
-    logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
+    logger.info(f"log id - {log_id} job id - {job_id} job status - {job_status}")
 
     # Dump the job status json into a file
     job_status_dir = results_dir + "/job_status_jsons"
     os.makedirs(job_status_dir, exist_ok=True)
 
-    job_file = job_status_dir + "/job_status" + str(worker_number) + ".json"
+    job_file = job_status_dir + "/job_status_" + str(log_id) + ".json"
     logger.info(f"Storing job status in {job_file}")
     with open(job_file, 'w') as f:
         json.dump(job_status_json, f, indent=4)
@@ -169,28 +200,32 @@ def fetch_bulk_job_status(job_id, worker_number, logger):
         logger.info(f"Check {job_file} for job status")
         return -1
 
-def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, tsdb_id, server):
+def collect_kruize_metrics(resultsdir, worker_number, server):
+    # Collect a single kruize metrics data point into the worker's own csv (one csv per worker,
+    # a row is appended every tsdb block). kruize_metrics.py prefixes the file name with increase_ / total_
+    script_path = "../../../../scripts/kruize_metrics.py"
+    cluster = "openshift"
+
+    timeout = "300m"
+    csv_file = f"kruizeMetrics-worker-{worker_number}.csv"
+    kruize_metrics_res_dir = f"{resultsdir}/results"
+
+    params = ["python3", script_path, "-c", cluster, "-s", server, "-t", timeout, "-e", kruize_metrics_res_dir,
+              "-r", csv_file]
+
     try:
-        script_path = "../../../../scripts/kruize_metrics.py"
-        cluster = "openshift"
+        subprocess.run(params, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+    except Exception as e:
+        print(f"Failed to collect kruize metrics for worker {worker_number}: {e}")
 
-        timeout = "300m"
-        csv_file = f"kruizeMetrics-{tsdb_id}.csv"
-        kruize_metrics_res_dir = f"{resultsdir}/results"
-
-        params = ["python3", script_path, "-c", cluster, "-s", server, "-t", timeout, "-e", kruize_metrics_res_dir,
-                  "-r", csv_file]
-
-        subprocess.Popen(params, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time, worker_number, tsdb_id):
+    try:
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
-        bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
+        bulk_json = update_bulk_config(config, current_start_time, current_end_time)
 
-        if prometheus == 0:
-            log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
-        else:
-            log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number)
+        log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_" + config['name']
 
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
@@ -213,7 +248,17 @@ def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_s
     except Exception as e:
         return {'error': str(e)}
 
-def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids, server):
+def run_worker(resultsdir, worker_number, worker_configs, current_start_time, current_end_time, tsdb_id, server):
+    # A worker invokes the bulk service, one at a time, with each of the configurations assigned to it
+    results = [invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time,
+                                                  worker_number, tsdb_id)
+               for config in worker_configs]
+
+    # Record the kruize metrics in the worker's csv once it is done with the tsdb block
+    collect_kruize_metrics(resultsdir, worker_number, server)
+    return results
+
+def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, configs, server):
     results = []
 
     print(f"initial_end_time - {initial_end_time}")
@@ -223,6 +268,14 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
     num_tsdb_blocks = int((days_of_res * 24) / interval_hours)
 
     print(f"num_tsdb_blocks - {num_tsdb_blocks}")
+
+    # One thread per worker, configurations are distributed round-robin across the workers
+    num_workers = min(max_workers, len(configs))
+    if num_workers < max_workers:
+        print(f"WARNING: only {len(configs)} bulk configuration(s) available, using {num_workers} worker(s) instead of {max_workers}")
+    worker_configs = [configs[i::num_workers] for i in range(num_workers)]
+    for i, wc in enumerate(worker_configs, start=1):
+        print(f"worker {i} - {len(wc)} bulk configuration(s)")
 
     current_end_time = initial_end_time
 
@@ -234,27 +287,19 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all the tasks to the executor
-            futures = []
-
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            # Submit one task per worker
             futures = [
-            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, k, server)
-                for worker_number, (org_id, cluster_id) in enumerate(
-                    ((org_id, cluster_id) for org_id in range(1, org_ids + 1) for cluster_id in
-                     range(1, cluster_ids + 1)),
-                    start=1
-                )
+                executor.submit(run_worker, resultsdir, worker_number, wc, current_start_time, current_end_time, k, server)
+                for worker_number, wc in enumerate(worker_configs, start=1)
             ]
 
             # Process the results as they complete
             for future in as_completed(futures):
                 try:
-                    result = future.result()
-                    results.append(result)
+                    results.extend(future.result())
                 except Exception as e:
                     results.append({'error': str(e)})
-        
 
         current_end_time = current_start_time
 
@@ -267,22 +312,22 @@ if __name__ == '__main__':
     results_dir = "."
     initial_end_date = "2024-12-10T11:50:00.001Z"
     interval_hours = 6
-    org_ids = 10
-    cluster_ids = 10
     prometheus = 0
     server = ""
+    configs_file = "configs.json"
+    job_timeout = 7200
 
     parser = argparse.ArgumentParser()
 
     # add the named arguments
     parser.add_argument('--workers', type=str, help='specify the number of parallel workers')
     parser.add_argument('--days_of_res', type=str, help='specify the number of days of results')
-    parser.add_argument('--enddate', type=str, help='Specify end date and time of the tsdb block in "%Y-%m-%dT%H:%M:%S.%fZ" format.')
+    parser.add_argument('--enddate', type=str, help='Specify end date and time of the tsdb block in "%%Y-%%m-%%dT%%H:%%M:%%S.%%fZ" format.')
     parser.add_argument('--interval', type=str, help='specify the interval hours')
     parser.add_argument('--resultsdir', type=str, help='specify the results dir')
-    parser.add_argument('--org_ids', type=str, help='specify the no. of orgs')
-    parser.add_argument('--cluster_ids', type=str, help='specify the no. of clusters / org')
     parser.add_argument('--prometheus', type=str, help='specify the value as 1 for prometheus, default is 0')
+    parser.add_argument('--configs', type=str, default='configs.json', help='json file with a list of bulk configurations ({"name": ..., "labels": {...}}), distributed across workers. Default: configs.json')
+    parser.add_argument('--job_timeout', type=str, help='max seconds to wait for a bulk job to complete, default is 7200')
 
     # parse the arguments from the command line
     args = parser.parse_args()
@@ -302,14 +347,14 @@ if __name__ == '__main__':
     if args.resultsdir:
         results_dir = args.resultsdir
 
-    if args.org_ids:
-        org_ids = int(args.org_ids)
-
-    if args.cluster_ids:
-        cluster_ids = int(args.cluster_ids)
-
     if args.prometheus:
         prometheus = int(args.prometheus)
+
+    if args.configs:
+        configs_file = args.configs
+
+    if args.job_timeout:
+        job_timeout = int(args.job_timeout)
 
     form_kruize_url(cluster_type)
 
@@ -340,7 +385,9 @@ if __name__ == '__main__':
 
     start_time = time.time()
     print(f"initial_end_date to parallel requests - {initial_end_date}")
-    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids, server)
+    bulk_configs = build_bulk_configs(max_workers, configs_file)
+    print(f"workers - {max_workers}, bulk configurations - {len(bulk_configs)}")
+    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, bulk_configs, server)
 
     # Print the results
     failed = 0
