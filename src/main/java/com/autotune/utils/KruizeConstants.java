@@ -825,7 +825,6 @@ public class KruizeConstants {
                 public static final int    FLEX_TERM_DURATION_DAYS           = 15;
                 public static final double FLEX_TERM_DURATION_DAYS_THRESHOLD = ((double) 30 / (24 * 60)); // 30 min expressed in days
                 public static final int    FLEX_TERM_MIN_DATAPOINTS          = 2;
-                public static final String TERM_FLEX                         = "flex_term";
 
                 // Term Names (for consistency in keys and names)
                 public static final String TERM_DAILY = "daily";
