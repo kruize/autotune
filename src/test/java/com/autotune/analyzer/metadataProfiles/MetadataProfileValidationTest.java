@@ -326,7 +326,8 @@ class MetadataProfileValidationTest {
         void unsupportedWorkloadTypesLeadingCommaIsStripped() throws Exception {
             // $UNSUPPORTED_WORKLOAD_TYPES$ expands to ", workload_type!~..." (leading comma).
             // With $WORKLOAD_FILTERS$ stripped to "", the raw selector becomes
-            // {, workload_type!~"..."  } which must be normalized to {workload_type!~"..."}.
+            // {, workload_type!~"..."} which must be normalized to {workload_type!~"..."}.
+            // Only the open-brace boundary {, is targeted — quoted values are never touched.
             JsonArray result = buildResultArray("namespace", "workload", "workload_type");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
@@ -357,9 +358,15 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("Container query selector is normalized: no leading or trailing comma")
-        void containerQuerySelectorNormalized() throws Exception {
-            JsonArray result = buildResultArray("container", "image", "workload", "workload_type", "namespace");
+        @DisplayName("Quoted matcher value containing comma-space is preserved unchanged")
+        void quotedValueWithCommaSpaceIsNotMutated() throws Exception {
+            // Ensures the normalization is scoped to {, (open-brace boundary only) and does
+            // not corrupt a quoted value like workload_type!~"(?i)foo, bar".
+            String queryWithQuotedComma =
+                    "sum by (namespace, workload, workload_type) " +
+                    "(avg_over_time(namespace_workload_pod:kube_pod_owner:relabel" +
+                    "{workload_type!~\"(?i)foo, bar\"}[15m]))";
+            JsonArray result = buildResultArray("namespace", "workload", "workload_type");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
             when(mockOperator.getResultArrayForQuery(any(), queryCaptor.capture())).thenReturn(result);
@@ -372,17 +379,15 @@ class MetadataProfileValidationTest {
 
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
-                        CONTAINER_QUERY,
-                        AnalyzerConstants.CONTAINER_METADATA_QUERY,
+                        queryWithQuotedComma,
+                        AnalyzerConstants.WORKLOAD_METADATA_QUERY,
                         errorString,
                         mockDataSourceInfo,
-                        AnalyzerConstants.MetadataProfileQueryIdentifier.CONTAINER_QUERY_IDENTIFIER);
+                        AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER);
 
                 String capturedQuery = queryCaptor.getValue();
-                assertFalse(capturedQuery.contains("{,"),
-                        "No selector should start with a leading comma");
-                assertFalse(capturedQuery.contains(",}"),
-                        "No selector should end with a trailing comma");
+                assertTrue(capturedQuery.contains("\"(?i)foo, bar\""),
+                        "Quoted matcher value containing comma-space must not be altered");
             }
         }
     }
@@ -454,17 +459,17 @@ class MetadataProfileValidationTest {
     }
 
     // =========================================================================
-    // appendFiltersToSecondSelector — workload filter on correct selector
+    // appendFiltersToMatchingSelector — structure-based selector targeting
     // =========================================================================
     @Nested
-    @DisplayName("appendFiltersToSecondSelector — workload filter targets the joined-workload selector")
-    class AppendFiltersSecondSelectorTests {
+    @DisplayName("appendFiltersToMatchingSelector — filter targets selector whose metric name contains the identifier")
+    class AppendFiltersMatchingSelectorTests {
 
         @Test
-        @DisplayName("workload= filter is injected into the second selector, not the first")
-        void workloadFilterGoesIntoSecondSelector() {
-            // First selector: kube_pod_labels{} — no workload label
-            // Second selector: namespace_workload_pod:kube_pod_owner:relabel{} — carries workload
+        @DisplayName("workload= filter goes into namespace_workload_pod selector, not kube_pod_labels")
+        void workloadFilterGoesIntoMatchingSelector() {
+            // namespace_workload_pod:kube_pod_owner:relabel contains "workload" in its name;
+            // kube_pod_labels does not.
             String query =
                     "sum by (namespace, workload, workload_type) " +
                     "(max_over_time(kube_pod_labels{}[15m]) * on (namespace, pod) " +
@@ -472,19 +477,17 @@ class MetadataProfileValidationTest {
                     "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{}[15m]))";
             String filter = ", workload=\"kruize\"";
 
-            String result = MetadataProfileUtil.appendFiltersToSecondSelector(query, filter);
+            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
 
-            // First selector must be untouched
             assertTrue(result.contains("kube_pod_labels{}"),
-                    "First selector must not have the workload filter injected");
-            // Second selector must have the filter
+                    "First selector (kube_pod_labels) must be untouched");
             assertTrue(result.contains("namespace_workload_pod:kube_pod_owner:relabel{workload=\"kruize\"}"),
-                    "Second selector must contain workload=\"kruize\"");
+                    "Matching selector must contain workload=\"kruize\"");
         }
 
         @Test
-        @DisplayName("workloadsWithPodLabelFilter query: workload= filter reaches second selector via queryValidator")
-        void workloadsWithLabelFilterQueryWorkloadInSecondSelector() throws Exception {
+        @DisplayName("workloadsWithPodLabelFilter: workload= filter reaches the namespace_workload_pod selector via queryValidator")
+        void workloadsWithLabelFilterQueryWorkloadInMatchingSelector() throws Exception {
             JsonArray result = buildResultArray("namespace", "workload", "workload_type");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
@@ -505,33 +508,51 @@ class MetadataProfileValidationTest {
                         AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER);
 
                 String capturedQuery = queryCaptor.getValue();
-                // The first selector (kube_pod_labels) must NOT have workload=
                 int firstOpen = capturedQuery.indexOf("{");
                 int firstClose = capturedQuery.indexOf("}", firstOpen);
                 String firstSelector = capturedQuery.substring(firstOpen + 1, firstClose);
                 assertFalse(firstSelector.contains("workload="),
                         "workload= must NOT be injected into the first (kube_pod_labels) selector");
-                // The second selector must contain workload=
                 int secondOpen = capturedQuery.indexOf("{", firstClose + 1);
                 int secondClose = capturedQuery.indexOf("}", secondOpen);
                 String secondSelector = capturedQuery.substring(secondOpen + 1, secondClose);
                 assertTrue(secondSelector.contains("workload="),
-                        "workload= must be injected into the second (namespace_workload_pod) selector");
+                        "workload= must be injected into the matching (namespace_workload_pod) selector");
                 assertTrue(errorString.isEmpty(),
                         "No error should be appended when result identifiers match");
             }
         }
 
         @Test
-        @DisplayName("Falls back to first selector when query has only one selector")
-        void fallsBackToFirstSelectorWhenOnlyOne() {
+        @DisplayName("A hypothetical joined workload query with a different name also routes correctly")
+        void arbitraryJoinedWorkloadQueryRoutesCorrectly() {
+            // Simulates a future metric name that is not workloadsWithPodLabelFilter but still
+            // uses a joined query where "workload" appears in the second metric's name.
+            String query =
+                    "sum by (namespace, workload, workload_type) " +
+                    "(max_over_time(some_pod_metric{}[15m]) * on (namespace, pod) " +
+                    "group_left(workload, workload_type) " +
+                    "max_over_time(namespace_workload_pod:some_other_relabel{}[15m]))";
+            String filter = ", workload=\"kruize\"";
+
+            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
+
+            assertTrue(result.contains("some_pod_metric{}"),
+                    "First selector must be untouched");
+            assertTrue(result.contains("namespace_workload_pod:some_other_relabel{workload=\"kruize\"}"),
+                    "Matching selector must receive the filter regardless of the calling metric name");
+        }
+
+        @Test
+        @DisplayName("Falls back to first selector when no metric name contains the identifier")
+        void fallsBackToFirstSelectorWhenNoMatch() {
             String query = "sum by (namespace, workload, workload_type) (avg_over_time(some_metric{}[15m]))";
             String filter = ", workload=\"kruize\"";
 
-            String result = MetadataProfileUtil.appendFiltersToSecondSelector(query, filter);
+            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
 
             assertTrue(result.contains("some_metric{workload=\"kruize\"}"),
-                    "Should fall back to the first selector when no second selector exists");
+                    "Must fall back to the first selector when no metric name contains the identifier");
         }
     }
 
