@@ -207,43 +207,59 @@ public class MetadataProfileUtil {
     }
 
     /**
-     * Appends additional filter clauses inside the second pair of curly braces in a query string.
-     * Used for joined queries (e.g. workloadsWithPodLabelFilter) where the label of interest
-     * is carried by the second metric selector, not the first.
+     * Appends filter clauses to the selector whose preceding metric name contains the given
+     * identifier. This is purely structure-based: it scans each {@code metric{...}} occurrence
+     * in the query and picks the first one whose metric name (the text before {@code {}) contains
+     * the identifier string. This correctly handles simple queries as well as any joined
+     * multi-metric query without relying on a hardcoded metric name.
      *
-     * @param query The original query string to which filters will be appended.
-     * @param filtersToAppend The filter string to be inserted into the second selector.
-     * @return The modified query string with filters appended to the second selector,
-     *         or the original query if a second selector cannot be found.
+     * <p>If no selector's metric name contains the identifier, falls back to the first selector.</p>
+     *
+     * @param query           The query string to modify.
+     * @param metricIdentifier The identifier to match against metric names (e.g. "namespace",
+     *                         "workload", "container").
+     * @param filtersToAppend The filter string to insert (may start with ", ").
+     * @return The modified query with the filter inserted into the correct selector.
      */
-    public static String appendFiltersToSecondSelector(String query, String filtersToAppend) {
+    public static String appendFiltersToMatchingSelector(String query, String metricIdentifier, String filtersToAppend) {
         if (null == query || query.isEmpty() || null == filtersToAppend || filtersToAppend.isEmpty()) {
             return query;
         }
 
-        int firstOpeningBraceIndex = query.indexOf("{");
-        if (firstOpeningBraceIndex == -1) {
-            return query;
-        }
-        int firstClosingBraceIndex = query.indexOf("}", firstOpeningBraceIndex);
-        if (firstClosingBraceIndex == -1) {
-            return query;
+        int searchFrom = 0;
+        int matchedOpen = -1;
+        int matchedClose = -1;
+
+        // Walk every {…} selector in the query and pick the first whose metric name
+        // (the text between the previous } or start-of-string and the {) contains the identifier.
+        while (true) {
+            int openBrace = query.indexOf("{", searchFrom);
+            if (openBrace == -1) break;
+
+            int closeBrace = query.indexOf("}", openBrace);
+            if (closeBrace == -1) break;
+
+            // Extract the metric name: everything after the last } (or start) up to this {
+            int prevClose = query.lastIndexOf("}", openBrace - 1);
+            String metricNameSegment = query.substring(prevClose + 1, openBrace);
+
+            if (metricNameSegment.contains(metricIdentifier)) {
+                matchedOpen = openBrace;
+                matchedClose = closeBrace;
+                break;
+            }
+            searchFrom = closeBrace + 1;
         }
 
-        int secondOpeningBraceIndex = query.indexOf("{", firstClosingBraceIndex + 1);
-        if (secondOpeningBraceIndex == -1) {
-            // No second selector — fall back to the first one
+        // Fall back to the first selector if no metric name matched
+        if (matchedOpen == -1) {
             return appendFiltersToQuery(query, filtersToAppend);
         }
-        int secondClosingBraceIndex = query.indexOf("}", secondOpeningBraceIndex);
-        if (secondClosingBraceIndex == -1) {
-            return query;
-        }
 
-        int contentStartIndex = secondOpeningBraceIndex + 1;
+        int contentStartIndex = matchedOpen + 1;
         String queryPrefix = query.substring(0, contentStartIndex);
-        String contentInsideBraces = query.substring(contentStartIndex, secondClosingBraceIndex).trim();
-        String querySuffix = query.substring(secondClosingBraceIndex);
+        String contentInsideBraces = query.substring(contentStartIndex, matchedClose).trim();
+        String querySuffix = query.substring(matchedClose);
 
         // Strip leading ", " from the filter when the selector is empty
         String effectiveFilter = contentInsideBraces.isEmpty()

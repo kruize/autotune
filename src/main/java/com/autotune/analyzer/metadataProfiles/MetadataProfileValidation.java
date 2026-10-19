@@ -382,26 +382,20 @@ public class MetadataProfileValidation {
                 .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, "")
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, "");
 
-        // Normalize selectors: remove leading/trailing commas left by stripped placeholders
-        // e.g. {, workload_type!~"..."} -> {workload_type!~"..."}, {filter, } -> {filter}
-        metricQuery = metricQuery.replaceAll("\\{,\\s*", "{")
-                .replaceAll(",\\s*}", "}")
-                .replaceAll("\\s+,", ",");
+        // Normalize only the selector open-brace boundary: remove a leading comma that
+        // getUnsupportedWorkloadTypesFilter() introduces (it always starts with ", ").
+        // Restricted to the {, pattern so quoted matcher values are never touched.
+        metricQuery = metricQuery.replaceAll("\\{,\\s*", "{");
 
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
             String updatedQuery = metricQuery;
             if (!metricQuery.contains(metricIdentifier + "=")) {
                 String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
-                // For workload queries that join a second metric (e.g. workloadsWithPodLabelFilter),
-                // the workload label lives in the second selector, not the first.
-                // Append to the selector that belongs to the metric carrying the workload label.
-                if (AnalyzerConstants.WORKLOAD.equals(metricIdentifier)
-                        && metricName.equals(AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER)) {
-                    updatedQuery = MetadataProfileUtil.appendFiltersToSecondSelector(metricQuery, filterString);
-                } else {
-                    updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
-                }
+                // Append the filter to whichever selector's metric name contains the identifier.
+                // This is structure-based: it works for any joined query, not just a single
+                // hardcoded metric name.
+                updatedQuery = MetadataProfileUtil.appendFiltersToMatchingSelector(metricQuery, metricIdentifier, filterString);
             }
 
             JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
