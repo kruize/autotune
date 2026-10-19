@@ -376,7 +376,11 @@ public class MetadataProfileValidation {
 
         metricQuery = metricQuery.replace(AnalyzerConstants.MetadataProfileConstants.ADDITIONAL_LABEL, "")
                 .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT))
-                .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
+                .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, AnalyzerConstants.getUnsupportedWorkloadTypesFilter())
+                .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, "")
+                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, "")
+                .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, "")
+                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, "");
 
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
