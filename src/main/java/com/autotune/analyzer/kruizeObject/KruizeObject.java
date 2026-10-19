@@ -202,9 +202,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                     terms.put(KruizeConstants.JSONKeys.FLEX_TERM, new Terms(
                             KruizeConstants.JSONKeys.FLEX_TERM,
                             KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS,
-                            Math.max(
-                                    getTermThresholdInDays(KruizeConstants.JSONKeys.FLEX_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
-                                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FLEX_TERM_DURATION_DAYS_THRESHOLD),
+                            getTermThresholdInDays(KruizeConstants.JSONKeys.FLEX_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
                 } else {
                     throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);

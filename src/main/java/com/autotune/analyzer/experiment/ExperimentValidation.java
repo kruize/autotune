@@ -309,7 +309,6 @@ public class ExperimentValidation {
                     );
                 }
 
-
                 if (AnalyzerConstants.AUTO.equalsIgnoreCase(expObj.getMode()) || AnalyzerConstants.RECREATE.equalsIgnoreCase(expObj.getMode())) {
                     // only vpa specific check for multiple term & model
 
@@ -358,7 +357,6 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
-
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&

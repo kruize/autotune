@@ -820,11 +820,9 @@ public class KruizeConstants {
                 public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
                 public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
-                // flex: minimum 2 datapoints (30 min of data); window spans up to 15 days
-                // — same datapoint floor as short_term, but no sub-window restriction.
-                public static final int    FLEX_TERM_DURATION_DAYS           = 15;
-                public static final double FLEX_TERM_DURATION_DAYS_THRESHOLD = ((double) 30 / (24 * 60)); // 30 min expressed in days
-                public static final int    FLEX_TERM_MIN_DATAPOINTS          = 2;
+                public static final int FLEX_TERM_DURATION_DAYS = 15;
+                public static final double FLEX_TERM_DURATION_DAYS_THRESHOLD = ((double) 30 / (24 * 60));
+                public static final int FLEX_TERM_MIN_DATAPOINTS = 2;
 
                 // Term Names (for consistency in keys and names)
                 public static final String TERM_DAILY = "daily";
@@ -889,15 +887,11 @@ public class KruizeConstants {
                 public static final double LONG_TERM_HOURS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
-                /* FLEX TERM
-                 * Minimum threshold: 30 min (2 datapoints at 15-min intervals) — same floor as short_term.
-                 * Maximum window:    15 days (360 h) — same ceiling as long_term.
-                 * The engine uses ALL available data up to the 15-day cap; no sub-window restriction.
-                 */
-                public static final double FLEX_TERM_MIN_DATA_THRESHOLD_MINS         = 30;
-                public static final double FLEX_TERM_HOURS                            = DurationAmount.FLEX_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
-                public static final double FLEX_TERM_TOTAL_DURATION_UPPER_BOUND_MINS  = FLEX_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
-                public static final double FLEX_TERM_TOTAL_DURATION_LOWER_BOUND_MINS  = FLEX_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                /* FLEX TERM */
+                public static final double FLEX_TERM_MIN_DATA_THRESHOLD_MINS = 30;
+                public static final double FLEX_TERM_HOURS = DurationAmount.FLEX_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
+                public static final double FLEX_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = FLEX_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                public static final double FLEX_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = FLEX_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
 
                 private RecommendationDurationRanges() {
 
