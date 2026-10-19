@@ -333,14 +333,17 @@ public class DataSourceMetadataOperator {
 
     }
 
-    // Helper function to map fields to query templates
+    // Helper function to map fields to query templates.
+    // Uses substring matching via getQueryFromProfile so that any profile naming convention
+    // (e.g. "namespacesAcrossCluster", "namespacesForAdditionalLabel") is resolved as long as
+    // the entry name contains the short keyword ("namespace", "workload", "container").
     private String getQueryTemplate(String field, MetadataProfile metadataProfile) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
 
         return switch (field) {
-            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
-            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD_METADATA_QUERY);
-            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER_METADATA_QUERY);
+            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE);
+            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD);
+            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER);
             default -> throw new IllegalArgumentException("Unknown field: " + field);
         };
     }

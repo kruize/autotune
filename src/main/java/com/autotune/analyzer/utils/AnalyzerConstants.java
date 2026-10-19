@@ -109,11 +109,9 @@ public class AnalyzerConstants {
     public static final String WORKLOAD = "workload";
     public static final String CONTAINER = "container";
 
-    // Metadata query constants - exact metric names in metadata profiles
-    public static final String WORKLOAD_METADATA_QUERY = "workloadsForAdditionalLabel";
+    // Exact name of the label-filter workload query entry in the metadata profile.
+    // Used to look up the specialised workloadsWithPodLabelFilter entry when pod label filtering is active.
     public static final String WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER = "workloadsWithPodLabelFilter";
-    public static final String NAMESPACE_METADATA_QUERY = "namespacesForAdditionalLabel";
-    public static final String CONTAINER_METADATA_QUERY = "containersForAdditionalLabel";
 
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
     public static final String KRUIZE_PROFILE_FILTER = "kruize";
