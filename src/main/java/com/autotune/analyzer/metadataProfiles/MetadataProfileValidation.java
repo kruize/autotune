@@ -382,12 +382,26 @@ public class MetadataProfileValidation {
                 .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, "")
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, "");
 
+        // Normalize selectors: remove leading/trailing commas left by stripped placeholders
+        // e.g. {, workload_type!~"..."} -> {workload_type!~"..."}, {filter, } -> {filter}
+        metricQuery = metricQuery.replaceAll("\\{,\\s*", "{")
+                .replaceAll(",\\s*}", "}")
+                .replaceAll("\\s+,", ",");
+
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
             String updatedQuery = metricQuery;
             if (!metricQuery.contains(metricIdentifier + "=")) {
                 String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
-                updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+                // For workload queries that join a second metric (e.g. workloadsWithPodLabelFilter),
+                // the workload label lives in the second selector, not the first.
+                // Append to the selector that belongs to the metric carrying the workload label.
+                if (AnalyzerConstants.WORKLOAD.equals(metricIdentifier)
+                        && metricName.equals(AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER)) {
+                    updatedQuery = MetadataProfileUtil.appendFiltersToSecondSelector(metricQuery, filterString);
+                } else {
+                    updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+                }
             }
 
             JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);

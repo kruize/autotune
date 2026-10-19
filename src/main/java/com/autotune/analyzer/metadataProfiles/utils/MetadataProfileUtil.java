@@ -198,7 +198,59 @@ public class MetadataProfileUtil {
         String contentInsideBraces = query.substring(contentStartIndex, firstClosingBraceIndex).trim();
         String querySuffix = query.substring(firstClosingBraceIndex);
 
-        return queryPrefix + contentInsideBraces + filtersToAppend + querySuffix;
+        // Strip leading ", " from the filter when the selector is empty to avoid {, filter=...}
+        String effectiveFilter = contentInsideBraces.isEmpty()
+                ? filtersToAppend.replaceFirst("^,\\s*", "")
+                : filtersToAppend;
+
+        return queryPrefix + contentInsideBraces + effectiveFilter + querySuffix;
+    }
+
+    /**
+     * Appends additional filter clauses inside the second pair of curly braces in a query string.
+     * Used for joined queries (e.g. workloadsWithPodLabelFilter) where the label of interest
+     * is carried by the second metric selector, not the first.
+     *
+     * @param query The original query string to which filters will be appended.
+     * @param filtersToAppend The filter string to be inserted into the second selector.
+     * @return The modified query string with filters appended to the second selector,
+     *         or the original query if a second selector cannot be found.
+     */
+    public static String appendFiltersToSecondSelector(String query, String filtersToAppend) {
+        if (null == query || query.isEmpty() || null == filtersToAppend || filtersToAppend.isEmpty()) {
+            return query;
+        }
+
+        int firstOpeningBraceIndex = query.indexOf("{");
+        if (firstOpeningBraceIndex == -1) {
+            return query;
+        }
+        int firstClosingBraceIndex = query.indexOf("}", firstOpeningBraceIndex);
+        if (firstClosingBraceIndex == -1) {
+            return query;
+        }
+
+        int secondOpeningBraceIndex = query.indexOf("{", firstClosingBraceIndex + 1);
+        if (secondOpeningBraceIndex == -1) {
+            // No second selector — fall back to the first one
+            return appendFiltersToQuery(query, filtersToAppend);
+        }
+        int secondClosingBraceIndex = query.indexOf("}", secondOpeningBraceIndex);
+        if (secondClosingBraceIndex == -1) {
+            return query;
+        }
+
+        int contentStartIndex = secondOpeningBraceIndex + 1;
+        String queryPrefix = query.substring(0, contentStartIndex);
+        String contentInsideBraces = query.substring(contentStartIndex, secondClosingBraceIndex).trim();
+        String querySuffix = query.substring(secondClosingBraceIndex);
+
+        // Strip leading ", " from the filter when the selector is empty
+        String effectiveFilter = contentInsideBraces.isEmpty()
+                ? filtersToAppend.replaceFirst("^,\\s*", "")
+                : filtersToAppend;
+
+        return queryPrefix + contentInsideBraces + effectiveFilter + querySuffix;
     }
 
     /**
