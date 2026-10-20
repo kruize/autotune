@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.autotune.utils.CloudWatchAppenderTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.745 s -- in com.autotune.utils.CloudWatchAppenderTest

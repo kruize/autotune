@@ -1,0 +1,4 @@
+com/autotune/utils/CloudWatchAppenderTest.class
+com/autotune/analyzer/adapters/MetricAggregationInfoResultsIntSerializerTest.class
+com/autotune/analyzer/workerimpl/BulkJobManagerMockedTest.class
+com/autotune/analyzer/utils/TestEvalExParser.class
