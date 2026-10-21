@@ -339,7 +339,9 @@ public class MetadataProfileValidation {
 
 
     /**
-     * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns
+     * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns.
+     * Rejects queries that still contain unresolved bulk-filter placeholders (e.g. $NAMESPACE_FILTERS$):
+     * the updateMetadata API requires pre-expanded queries.
      *
      * @param metricQuery Query to be updated
      * @param metricName  Name of the Metric to be updated
@@ -347,6 +349,28 @@ public class MetadataProfileValidation {
      * @param dataSourceInfo Datasource object with datasource details to run the queries
      */
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
+        // Reject queries that contain unresolved $...$ placeholders.
+        List<String> unresolvedPlaceholders = Arrays.asList(
+                KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS,
+                KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS,
+                KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS,
+                KruizeConstants.KRUIZE_BULK_API.LABELS,
+                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE,
+                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE
+        );
+        List<String> found = new ArrayList<>();
+        for (String placeholder : unresolvedPlaceholders) {
+            if (metricQuery.contains(placeholder)) {
+                found.add(placeholder);
+            }
+        }
+        if (!found.isEmpty()) {
+            errorString.append(String.format(
+                    AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UNRESOLVED_PLACEHOLDER_IN_QUERY,
+                    metricName, found));
+            return;
+        }
+
         AnalyzerConstants.MetadataProfileQueryIdentifier matchedIdentifier = matchSumByClause(metricQuery);
         if (matchedIdentifier == null) {
             errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE)
@@ -374,18 +398,10 @@ public class MetadataProfileValidation {
                                AnalyzerConstants.MetadataProfileQueryIdentifier queryIdentifier) {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
-        metricQuery = metricQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT))
-                .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE, AnalyzerConstants.getUnsupportedWorkloadTypesFilter())
-                .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, "")
-                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, "")
-                .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, "")
-                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, "");
-
-        // Normalize only the selector open-brace boundary: remove a leading comma that
-        // getUnsupportedWorkloadTypesFilter() introduces (it always starts with ", ").
-        // Restricted to the {, pattern so quoted matcher values are never touched.
-        metricQuery = metricQuery.replaceAll("\\{,\\s*", "{");
-
+        // By the time queryValidator is called, validateMetricQueryPattern has already rejected
+        // any query containing unresolved $...$ placeholders. The query here is pre-expanded
+        // and ready to execute against Prometheus. We only need to inject a narrow filter so
+        // the validation query targets a known workload/namespace rather than the whole cluster.
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
             String updatedQuery = metricQuery;
