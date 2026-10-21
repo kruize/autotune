@@ -9,7 +9,7 @@
   "datasource": "prometheus",
   "query_variables": [
     {
-      "name": "namespacesAcrossCluster",
+      "name": "namespacesForAdditionalLabel",
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
@@ -21,7 +21,7 @@
       ]
     },
     {
-      "name": "workloadsAcrossCluster",
+      "name": "workloadsForAdditionalLabel",
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
@@ -33,7 +33,7 @@
       ]
     },
     {
-      "name": "containersAcrossCluster",
+      "name": "containersForAdditionalLabel",
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
