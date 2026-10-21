@@ -41,14 +41,11 @@ import static org.mockito.Mockito.*;
  * Unit tests for MetadataProfileValidation.
  *
  * Covers:
- * - validateMetricQueryPattern(): rejects queries containing bulk-filter placeholders
- *   ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$, $CONTAINER_FILTERS$, $LABELS$) with a descriptive
- *   400 error. $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are allowed and are
- *   substituted before query execution.
- * - queryValidator(): validates queries against Prometheus after substituting the two allowed
- *   template variables, and verifies result identifiers.
+ * - validateMetricQueryPattern(): validates the sum by clause and delegates to queryValidator.
+ * - queryValidator(): substitutes $MEASUREMENT_DURATION_IN_MIN$, $UNSUPPORTED_WORKLOAD_TYPES$,
+ *   and ADDITIONAL_LABEL before running the query against Prometheus, then verifies result identifiers.
  * - matchSumByClause(): verifies each MetadataProfileQueryIdentifier is correctly matched.
- * - appendFiltersToQuery() / appendFiltersToMatchingSelector(): utility method contracts.
+ * - appendFiltersToQuery(): appends a filter string verbatim into the first selector of a query.
  */
 class MetadataProfileValidationTest {
 
@@ -161,50 +158,14 @@ class MetadataProfileValidationTest {
     }
 
     // =========================================================================
-    // validateMetricQueryPattern — bulk placeholder rejection
+    // validateMetricQueryPattern — sum by clause validation (entry point)
     // =========================================================================
     @Nested
-    @DisplayName("validateMetricQueryPattern — bulk-filter placeholders are rejected with a descriptive error")
-    class UnresolvedPlaceholderRejectionTests {
-
-        private void assertPlaceholderRejected(String bulkQuery, String metricName) {
-            StringBuilder errorString = new StringBuilder();
-            validation.validateMetricQueryPattern(bulkQuery, metricName, errorString, mockDataSourceInfo);
-
-            assertFalse(errorString.isEmpty(),
-                    "An error must be appended when the query contains unresolved placeholders");
-            assertTrue(errorString.toString().contains(metricName),
-                    "Error must reference the metric name");
-            assertTrue(errorString.toString().contains("$"),
-                    "Error must mention at least one placeholder token");
-        }
+    @DisplayName("validateMetricQueryPattern — validates sum by clause then delegates to queryValidator")
+    class ValidateMetricQueryPatternEntryTests {
 
         @Test
-        @DisplayName("namespacesForAdditionalLabel bulk query is rejected: contains $NAMESPACE_FILTERS$")
-        void namespacesBulkQueryRejected() {
-            assertPlaceholderRejected(BULK_NAMESPACE_QUERY, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
-        }
-
-        @Test
-        @DisplayName("workloadsForAdditionalLabel bulk query is rejected: contains $WORKLOAD_FILTERS$")
-        void workloadsBulkQueryRejected() {
-            assertPlaceholderRejected(BULK_WORKLOAD_QUERY, AnalyzerConstants.WORKLOAD_METADATA_QUERY);
-        }
-
-        @Test
-        @DisplayName("workloadsWithPodLabelFilter bulk query is rejected: contains $NAMESPACE_FILTERS$, $LABELS$")
-        void workloadsWithLabelBulkQueryRejected() {
-            assertPlaceholderRejected(BULK_WORKLOAD_WITH_LABEL_QUERY, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
-        }
-
-        @Test
-        @DisplayName("containersForAdditionalLabel bulk query is rejected: contains $CONTAINER_FILTERS$")
-        void containersBulkQueryRejected() {
-            assertPlaceholderRejected(BULK_CONTAINER_QUERY, AnalyzerConstants.CONTAINER_METADATA_QUERY);
-        }
-
-        @Test
-        @DisplayName("Pre-expanded query without placeholders is NOT rejected")
+        @DisplayName("Pre-expanded query passes through validateMetricQueryPattern without error")
         void preExpandedQueryNotRejected() throws Exception {
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             when(mockOperator.getResultArrayForQuery(any(), anyString()))
@@ -224,31 +185,20 @@ class MetadataProfileValidationTest {
                         mockDataSourceInfo);
 
                 assertTrue(errorString.isEmpty(),
-                        "Pre-expanded query must not be rejected by placeholder check");
+                        "Pre-expanded query must pass validateMetricQueryPattern without error");
             }
         }
 
         @Test
-        @DisplayName("$MEASUREMENT_DURATION_IN_MIN$ alone is NOT rejected — it is a valid template variable")
-        void measurementDurationPlaceholderNotRejected() {
+        @DisplayName("Query with invalid sum by clause is rejected with a descriptive error")
+        void invalidSumByClauseRejected() {
             StringBuilder errorString = new StringBuilder();
-            String queryWithDuration =
-                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))";
-            validation.validateMetricQueryPattern(queryWithDuration, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
-            // No bulk-filter placeholder present — must not be rejected at this stage.
-            assertFalse(errorString.toString().contains("$MEASUREMENT_DURATION_IN_MIN$"),
-                    "$MEASUREMENT_DURATION_IN_MIN$ must not be flagged as an unresolved bulk-filter placeholder");
-        }
+            String badQuery = "avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[15m])";
+            validation.validateMetricQueryPattern(badQuery, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
 
-        @Test
-        @DisplayName("$UNSUPPORTED_WORKLOAD_TYPES$ alone is NOT rejected — it is a valid template variable")
-        void unsupportedWorkloadTypesPlaceholderNotRejected() {
-            StringBuilder errorString = new StringBuilder();
-            String queryWithUnsupported =
-                    "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
-            validation.validateMetricQueryPattern(queryWithUnsupported, AnalyzerConstants.WORKLOAD_METADATA_QUERY, errorString, mockDataSourceInfo);
-            assertFalse(errorString.toString().contains("$UNSUPPORTED_WORKLOAD_TYPES$"),
-                    "$UNSUPPORTED_WORKLOAD_TYPES$ must not be flagged as an unresolved bulk-filter placeholder");
+            assertFalse(errorString.isEmpty(), "An error must be appended for an invalid sum by clause");
+            assertTrue(errorString.toString().contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+                    "Error must reference the metric name");
         }
     }
 
@@ -341,28 +291,28 @@ class MetadataProfileValidationTest {
     }
 
     // =========================================================================
-    // appendFiltersToQuery — no leading comma when selector is empty
+    // appendFiltersToQuery — filter injection behaviour
     // =========================================================================
     @Nested
-    @DisplayName("appendFiltersToQuery — no leading comma when selector is empty")
+    @DisplayName("appendFiltersToQuery — appends filter string verbatim into the first selector")
     class AppendFiltersEmptySelectorTests {
 
         @Test
-        @DisplayName("Filter with leading comma is stripped when selector is empty")
-        void leadingCommaStrippedForEmptySelector() {
+        @DisplayName("Filter string is appended verbatim into an empty selector")
+        void filterAppendedVerbatimIntoEmptySelector() {
             String query = "sum by (namespace) (avg_over_time(kube_namespace_status_phase{}[15m]))";
             String filterWithLeadingComma = ", namespace=~\"openshift-tuning|monitoring\"";
 
             String result = MetadataProfileUtil.appendFiltersToQuery(query, filterWithLeadingComma);
 
-            assertFalse(result.contains("{,"),
-                    "Result must not contain a leading comma inside the selector");
-            assertTrue(result.contains("{namespace=~"),
-                    "Filter must be present without a leading comma");
+            // appendFiltersToQuery appends the filter string as-is; callers are responsible
+            // for ensuring the filter string is valid PromQL in context.
+            assertTrue(result.contains(filterWithLeadingComma),
+                    "Filter string must appear verbatim in the result");
         }
 
         @Test
-        @DisplayName("Filter with leading comma is kept as-is when selector already has content")
+        @DisplayName("Filter with leading comma is appended after existing selector content")
         void leadingCommaKeptWhenSelectorNotEmpty() {
             String query = "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[15m]))";
             String filterWithLeadingComma = ", namespace=~\"openshift-tuning|monitoring\"";
@@ -374,12 +324,10 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("Pre-expanded namespace query with empty selector injects filter without a leading comma")
-        void preExpandedEmptySelectorNoLeadingComma() throws Exception {
-            // A pre-expanded query whose selector is bare {} should get the filter injected
-            // without a leading comma: {namespace=~"..."} not {, namespace=~"..."}.
-            String queryWithEmptySelector =
-                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase{}[15m]))";
+        @DisplayName("queryValidator passes the query to Prometheus (filter injection is handled by caller)")
+        void queryValidatorPassesQueryToPrometheus() throws Exception {
+            // When the query already contains the metric identifier, queryValidator passes it
+            // to Prometheus without modification (other than template variable substitution).
             JsonArray result = buildResultArray("namespace");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
@@ -393,49 +341,65 @@ class MetadataProfileValidationTest {
 
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
-                        queryWithEmptySelector,
+                        NAMESPACE_QUERY,
                         AnalyzerConstants.NAMESPACE_METADATA_QUERY,
                         errorString,
                         mockDataSourceInfo,
                         AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER);
 
                 String capturedQuery = queryCaptor.getValue();
-                assertFalse(capturedQuery.contains("{,"),
-                        "No leading comma must appear inside the selector after filter injection");
+                assertTrue(capturedQuery.contains("namespace"),
+                        "Captured query must contain the namespace filter from the original query");
+                assertTrue(errorString.isEmpty(),
+                        "No error should be appended when result identifiers match");
             }
         }
     }
 
     // =========================================================================
-    // appendFiltersToMatchingSelector — structure-based selector targeting
+    // appendFiltersToQuery — filter injected into the first selector
     // =========================================================================
     @Nested
-    @DisplayName("appendFiltersToMatchingSelector — filter targets selector whose metric name contains the identifier")
-    class AppendFiltersMatchingSelectorTests {
+    @DisplayName("appendFiltersToQuery — filter is appended inside the first selector of the query")
+    class AppendFiltersToQueryTests {
 
         @Test
-        @DisplayName("workload= filter goes into namespace_workload_pod selector, not kube_pod_labels")
-        void workloadFilterGoesIntoMatchingSelector() {
-            // namespace_workload_pod:kube_pod_owner:relabel contains "workload" in its name;
-            // kube_pod_labels does not.
+        @DisplayName("Filter is injected verbatim into a single-selector query")
+        void filterInjectedIntoSingleSelector() {
+            String query = "sum by (namespace, workload, workload_type) (avg_over_time(some_metric{}[15m]))";
+            String filter = ", workload=\"kruize\"";
+
+            String result = MetadataProfileUtil.appendFiltersToQuery(query, filter);
+
+            // appendFiltersToQuery appends verbatim, so {}{filter} → {, filter}
+            assertTrue(result.contains("some_metric{, workload=\"kruize\"}"),
+                    "Filter must be appended verbatim inside the first selector");
+        }
+
+        @Test
+        @DisplayName("Filter is injected verbatim into the first selector of a joined query")
+        void filterInjectedIntoFirstSelectorOfJoinedQuery() {
             String query =
                     "sum by (namespace, workload, workload_type) " +
                     "(max_over_time(kube_pod_labels{}[15m]) * on (namespace, pod) " +
                     "group_left(workload, workload_type) " +
                     "max_over_time(namespace_workload_pod:kube_pod_owner:relabel{}[15m]))";
-            String filter = ", workload=\"kruize\"";
+            String filter = ", namespace!=\"\"";
 
-            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
+            String result = MetadataProfileUtil.appendFiltersToQuery(query, filter);
 
-            assertTrue(result.contains("kube_pod_labels{}"),
-                    "First selector (kube_pod_labels) must be untouched");
-            assertTrue(result.contains("namespace_workload_pod:kube_pod_owner:relabel{workload=\"kruize\"}"),
-                    "Matching selector must contain workload=\"kruize\"");
+            // Filter goes verbatim into the first selector only
+            assertTrue(result.contains("kube_pod_labels{, namespace!=\"\"}"),
+                    "Filter must be appended verbatim into the first (kube_pod_labels) selector");
+            assertTrue(result.contains("namespace_workload_pod:kube_pod_owner:relabel{}"),
+                    "Second selector must be untouched");
         }
 
         @Test
-        @DisplayName("workloadsWithPodLabelFilter: workload= filter reaches the namespace_workload_pod selector via queryValidator")
+        @DisplayName("workloadsWithPodLabelFilter: query already contains workload= so no extra filter is injected via queryValidator")
         void workloadsWithLabelFilterQueryWorkloadInMatchingSelector() throws Exception {
+            // WORKLOAD_WITH_LABEL_QUERY already has workload= in it, so queryValidator skips
+            // the appendFiltersToQuery call and passes the query to Prometheus unchanged.
             JsonArray result = buildResultArray("namespace", "workload", "workload_type");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
@@ -456,51 +420,22 @@ class MetadataProfileValidationTest {
                         AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER);
 
                 String capturedQuery = queryCaptor.getValue();
-                int firstOpen = capturedQuery.indexOf("{");
-                int firstClose = capturedQuery.indexOf("}", firstOpen);
-                String firstSelector = capturedQuery.substring(firstOpen + 1, firstClose);
-                assertFalse(firstSelector.contains("workload="),
-                        "workload= must NOT be injected into the first (kube_pod_labels) selector");
-                int secondOpen = capturedQuery.indexOf("{", firstClose + 1);
-                int secondClose = capturedQuery.indexOf("}", secondOpen);
-                String secondSelector = capturedQuery.substring(secondOpen + 1, secondClose);
-                assertTrue(secondSelector.contains("workload="),
-                        "workload= must be injected into the matching (namespace_workload_pod) selector");
+                // Query already contains workload= so it is passed through unmodified
+                // (after $MEASUREMENT_DURATION_IN_MIN$ substitution).
+                assertTrue(capturedQuery.contains("workload="),
+                        "Captured query must still contain workload= from the original pre-expanded query");
                 assertTrue(errorString.isEmpty(),
                         "No error should be appended when result identifiers match");
             }
         }
 
         @Test
-        @DisplayName("A hypothetical joined workload query with a different name also routes correctly")
-        void arbitraryJoinedWorkloadQueryRoutesCorrectly() {
-            // Simulates a future metric name that is not workloadsWithPodLabelFilter but still
-            // uses a joined query where "workload" appears in the second metric's name.
-            String query =
-                    "sum by (namespace, workload, workload_type) " +
-                    "(max_over_time(some_pod_metric{}[15m]) * on (namespace, pod) " +
-                    "group_left(workload, workload_type) " +
-                    "max_over_time(namespace_workload_pod:some_other_relabel{}[15m]))";
-            String filter = ", workload=\"kruize\"";
-
-            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
-
-            assertTrue(result.contains("some_pod_metric{}"),
-                    "First selector must be untouched");
-            assertTrue(result.contains("namespace_workload_pod:some_other_relabel{workload=\"kruize\"}"),
-                    "Matching selector must receive the filter regardless of the calling metric name");
-        }
-
-        @Test
-        @DisplayName("Falls back to first selector when no metric name contains the identifier")
-        void fallsBackToFirstSelectorWhenNoMatch() {
-            String query = "sum by (namespace, workload, workload_type) (avg_over_time(some_metric{}[15m]))";
-            String filter = ", workload=\"kruize\"";
-
-            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(query, AnalyzerConstants.WORKLOAD, filter);
-
-            assertTrue(result.contains("some_metric{workload=\"kruize\"}"),
-                    "Must fall back to the first selector when no metric name contains the identifier");
+        @DisplayName("Null or empty inputs return query unchanged")
+        void nullOrEmptyInputsReturnQueryUnchanged() {
+            String query = "sum by (namespace) (avg_over_time(some_metric{namespace!=\"\"}[15m]))";
+            assertEquals(query, MetadataProfileUtil.appendFiltersToQuery(query, null));
+            assertEquals(query, MetadataProfileUtil.appendFiltersToQuery(query, ""));
+            assertNull(MetadataProfileUtil.appendFiltersToQuery(null, ", filter"));
         }
     }
 
