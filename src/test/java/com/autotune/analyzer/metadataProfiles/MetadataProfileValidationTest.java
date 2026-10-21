@@ -41,30 +41,45 @@ import static org.mockito.Mockito.*;
  * Unit tests for MetadataProfileValidation.
  *
  * Covers:
- * - queryValidator(): verifies all $...$ filter placeholders are stripped before
- *   the query is sent to Prometheus, preventing HTTP 400 syntax errors.
- * - validateMetricQueryPattern(): verifies the sum-by clause matcher and error
- *   reporting for unsupported clause shapes.
- * - matchSumByClause(): verifies each MetadataProfileQueryIdentifier is correctly
- *   matched from the real queries in the payload.
+ * - validateMetricQueryPattern(): rejects queries containing unresolved $...$ bulk-filter
+ *   placeholders with a descriptive 400 error; the updateMetadata API requires pre-expanded queries.
+ * - queryValidator(): validates pre-expanded queries against Prometheus and verifies result identifiers.
+ * - matchSumByClause(): verifies each MetadataProfileQueryIdentifier is correctly matched.
+ * - appendFiltersToQuery() / appendFiltersToMatchingSelector(): utility method contracts.
  */
 class MetadataProfileValidationTest {
 
     private MetadataProfileValidation validation;
     private DataSourceInfo mockDataSourceInfo;
 
-    // Queries from the updateMetadata payload that triggered the bug
-    private static final String NAMESPACE_QUERY =
+    // ---- Bulk-profile queries (contain $...$ placeholders) ----
+    // These are valid in bulk metadata profiles used at data-gathering time,
+    // but must be REJECTED by the updateMetadata API.
+    private static final String BULK_NAMESPACE_QUERY =
             "sum by (namespace) (avg_over_time(kube_namespace_status_phase{$NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String WORKLOAD_QUERY =
+    private static final String BULK_WORKLOAD_QUERY =
             "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String WORKLOAD_WITH_LABEL_QUERY =
+    private static final String BULK_WORKLOAD_WITH_LABEL_QUERY =
             "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String CONTAINER_QUERY =
+    private static final String BULK_CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+
+    // ---- Pre-expanded queries (valid updateMetadata payload) ----
+    // These mirror update_cluster_metadata_local_monitoring.json.
+    private static final String NAMESPACE_QUERY =
+            "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\"}[15m]))";
+
+    private static final String WORKLOAD_QUERY =
+            "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\", workload=\"kruize\"}[15m]))";
+
+    private static final String WORKLOAD_WITH_LABEL_QUERY =
+            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{namespace!=\"\"}[15m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\", workload=\"kruize\"}[15m]))";
+
+    private static final String CONTAINER_QUERY =
+            "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\", container=\"kruize\"}[15m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[15m]))";
 
     @BeforeEach
     void setup() {
@@ -143,26 +158,54 @@ class MetadataProfileValidationTest {
     }
 
     // =========================================================================
-    // queryValidator — placeholder stripping (the core bug fix)
+    // validateMetricQueryPattern — bulk placeholder rejection
     // =========================================================================
     @Nested
-    @DisplayName("queryValidator — filter placeholders stripped before Prometheus call")
-    class QueryValidatorPlaceholderTests {
+    @DisplayName("validateMetricQueryPattern — bulk-filter placeholders are rejected with a descriptive error")
+    class UnresolvedPlaceholderRejectionTests {
 
-        /**
-         * Captures the query string actually passed to the operator and asserts that
-         * none of the $...$ placeholder tokens remain in it.
-         */
-        private void assertNoPlaceholdersReachPrometheus(
-                String rawQuery,
-                String metricName,
-                AnalyzerConstants.MetadataProfileQueryIdentifier identifier,
-                JsonArray fakeResult) throws Exception {
+        private void assertPlaceholderRejected(String bulkQuery, String metricName) {
+            StringBuilder errorString = new StringBuilder();
+            validation.validateMetricQueryPattern(bulkQuery, metricName, errorString, mockDataSourceInfo);
 
+            assertFalse(errorString.isEmpty(),
+                    "An error must be appended when the query contains unresolved placeholders");
+            assertTrue(errorString.toString().contains(metricName),
+                    "Error must reference the metric name");
+            assertTrue(errorString.toString().contains("$"),
+                    "Error must mention at least one placeholder token");
+        }
+
+        @Test
+        @DisplayName("namespacesForAdditionalLabel bulk query is rejected: contains $NAMESPACE_FILTERS$")
+        void namespacesBulkQueryRejected() {
+            assertPlaceholderRejected(BULK_NAMESPACE_QUERY, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
+        }
+
+        @Test
+        @DisplayName("workloadsForAdditionalLabel bulk query is rejected: contains $WORKLOAD_FILTERS$")
+        void workloadsBulkQueryRejected() {
+            assertPlaceholderRejected(BULK_WORKLOAD_QUERY, AnalyzerConstants.WORKLOAD_METADATA_QUERY);
+        }
+
+        @Test
+        @DisplayName("workloadsWithPodLabelFilter bulk query is rejected: contains $NAMESPACE_FILTERS$, $LABELS$")
+        void workloadsWithLabelBulkQueryRejected() {
+            assertPlaceholderRejected(BULK_WORKLOAD_WITH_LABEL_QUERY, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
+        }
+
+        @Test
+        @DisplayName("containersForAdditionalLabel bulk query is rejected: contains $CONTAINER_FILTERS$")
+        void containersBulkQueryRejected() {
+            assertPlaceholderRejected(BULK_CONTAINER_QUERY, AnalyzerConstants.CONTAINER_METADATA_QUERY);
+        }
+
+        @Test
+        @DisplayName("Pre-expanded query without placeholders is NOT rejected")
+        void preExpandedQueryNotRejected() throws Exception {
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
-            ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
-            when(mockOperator.getResultArrayForQuery(any(), queryCaptor.capture()))
-                    .thenReturn(fakeResult);
+            when(mockOperator.getResultArrayForQuery(any(), anyString()))
+                    .thenReturn(buildResultArray("namespace"));
 
             try (MockedStatic<DataSourceOperatorImpl> staticMock =
                          mockStatic(DataSourceOperatorImpl.class)) {
@@ -171,67 +214,32 @@ class MetadataProfileValidationTest {
                 when(mockImpl.getOperator(anyString())).thenReturn(mockOperator);
 
                 StringBuilder errorString = new StringBuilder();
-                validation.queryValidator(rawQuery, metricName, errorString, mockDataSourceInfo, identifier);
+                validation.validateMetricQueryPattern(
+                        NAMESPACE_QUERY,
+                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        errorString,
+                        mockDataSourceInfo);
 
-                String capturedQuery = queryCaptor.getValue();
-                assertFalse(capturedQuery.contains("$NAMESPACE_FILTERS$"),
-                        "Query sent to Prometheus must not contain $NAMESPACE_FILTERS$");
-                assertFalse(capturedQuery.contains("$WORKLOAD_FILTERS$"),
-                        "Query sent to Prometheus must not contain $WORKLOAD_FILTERS$");
-                assertFalse(capturedQuery.contains("$CONTAINER_FILTERS$"),
-                        "Query sent to Prometheus must not contain $CONTAINER_FILTERS$");
-                assertFalse(capturedQuery.contains("$LABELS$"),
-                        "Query sent to Prometheus must not contain $LABELS$");
-                assertFalse(capturedQuery.contains("$MEASUREMENT_DURATION_IN_MIN$"),
-                        "Query sent to Prometheus must not contain $MEASUREMENT_DURATION_IN_MIN$");
-                assertFalse(capturedQuery.contains("$UNSUPPORTED_WORKLOAD_TYPES$"),
-                        "Query sent to Prometheus must not contain $UNSUPPORTED_WORKLOAD_TYPES$");
+                assertTrue(errorString.isEmpty(),
+                        "Pre-expanded query must not be rejected by placeholder check");
             }
         }
 
         @Test
-        @DisplayName("namespacesForAdditionalLabel: $NAMESPACE_FILTERS$ is stripped before Prometheus call")
-        void namespaceQueryStripsNamespaceFilters() throws Exception {
-            JsonArray result = buildResultArray("namespace");
-            assertNoPlaceholdersReachPrometheus(
-                    NAMESPACE_QUERY,
-                    AnalyzerConstants.NAMESPACE_METADATA_QUERY,
-                    AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER,
-                    result);
+        @DisplayName("Only $MEASUREMENT_DURATION_IN_MIN$ placeholder is also rejected")
+        void measurementDurationPlaceholderRejected() {
+            String queryWithDuration =
+                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+            assertPlaceholderRejected(queryWithDuration, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
         }
+    }
 
-        @Test
-        @DisplayName("workloadsForAdditionalLabel: $WORKLOAD_FILTERS$ and $UNSUPPORTED_WORKLOAD_TYPES$ are stripped")
-        void workloadQueryStripsAllPlaceholders() throws Exception {
-            JsonArray result = buildResultArray("namespace", "workload", "workload_type");
-            assertNoPlaceholdersReachPrometheus(
-                    WORKLOAD_QUERY,
-                    AnalyzerConstants.WORKLOAD_METADATA_QUERY,
-                    AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER,
-                    result);
-        }
-
-        @Test
-        @DisplayName("workloadsWithPodLabelFilter: $NAMESPACE_FILTERS$, $CONTAINER_FILTERS$, $LABELS$ are stripped")
-        void workloadWithLabelQueryStripsAllPlaceholders() throws Exception {
-            JsonArray result = buildResultArray("namespace", "workload", "workload_type");
-            assertNoPlaceholdersReachPrometheus(
-                    WORKLOAD_WITH_LABEL_QUERY,
-                    AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER,
-                    AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER,
-                    result);
-        }
-
-        @Test
-        @DisplayName("containersForAdditionalLabel: $NAMESPACE_FILTERS$, $CONTAINER_FILTERS$, $WORKLOAD_FILTERS$ are stripped")
-        void containerQueryStripsAllPlaceholders() throws Exception {
-            JsonArray result = buildResultArray("container", "image", "workload", "workload_type", "namespace");
-            assertNoPlaceholdersReachPrometheus(
-                    CONTAINER_QUERY,
-                    AnalyzerConstants.CONTAINER_METADATA_QUERY,
-                    AnalyzerConstants.MetadataProfileQueryIdentifier.CONTAINER_QUERY_IDENTIFIER,
-                    result);
-        }
+    // =========================================================================
+    // queryValidator — pre-expanded query execution
+    // =========================================================================
+    @Nested
+    @DisplayName("queryValidator — validates pre-expanded queries against Prometheus")
+    class QueryValidatorTests {
 
         @Test
         @DisplayName("No error appended when Prometheus returns expected identifiers")
@@ -315,84 +323,6 @@ class MetadataProfileValidationTest {
     }
 
     // =========================================================================
-    // selector normalization after placeholder replacement
-    // =========================================================================
-    @Nested
-    @DisplayName("queryValidator — selector normalization after placeholder stripping")
-    class SelectorNormalizationTests {
-
-        @Test
-        @DisplayName("Leading comma from getUnsupportedWorkloadTypesFilter is removed before Prometheus call")
-        void unsupportedWorkloadTypesLeadingCommaIsStripped() throws Exception {
-            // $UNSUPPORTED_WORKLOAD_TYPES$ expands to ", workload_type!~..." (leading comma).
-            // With $WORKLOAD_FILTERS$ stripped to "", the raw selector becomes
-            // {, workload_type!~"..."} which must be normalized to {workload_type!~"..."}.
-            // Only the open-brace boundary {, is targeted — quoted values are never touched.
-            JsonArray result = buildResultArray("namespace", "workload", "workload_type");
-            DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
-            ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
-            when(mockOperator.getResultArrayForQuery(any(), queryCaptor.capture())).thenReturn(result);
-
-            try (MockedStatic<DataSourceOperatorImpl> staticMock =
-                         mockStatic(DataSourceOperatorImpl.class)) {
-                DataSourceOperatorImpl mockImpl = mock(DataSourceOperatorImpl.class);
-                staticMock.when(DataSourceOperatorImpl::getInstance).thenReturn(mockImpl);
-                when(mockImpl.getOperator(anyString())).thenReturn(mockOperator);
-
-                StringBuilder errorString = new StringBuilder();
-                validation.queryValidator(
-                        WORKLOAD_QUERY,
-                        AnalyzerConstants.WORKLOAD_METADATA_QUERY,
-                        errorString,
-                        mockDataSourceInfo,
-                        AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER);
-
-                String capturedQuery = queryCaptor.getValue();
-                assertFalse(capturedQuery.contains("{,"),
-                        "Selector must not start with a leading comma after normalization");
-                assertFalse(capturedQuery.contains("{, "),
-                        "Selector must not start with a leading comma-space after normalization");
-                assertTrue(errorString.isEmpty(),
-                        "No error should be appended when result identifiers match");
-            }
-        }
-
-        @Test
-        @DisplayName("Quoted matcher value containing comma-space is preserved unchanged")
-        void quotedValueWithCommaSpaceIsNotMutated() throws Exception {
-            // Ensures the normalization is scoped to {, (open-brace boundary only) and does
-            // not corrupt a quoted value like workload_type!~"(?i)foo, bar".
-            String queryWithQuotedComma =
-                    "sum by (namespace, workload, workload_type) " +
-                    "(avg_over_time(namespace_workload_pod:kube_pod_owner:relabel" +
-                    "{workload_type!~\"(?i)foo, bar\"}[15m]))";
-            JsonArray result = buildResultArray("namespace", "workload", "workload_type");
-            DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
-            ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
-            when(mockOperator.getResultArrayForQuery(any(), queryCaptor.capture())).thenReturn(result);
-
-            try (MockedStatic<DataSourceOperatorImpl> staticMock =
-                         mockStatic(DataSourceOperatorImpl.class)) {
-                DataSourceOperatorImpl mockImpl = mock(DataSourceOperatorImpl.class);
-                staticMock.when(DataSourceOperatorImpl::getInstance).thenReturn(mockImpl);
-                when(mockImpl.getOperator(anyString())).thenReturn(mockOperator);
-
-                StringBuilder errorString = new StringBuilder();
-                validation.queryValidator(
-                        queryWithQuotedComma,
-                        AnalyzerConstants.WORKLOAD_METADATA_QUERY,
-                        errorString,
-                        mockDataSourceInfo,
-                        AnalyzerConstants.MetadataProfileQueryIdentifier.WORKLOAD_QUERY_IDENTIFIER);
-
-                String capturedQuery = queryCaptor.getValue();
-                assertTrue(capturedQuery.contains("\"(?i)foo, bar\""),
-                        "Quoted matcher value containing comma-space must not be altered");
-            }
-        }
-    }
-
-    // =========================================================================
     // appendFiltersToQuery — no leading comma when selector is empty
     // =========================================================================
     @Nested
@@ -426,10 +356,12 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("Namespace query with all-placeholder selector produces no leading comma after stripping")
-        void namespaceQueryEmptySelectorAfterStripping() throws Exception {
-            // After stripping $NAMESPACE_FILTERS$ the selector is {}.
-            // appendFiltersToQuery must inject namespace=~"..." without a leading comma.
+        @DisplayName("Pre-expanded namespace query with empty selector injects filter without a leading comma")
+        void preExpandedEmptySelectorNoLeadingComma() throws Exception {
+            // A pre-expanded query whose selector is bare {} should get the filter injected
+            // without a leading comma: {namespace=~"..."} not {, namespace=~"..."}.
+            String queryWithEmptySelector =
+                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase{}[15m]))";
             JsonArray result = buildResultArray("namespace");
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
@@ -443,7 +375,7 @@ class MetadataProfileValidationTest {
 
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
-                        NAMESPACE_QUERY,
+                        queryWithEmptySelector,
                         AnalyzerConstants.NAMESPACE_METADATA_QUERY,
                         errorString,
                         mockDataSourceInfo,
@@ -452,8 +384,6 @@ class MetadataProfileValidationTest {
                 String capturedQuery = queryCaptor.getValue();
                 assertFalse(capturedQuery.contains("{,"),
                         "No leading comma must appear inside the selector after filter injection");
-                assertTrue(errorString.isEmpty(),
-                        "No error should be appended when the query and result are valid");
             }
         }
     }
@@ -564,7 +494,7 @@ class MetadataProfileValidationTest {
     class ValidateMetricQueryPatternTests {
 
         @Test
-        @DisplayName("Valid namespace query passes sum-by check without error")
+        @DisplayName("Valid pre-expanded namespace query passes sum-by check without error")
         void validNamespaceQueryNoError() throws Exception {
             DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
             when(mockOperator.getResultArrayForQuery(any(), anyString()))
@@ -584,7 +514,7 @@ class MetadataProfileValidationTest {
                         mockDataSourceInfo);
 
                 assertTrue(errorString.isEmpty(),
-                        "No error should be appended for a valid namespace query");
+                        "No error should be appended for a valid pre-expanded namespace query");
             }
         }
 
