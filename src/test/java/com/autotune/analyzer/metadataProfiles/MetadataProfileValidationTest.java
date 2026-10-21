@@ -41,9 +41,12 @@ import static org.mockito.Mockito.*;
  * Unit tests for MetadataProfileValidation.
  *
  * Covers:
- * - validateMetricQueryPattern(): rejects queries containing unresolved $...$ bulk-filter
- *   placeholders with a descriptive 400 error; the updateMetadata API requires pre-expanded queries.
- * - queryValidator(): validates pre-expanded queries against Prometheus and verifies result identifiers.
+ * - validateMetricQueryPattern(): rejects queries containing bulk-filter placeholders
+ *   ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$, $CONTAINER_FILTERS$, $LABELS$) with a descriptive
+ *   400 error. $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are allowed and are
+ *   substituted before query execution.
+ * - queryValidator(): validates queries against Prometheus after substituting the two allowed
+ *   template variables, and verifies result identifiers.
  * - matchSumByClause(): verifies each MetadataProfileQueryIdentifier is correctly matched.
  * - appendFiltersToQuery() / appendFiltersToMatchingSelector(): utility method contracts.
  */
@@ -226,11 +229,26 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("Only $MEASUREMENT_DURATION_IN_MIN$ placeholder is also rejected")
-        void measurementDurationPlaceholderRejected() {
+        @DisplayName("$MEASUREMENT_DURATION_IN_MIN$ alone is NOT rejected — it is a valid template variable")
+        void measurementDurationPlaceholderNotRejected() {
+            StringBuilder errorString = new StringBuilder();
             String queryWithDuration =
                     "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))";
-            assertPlaceholderRejected(queryWithDuration, AnalyzerConstants.NAMESPACE_METADATA_QUERY);
+            validation.validateMetricQueryPattern(queryWithDuration, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+            // No bulk-filter placeholder present — must not be rejected at this stage.
+            assertFalse(errorString.toString().contains("$MEASUREMENT_DURATION_IN_MIN$"),
+                    "$MEASUREMENT_DURATION_IN_MIN$ must not be flagged as an unresolved bulk-filter placeholder");
+        }
+
+        @Test
+        @DisplayName("$UNSUPPORTED_WORKLOAD_TYPES$ alone is NOT rejected — it is a valid template variable")
+        void unsupportedWorkloadTypesPlaceholderNotRejected() {
+            StringBuilder errorString = new StringBuilder();
+            String queryWithUnsupported =
+                    "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+            validation.validateMetricQueryPattern(queryWithUnsupported, AnalyzerConstants.WORKLOAD_METADATA_QUERY, errorString, mockDataSourceInfo);
+            assertFalse(errorString.toString().contains("$UNSUPPORTED_WORKLOAD_TYPES$"),
+                    "$UNSUPPORTED_WORKLOAD_TYPES$ must not be flagged as an unresolved bulk-filter placeholder");
         }
     }
 
