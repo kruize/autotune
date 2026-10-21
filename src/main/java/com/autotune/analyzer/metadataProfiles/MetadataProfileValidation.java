@@ -340,8 +340,11 @@ public class MetadataProfileValidation {
 
     /**
      * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns.
-     * Rejects queries that still contain unresolved bulk-filter placeholders (e.g. $NAMESPACE_FILTERS$):
-     * the updateMetadata API requires pre-expanded queries.
+     * Rejects queries that contain bulk-filter placeholders ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$,
+     * $CONTAINER_FILTERS$, $LABELS$) which are only valid in bulk metadata profiles used at
+     * data-gathering time and cannot be used in updateMetadata payloads.
+     * $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are allowed and are substituted
+     * before the query is executed for validation.
      *
      * @param metricQuery Query to be updated
      * @param metricName  Name of the Metric to be updated
@@ -349,14 +352,14 @@ public class MetadataProfileValidation {
      * @param dataSourceInfo Datasource object with datasource details to run the queries
      */
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
-        // Reject queries that contain unresolved $...$ placeholders.
+        // Reject queries that contain bulk-filter placeholders.
+        // $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are intentionally excluded
+        // here — they are valid in update payloads and are substituted in queryValidator.
         List<String> unresolvedPlaceholders = Arrays.asList(
                 KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS,
                 KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS,
                 KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS,
-                KruizeConstants.KRUIZE_BULK_API.LABELS,
-                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE,
-                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE
+                KruizeConstants.KRUIZE_BULK_API.LABELS
         );
         List<String> found = new ArrayList<>();
         for (String placeholder : unresolvedPlaceholders) {
@@ -386,7 +389,10 @@ public class MetadataProfileValidation {
     }
 
     /**
-     * Validates the metric query by executing the query for `kruize` workload, container and verify for any syntax errors or unexpected query output
+     * Validates the metric query by executing the query for `kruize` workload, container and verify for any syntax errors or unexpected query output.
+     * Substitutes $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ before execution —
+     * these are valid template variables in update payloads. Bulk-filter placeholders
+     * ($NAMESPACE_FILTERS$ etc.) are already rejected upstream by validateMetricQueryPattern.
      *
      * @param metricQuery Query output to be validated
      * @param metricName  Name of the metric to be validated
@@ -398,18 +404,31 @@ public class MetadataProfileValidation {
                                AnalyzerConstants.MetadataProfileQueryIdentifier queryIdentifier) {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
-        // By the time queryValidator is called, validateMetricQueryPattern has already rejected
-        // any query containing unresolved $...$ placeholders. The query here is pre-expanded
-        // and ready to execute against Prometheus. We only need to inject a narrow filter so
-        // the validation query targets a known workload/namespace rather than the whole cluster.
+        // Substitute the two template variables that are valid in update payloads.
+        // $MEASUREMENT_DURATION_IN_MIN$ is used by all standard profiles.
+        // $UNSUPPORTED_WORKLOAD_TYPES$ expands to a filter that starts with ", " — the leading
+        // comma is cleaned up by the {, normalisation below.
+        metricQuery = metricQuery
+                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
+                        String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT))
+                .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE,
+                        AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
+
+        // Normalise the open-brace boundary only: getUnsupportedWorkloadTypesFilter() always
+        // starts with ", " so after substitution a selector can become {, workload_type!~"..."}.
+        // Restrict to {, so quoted label values are never touched.
+        metricQuery = metricQuery.replaceAll("\\{,\\s*", "{");
+
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
             String updatedQuery = metricQuery;
             if (!metricQuery.contains(metricIdentifier + "=")) {
                 String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
-                // Append the filter to whichever selector's metric name contains the identifier.
-                // This is structure-based: it works for any joined query, not just a single
-                // hardcoded metric name.
+                // Inject a narrow validation filter (e.g. workload="kruize") into the selector
+                // whose metric name contains the identifier string. For joined queries such as
+                // workloadsWithPodLabelFilter, this correctly targets the
+                // namespace_workload_pod:kube_pod_owner:relabel selector (which carries the
+                // workload label), not the kube_pod_labels selector (which does not).
                 updatedQuery = MetadataProfileUtil.appendFiltersToMatchingSelector(metricQuery, metricIdentifier, filterString);
             }
 
