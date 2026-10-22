@@ -340,12 +340,19 @@ public class MetadataProfileValidation {
 
     /**
      * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns.
-     * Rejects queries that contain bulk-only placeholders — any placeholder from
-     * {@link KruizeConstants.KRUIZE_BULK_API#SUPPORTED_PLACEHOLDERS} that is NOT in
-     * {@link KruizeConstants.KRUIZE_BULK_API#UPDATE_PAYLOAD_PLACEHOLDERS}.
-     * Bulk-only placeholders ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$, $CONTAINER_FILTERS$, $LABELS$)
-     * are only valid in bulk metadata profiles at data-gathering time and must not appear in
-     * updateMetadata payloads.
+     *
+     * <p>Two placeholder checks are performed before the structural validation:
+     * <ol>
+     *   <li><b>Bulk-only placeholders</b> — any token from
+     *       {@link KruizeConstants.KRUIZE_BULK_API#SUPPORTED_PLACEHOLDERS} that is NOT in
+     *       {@link KruizeConstants.KRUIZE_BULK_API#UPDATE_PAYLOAD_PLACEHOLDERS} is rejected.
+     *       These are bulk-only (e.g. $NAMESPACE_FILTERS$) and must be fully expanded before
+     *       calling updateMetadata.</li>
+     *   <li><b>Unknown placeholders</b> — any remaining {@code $...$} token that does not appear
+     *       in {@link KruizeConstants.KRUIZE_BULK_API#SUPPORTED_PLACEHOLDERS} is also rejected.
+     *       This catches future or misspelled placeholders before they reach Prometheus and
+     *       produce a cryptic syntax error.</li>
+     * </ol>
      * $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are allowed and are substituted
      * before the query is executed for validation.
      *
@@ -355,20 +362,38 @@ public class MetadataProfileValidation {
      * @param dataSourceInfo Datasource object with datasource details to run the queries
      */
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
-        // Reject any placeholder that Kruize supports but is bulk-only (not valid in update payloads).
-        // Uses the central SUPPORTED_PLACEHOLDERS list so this check stays in sync automatically
-        // as new placeholders are added.
-        List<String> found = new ArrayList<>();
+        // 1. Reject known placeholders that are bulk-only (not valid in update payloads).
+        //    Uses the central SUPPORTED_PLACEHOLDERS list so the check stays in sync automatically.
+        List<String> bulkFound = new ArrayList<>();
         for (String placeholder : KruizeConstants.KRUIZE_BULK_API.SUPPORTED_PLACEHOLDERS) {
             if (!KruizeConstants.KRUIZE_BULK_API.UPDATE_PAYLOAD_PLACEHOLDERS.contains(placeholder)
                     && metricQuery.contains(placeholder)) {
-                found.add(placeholder);
+                bulkFound.add(placeholder);
             }
         }
-        if (!found.isEmpty()) {
+        if (!bulkFound.isEmpty()) {
             errorString.append(String.format(
                     AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UNRESOLVED_PLACEHOLDER_IN_QUERY,
-                    metricName, found));
+                    metricName, bulkFound));
+            return;
+        }
+
+        // 2. Reject any $...$ token that is not in SUPPORTED_PLACEHOLDERS at all.
+        //    This catches unknown/misspelled placeholders before they reach Prometheus
+        //    and produces a cryptic syntax error instead of a clear validation failure.
+        java.util.regex.Matcher unknownMatcher =
+                java.util.regex.Pattern.compile("\\$[A-Z0-9_]+\\$").matcher(metricQuery);
+        List<String> unknownFound = new ArrayList<>();
+        while (unknownMatcher.find()) {
+            String token = unknownMatcher.group();
+            if (!KruizeConstants.KRUIZE_BULK_API.SUPPORTED_PLACEHOLDERS.contains(token)) {
+                unknownFound.add(token);
+            }
+        }
+        if (!unknownFound.isEmpty()) {
+            errorString.append(String.format(
+                    AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UNKNOWN_PLACEHOLDER_IN_QUERY,
+                    metricName, unknownFound));
             return;
         }
 
