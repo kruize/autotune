@@ -340,9 +340,12 @@ public class MetadataProfileValidation {
 
     /**
      * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns.
-     * Rejects queries that contain bulk-filter placeholders ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$,
-     * $CONTAINER_FILTERS$, $LABELS$) which are only valid in bulk metadata profiles used at
-     * data-gathering time and cannot be used in updateMetadata payloads.
+     * Rejects queries that contain bulk-only placeholders — any placeholder from
+     * {@link KruizeConstants.KRUIZE_BULK_API#SUPPORTED_PLACEHOLDERS} that is NOT in
+     * {@link KruizeConstants.KRUIZE_BULK_API#UPDATE_PAYLOAD_PLACEHOLDERS}.
+     * Bulk-only placeholders ($NAMESPACE_FILTERS$, $WORKLOAD_FILTERS$, $CONTAINER_FILTERS$, $LABELS$)
+     * are only valid in bulk metadata profiles at data-gathering time and must not appear in
+     * updateMetadata payloads.
      * $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are allowed and are substituted
      * before the query is executed for validation.
      *
@@ -352,18 +355,13 @@ public class MetadataProfileValidation {
      * @param dataSourceInfo Datasource object with datasource details to run the queries
      */
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
-        // Reject queries that contain bulk-filter placeholders.
-        // $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are intentionally excluded
-        // here — they are valid in update payloads and are substituted in queryValidator.
-        List<String> unresolvedPlaceholders = Arrays.asList(
-                KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS,
-                KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS,
-                KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS,
-                KruizeConstants.KRUIZE_BULK_API.LABELS
-        );
+        // Reject any placeholder that Kruize supports but is bulk-only (not valid in update payloads).
+        // Uses the central SUPPORTED_PLACEHOLDERS list so this check stays in sync automatically
+        // as new placeholders are added.
         List<String> found = new ArrayList<>();
-        for (String placeholder : unresolvedPlaceholders) {
-            if (metricQuery.contains(placeholder)) {
+        for (String placeholder : KruizeConstants.KRUIZE_BULK_API.SUPPORTED_PLACEHOLDERS) {
+            if (!KruizeConstants.KRUIZE_BULK_API.UPDATE_PAYLOAD_PLACEHOLDERS.contains(placeholder)
+                    && metricQuery.contains(placeholder)) {
                 found.add(placeholder);
             }
         }

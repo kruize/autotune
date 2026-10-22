@@ -213,12 +213,16 @@ public class MetadataProfileUtil {
      * the identifier string. This correctly handles simple queries as well as any joined
      * multi-metric query without relying on a hardcoded metric name.
      *
+     * <p>Selector boundaries are found by {@link #findSelectorCloseBrace(String, int)}, which
+     * skips over quoted label values so that a {@code }} inside a regex value (e.g.
+     * {@code workload_type!~"(?i)foo{bar}"}) is not mistaken for the end of the selector.</p>
+     *
      * <p>If no selector's metric name contains the identifier, falls back to the first selector.</p>
      *
-     * @param query           The query string to modify.
+     * @param query            The query string to modify.
      * @param metricIdentifier The identifier to match against metric names (e.g. "namespace",
      *                         "workload", "container").
-     * @param filtersToAppend The filter string to insert (may start with ", ").
+     * @param filtersToAppend  The filter string to insert (may start with ", ").
      * @return The modified query with the filter inserted into the correct selector.
      */
     public static String appendFiltersToMatchingSelector(String query, String metricIdentifier, String filtersToAppend) {
@@ -236,7 +240,10 @@ public class MetadataProfileUtil {
             int openBrace = query.indexOf("{", searchFrom);
             if (openBrace == -1) break;
 
-            int closeBrace = query.indexOf("}", openBrace);
+            // Find the real closing brace by respecting quoted label values so that
+            // a } inside a quoted regex (e.g. workload_type!~"(?i)Foo{Bar}") is not
+            // mistaken for the end of the selector.
+            int closeBrace = findSelectorCloseBrace(query, openBrace + 1);
             if (closeBrace == -1) break;
 
             // Extract the metric name: everything after the last } (or start) up to this {
@@ -267,6 +274,43 @@ public class MetadataProfileUtil {
                 : filtersToAppend;
 
         return queryPrefix + contentInsideBraces + effectiveFilter + querySuffix;
+    }
+
+    /**
+     * Finds the index of the closing {@code }} of a PromQL label selector, starting the scan at
+     * {@code startIndex} (one past the opening {@code {}). Quoted label values are skipped so that
+     * a {@code }} inside a string (e.g. a regex like {@code "(?i)foo{bar}"}) is never mistaken for
+     * the selector boundary.
+     *
+     * @param query      The full query string.
+     * @param startIndex The index to begin scanning from (one past the opening {@code {}).
+     * @return The index of the closing {@code }}, or {@code -1} if not found.
+     */
+    public static int findSelectorCloseBrace(String query, int startIndex) {
+        int i = startIndex;
+        while (i < query.length()) {
+            char c = query.charAt(i);
+            if (c == '}') {
+                return i;
+            } else if (c == '"') {
+                // Skip over the quoted string, handling \" escapes
+                i++;
+                while (i < query.length()) {
+                    char q = query.charAt(i);
+                    if (q == '\\') {
+                        i += 2; // skip escaped character
+                    } else if (q == '"') {
+                        i++; // step past closing quote
+                        break;
+                    } else {
+                        i++;
+                    }
+                }
+            } else {
+                i++;
+            }
+        }
+        return -1;
     }
 
     /**
