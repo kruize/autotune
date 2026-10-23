@@ -820,16 +820,10 @@ public class KruizeConstants {
                 public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
                 public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
-                // Flex term is data-range-agnostic: it uses all available data up to a maximum lookback window
-                // instead of a fixed sub-window like short (1 day) or medium (7 days).
-                // The lookback is capped at 15 days, the same as the longest existing term (long term).
+                // Flex uses all available data up to a 15 day lookback (same cap as long term)
                 public static final int FLEX_TERM_DURATION_DAYS = 15;
-                // Minimum data required for flex term, in days: 30 minutes, same as short term.
-                // Flex is meant for best-effort recommendationswhere the workload may have only a few hours of data,
-                // so the threshold is kept at the smallest value that still yields a meaningful sample.
-                public static final double FLEX_TERM_DURATION_DAYS_THRESHOLD = ((double) 30 / (24 * 60));
-                // Minimum number of datapoints for flex term. Two is the smallest sample from which the engine
-                // can compute aggregates (min/max/avg) and percentiles. 
+                // Minimum of 2 datapoints (30 mins at 15 min intervals, same as short term) so that
+                // best-effort recommendations can be generated for workloads with very little data
                 public static final int FLEX_TERM_MIN_DATAPOINTS = 2;
 
                 // Term Names (for consistency in keys and names)
