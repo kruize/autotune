@@ -23,6 +23,9 @@ import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -961,6 +964,33 @@ public class KruizeConstants {
         public static final String WORKLOAD_FILTERS = "$WORKLOAD_FILTERS$";
         public static final String CONTAINER_FILTERS = "$CONTAINER_FILTERS$";
         public static final String LABELS = "$LABELS$";
+
+        /**
+         * Central list of ALL $...$ placeholders that Kruize supports across bulk and update profiles.
+         * Bulk-only placeholders (NAMESPACE_FILTERS, WORKLOAD_FILTERS, CONTAINER_FILTERS, LABELS) are
+         * expanded by DataSourceMetadataOperator at data-gathering time and must not appear in
+         * updateMetadata payloads.
+         * Template variables (MEASUREMENT_DURATION_IN_MIN, UNSUPPORTED_WORKLOAD_TYPES) are valid in
+         * both bulk and update profiles and are substituted before query execution.
+         */
+        public static final List<String> SUPPORTED_PLACEHOLDERS = Collections.unmodifiableList(Arrays.asList(
+                NAMESPACE_FILTERS,
+                WORKLOAD_FILTERS,
+                CONTAINER_FILTERS,
+                LABELS,
+                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
+                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE
+        ));
+
+        /**
+         * Placeholders that are valid in updateMetadata payloads (substituted before validation).
+         * Any placeholder in SUPPORTED_PLACEHOLDERS but not here is bulk-only and must not appear
+         * in update payloads.
+         */
+        public static final List<String> UPDATE_PAYLOAD_PLACEHOLDERS = Collections.unmodifiableList(Arrays.asList(
+                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
+                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE
+        ));
 
         public static final String SUMMARY = "summary";
         public static final String SUMMARY_FILTER = "summaryFilter";
