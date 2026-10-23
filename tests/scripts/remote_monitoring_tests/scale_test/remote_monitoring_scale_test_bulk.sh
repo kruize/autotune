@@ -51,10 +51,11 @@ target="crc"
 KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 hours=6
 total_results_count=0
+scheme="http"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [-g No. of kruize replicas. Default - 10] [--api-version=<v1|legacy>]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns|gpucontainer] (default - container)] [-a Test case (default - scale_5k)] [-g No. of kruize replicas. Default - 10] [-x URL scheme http|https (default - http)] [--api-version=<v1|legacy>]"
 	echo
 	echo "API Version Parameter:"
 	echo "  --api-version=v1      Use NEW v1 API (/kruize/api/v1/recommendations)"
@@ -64,6 +65,7 @@ function usage() {
 	echo "Examples:"
 	echo "  ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7                    # Uses legacy API (default)"
 	echo "  ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7 --api-version=v1  # Uses new v1 API"
+	echo "  ./remote_monitoring_scale_test_bulk.sh -u 1000 -d 7 -x https          # Uses HTTPS for Kruize API"
 	exit -1
 }
 
@@ -118,13 +120,19 @@ function kruize_scale_test_remote_patch() {
 
 }
 
-while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:a:g:h:-: gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:a:g:x:h:-: gopts
 do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
 			api-version=*)
 				api_version=${OPTARG#*=}
+				;;
+			api-key=*)
+				IBMCLOUD_API_KEY=${OPTARG#*=}
+				;;
+			oc-server=*)
+				OC_SERVER_URL=${OPTARG#*=}
 				;;
 		esac
 		;;
@@ -175,6 +183,9 @@ do
 		;;
 	g)
 		replicas="${OPTARG}"
+		;;
+	x)
+		scheme="${OPTARG}"
 		;;
 	h)
 		usage
@@ -234,9 +245,14 @@ if [ ${kruize_setup} == true ]; then
 fi
 
 if [ -z "${SERVER_IP_ADDR}" ]; then
-	oc expose svc/kruize -n ${NAMESPACE}
-
-	SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
+	if [ "${scheme}" == "https" ]; then
+		oc create route edge kruize --service=kruize -n ${NAMESPACE}
+		SERVER_IP_ADDR=$(oc get route kruize -n ${NAMESPACE} -o jsonpath='{.spec.host}')
+	else
+		oc expose svc/kruize -n ${NAMESPACE}
+		SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
+	fi
+	oc annotate route kruize -n ${NAMESPACE} --overwrite haproxy.router.openshift.io/timeout=300s
 	port=0
 	echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} " | tee -a ${LOG}
 fi
@@ -256,8 +272,16 @@ fi
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version="${api_version}" > >(tee -a ${LOG}) 2>&1 &"
-nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version="${api_version}" > >(tee -a ${LOG}) 2>&1 &
+api_key_arg=""
+oc_server_arg=""
+if [ -n "${IBMCLOUD_API_KEY}" ]; then
+	api_key_arg="--api-key=${IBMCLOUD_API_KEY}"
+fi
+if [ -n "${OC_SERVER_URL}" ]; then
+	oc_server_arg="--oc-server=${OC_SERVER_URL}"
+fi
+echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version="${api_version}" --scheme="${scheme}" ${api_key_arg} ${oc_server_arg} > >(tee -a ${LOG}) 2>&1 &"
+nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" --api-version="${api_version}" --scheme="${scheme}" ${api_key_arg} ${oc_server_arg} > >(tee -a ${LOG}) 2>&1 &
 
 wait $!
 

@@ -35,9 +35,21 @@ function usage() {
 	exit -1
 }
 
+function refresh_oc_token() {
+	if [ -n "${IBMCLOUD_API_KEY}" ]; then
+		if [ -z "${OC_SERVER_URL}" ]; then
+			OC_SERVER_URL=$(oc whoami --show-server 2>/dev/null)
+		fi
+		echo "Refreshing oc login token..."
+		oc login -u apikey -p "${IBMCLOUD_API_KEY}" --server="${OC_SERVER_URL}" --insecure-skip-tls-verify=true 2>/dev/null
+	fi
+}
+
 function query_db() {
 
 	while(true); do
+		refresh_oc_token
+
 		# Obtain the no. of experiments and results from the db
 		exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
 
@@ -100,7 +112,7 @@ function container_ns_scale_test() {
 	declare -a pid_array=()
 
 	# Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
-	prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
+	prometheus_server=$(echo ${IP} | cut -d "." -f 2- )
 	echo "Prometheus server = $prometheus_server"
 	for ((loop=1; loop<=num_clients; loop++));
 	do
@@ -110,7 +122,7 @@ function container_ns_scale_test() {
 			logfile="${SCALE_LOG_DIR}/${name}.log"
 			echo "logfile = $logfile"
 
-			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "container" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "container" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} --scheme ${scheme} >> ${logfile} 2>&1 &
 			pid_array+=($!)
 
 			echo
@@ -126,7 +138,7 @@ function container_ns_scale_test() {
 			logfile="${SCALE_LOG_DIR}/${name}.log"
 			echo "logfile = $logfile"
 
-			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "namespace" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "namespace" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} --scheme ${scheme} >> ${logfile} 2>&1 &
 			pid_array+=($!)
 			echo
 			echo "#####################################################################################"
@@ -157,7 +169,7 @@ function scale_test() {
 
 	declare -a pid_array=()
 	# Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
-	prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
+	prometheus_server=$(echo ${IP} | cut -d "." -f 2- )
 	echo "Prometheus server = $prometheus_server"
 	for ((loop=1; loop<=num_clients; loop++));
 	do
@@ -166,7 +178,7 @@ function scale_test() {
 		logfile="${SCALE_LOG_DIR}/${name}.log"
 		echo "logfile = $logfile"
 
-	        nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "${exp_type}" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} >> ${logfile} 2>&1 &
+	        nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "${exp_type}" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} --api-version ${api_version} --scheme ${scheme} >> ${logfile} 2>&1 &
 
 	        pid_array+=($!)
 
@@ -201,6 +213,15 @@ do
 		case "${OPTARG}" in
 			api-version=*)
 				api_version=${OPTARG#*=}
+				;;
+			scheme=*)
+				scheme=${OPTARG#*=}
+				;;
+			api-key=*)
+				IBMCLOUD_API_KEY=${OPTARG#*=}
+				;;
+			oc-server=*)
+				OC_SERVER_URL=${OPTARG#*=}
 				;;
 		esac
 		;;
@@ -257,6 +278,10 @@ echo "run_bulk_scalability_test.sh :: api_version = ${api_version}"
 # Set the API version to default if not passed on parameter
 if [ -z "${api_version}" ]; then
   api_version="legacy"
+fi
+
+if [ -z "${scheme}" ]; then
+  scheme="http"
 fi
 
 SCALE_LOG_DIR="${RESULTS_DIR}/scale_logs"

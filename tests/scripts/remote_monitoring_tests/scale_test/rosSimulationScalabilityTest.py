@@ -91,29 +91,31 @@ if __name__ == "__main__":
     parser.add_argument('--minutesjump', type=int,
                         help='specify the time difference between the start time and end time of the interval.')
     parser.add_argument('--api-version', type=str, help='API version (v1/legacy)', default='legacy')
+    parser.add_argument('--scheme', type=str, help='URL scheme (http/https)', default='http')
 
     # parse the arguments from the command line
     args = parser.parse_args()
     use_new_api = args.api_version.lower() == 'v1'
+    scheme = args.scheme
     print("rosSimulationScalabilityTest :: api_version =", args.api_version)
     if args.port != 0:
-        createExpURL = 'http://%s:%s/createExperiment' % (args.ip, args.port)
-        updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
-        createProfileURL = 'http://%s:%s/createPerformanceProfile' % (args.ip, args.port)
-        updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
+        createExpURL = '%s://%s:%s/createExperiment' % (scheme, args.ip, args.port)
+        updateExpURL = '%s://%s:%s/updateResults' % (scheme, args.ip, args.port)
+        createProfileURL = '%s://%s:%s/createPerformanceProfile' % (scheme, args.ip, args.port)
+        updateExpURL = '%s://%s:%s/updateResults' % (scheme, args.ip, args.port)
         if use_new_api:
-            updateRecommendationURL = 'http://%s:%s/kruize/api/v1/recommendations' % (args.ip, args.port)
+            updateRecommendationURL = '%s://%s:%s/kruize/api/v1/recommendations' % (scheme, args.ip, args.port)
         else:
-            updateRecommendationURL = 'http://%s:%s/updateRecommendations' % (args.ip, args.port)
+            updateRecommendationURL = '%s://%s:%s/updateRecommendations' % (scheme, args.ip, args.port)
     else:
-        createExpURL = 'http://%s/createExperiment' % (args.ip)
-        updateExpURL = 'http://%s/updateResults' % (args.ip)
-        createProfileURL = 'http://%s/createPerformanceProfile' % (args.ip)
-        updateExpURL = 'http://%s/updateResults' % (args.ip)
+        createExpURL = '%s://%s/createExperiment' % (scheme, args.ip)
+        updateExpURL = '%s://%s/updateResults' % (scheme, args.ip)
+        createProfileURL = '%s://%s/createPerformanceProfile' % (scheme, args.ip)
+        updateExpURL = '%s://%s/updateResults' % (scheme, args.ip)
         if use_new_api:
-            updateRecommendationURL = 'http://%s/kruize/api/v1/recommendations' % (args.ip)
+            updateRecommendationURL = '%s://%s/kruize/api/v1/recommendations' % (scheme, args.ip)
         else:
-            updateRecommendationURL = 'http://%s/updateRecommendations' % (args.ip)
+            updateRecommendationURL = '%s://%s/updateRecommendations' % (scheme, args.ip)
 
     expnameprfix = args.name
     exptype = args.exptype
@@ -158,6 +160,9 @@ if __name__ == "__main__":
     # Create experiment and post results
     start_time = time.time()
     for i in range(1, expcount + 1):
+        createExp_elapsed_time = 0.0
+        bulkDataPost_elapsed_time = 0.0
+        updateRec_elapsed_time = 0.0
         try:
             successfulCnt = 0
             experiment_name = "%s_%s" % (expnameprfix, i)
