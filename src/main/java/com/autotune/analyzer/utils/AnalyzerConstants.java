@@ -992,7 +992,6 @@ public class AnalyzerConstants {
         public static final String PROFILE_VERSION = "profileVersion";
         public static final String METADATA = "metadata";
         public static final String K8STYPE = "k8sType";
-        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
     }
 
     public static final class CommonProfileMsgs {
