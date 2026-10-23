@@ -294,21 +294,23 @@ class MetadataProfileValidationTest {
     // appendFiltersToQuery — filter injection behaviour
     // =========================================================================
     @Nested
-    @DisplayName("appendFiltersToQuery — appends filter string verbatim into the first selector")
+    @DisplayName("appendFiltersToQuery — strips leading comma for empty selector, appends verbatim otherwise")
     class AppendFiltersEmptySelectorTests {
 
         @Test
-        @DisplayName("Filter string is appended verbatim into an empty selector")
-        void filterAppendedVerbatimIntoEmptySelector() {
+        @DisplayName("Leading comma is stripped when selector is empty, producing valid PromQL")
+        void leadingCommaStrippedForEmptySelector() {
             String query = "sum by (namespace) (avg_over_time(kube_namespace_status_phase{}[15m]))";
             String filterWithLeadingComma = ", namespace=~\"openshift-tuning|monitoring\"";
 
             String result = MetadataProfileUtil.appendFiltersToQuery(query, filterWithLeadingComma);
 
-            // appendFiltersToQuery appends the filter string as-is; callers are responsible
-            // for ensuring the filter string is valid PromQL in context.
-            assertTrue(result.contains(filterWithLeadingComma),
-                    "Filter string must appear verbatim in the result");
+            // appendFiltersToQuery strips the leading ", " when the selector is empty to produce
+            // valid PromQL: {namespace=~"..."} not {, namespace=~"..."}.
+            assertFalse(result.contains("{,"),
+                    "Result must not contain a leading comma inside the selector");
+            assertTrue(result.contains("{namespace=~"),
+                    "Filter must be present without a leading comma");
         }
 
         @Test
@@ -364,20 +366,20 @@ class MetadataProfileValidationTest {
     class AppendFiltersToQueryTests {
 
         @Test
-        @DisplayName("Filter is injected verbatim into a single-selector query")
+        @DisplayName("Filter is injected into a single empty-selector query, leading comma stripped")
         void filterInjectedIntoSingleSelector() {
             String query = "sum by (namespace, workload, workload_type) (avg_over_time(some_metric{}[15m]))";
             String filter = ", workload=\"kruize\"";
 
             String result = MetadataProfileUtil.appendFiltersToQuery(query, filter);
 
-            // appendFiltersToQuery appends verbatim, so {}{filter} → {, filter}
-            assertTrue(result.contains("some_metric{, workload=\"kruize\"}"),
-                    "Filter must be appended verbatim inside the first selector");
+            // Leading ", " is stripped when the selector is empty
+            assertTrue(result.contains("some_metric{workload=\"kruize\"}"),
+                    "Filter must be appended inside the first selector without a leading comma");
         }
 
         @Test
-        @DisplayName("Filter is injected verbatim into the first selector of a joined query")
+        @DisplayName("Filter is injected into the first selector of a joined query, leading comma stripped")
         void filterInjectedIntoFirstSelectorOfJoinedQuery() {
             String query =
                     "sum by (namespace, workload, workload_type) " +
@@ -388,9 +390,9 @@ class MetadataProfileValidationTest {
 
             String result = MetadataProfileUtil.appendFiltersToQuery(query, filter);
 
-            // Filter goes verbatim into the first selector only
-            assertTrue(result.contains("kube_pod_labels{, namespace!=\"\"}"),
-                    "Filter must be appended verbatim into the first (kube_pod_labels) selector");
+            // Leading ", " is stripped when the selector is empty
+            assertTrue(result.contains("kube_pod_labels{namespace!=\"\"}"),
+                    "Filter must be appended into the first (kube_pod_labels) selector without a leading comma");
             assertTrue(result.contains("namespace_workload_pod:kube_pod_owner:relabel{}"),
                     "Second selector must be untouched");
         }
@@ -436,6 +438,176 @@ class MetadataProfileValidationTest {
             assertEquals(query, MetadataProfileUtil.appendFiltersToQuery(query, null));
             assertEquals(query, MetadataProfileUtil.appendFiltersToQuery(query, ""));
             assertNull(MetadataProfileUtil.appendFiltersToQuery(null, ", filter"));
+        }
+    }
+
+    // =========================================================================
+    // findSelectorCloseBrace — quote-aware brace scanning
+    // =========================================================================
+    @Nested
+    @DisplayName("findSelectorCloseBrace — finds closing brace respecting quoted label values")
+    class FindSelectorCloseBraceTests {
+
+        @Test
+        @DisplayName("Returns index of plain closing brace in a simple selector")
+        void simpleSelectorCloseBrace() {
+            String query = "some_metric{namespace!=\"\", workload=\"kruize\"}[15m]";
+            int openBrace = query.indexOf("{");
+            int close = MetadataProfileUtil.findSelectorCloseBrace(query, openBrace + 1);
+            assertEquals(query.indexOf("}"), close, "Must find the real closing brace");
+        }
+
+        @Test
+        @DisplayName("Skips } inside a double-quoted label value")
+        void skipsCloseBraceInsideQuotedValue() {
+            // workload_type!~"(?i)foo{bar}" — the } inside the quoted regex must be skipped
+            String query = "some_metric{workload_type!~\"(?i)foo{bar}\"}[15m]";
+            int openBrace = query.indexOf("{");
+            int close = MetadataProfileUtil.findSelectorCloseBrace(query, openBrace + 1);
+            int expected = query.lastIndexOf("}");
+            assertEquals(expected, close, "Must skip the } inside the quoted regex value");
+        }
+
+        @Test
+        @DisplayName("Handles escaped quote inside label value")
+        void handlesEscapedQuoteInsideValue() {
+            String query = "some_metric{label=\"val\\\"ue\"}[15m]";
+            int openBrace = query.indexOf("{");
+            int close = MetadataProfileUtil.findSelectorCloseBrace(query, openBrace + 1);
+            int expected = query.lastIndexOf("}");
+            assertEquals(expected, close, "Must handle escaped quote and find the real closing brace");
+        }
+
+        @Test
+        @DisplayName("Returns -1 when no closing brace is found")
+        void returnsMinusOneWhenNoBrace() {
+            String query = "some_metric{label=\"value\"";
+            int openBrace = query.indexOf("{");
+            int close = MetadataProfileUtil.findSelectorCloseBrace(query, openBrace + 1);
+            assertEquals(-1, close, "Must return -1 when no closing brace exists");
+        }
+    }
+
+    // =========================================================================
+    // appendFiltersToMatchingSelector — quote-aware selector targeting
+    // =========================================================================
+    @Nested
+    @DisplayName("appendFiltersToMatchingSelector — correctly handles quoted label values containing braces")
+    class AppendFiltersMatchingSelectorQuotedBraceTests {
+
+        @Test
+        @DisplayName("Filter is inserted correctly when a label value contains a } inside quotes")
+        void filterInsertedCorrectlyWithQuotedBraceInValue() {
+            // workload_type!~"(?i)Deployment{Config}" — the } inside the regex must not be
+            // mistaken for the selector boundary.
+            String query =
+                    "sum by (namespace, workload, workload_type) " +
+                    "(avg_over_time(namespace_workload_pod:kube_pod_owner:relabel" +
+                    "{workload_type!~\"(?i)Deployment{Config}\"}[15m]))";
+            String filter = ", workload=\"kruize\"";
+
+            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(
+                    query, AnalyzerConstants.WORKLOAD, filter);
+
+            assertTrue(result.contains("workload_type!~\"(?i)Deployment{Config}\", workload=\"kruize\""),
+                    "Filter must be appended after the existing content, not inserted inside the quoted value");
+            assertTrue(result.contains("workload_type!~\"(?i)Deployment{Config}\", workload=\"kruize\"}"),
+                    "Selector must close correctly after the injected filter");
+        }
+
+        @Test
+        @DisplayName("Quoted } in a later selector does not corrupt the result of filter injection")
+        void quotedBraceInLaterSelectorDoesNotCorruptResult() {
+            // The second selector contains a quoted } inside a regex value.
+            // The key correctness property: the quoted } must not be treated as a selector
+            // boundary, so the second selector survives intact in the output.
+            String query =
+                    "sum by (namespace, workload, workload_type) " +
+                    "(max_over_time(kube_pod_labels{namespace!=\"\"}[15m]) * on (namespace, pod) " +
+                    "group_left(workload, workload_type) " +
+                    "max_over_time(namespace_workload_pod:kube_pod_owner:relabel" +
+                    "{workload_type!~\"(?i)foo{bar}\"}[15m]))";
+            String filter = ", workload=\"kruize\"";
+
+            String result = MetadataProfileUtil.appendFiltersToMatchingSelector(
+                    query, AnalyzerConstants.WORKLOAD, filter);
+
+            // The quoted } inside "(?i)foo{bar}" must remain intact in the output
+            assertTrue(result.contains("workload_type!~\"(?i)foo{bar}\"}"),
+                    "Quoted } inside regex value in the second selector must remain intact");
+            assertFalse(result.isEmpty(), "Result must not be empty");
+        }
+    }
+
+    // =========================================================================
+    // validateMetricQueryPattern — unknown placeholder rejection
+    // =========================================================================
+    @Nested
+    @DisplayName("validateMetricQueryPattern — unknown placeholders are rejected with a clear error")
+    class UnknownPlaceholderRejectionTests {
+
+        @Test
+        @DisplayName("A completely unknown placeholder is rejected before reaching Prometheus")
+        void unknownPlaceholderRejected() {
+            StringBuilder errorString = new StringBuilder();
+            // $CLUSTER_FILTERS$ is not in SUPPORTED_PLACEHOLDERS
+            String queryWithUnknown =
+                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
+                    "{namespace!=\"\", $CLUSTER_FILTERS$}[15m]))";
+            validation.validateMetricQueryPattern(
+                    queryWithUnknown, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+
+            assertFalse(errorString.isEmpty(),
+                    "An error must be appended for an unknown placeholder");
+            assertTrue(errorString.toString().contains("$CLUSTER_FILTERS$"),
+                    "Error must name the unknown placeholder");
+            assertTrue(errorString.toString().contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+                    "Error must reference the metric name");
+        }
+
+        @Test
+        @DisplayName("A misspelled supported placeholder is also rejected as unknown")
+        void misspelledPlaceholderRejected() {
+            StringBuilder errorString = new StringBuilder();
+            // $NAMESPACE_FILTER$ (missing trailing S) is not in SUPPORTED_PLACEHOLDERS
+            String queryWithTypo =
+                    "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
+                    "{$NAMESPACE_FILTER$}[15m]))";
+            validation.validateMetricQueryPattern(
+                    queryWithTypo, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+
+            assertFalse(errorString.isEmpty(),
+                    "An error must be appended for a misspelled placeholder");
+            assertTrue(errorString.toString().contains("$NAMESPACE_FILTER$"),
+                    "Error must name the misspelled placeholder");
+        }
+
+        @Test
+        @DisplayName("SUPPORTED_PLACEHOLDERS that are valid in update payloads are not rejected as unknown")
+        void updatePayloadPlaceholdersNotRejected() throws Exception {
+            // $MEASUREMENT_DURATION_IN_MIN$ and $UNSUPPORTED_WORKLOAD_TYPES$ are in
+            // SUPPORTED_PLACEHOLDERS and also in UPDATE_PAYLOAD_PLACEHOLDERS — must not be flagged.
+            DataSourceOperatorImpl mockOperator = mock(DataSourceOperatorImpl.class);
+            when(mockOperator.getResultArrayForQuery(any(), anyString()))
+                    .thenReturn(buildResultArray("namespace"));
+
+            try (MockedStatic<DataSourceOperatorImpl> staticMock =
+                         mockStatic(DataSourceOperatorImpl.class)) {
+                DataSourceOperatorImpl mockImpl = mock(DataSourceOperatorImpl.class);
+                staticMock.when(DataSourceOperatorImpl::getInstance).thenReturn(mockImpl);
+                when(mockImpl.getOperator(anyString())).thenReturn(mockOperator);
+
+                StringBuilder errorString = new StringBuilder();
+                String queryWithTemplateVars =
+                        "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
+                        "{namespace!=\"\", $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+                validation.validateMetricQueryPattern(
+                        queryWithTemplateVars, AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        errorString, mockDataSourceInfo);
+
+                assertFalse(errorString.toString().contains("unknown placeholder"),
+                        "Known template variables must not be flagged as unknown placeholders");
+            }
         }
     }
 
