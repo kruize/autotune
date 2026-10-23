@@ -179,11 +179,46 @@ Here are the test scenarios:
 - Delete performance profile with when its associated with existing experiments
 
 
+### **CloudWatch Logging Integration tests**
+
+These tests validate the CloudWatch logging setup in Kruize by deploying the pod against two scenarios and inspecting the pod logs.
+
+**Scenario 1 — credentials-absent** *(always runs — no AWS credentials required)*
+- Kruize must start successfully with no CloudWatch credentials set
+- Pod logs must contain the skip message: `AWS access details are not provided. Skipping sending logs to CloudWatch.`
+- Pod logs must NOT contain `NoClassDefFoundError: jdk/net/Sockets`
+
+This scenario simulates the test/dev cluster configuration that **masked the jdk.net bug** — when credentials are absent, the credential guard in `CloudWatchAppender.configureLoggerForCloudWatchLog()` short-circuits before the AWS SDK client is constructed, so the missing `jdk.net` module is never exercised.
+
+**Scenario 2 — credentials-present** *(runs only when AWS env vars are set — see prerequisites below)*
+- Kruize must start successfully with valid CloudWatch credentials set
+- Pod logs must contain the success message: `CloudWatch logging enabled — region: <r>, log group: <g>, log stream: <s>, log level: <l>`
+- Pod logs must NOT contain `NoClassDefFoundError: jdk/net/Sockets`
+
+This scenario replicates the **stage/prod configuration that triggered the production crash** after the `awssdk-version` bump from `2.42.25` to `2.46.5` in `pom.xml` (which switched the default HTTP client from Apache HttpClient 4 to Apache HttpClient 5, requiring the `jdk.net` JDK module that was absent from the `jlink`-built container JRE).
+
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
 - Tools like kubectl, oc, curl, jq, python
 - Various python modules pytest, json, pytest-html, requests, jinja2
   (these modules will be automatically installed while the test is run)
+
+**Additional prerequisites for CloudWatch logging credentials-present test:**
+- A dev AWS account (do **not** use production credentials)
+- A CloudWatch log group and log stream created on the dev account
+- An IAM user with the following permissions scoped to the dev log group:
+  `logs:CreateLogGroup`, `logs:CreateLogStream`, `logs:DescribeLogGroups`, `logs:DescribeLogStreams`, `logs:PutLogEvents`
+- The following environment variables exported before running:
+
+```
+export CLOUDWATCH_ACCESS_KEY_ID=<IAM access key id>
+export CLOUDWATCH_SECRET_ACCESS_KEY=<IAM secret access key>
+export CLOUDWATCH_REGION=<AWS region, e.g. us-east-1>
+export CLOUDWATCH_LOG_GROUP=<log group name, e.g. kruize-dev-logs>
+export CLOUDWATCH_LOG_STREAM=<log stream name, e.g. kruize-dev-stream>
+```
+
+If these variables are not set, the credentials-present test is automatically skipped and only the credentials-absent test runs.
 
 ## How to run the test?
 
@@ -208,7 +243,7 @@ usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, opensh
 			[ --skipsetup ] : optional. Specifying this option skips the Kruize setup and performance profile creation in case of remote_monitoring_tests
 
 Note: If you want to run a particular testcase then it is mandatory to specify the testsuite
-Test cases supported are sanity, negative, extended and test_e2e
+Test cases supported are sanity, negative, extended, test_e2e and cloudwatch_logging
 
 ```
 
@@ -242,6 +277,76 @@ Remote monitoring tests can also be run without using the test_autotune.sh. To d
 - To run only a specific test within listRecommendations API
 ```
 	pytest -s test_list_recommendations.py::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
+```
+
+Note: You can check the report.html for the results as it provides better readability
+
+## How to run the CloudWatch logging tests?
+
+### Using test_autotune.sh
+
+To run only the CloudWatch logging integration tests (credentials-absent scenario, no AWS credentials needed):
+
+```
+<KRUIZE_REPO>/tests/test_autotune.sh -c openshift --testsuite=remote_monitoring_tests --testcase=cloudwatch_logging --resultsdir=/home/results
+```
+
+To run both scenarios (credentials-absent and credentials-present), export the AWS env vars first:
+
+```
+export CLOUDWATCH_ACCESS_KEY_ID=<IAM access key id>
+export CLOUDWATCH_SECRET_ACCESS_KEY=<IAM secret access key>
+export CLOUDWATCH_REGION=us-east-1
+export CLOUDWATCH_LOG_GROUP=kruize-dev-logs
+export CLOUDWATCH_LOG_STREAM=kruize-dev-stream
+
+<KRUIZE_REPO>/tests/test_autotune.sh -c openshift --testsuite=remote_monitoring_tests --testcase=cloudwatch_logging --resultsdir=/home/results
+```
+
+### Running directly using pytest
+
+- Deploy Kruize using the deploy.sh from the kruize autotune repo
+- cd `<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests`
+- python3 -m pip install --user -r requirements.txt
+- cd rest_apis
+
+To run only the credentials-absent test (no AWS credentials needed):
+```
+pytest -m cloudwatch_logging -k "credentials_absent" --html=<dir>/report.html --cluster_type <minikube|openshift>
+```
+
+To run both credentials-absent and credentials-present tests (AWS env vars must be set):
+```
+pytest -m cloudwatch_logging --html=<dir>/report.html --cluster_type <minikube|openshift>
+```
+
+To run a specific CloudWatch test:
+```
+pytest -s test_cloudwatch_logging.py::test_kruize_starts_and_skips_cloudwatch_when_credentials_absent --cluster_type openshift
+pytest -s test_cloudwatch_logging.py::test_kruize_starts_and_enables_cloudwatch_when_credentials_present --cluster_type openshift
+```
+
+### Using the shell orchestrator directly
+
+The shell orchestrator patches the deployment YAML, redeploys, reads pod logs, and reports results:
+
+```
+cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests
+export KRUIZE_REPO=<path to kruize repo>
+export cluster_type=openshift
+export RESULTS=<results directory>
+
+# credentials-absent only (no AWS needed)
+source cloudwatch_logging_tests.sh
+cloudwatch_logging_tests
+
+# both scenarios (set AWS env vars first)
+export CLOUDWATCH_ACCESS_KEY_ID=<IAM access key id>
+export CLOUDWATCH_SECRET_ACCESS_KEY=<IAM secret access key>
+export CLOUDWATCH_REGION=us-east-1
+export CLOUDWATCH_LOG_GROUP=kruize-dev-logs
+export CLOUDWATCH_LOG_STREAM=kruize-dev-stream
+cloudwatch_logging_tests
 ```
 
 Note: You can check the report.html for the results as it provides better readability
