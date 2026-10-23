@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import csv
+import itertools
 import json
 import os
+import random
 import re
 import subprocess
 import time
@@ -2411,3 +2413,66 @@ def validate_current(current_config, experiment_type):
         assert "replicas" in current_config, MISSING_REPLICA_OBJECT
         assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
         assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+
+
+# Shared field groups for mandatory field validation tests.
+# slo_level, func_var_level, and aggr_level are common to both
+# performance profiles (old-style) and metric profiles (new-style).
+COMMON_FIELD_GROUPS = {
+    "slo_level": [
+        ("direction", lambda d: d["slo"].pop("direction", None)),
+        ("objectiveFunction", lambda d: d["slo"].pop("objective_function", None)),
+        ("functionVariables", lambda d: d["slo"].pop("function_variables", None)),
+    ],
+    "func_var_level": [
+        ("name", lambda d: d["slo"]["function_variables"][0].pop("name", None)),
+        ("datasource", lambda d: d["slo"]["function_variables"][0].pop("datasource", None)),
+        ("valueType", lambda d: d["slo"]["function_variables"][0].pop("value_type", None)),
+    ],
+    "aggr_level": [
+        ("function", lambda d: d["slo"]["function_variables"][0]["aggregation_functions"][0].pop("function", None)),
+        ("query", lambda d: d["slo"]["function_variables"][0]["aggregation_functions"][0].pop("query", None)),
+    ],
+}
+
+PERF_PROFILE_TOP_LEVEL_FIELDS = [
+    ("name", lambda d: d.pop("name", None)),
+    ("profile_version", lambda d: d.pop("profile_version", None)),
+]
+
+METRIC_PROFILE_TOP_LEVEL_FIELDS = [
+    ("apiVersion", lambda d: d.pop("apiVersion", None)),
+    ("kind", lambda d: d.pop("kind", None)),
+    ("metadata", lambda d: d.pop("metadata", None)),
+]
+
+
+def build_field_groups(top_level_fields):
+    groups = {"top_level": top_level_fields}
+    groups.update(COMMON_FIELD_GROUPS)
+    return groups
+
+
+def generate_multi_field_removal_combos(field_groups, num_combos=10, seed=42):
+    """Generate random combinations that remove 2-4 fields across categories."""
+    rng = random.Random(seed)
+    all_fields = []
+    for group_name, fields in field_groups.items():
+        for field_name, remover in fields:
+            all_fields.append((group_name, field_name, remover))
+
+    combos = []
+    for combo_size in range(2, min(5, len(all_fields) + 1)):
+        for combo in itertools.combinations(all_fields, combo_size):
+            combos.append(combo)
+
+    rng.shuffle(combos)
+    selected = combos[:num_combos]
+
+    result = []
+    for combo in selected:
+        field_names = [f[1] for f in combo]
+        removers = [f[2] for f in combo]
+        test_id = "+".join(field_names)
+        result.append(pytest.param(field_names, removers, id=test_id))
+    return result

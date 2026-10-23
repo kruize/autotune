@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import copy
 import tempfile
 
 import pytest
@@ -200,3 +201,52 @@ def test_create_performance_profiles_mandatory_fields(cluster_type, field, expec
         assert data['message'] == AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG
     else:
         assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
+
+
+perf_profile_field_groups = build_field_groups(PERF_PROFILE_TOP_LEVEL_FIELDS)
+multi_field_combos = generate_multi_field_removal_combos(perf_profile_field_groups)
+
+
+@pytest.mark.perf_profile
+@pytest.mark.parametrize("missing_fields, removers", multi_field_combos)
+def test_create_performance_profile_multiple_missing_fields(cluster_type, missing_fields, removers):
+    """
+    Test Description: This test validates that when multiple mandatory fields are missing,
+    the API returns all of them in a single error response rather than one at a time.
+    """
+    form_kruize_url(cluster_type)
+    input_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+
+    response = delete_performance_profile(input_json_file)
+    print("delete API status code = ", response.status_code)
+
+    json_data = json.load(open(input_json_file))
+    original_data = copy.deepcopy(json_data)
+
+    for remover in removers:
+        try:
+            remover(json_data)
+        except (KeyError, IndexError, TypeError):
+            pass
+
+    if json_data == original_data:
+        pytest.skip("No fields were actually removed (parent already missing)")
+
+    json_file = "/tmp/create_performance_profile_multi.json"
+    with open(json_file, 'w') as f:
+        json.dump(json_data, f)
+
+    print(f"\n*** Missing fields: {missing_fields} ***")
+    print(json_data)
+
+    response = create_performance_profile(json_file)
+    data = response.json()
+    print(f"Response: {data['message']}")
+
+    assert response.status_code == ERROR_STATUS_CODE, \
+        f"Expected {ERROR_STATUS_CODE} but got {response.status_code} when missing {missing_fields}"
+    assert data['status'] == ERROR_STATUS
+
+    for field in missing_fields:
+        assert field in data['message'], \
+            f"Field '{field}' not mentioned in error response: {data['message']}"

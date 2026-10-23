@@ -28,22 +28,29 @@ from helpers.list_metric_profiles_without_parameters_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 
+VALIDATION_FIELD_NAMES = {
+    "slo": "sloInfo",
+    "objective_function": "objectiveFunction",
+    "function_variables": "functionVariables",
+    "value_type": "valueType",
+}
+
 mandatory_fields = [
-    ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("kind", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("metadata", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("apiVersion", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("kind", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("metadata", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("slo", ERROR_STATUS_CODE, ERROR_STATUS),
     ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("objective_function", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("objective_function", ERROR_STATUS_CODE, ERROR_STATUS),
     ("function_type", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("function_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("value_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("function", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("query", ERROR_500_STATUS_CODE, ERROR_STATUS)
+    ("function_variables", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("datasource", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("value_type", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("aggregation_functions", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("function", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("query", ERROR_STATUS_CODE, ERROR_STATUS),
 ]
 
 
@@ -272,10 +279,60 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
-    if response.status_code == ERROR_500_STATUS_CODE:
-        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
+    if field == "aggregation_functions":
+        assert data['message'] == AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG
     else:
-        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
+        validation_field = VALIDATION_FIELD_NAMES.get(field, field)
+        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % validation_field
 
     response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
+
+
+metric_profile_field_groups = build_field_groups(METRIC_PROFILE_TOP_LEVEL_FIELDS)
+multi_field_combos_metric = generate_multi_field_removal_combos(metric_profile_field_groups)
+
+
+@pytest.mark.extended
+@pytest.mark.parametrize("missing_fields, removers", multi_field_combos_metric)
+def test_create_metric_profile_multiple_missing_fields(cluster_type, missing_fields, removers):
+    """
+    Test Description: This test validates that when multiple mandatory fields are missing,
+    the API returns all of them in a single error response rather than one at a time.
+    """
+    form_kruize_url(cluster_type)
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+
+    response = delete_metric_profile(input_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    json_data = json.load(open(input_json_file))
+    original_data = copy.deepcopy(json_data)
+
+    for remover in removers:
+        try:
+            remover(json_data)
+        except (KeyError, IndexError, TypeError):
+            pass
+
+    if json_data == original_data:
+        pytest.skip("No fields were actually removed (parent already missing)")
+
+    json_file = "/tmp/create_metric_profile_multi.json"
+    with open(json_file, 'w') as f:
+        json.dump(json_data, f)
+
+    print(f"\n*** Missing fields: {missing_fields} ***")
+    print(json_data)
+
+    response = create_metric_profile(json_file)
+    data = response.json()
+    print(f"Response: {data['message']}")
+
+    assert response.status_code in (ERROR_STATUS_CODE, ERROR_500_STATUS_CODE), \
+        f"Expected error status but got {response.status_code} when missing {missing_fields}"
+    assert data['status'] == ERROR_STATUS
+
+    for field in missing_fields:
+        assert field in data['message'], \
+            f"Field '{field}' not mentioned in error response: {data['message']}"
