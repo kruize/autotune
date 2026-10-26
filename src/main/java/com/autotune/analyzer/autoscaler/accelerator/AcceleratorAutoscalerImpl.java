@@ -7,6 +7,7 @@ import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.ResourceRecommendation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -105,34 +106,42 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
 
                 // Process requests
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> updatedRequests = new HashMap<>();
-                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingRequests = existingObj.getRequests();
+                Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> existingRequests = existingObj.getRequests();
 
-                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestMapEntry : existingRequests.entrySet()) {
-                    AnalyzerConstants.RecommendationItem recommendationItem = requestMapEntry.getKey();
-                    RecommendationConfigItem recommendationConfigItem = requestMapEntry.getValue();
+                if (existingRequests != null) {
+                    for (Map.Entry<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requestMapEntry : existingRequests.entrySet()) {
+                        AnalyzerConstants.RecommendationItem recommendationItem = requestMapEntry.getKey();
+                        if (!(requestMapEntry.getValue() instanceof RecommendationConfigItem recommendationConfigItem)) {
+                            continue;
+                        }
 
-                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU) {
-                        updatedRequests.put(recommendationItem, CommonUtils.formatCpuUnits(recommendationConfigItem));
-                    } else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
-                        updatedRequests.put(recommendationItem, CommonUtils.formatMemoryUnits(recommendationConfigItem));
-                    } else {
-                        updatedRequests.put(recommendationItem, CommonUtils.formatAcceleratorUnits(recommendationConfigItem));
+                        if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU) {
+                            updatedRequests.put(recommendationItem, CommonUtils.formatCpuUnits(recommendationConfigItem));
+                        } else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
+                            updatedRequests.put(recommendationItem, CommonUtils.formatMemoryUnits(recommendationConfigItem));
+                        } else {
+                            updatedRequests.put(recommendationItem, CommonUtils.formatAcceleratorUnits(recommendationConfigItem));
+                        }
                     }
                 }
 
                 HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> updatedLimits = new HashMap<>();
-                Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> existingLimits = existingObj.getLimits();
+                Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> existingLimits = existingObj.getLimits();
 
-                for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMapEntry : existingLimits.entrySet()) {
-                    AnalyzerConstants.RecommendationItem recommendationItem = limitsMapEntry.getKey();
-                    RecommendationConfigItem recommendationConfigItem = limitsMapEntry.getValue();
+                if (existingLimits != null) {
+                    for (Map.Entry<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limitsMapEntry : existingLimits.entrySet()) {
+                        AnalyzerConstants.RecommendationItem recommendationItem = limitsMapEntry.getKey();
+                        if (!(limitsMapEntry.getValue() instanceof RecommendationConfigItem recommendationConfigItem)) {
+                            continue;
+                        }
 
-                    if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU) {
-                        updatedLimits.put(recommendationItem, CommonUtils.formatCpuUnits(recommendationConfigItem));
-                    } else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
-                        updatedLimits.put(recommendationItem, CommonUtils.formatMemoryUnits(recommendationConfigItem));
-                    } else {
-                        updatedLimits.put(recommendationItem, CommonUtils.formatAcceleratorUnits(recommendationConfigItem));
+                        if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU) {
+                            updatedLimits.put(recommendationItem, CommonUtils.formatCpuUnits(recommendationConfigItem));
+                        } else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
+                            updatedLimits.put(recommendationItem, CommonUtils.formatMemoryUnits(recommendationConfigItem));
+                        } else {
+                            updatedLimits.put(recommendationItem, CommonUtils.formatAcceleratorUnits(recommendationConfigItem));
+                        }
                     }
                 }
 

@@ -19,6 +19,8 @@ package com.autotune.database.helper;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.adapters.ResourceRecommendationAdapter;
+import com.autotune.analyzer.recommendations.ResourceRecommendation;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.exceptions.LayerConversionException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
@@ -928,6 +930,7 @@ public class DBHelpers {
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(ResourceRecommendation.class, new ResourceRecommendationAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
@@ -997,6 +1000,7 @@ public class DBHelpers {
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(ResourceRecommendation.class, new ResourceRecommendationAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
