@@ -180,7 +180,7 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.validateMetricQueryPattern(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo);
 
@@ -194,10 +194,10 @@ class MetadataProfileValidationTest {
         void invalidSumByClauseRejected() {
             StringBuilder errorString = new StringBuilder();
             String badQuery = "avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[15m])";
-            validation.validateMetricQueryPattern(badQuery, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+            validation.validateMetricQueryPattern(badQuery, "namespacesForAdditionalLabel", errorString, mockDataSourceInfo);
 
             assertFalse(errorString.isEmpty(), "An error must be appended for an invalid sum by clause");
-            assertTrue(errorString.toString().contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+            assertTrue(errorString.toString().contains("namespacesForAdditionalLabel"),
                     "Error must reference the metric name");
         }
     }
@@ -225,7 +225,7 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo,
                         AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER);
@@ -250,7 +250,7 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo,
                         AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER);
@@ -276,13 +276,13 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo,
                         AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER);
 
                 String error = errorString.toString();
-                assertTrue(error.contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+                assertTrue(error.contains("namespacesForAdditionalLabel"),
                         "Error message must contain the metric name");
                 assertTrue(error.contains("Please review the metric query"),
                         "Error message must contain the syntax error hint");
@@ -344,7 +344,7 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.queryValidator(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo,
                         AnalyzerConstants.MetadataProfileQueryIdentifier.NAMESPACE_QUERY_IDENTIFIER);
@@ -555,13 +555,13 @@ class MetadataProfileValidationTest {
                     "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
                     "{namespace!=\"\", $CLUSTER_FILTERS$}[15m]))";
             validation.validateMetricQueryPattern(
-                    queryWithUnknown, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+                    queryWithUnknown, "namespacesForAdditionalLabel", errorString, mockDataSourceInfo);
 
             assertFalse(errorString.isEmpty(),
                     "An error must be appended for an unknown placeholder");
             assertTrue(errorString.toString().contains("$CLUSTER_FILTERS$"),
                     "Error must name the unknown placeholder");
-            assertTrue(errorString.toString().contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+            assertTrue(errorString.toString().contains("namespacesForAdditionalLabel"),
                     "Error must reference the metric name");
         }
 
@@ -574,7 +574,7 @@ class MetadataProfileValidationTest {
                     "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
                     "{$NAMESPACE_FILTER$}[15m]))";
             validation.validateMetricQueryPattern(
-                    queryWithTypo, AnalyzerConstants.NAMESPACE_METADATA_QUERY, errorString, mockDataSourceInfo);
+                    queryWithTypo, "namespacesForAdditionalLabel", errorString, mockDataSourceInfo);
 
             assertFalse(errorString.isEmpty(),
                     "An error must be appended for a misspelled placeholder");
@@ -602,7 +602,7 @@ class MetadataProfileValidationTest {
                         "sum by (namespace) (avg_over_time(kube_namespace_status_phase" +
                         "{namespace!=\"\", $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
                 validation.validateMetricQueryPattern(
-                        queryWithTemplateVars, AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        queryWithTemplateVars, "namespacesForAdditionalLabel",
                         errorString, mockDataSourceInfo);
 
                 assertFalse(errorString.toString().contains("unknown placeholder"),
@@ -634,7 +634,7 @@ class MetadataProfileValidationTest {
                 StringBuilder errorString = new StringBuilder();
                 validation.validateMetricQueryPattern(
                         NAMESPACE_QUERY,
-                        AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                        "namespacesForAdditionalLabel",
                         errorString,
                         mockDataSourceInfo);
 
@@ -651,13 +651,13 @@ class MetadataProfileValidationTest {
 
             validation.validateMetricQueryPattern(
                     badQuery,
-                    AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                    "namespacesForAdditionalLabel",
                     errorString,
                     mockDataSourceInfo);
 
             assertFalse(errorString.isEmpty(),
                     "An error must be appended for an unrecognised sum-by clause");
-            assertTrue(errorString.toString().contains(AnalyzerConstants.NAMESPACE_METADATA_QUERY),
+            assertTrue(errorString.toString().contains("namespacesForAdditionalLabel"),
                     "Error must reference the metric name");
         }
 
@@ -669,7 +669,7 @@ class MetadataProfileValidationTest {
 
             validation.validateMetricQueryPattern(
                     noSumByQuery,
-                    AnalyzerConstants.NAMESPACE_METADATA_QUERY,
+                    "namespacesForAdditionalLabel",
                     errorString,
                     mockDataSourceInfo);
 
