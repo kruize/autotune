@@ -46,9 +46,19 @@ function refresh_oc_token() {
 }
 
 function query_db() {
+	prev_results_count=0
+	stale_count=0
 
 	while(true); do
 		refresh_oc_token
+
+		# Check if any worker processes are still alive
+		workers_alive=0
+		for pid in "${pid_array[@]}"; do
+			if kill -0 "$pid" 2>/dev/null; then
+				workers_alive=$((workers_alive + 1))
+			fi
+		done
 
 		# Obtain the no. of experiments and results from the db
 		exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
@@ -56,7 +66,7 @@ function query_db() {
 		results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 		# Print the scalability test progress
-		echo "Exps = $exp_count Results = $results_count"
+		echo "[$(date '+%Y-%m-%d %H:%M:%S')] Exps = $exp_count Results = $results_count (workers alive: $workers_alive/${#pid_array[@]})"
 		days_completed=$((${results_count} / (96 * ${num_exps} * ${num_clients})))
 		day_in_progress=$(($days_completed + 1))
 
@@ -69,7 +79,30 @@ function query_db() {
 				echo "Day $days_completed completed, Day $day_in_progress in progress"
 			fi
 		fi
-		
+
+		# Detect stale progress
+		if [ "${results_count}" == "${prev_results_count}" ]; then
+			stale_count=$((stale_count + 1))
+		else
+			stale_count=0
+		fi
+		prev_results_count=${results_count}
+
+		# If no workers alive and test not complete, report failure and exit
+		if [ ${workers_alive} == 0 ]; then
+			echo ""
+			echo "ERROR: All worker processes have died before test completion!"
+			echo "Expected days: ${num_days_of_res}, Completed days: ${days_completed}"
+			echo "Expected results: $((96 * ${num_exps} * ${num_clients} * ${num_days_of_res})), Actual results: ${results_count}"
+			echo "Check scale_logs/*.log for errors."
+			break
+		fi
+
+		# If results haven't changed for 3 consecutive checks, warn
+		if [ ${stale_count} -ge 3 ]; then
+			echo "WARNING: Results count has not changed for $((stale_count * query_db_interval)) minutes (workers alive: $workers_alive)"
+		fi
+
 		sleep_time=$((query_db_interval * 60))
 		sleep ${sleep_time}
 	done
