@@ -291,7 +291,8 @@ def get_term_schema_with_data(include_plots=True, namespace_type=False):
                 "type": "object",
                 "properties": {
                     "cost": get_recommendation_engine_schema("cost"),
-                    "performance": get_recommendation_engine_schema("performance")
+                    "performance": get_recommendation_engine_schema("performance"),
+                    "stability": get_recommendation_engine_schema("stability")
                 },
                 "required": []
             }

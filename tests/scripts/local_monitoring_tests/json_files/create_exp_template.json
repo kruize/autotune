@@ -25,6 +25,16 @@
 	},
 	"recommendation_settings": {
 		"threshold": "{{threshold}}"
+		{% if terms is defined and terms is not none and terms | length > 0 %},
+		"term_settings": {
+			"terms": {{ terms | tojson }}
+		}
+		{% endif %}
+		{% if models is defined and models is not none and models | length > 0 %},
+		"model_settings": {
+			"models": {{ models | tojson }}
+		}
+		{% endif %}
 	}
 }]
 

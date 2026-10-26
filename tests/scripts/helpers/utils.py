@@ -144,6 +144,15 @@ TUNABLE_MISSING_CONFIG_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' mu
 TUNABLE_NULL_BOUNDS_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null bounds; both upper_bound and lower_bound must be set"
 TUNABLE_NULL_STEP_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null step; step must be set for bounded tunables"
 
+# Term / Model validation error messages (flex + stability)
+INVALID_TERM_NAME = "Term name is not supported. Use short, medium, long or flex term."
+INVALID_MODEL_NAME = "Model name is not supported. Use cost, performance or stability."
+FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED = "When combining flex with other terms (short/medium/long), no model should be specified. Remove the model or use a single term with its required model."
+STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED = "When combining stability with other models (cost/performance), no term should be specified. Remove the term setting or use stability alone with the flex term."
+EMPTY_NOT_ALLOWED = "Empty term or model value."
+
+
+
 # List Layer API Messages
 LIST_LAYERS_INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid"
 LIST_LAYERS_NO_LAYERS_FOUND_MSG = "No layers found!"
@@ -168,6 +177,8 @@ NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "112102"
 NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "111101"
 NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "111102"
 NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE = "111103"
+NOTIFICATION_CODE_FOR_FLEX_TERM_RECOMMENDATIONS_AVAILABLE = "111104"
+NOTIFICATION_CODE_FOR_STABILITY_RECOMMENDATIONS_AVAILABLE = "112105"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated"
@@ -205,8 +216,10 @@ CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
 INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
 INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
+INFO_STABILITY_RECOMMENDATIONS_AVAILABLE_CODE = "112105"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
+INFO_FLEX_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111104"
 
 INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "128001"
 NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE = "328001"
@@ -247,6 +260,7 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 SHORT_TERM = "short_term"
 MEDIUM_TERM = "medium_term"
 LONG_TERM = "long_term"
+FLEX_TERM = "flex_term"
 NO_TERM = "no_term"
 SHORT_AND_MEDIUM = "short_term_and_medium_term"
 SHORT_AND_LONG = "short_term_and_long_term"
@@ -265,7 +279,14 @@ TERMS_NOTIFICATION_CODES = {
     SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
     MEDIUM_TERM: NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
     LONG_TERM: NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+    FLEX_TERM: NOTIFICATION_CODE_FOR_FLEX_TERM_RECOMMENDATIONS_AVAILABLE,
 }
+
+FLEX_TERM_DURATION_IN_HRS_MAX = 15 * 24.0  # 15-day cap
+
+STABILITY_RECOMMENDATIONS_AVAILABLE_MSG = "Stability Recommendations Available"
+FLEX_TERM_RECOMMENDATIONS_AVAILABLE_MSG  = "Flex Term Recommendations Available"
+NOT_ENOUGH_DATA_MSG_RECO = "There is not enough data available to generate a recommendation."
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
