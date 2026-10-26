@@ -36,6 +36,87 @@ Here we test Kruize [Local monitoring APIs](/design/KruizeLocalAPI.md).
 
   For details refer this [doc](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
 
+### Authentication Test:
+
+Kruize 0.2 onwards supports the authentication which provides the user an option to pass authentication details in the YAML for the service they are using.
+
+The authentication test is a standalone shell-based test. It contains various valid and invalid scenarios for testing.
+
+It can be run directly from the shell test location, for example:
+
+`tests/config_tests/authentication_tests.sh`
+
+#### Scenarios
+**_valid_**: a valid path to the token
+
+**_expired_**: an expired token value
+
+**_invalid_**: an invalid path to the token
+
+**_empty_**: a blank input in place of the token file path
+
+### Datasource Availability/Serviceability Test:
+
+Kruize supports multiple datasources such as Prometheus and Thanos Querier. During startup, Kruize validates the reachability of all configured datasources before proceeding.
+
+The datasource availability/serviceability test is a standalone shell-based test and is not part of the pytest-based functional/local monitoring suite.
+It validates Kruize behavior when one or more datasources are reachable or unreachable.
+
+Kruize startup behavior follows these rules:
+
+* Kruize continues startup if at least one datasource is reachable.
+* Kruize logs an error for each unreachable datasource.
+* Kruize fails startup only when all configured datasources are unreachable.
+
+The test can be run using the command below:
+
+```
+./test_autotune.sh -c <cluster-type> -i <image-name> --testsuite=datasource_tests
+```
+
+#### Scenarios
+
+Both cluster types support multiple datasources. Scenarios vary by which datasources are in the cluster YAML:
+- **OpenShift:** YAML has Prometheus + Thanos (both available in cluster)
+- **Minikube/Kind:** YAML has Prometheus only (Thanos not running; multiple Prometheus datasources are also valid)
+
+**both-valid** (OpenShift)
+
+Both datasources are reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**valid-invalid** (OpenShift)
+
+Datasource 1 is reachable, datasource 2 is unreachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for datasource 2.
+
+**invalid-valid** (OpenShift)
+
+Datasource 1 is unreachable, datasource 2 is reachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for datasource 1.
+
+**both-invalid** (OpenShift)
+
+Both datasources are unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.
+
+**valid** (Minikube/Kind)
+
+Datasource is reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**invalid** (Minikube/Kind)
+
+Datasource is unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.
+
+
 ## Supported Clusters
 - Minikube, Openshift
 
