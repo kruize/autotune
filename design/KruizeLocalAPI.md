@@ -2682,19 +2682,31 @@ Updates the specified metadata profile name, provided metadata profile is alread
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\", workload=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\", workload=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
     {
-      "name": "containerForAdditionalLabel",
+      "name": "workloadsWithPodLabelFilter",
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\", container=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\", workload=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "containersForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\", container!=\"\", container=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     }
@@ -2798,19 +2810,31 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
     {
-      "name": "containerForAdditionalLabel",
+      "name": "workloadsWithPodLabelFilter",
       "datasource": "prometheus",
       "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{namespace!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "containersForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{namespace!=\"\", container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     }
