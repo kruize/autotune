@@ -30,7 +30,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,16 +59,16 @@ class MetadataProfileValidationTest {
     // ---- Bulk-profile queries (contain $...$ bulk-only placeholders) ----
     // These are valid in bulk metadata profiles used at data-gathering time,
     // but must be REJECTED by the updateMetadata API.
-    private static final String BULK_NAMESPACE_QUERY =
+    private static final String NAMESPACE_QUERY =
             "sum by (namespace) (avg_over_time(kube_namespace_status_phase{$NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String BULK_WORKLOAD_QUERY =
+    private static final String WORKLOAD_QUERY =
             "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String BULK_WORKLOAD_WITH_LABEL_QUERY =
+    private static final String WORKLOAD_WITH_LABEL_QUERY =
             "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
-    private static final String BULK_CONTAINER_QUERY =
+    private static final String CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     // ---- Update-payload queries (valid for updateMetadata) ----
@@ -350,7 +349,7 @@ class MetadataProfileValidationTest {
         void bulkOnlyNamespaceFilterRejected() {
             StringBuilder errorString = new StringBuilder();
             validation.validateMetricQueryPattern(
-                    BULK_NAMESPACE_QUERY,
+                    NAMESPACE_QUERY,
                     "namespacesForAdditionalLabel",
                     errorString,
                     mockDataSourceInfo);
@@ -366,7 +365,7 @@ class MetadataProfileValidationTest {
         void bulkOnlyWorkloadFilterRejected() {
             StringBuilder errorString = new StringBuilder();
             validation.validateMetricQueryPattern(
-                    BULK_WORKLOAD_QUERY,
+                    WORKLOAD_QUERY,
                     "workloadsForAdditionalLabel",
                     errorString,
                     mockDataSourceInfo);
@@ -382,7 +381,7 @@ class MetadataProfileValidationTest {
         void allBulkOnlyPlaceholdersInLabelFilterQueryRejected() {
             StringBuilder errorString = new StringBuilder();
             validation.validateMetricQueryPattern(
-                    BULK_WORKLOAD_WITH_LABEL_QUERY,
+                    WORKLOAD_WITH_LABEL_QUERY,
                     "workloadsWithPodLabelFilter",
                     errorString,
                     mockDataSourceInfo);
