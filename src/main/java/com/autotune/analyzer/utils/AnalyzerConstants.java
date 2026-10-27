@@ -402,6 +402,7 @@ public class AnalyzerConstants {
     }
 
     public enum MetadataProfileQueryIdentifier {
+    // TODO: We're restricting the query identifiers to only container, namespace and workload for now. In the future, we can add more query identifiers.
         NAMESPACE_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace"))),
 
         WORKLOAD_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace", "workload", "workload_type"))),
