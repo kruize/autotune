@@ -820,7 +820,8 @@ public class KruizeConstants {
                 public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
                 public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
-                // Flex uses all available data up to a 15 day lookback (same cap as long term)
+                // Maximum lookback window for flex term is 15 days.
+                // Flex term uses whatever data is available up to this maximum.
                 public static final int FLEX_TERM_DURATION_DAYS = 15;
                 // Minimum of 2 datapoints (30 mins at 15 min intervals, same as short term) so that
                 // best-effort recommendations can be generated for workloads with very little data
