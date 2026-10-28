@@ -24,6 +24,8 @@ public class RecommendationSettings {
     private ModelSettings modelSettings;
     @SerializedName(KruizeConstants.JSONKeys.TERM_SETTINGS)
     private TermSettings termSettings;
+    @SerializedName(KruizeConstants.JSONKeys.RESOURCE_SCOPE_SETTINGS)
+    private ResourceScopeSettings resourceScopeSettings;
 
     public RecommendationSettings(){}
 
@@ -51,12 +53,28 @@ public class RecommendationSettings {
         this.termSettings = termSettings;
     }
 
+    public ResourceScopeSettings getResourceScopeSettings() {
+        return resourceScopeSettings;
+    }
+
+    /**
+     * Gson does not call setters, so objects deserialized directly by Gson have unparsed scopes.
+     * Callers that copy settings (e.g. Converters) must go through this setter so the EnumSets are populated.
+     */
+    public void setResourceScopeSettings(ResourceScopeSettings resourceScopeSettings) {
+        this.resourceScopeSettings = resourceScopeSettings;
+        if (resourceScopeSettings != null) {
+            resourceScopeSettings.parse();
+        }
+    }
+
     @Override
     public String toString() {
         return "RecommendationSettings{" +
                 "threshold=" + threshold +
                 ", modelSettings=" + modelSettings +
                 ", termSettings=" + termSettings +
+                ", resourceScopeSettings=" + resourceScopeSettings +
                 '}';
     }
 }

@@ -3,8 +3,10 @@ package com.autotune.analyzer.recommendations;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.*;
 
@@ -31,6 +33,68 @@ public class RecommendationConstants {
 
         public int getSeverity() {
             return severity;
+        }
+    }
+
+    /**
+     * Elementary provisioning states used by resource_scope_settings.
+     * IDLE applies to CPU only. ALL matches any state (disables filtering for that resource).
+     */
+    public enum RecommendationScope {
+        UNDER_PROVISIONED("under_provisioned"),
+        OVER_PROVISIONED("over_provisioned"),
+        OPTIMISED("optimised"),
+        IDLE("idle"),
+        ALL("all");
+
+        private static final Map<String, RecommendationScope> VALUE_MAP = new HashMap<>();
+
+        static {
+            for (RecommendationScope scope : values()) {
+                VALUE_MAP.put(scope.value, scope);
+                VALUE_MAP.put(scope.name().toLowerCase(), scope);
+            }
+            // American spelling alias
+            VALUE_MAP.put("optimized", OPTIMISED);
+        }
+
+        private final String value;
+
+        RecommendationScope(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * Returns the matching scope, or null if the text is null, blank or unknown.
+         */
+        public static RecommendationScope fromString(String text) {
+            if (text == null || text.trim().isEmpty()) {
+                return null;
+            }
+            return VALUE_MAP.get(text.trim().toLowerCase().replace("-", "_"));
+        }
+
+        /**
+         * Parses a list of scope strings into an EnumSet.
+         * Returns null if the list is null or empty, meaning the resource key was absent (unconstrained).
+         * Unknown strings are skipped; they are expected to have been rejected by validation beforehand.
+         */
+        public static EnumSet<RecommendationScope> parseScopes(List<String> scopes) {
+            if (scopes == null || scopes.isEmpty()) {
+                return null;
+            }
+            EnumSet<RecommendationScope> set = EnumSet.noneOf(RecommendationScope.class);
+            for (String s : scopes) {
+                RecommendationScope scope = fromString(s);
+                if (scope != null) {
+                    set.add(scope);
+                }
+            }
+            return set;
         }
     }
 

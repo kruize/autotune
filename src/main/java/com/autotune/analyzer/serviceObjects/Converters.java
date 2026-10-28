@@ -96,6 +96,10 @@ public class Converters {
                     if (apiRecommendationSettings.getThreshold() != null) {
                         recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
                     }
+                    if (apiRecommendationSettings.getResourceScopeSettings() != null) {
+                        // Use the setter: it parses the scopes into EnumSets, which Gson deserialization skips
+                        recommendationSettings.setResourceScopeSettings(apiRecommendationSettings.getResourceScopeSettings());
+                    }
                 }
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
