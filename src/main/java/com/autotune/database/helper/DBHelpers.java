@@ -1191,7 +1191,7 @@ public class DBHelpers {
                                 JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
                                 String authType = kruizeDataSource.getKruizeAuthenticationEntry().getAuthenticationType();
                                 // Parse the JsonNode credentials into a JSONObject
-                                if (!credentialsNode.toString().equalsIgnoreCase(AnalyzerConstants.NULL)) {
+                                if (credentialsNode != null && !credentialsNode.toString().equalsIgnoreCase(AnalyzerConstants.NULL)) {
                                     JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
                                     authJson = new JSONObject()
                                             .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
