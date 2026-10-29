@@ -366,13 +366,11 @@ public class BulkConfigValidation {
                     HttpServletResponse.SC_BAD_REQUEST);
         }
 
-        // Validate terms if provided or required
-        if (settings.getTerms() != null) {
-            if (settings.getTerms().isEmpty()) {
-                return new ValidationOutputData(false,
-                        "terms cannot be empty if provided in recommendation_settings",
-                        HttpServletResponse.SC_BAD_REQUEST);
-            }
+        // Validate terms if provided or required.
+        // An empty list is treated as "not provided" because RecommendationSettings
+        // initialises terms/models as new ArrayList<>(), so Jackson deserialises a
+        // missing JSON key as an empty list rather than null.
+        if (settings.getTerms() != null && !settings.getTerms().isEmpty()) {
             for (String term : settings.getTerms()) {
                 if (!VALID_TERMS.contains(term)) {
                     return new ValidationOutputData(false,
@@ -386,13 +384,9 @@ public class BulkConfigValidation {
                     HttpServletResponse.SC_BAD_REQUEST);
         }
 
-        // Validate models if provided or required
-        if (settings.getModels() != null) {
-            if (settings.getModels().isEmpty()) {
-                return new ValidationOutputData(false,
-                        "models cannot be empty if provided in recommendation_settings",
-                        HttpServletResponse.SC_BAD_REQUEST);
-            }
+        // Validate models if provided or required.
+        // Same empty-list-as-absent treatment as terms above.
+        if (settings.getModels() != null && !settings.getModels().isEmpty()) {
             for (String model : settings.getModels()) {
                 if (!VALID_MODELS.contains(model)) {
                     return new ValidationOutputData(false,
