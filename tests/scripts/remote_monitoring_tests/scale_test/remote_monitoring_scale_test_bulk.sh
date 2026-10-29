@@ -257,6 +257,31 @@ if [ -z "${SERVER_IP_ADDR}" ]; then
 	echo "SERVER_IP_ADDR = ${SERVER_IP_ADDR} " | tee -a ${LOG}
 fi
 
+# Verify that the Kruize API is reachable via the route before starting the test
+echo "Verifying Kruize API is reachable at ${scheme}://${SERVER_IP_ADDR}..." | tee -a ${LOG}
+max_retries=30
+retry_interval=10
+route_verified=false
+for ((attempt=1; attempt<=max_retries; attempt++)); do
+	http_code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "${scheme}://${SERVER_IP_ADDR}/health" 2>/dev/null || echo "000")
+	if [ "${http_code}" -ge 200 ] && [ "${http_code}" -lt 500 ] 2>/dev/null; then
+		echo "Kruize API is reachable (HTTP ${http_code}) after ${attempt} attempt(s)" | tee -a ${LOG}
+		route_verified=true
+		break
+	fi
+	echo "Attempt ${attempt}/${max_retries}: Kruize API not reachable (HTTP ${http_code}), retrying in ${retry_interval}s..." | tee -a ${LOG}
+	sleep ${retry_interval}
+done
+
+if [ "${route_verified}" != "true" ]; then
+	echo "ERROR: Kruize API is not reachable at ${scheme}://${SERVER_IP_ADDR} after $((max_retries * retry_interval))s. Aborting test." | tee -a ${LOG}
+	echo "Check the route, service, and pod status:" | tee -a ${LOG}
+	oc get route kruize -n ${NAMESPACE} -o wide 2>&1 | tee -a ${LOG}
+	oc get svc kruize -n ${NAMESPACE} -o wide 2>&1 | tee -a ${LOG}
+	oc get pods -n ${NAMESPACE} 2>&1 | tee -a ${LOG}
+	exit 1
+fi
+
 echo | tee -a ${LOG}
 
 get_kruize_pod_log ${LOG_DIR}
