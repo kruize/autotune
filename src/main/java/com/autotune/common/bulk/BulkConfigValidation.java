@@ -312,16 +312,18 @@ public class BulkConfigValidation {
             }
         }
 
-        // Validate trial_settings if provided
-        if (updateRequest.getTrialSettings() != null) {
+        // Validate trial_settings only when it carries meaningful content — reuses
+        // the same guard as hasUpdates() to avoid diverging behaviour.
+        if (updateRequest.hasTrialSettingsUpdate()) {
             ValidationOutputData trialSettingsValidation = validateTrialSettings(updateRequest.getTrialSettings());
             if (!trialSettingsValidation.isSuccess()) {
                 return trialSettingsValidation;
             }
         }
 
-        // Validate recommendation settings if provided (partial validation for updates)
-        if (updateRequest.getRecommendationSettings() != null) {
+        // Validate recommendation_settings only when it carries meaningful content —
+        // reuses the same guard as hasUpdates() to avoid diverging behaviour.
+        if (updateRequest.hasRecommendationSettingsUpdate()) {
             ValidationOutputData settingsValidation = validateRecommendationSettings(updateRequest.getRecommendationSettings(), false);
             if (!settingsValidation.isSuccess()) {
                 return settingsValidation;

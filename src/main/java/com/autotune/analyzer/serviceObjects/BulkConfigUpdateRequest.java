@@ -174,7 +174,7 @@ public class BulkConfigUpdateRequest {
      * is treated as no update — it would otherwise stamp updatedAt, persist the
      * unchanged config, and fire the webhook for no reason.
      */
-    private boolean hasRecommendationSettingsUpdate() {
+    public boolean hasRecommendationSettingsUpdate() {
         if (recommendationSettings == null) {
             return false;
         }
@@ -187,7 +187,7 @@ public class BulkConfigUpdateRequest {
      * Returns true only when trialSettings carries a non-empty measurement_duration.
      * An empty TrialSettings object is treated as no update for the same reason.
      */
-    private boolean hasTrialSettingsUpdate() {
+    public boolean hasTrialSettingsUpdate() {
         if (trialSettings == null) {
             return false;
         }
