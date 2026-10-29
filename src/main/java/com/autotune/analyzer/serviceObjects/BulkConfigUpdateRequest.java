@@ -162,9 +162,36 @@ public class BulkConfigUpdateRequest {
                 (experimentTypes != null && !experimentTypes.isEmpty()) ||
                 (metadataProfile != null && !metadataProfile.trim().isEmpty()) ||
                 (performanceProfile != null && !performanceProfile.trim().isEmpty()) ||
-                trialSettings != null ||
-                recommendationSettings != null ||
+                hasTrialSettingsUpdate() ||
+                hasRecommendationSettingsUpdate() ||
                 (webhookUrl != null && !webhookUrl.trim().isEmpty()) ||
                 enabled != null;
+    }
+
+    /**
+     * Returns true only when recommendationSettings carries at least one meaningful
+     * field. A non-null object with no scheduling and empty/omitted terms and models
+     * is treated as no update — it would otherwise stamp updatedAt, persist the
+     * unchanged config, and fire the webhook for no reason.
+     */
+    public boolean hasRecommendationSettingsUpdate() {
+        if (recommendationSettings == null) {
+            return false;
+        }
+        return (recommendationSettings.getScheduling() != null && !recommendationSettings.getScheduling().trim().isEmpty()) ||
+                (recommendationSettings.getTerms() != null && !recommendationSettings.getTerms().isEmpty()) ||
+                (recommendationSettings.getModels() != null && !recommendationSettings.getModels().isEmpty());
+    }
+
+    /**
+     * Returns true only when trialSettings carries a non-empty measurement_duration.
+     * An empty TrialSettings object is treated as no update for the same reason.
+     */
+    public boolean hasTrialSettingsUpdate() {
+        if (trialSettings == null) {
+            return false;
+        }
+        return trialSettings.getMeasurementDurationMinutes() != null &&
+                !trialSettings.getMeasurementDurationMinutes().trim().isEmpty();
     }
 }
