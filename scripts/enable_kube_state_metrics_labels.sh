@@ -17,7 +17,7 @@
 #!/bin/bash
 set -euo pipefail
 
-LABEL_ARG="--metric-labels-allowlist=pods=[app,com.redhat.component-name,version]"
+LABEL_ARG="--metric-labels-allowlist=pods=[app,ibm.runtimes.intelligence.monitoring,com.redhat.component-name,version]"
 NAMESPACE=""
 DEPLOYMENT=""
 
