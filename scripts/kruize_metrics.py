@@ -177,7 +177,7 @@ def run_queries(map_type,server,prometheus_url=None):
     TOKEN = 'TOKEN'
     if prometheus_url is None:
         if cluster_type == "openshift":
-            prometheus_url = f"https://thanos-querier-openshift-monitoring.apps.{server}/api/v1/query"
+            prometheus_url = f"https://thanos-querier-openshift-monitoring.{server}/api/v1/query"
         elif cluster_type == "minikube":
             prometheus_url = f"http://{server}:9090/api/v1/query"
 
