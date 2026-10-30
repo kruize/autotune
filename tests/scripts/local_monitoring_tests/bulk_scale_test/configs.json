@@ -1,0 +1,30 @@
+[
+  {
+    "name": "org-1_cluster-1",
+    "labels": {
+      "org_id": "org-1",
+      "cluster_id": "eu-1-1"
+    }
+  },
+  {
+    "name": "org-1_cluster-2",
+    "labels": {
+      "org_id": "org-1",
+      "cluster_id": "eu-1-2"
+    }
+  },
+  {
+    "name": "org-2_cluster-1",
+    "labels": {
+      "org_id": "org-2",
+      "cluster_id": "eu-2-1"
+    }
+  },
+  {
+    "name": "org-2_cluster-2",
+    "labels": {
+      "org_id": "org-2",
+      "cluster_id": "eu-2-2"
+    }
+  }
+]
