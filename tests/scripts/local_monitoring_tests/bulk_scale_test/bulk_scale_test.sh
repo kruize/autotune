@@ -99,13 +99,21 @@ function kruize_local_config_patch() {
 		sed_inplace 's#"url": ""#"url": "'"${ds_url}"'"#' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	fi
 
+	# Replace memory requests and limits for Kruize to 4Gi and 8Gi respectively for scale test
+	sed_inplace '/- name: kruize$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"4Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"8Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+
+	# Replace memory requests and limits for Kruize DB to 10Gi and 16 Gi respectively for scale test
+	sed_inplace '/- name: kruize-db$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"10Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"16Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+
+	sed_inplace 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+    cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
+	    
 	#sed_inplace 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9][0-9]*/"bulkapilimit" : 10000/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	sed_inplace 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9][0-9]*Mi/\1\2 1Gi/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-	sed_inplace 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 }
 
 
-while getopts r:i:d:w:s:t:a:k:zh:-: gopts
+while getopts r:i:d:w:s:t:a:k:zh-: gopts
 do
 	case ${gopts} in
 	-)
@@ -234,6 +242,30 @@ end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+
+echo ""
+echo "###########################################################################"
+echo "Summary of the test run"
+exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_lm_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+reco_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_lm_recommendations ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+echo "exp_count / reco_count = ${exp_count} / ${reco_count}"
+
+db_size=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT pg_database_size('kruizeDB') AS database_size_bytes;" | tail -3 | head -1 | tr -d '[:space:]')
+
+db_size_mb=$((db_size / (1024 * 1024) + 1))
+
+echo "Postgres DB size in MB = ${db_size_mb}"
+
+# This should be a computed value
+total_recos_count = 300000
+#echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}""
+#python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}"
+
+echo "###########################################################################"
+echo ""
+echo ""
 
 if [[ $(grep -i "error\|exception" ${KRUIZE_SERVICE_LOG}) ]]; then
 	echo "Bulk scale test failed! Check the logs for details" | tee -a ${LOG}

@@ -100,7 +100,7 @@ For example:
 cd <KRUIZE_REPO>/tests/scripts/local_monitoring_tests/bulk_scale_test
 
 # Run scale test using default configs.json with 20 parallel workers across 15 days of 6-hour TSDB blocks
-./bulk_scale_test.sh -i quay.io/kruize/autotune_operator:0.3 -w 20 -d 15 -t 6 -s "2024-12-10T11:50:00.000Z" -k configs.json
+./bulk_scale_test.sh -i quay.io/kruize/autotune_operator:0.11.2 -w 20 -d 15 -t 6 -s "2024-12-10T11:50:00.000Z" -k configs.json
 ```
 
 Once the tests are complete, check the results directory (`kruize_bulk_scale_test_results/`) for execution logs (`scale_logs/`), job status responses (`job_status_jsons/`), and Kruize resource metrics (`results/`).
