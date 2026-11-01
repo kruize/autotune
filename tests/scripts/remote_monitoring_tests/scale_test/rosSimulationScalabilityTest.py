@@ -10,6 +10,27 @@ sys.path.append("../../")
 
 from helpers.utils import get_metric_profile_dir
 
+
+session = requests.Session()
+
+
+def request_with_retry(method, url, max_retries=3, **kwargs):
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = session.request(method, url, **kwargs)
+            return response
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            wait = 10 * (2 ** (attempt - 1))
+            print(f"Retry {attempt}/{max_retries} for {url} after {type(e).__name__}, waiting {wait}s...")
+            if attempt == max_retries:
+                print(f"All {max_retries} retries exhausted for {url}")
+                return None
+            time.sleep(wait)
+        except requests.exceptions.RequestException as e:
+            print(f"Non-retryable error for {url}: {e}")
+            return None
+    return None
+
 def loadData(exptype):
     if exptype == "container":
          exp_json_file = "./json_files/create_exp.json"
@@ -41,8 +62,9 @@ def updateRecommendation(experiment_name, endDate):
         payloadRecommendationURL = "%s?experiment_name=%s&interval_end_time=%s" % (
             updateRecommendationURL, experiment_name, endDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-4] + 'Z')
         print(f"calling POST API {payloadRecommendationURL}")
-        response = requests.post(payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
-
+        response = request_with_retry('POST', payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
+        if response is None:
+            return
         # Check the response
         if response.status_code == 201:
             #data = response.json()
@@ -63,7 +85,9 @@ def postResultsInBulk(expName, bulkData):
     try:
         print(f"calling POST API {updateExpURL} with {len(bulkData)} datapoints")
         # Send the request with the payload
-        response = requests.post(updateExpURL, data=json_payload, headers=headers, timeout=timeout)
+        response = request_with_retry('POST', updateExpURL, data=json_payload, headers=headers, timeout=timeout)
+        if response is None:
+            return
         # Check the response
         if response.status_code == 201:
             pass
@@ -125,7 +149,7 @@ if __name__ == "__main__":
     headers = {
         'Content-Type': 'application/json'
     }
-    timeout = (60, 60)
+    timeout = (60, 120)
 
     data, createdata, profile_data = loadData(exptype)
 
@@ -172,8 +196,10 @@ if __name__ == "__main__":
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
             createExp_start_time = time.time()
             print(f"calling POST API {createExpURL}")
-            response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
-            createExp_elapsed_time = time.time() -createExp_start_time
+            response = request_with_retry('POST', createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
+            createExp_elapsed_time = time.time() - createExp_start_time
+            if response is None:
+                continue
             j = 0
             if args.startdate:
                 data['interval_end_time'] = args.startdate
