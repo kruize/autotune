@@ -260,8 +260,8 @@ echo "Postgres DB size in MB = ${db_size_mb}"
 
 # This should be a computed value
 total_recos_count = 300000
-#echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}""
-#python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}"
+echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}""
+python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}"
 
 echo "###########################################################################"
 echo ""
