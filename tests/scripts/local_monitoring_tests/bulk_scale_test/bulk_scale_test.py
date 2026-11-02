@@ -364,6 +364,13 @@ if __name__ == '__main__':
     print(metric_profile_json_file) 
     create_metric_profile(metric_profile_json_file)
 
+    # Create the metadata profile
+    metadata_profile_dir = get_metadata_profile_dir()
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
+    print(metadata_profile_json_file) 
+    create_metadata_profile(metadata_profile_json_file)
+
+
     # List datasources
     datasource_name = None
     list_response = list_datasources(datasource_name)

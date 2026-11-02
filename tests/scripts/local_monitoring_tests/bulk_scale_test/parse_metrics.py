@@ -96,7 +96,7 @@ def print_metric(metrics, column_name, label):
         print(f"No valid values found in the specified column - {column_name}")
 
 
-def print_ratio_metric(metrics, sum_column, count_column, label):
+def compute_latency_metric(metrics, sum_column, count_column, label):
     sum_max_val, sum_avg_val = get_max_avg(metrics, sum_column)
     count_max_val, count_avg_val = get_max_avg(metrics, count_column)
     if count_max_val and count_avg_val and sum_max_val is not None and sum_avg_val is not None:
@@ -107,10 +107,14 @@ def print_ratio_metric(metrics, sum_column, count_column, label):
         print(f"No valid values found in the specified column - {count_column}")
 
 
-def print_resource_metric(metrics, column_name, label, divisor=1.0, unit=""):
+def print_resource_metric(metrics, column_name, label, type="cpu"):
+    unit="GB"
     max_val, _ = get_max_avg(metrics, column_name)
     if max_val is not None:
-        scaled_val = round(max_val / divisor, 2)
+        if type == "memory":
+            scaled_val = round(max_val / 1024 / 1024 / 1024, 3)
+        else:
+            scaled_val = round(max_val, 3)
         unit_str = f" {unit}" if unit else ""
         print(f"{label} Max value: {scaled_val}{unit_str}")
     else:
@@ -160,10 +164,18 @@ def main():
 
         print_metric(metrics, 'updateRecommendationsPerCall_success', 'Update Reco')
         print_metric(metrics, 'updateResultsPerCall_success', 'Update Results')
-        print_metric(metrics, 'BulkJobPerCall_success', 'Bulk Job')
-        #print_ratio_metric(metrics, 'loadResultsByExperimentName_sum_success', 'loadResultsByExperimentName_count_success', 'LoadResultsByExpName')
-        print_ratio_metric(metrics, 'generatePlots_sum_success', 'generatePlots_count_success', 'Generate Plots')
-        print_resource_metric(metrics, 'kruize_memory', 'Kruize memory', divisor=1024**3, unit="GB")
+        print_metric(metrics, 'BulkJobPerCall_success', 'Bulk Job')      
+
+           
+        compute_latency_metric(metrics, 'generatePlots_sum_success', 'generatePlots_count_success', 'Generate Plots')
+        compute_latency_metric(metrics, 'createBulkJob_sum_success', 'createBulkJob_count_success', 'Create Bulk Job')
+        compute_latency_metric(metrics, 'bulk_getExperimentMap_sum_success', 'bulk_getExperimentMap_count_success', 'Bulk Get Experiment Map')
+        compute_latency_metric(metrics, 'getBulkJobDB_sum_success', 'getBulkJobDB_count_success', 'Get Bulk Job DB')
+        compute_latency_metric(metrics, 'JobStatus_sum_success', 'JobStatus_count_success', 'Bulk Job status')
+        compute_latency_metric(metrics, 'runBulkJob_sum_success', 'runBulkJob_count_success', 'Run Bulk Job')
+        
+        
+        print_resource_metric(metrics, 'kruize_memory', 'Kruize memory', )
         print_resource_metric(metrics, 'kruize_cpu_max', 'Kruize cpu')
         print_resource_metric(metrics, 'kruizedb_memory', 'Kruizedb memory', divisor=1024**3, unit="GB")
         print_resource_metric(metrics, 'kruizedb_cpu_max', 'Kruizedb cpu')
