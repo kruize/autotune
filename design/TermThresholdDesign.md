@@ -1,5 +1,5 @@
 # Term Threshold
-Presently, recommendations are categorized into Short, Medium, and Long terms based on the duration of historical data considered.
+Presently, recommendations are categorized into Short, Medium, Long, and Flex terms based on the duration of historical data considered.
 
 ### Earlier Design Issues
 The earlier design (v0.0.20.1) related to term durations has identified shortcomings:
@@ -44,6 +44,67 @@ When the available data is less than the above threshold for each term, Kruize r
 | **Minimum Data Thresholds**         | We had a requirement of at least: <br/>**1 Day** for **Short term**. <br/>**7 days** for **Medium term**. <br/>**15 days** for **Long term**. | Introduced minimum data thresholds: <br/>**Short Term** (**30 mins**), <br/>**Medium Term** (**2 days**), <br/>**Long** (**8 days**). |
 | **Impact on Short-lived Workloads** | Unable to generate recommendations for short-lived workloads.                                                                                                       | Minimum data thresholds allow meaningful recommendations for shorter durations.                                           |
 | **User Clarity**                    | Users may not be aware of the actual duration considered.                                                                                                           | Strict enforcement provides clear insights into the duration for each recommendation.                                     |
+
+### C. Flex Term
+
+The `flex` term is an opt-in, data-range-agnostic term introduced to serve workloads that cannot satisfy the minimum data thresholds of the existing three terms.
+
+#### Term Reference Table
+
+| Term   | Duration              | Min Data Threshold | Min Datapoints | Opt-in |
+|--------|-----------------------|--------------------|----------------|--------|
+| Short  | 1 day                 | 30 mins            | 2              | No     |
+| Medium | 7 days                | 2 days             | 192            | No     |
+| Long   | 15 days               | 8 days             | 768            | No     |
+| **Flex**   | **15 days (or max available)** | **30 mins** | **2**      | **Yes** |
+
+#### Key differences from existing terms
+
+- Uses **all available data** from the current time back up to **15 days** — no sub-window restrictions.
+- Minimum threshold is just **2 datapoints (30 minutes)**; the engine uses however much data is available up to the cap.
+- Does **not replace** `short`, `medium`, or `long`. Those remain unchanged.
+- `flex` is **exclusively** used with the `stability` recommendation profile.
+- `flex` is **not part of the default term set** — it must be explicitly requested.
+- `flex` **cannot be combined** with other terms in the same request.
+
+#### Scenarios for Flex Term
+
+##### Case: Less than 30 minutes of data (below minimum threshold)
+
+  **Response**
+  ```
+  "120001": {
+              "type": "info",
+              "message": "There is not enough data available to generate a recommendation.",
+              "code": 120001
+            }
+  ```
+
+##### Case: 30 minutes to 15 days of data available
+
+  The engine uses all available data up to the 15-day cap regardless of whether it is contiguous or sparse.
+
+  **Response**
+  ```
+  "111104": {
+              "type": "info",
+              "message": "Flex Term Recommendations Available",
+              "code": 111104
+            }
+  ```
+
+##### Case: More than 15 days of data available
+
+  The engine caps the lookback window at 15 days. Data older than 15 days is not considered.
+
+  **Response**
+  ```
+  "111104": {
+              "type": "info",
+              "message": "Flex Term Recommendations Available",
+              "code": 111104
+            }
+  ```
 
 ### Scenarios
 #### Case: Contiguous Order

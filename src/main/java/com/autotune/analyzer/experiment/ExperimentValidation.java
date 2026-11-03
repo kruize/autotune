@@ -338,7 +338,7 @@ public class ExperimentValidation {
                 // common check for terms and models
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
-                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG, KruizeConstants.JSONKeys.FLEX);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
@@ -358,11 +358,30 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
+
+                    // V-3: flex combined with other terms
+                    List<String> requestedTerms = expObj.getRecommendation_settings().getTermSettings().getTerms();
+                    boolean flexWithOtherTerms = requestedTerms.contains(KruizeConstants.JSONKeys.FLEX) && requestedTerms.size() > 1;
+                    if (flexWithOtherTerms) {
+                        // flex + other terms is allowed only when NO model is specified.
+                        // If the user has also specified a model, reject with a clear error.
+                        boolean modelSpecified = expObj.getRecommendation_settings().getModelSettings() != null
+                                && expObj.getRecommendation_settings().getModelSettings().getModels() != null
+                                && !expObj.getRecommendation_settings().getModelSettings().getModels().isEmpty();
+                        if (modelSpecified) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.FLEX_WITH_OTHER_TERMS_NO_MODEL_ALLOWED;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        // flex + other terms with no model is valid — skip further model cross-checks for this case
+                    }
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
                         expObj.getRecommendation_settings().getModelSettings().getModels() != null) {
-                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE);
+                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE, KruizeConstants.JSONKeys.STABILITY);
 
                     for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
                         if (model == null || model.trim().isEmpty()) {
@@ -380,6 +399,29 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
+
+                    List<String> reqTerms = (expObj.getRecommendation_settings().getTermSettings() != null
+                            && expObj.getRecommendation_settings().getTermSettings().getTerms() != null)
+                            ? expObj.getRecommendation_settings().getTermSettings().getTerms() : Collections.emptyList();
+                    List<String> reqModels = expObj.getRecommendation_settings().getModelSettings().getModels();
+
+                    boolean hasFlex        = reqTerms.contains(KruizeConstants.JSONKeys.FLEX);
+                    boolean hasStability   = reqModels.contains(KruizeConstants.JSONKeys.STABILITY);
+                    boolean hasOtherModels = reqModels.stream().anyMatch(m ->
+                            KruizeConstants.JSONKeys.COST.equalsIgnoreCase(m) ||
+                            KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(m));
+
+                    // stability combined with cost/performance models is only allowed when NO term is specified.
+                    // If any term is given alongside the mixed models, reject it.
+                    if (hasStability && hasOtherModels && !reqTerms.isEmpty()) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.STABILITY_WITH_OTHER_MODELS_NO_TERM_ALLOWED;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
+                    }
+                    // All other combinations (stability-only, flex-only, stability+cost/perf no term)
+                    // are valid — the engine will auto-default the missing counterpart.
                 }
 
                 String depType = "";

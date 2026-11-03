@@ -153,6 +153,9 @@ public class KruizeConstants {
         public static final RecommendationTunables PERFORMANCE_RECOMMENDATION_TUNABLES = new RecommendationTunables(PERFORMANCE_CPU_PERCENTILE, PERFORMANCE_MEMORY_PERCENTILE, PERFORMANCE_ACCELERATOR_PERCENTILE);
 
     }
+    public static final class StabilityBasedRecommendationConstants {
+        public static final RecommendationTunables STABILITY_RECOMMENDATION_TUNABLES = new RecommendationTunables(STABILITY_CPU_PERCENTILE, STABILITY_MEMORY_PERCENTILE, STABILITY_ACCELERATOR_PERCENTILE);
+    }
 
     public static final class JSONKeys {
         public static final String QUESTION_MARK = "?";
@@ -285,9 +288,11 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
+        public static final String FLEX_TERM = "flex_term";
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
         public static final String LONG = "long";
+        public static final String FLEX = "flex";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -295,6 +300,7 @@ public class KruizeConstants {
         public static final String PROFILE_BASED = "profile_based";
         public static final String COST = "cost";
         public static final String PERFORMANCE = "performance";
+        public static final String STABILITY = "stability";
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String RECOMMENDATION_MODELS = "recommendation_models";
@@ -818,6 +824,12 @@ public class KruizeConstants {
                 public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
                 public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
+                // flex: minimum 2 datapoints (30 min of data); window spans up to 15 days
+                // — same datapoint floor as short_term, but no sub-window restriction.
+                public static final int    FLEX_TERM_DURATION_DAYS           = 15;
+                public static final double FLEX_TERM_DURATION_DAYS_THRESHOLD = ((double) 30 / (24 * 60)); // 30 min expressed in days
+                public static final int    FLEX_TERM_MIN_DATAPOINTS          = 2;
+                public static final String TERM_FLEX                         = "flex_term";
 
                 // Term Names (for consistency in keys and names)
                 public static final String TERM_DAILY = "daily";
@@ -882,6 +894,15 @@ public class KruizeConstants {
                 public static final double LONG_TERM_HOURS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                /* FLEX TERM
+                 * Minimum threshold: 30 min (2 datapoints at 15-min intervals) — same floor as short_term.
+                 * Maximum window:    15 days (360 h) — same ceiling as long_term.
+                 * The engine uses ALL available data up to the 15-day cap; no sub-window restriction.
+                 */
+                public static final double FLEX_TERM_MIN_DATA_THRESHOLD_MINS         = 30;
+                public static final double FLEX_TERM_HOURS                            = DurationAmount.FLEX_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
+                public static final double FLEX_TERM_TOTAL_DURATION_UPPER_BOUND_MINS  = FLEX_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                public static final double FLEX_TERM_TOTAL_DURATION_LOWER_BOUND_MINS  = FLEX_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
 
                 private RecommendationDurationRanges() {
 
