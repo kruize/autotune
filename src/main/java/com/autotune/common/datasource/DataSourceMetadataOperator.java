@@ -260,11 +260,10 @@ public class DataSourceMetadataOperator {
         // Clean up label selector formatting (from filter chaining with leading commas)
         // Remove leading commas: {, filter} -> {filter}
         // Remove trailing commas: {filter, } -> {filter}
-        // Collapse double commas: filter,, filter -> filter, filter
         // Normalize spacing: filter , filter -> filter, filter
-        namespaceQuery = namespaceQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll(",\\s*,", ",").replaceAll("\\s+,", ",");
-        workloadQuery = workloadQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll(",\\s*,", ",").replaceAll("\\s+,", ",");
-        containerQuery = containerQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll(",\\s*,", ",").replaceAll("\\s+,", ",");
+        namespaceQuery = namespaceQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
+        workloadQuery = workloadQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
+        containerQuery = containerQuery.replaceAll("\\{,\\s*", "{").replaceAll(",\\s*\\}", "}").replaceAll("\\s+,", ",");
 
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);

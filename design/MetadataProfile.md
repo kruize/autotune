@@ -81,4 +81,19 @@ These set of queries fetch list of namespaces, workloads and containers for spec
 | containersForAdditionalLabel | sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) <br/> * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m])) |
 
 
+### Supported query placeholders
+
+Metadata profile query templates can use the following `$...$` placeholders, which are substituted at runtime:
+
+| Placeholder                      | Substituted by                       | Notes                                                                                                              |
+|----------------------------------|--------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `$MEASUREMENT_DURATION_IN_MIN$`  | Measurement duration (integer)       | Used in all profiles.                                                                                              |
+| `$UNSUPPORTED_WORKLOAD_TYPES$`   | Workload type exclusion filters      | Substituted value **includes a leading comma** (`, workload_type!~...`). Do not add a comma before this placeholder in the query template — it will result in a double comma and an invalid PromQL query. Use a space instead: `{workload!="" $UNSUPPORTED_WORKLOAD_TYPES$}`. |
+| `$NAMESPACE_FILTERS$`            | Namespace include/exclude filters    | Bulk profiles only. Value includes a leading comma.                                                                |
+| `$WORKLOAD_FILTERS$`             | Workload include/exclude filters     | Bulk profiles only. Value includes a leading comma.                                                                |
+| `$CONTAINER_FILTERS$`            | Container include/exclude filters    | Bulk profiles only. Value includes a leading comma.                                                                |
+| `$LABELS$`                       | Pod label filters                    | Bulk profiles only. Value includes a leading comma.                                                                |
+
+> **Important:** All filter placeholders (`$UNSUPPORTED_WORKLOAD_TYPES$`, `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$`) produce values that already include a leading `, `. Do not add a preceding comma before these placeholders in query templates. Separate them from adjacent filters using a space only.
+
 * #####  Refer [REST APIs doc](/design/MetadataProfileAPI.md) supported for more details.

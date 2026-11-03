@@ -429,14 +429,17 @@ public class MetadataProfileValidation {
 
         // Substitute the two template variables that are valid in update payloads.
         // $MEASUREMENT_DURATION_IN_MIN$ is used by all standard profiles.
-        // $UNSUPPORTED_WORKLOAD_TYPES$ expands to a workload_type exclusion filter.
+        // $UNSUPPORTED_WORKLOAD_TYPES$ expands to a filter that starts with ", " — the leading
+        // comma is cleaned up by the {, normalisation below.
         metricQuery = metricQuery
                 .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
                         String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT))
                 .replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE,
                         AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
 
-        // Normalize leading-comma edge cases in selectors (e.g. {, filter} -> {filter}).
+        // Normalise the open-brace boundary only: getUnsupportedWorkloadTypesFilter() always
+        // starts with ", " so after substitution a selector can become {, workload_type!~"..."}.
+        // Restrict to {, so quoted label values are never touched.
         metricQuery = metricQuery.replaceAll("\\{,\\s*", "{");
 
         try {
