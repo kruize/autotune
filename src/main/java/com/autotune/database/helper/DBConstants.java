@@ -87,6 +87,7 @@ public class DBConstants {
         public static final String SELECT_FROM_METADATA_PROFILE_BY_NAME = "from KruizeLMMetadataProfileEntry k WHERE k.name = :name";
         public static final String SELECT_FROM_LAYER = "from KruizeLMLayerEntry";
         public static final String SELECT_FROM_LAYER_BY_NAME = "from KruizeLMLayerEntry k WHERE k.layer_name = :layerName";
+        public static final String DELETE_FROM_LAYER_BY_NAME = "DELETE FROM KruizeLMLayerEntry k WHERE k.layer_name = :layerName";
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
