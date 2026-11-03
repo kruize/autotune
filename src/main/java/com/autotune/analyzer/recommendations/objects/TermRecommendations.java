@@ -116,6 +116,12 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         return null;
     }
 
+    public MappedRecommendationForModel getStabilityRecommendations() {
+        if (null != this.recommendationForModelHashMap && this.recommendationForModelHashMap.containsKey(KruizeConstants.JSONKeys.STABILITY))
+            return this.recommendationForModelHashMap.get(KruizeConstants.JSONKeys.STABILITY);
+        return null;
+    }
+
     public void addNotification(RecommendationNotification recommendationNotification) {
         if (null == this.termLevelNotificationMap)
             this.termLevelNotificationMap = new HashMap<>();
