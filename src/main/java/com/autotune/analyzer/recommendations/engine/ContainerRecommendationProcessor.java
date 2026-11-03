@@ -234,6 +234,10 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE);
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY)) {
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_STABILITY_RECOMMENDATIONS_AVAILABLE);
                     } else if (null != model.getModelName()) {
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
