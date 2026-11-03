@@ -229,6 +229,7 @@ public class Terms {
             case SHORT_TERM -> SHORT_TERM_HOURS;
             case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
             case LONG_TERM -> LONG_TERM_HOURS;
+            case FLEX_TERM -> FLEX_TERM_HOURS;
             default -> throw new IllegalStateException("Unexpected value: " + termValue);
         };
     }

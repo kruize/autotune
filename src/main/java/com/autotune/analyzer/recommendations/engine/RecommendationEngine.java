@@ -52,6 +52,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
 import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationConstants.PERFORMANCE_RECOMMENDATION_TUNABLES;
+import static com.autotune.utils.KruizeConstants.StabilityBasedRecommendationConstants.STABILITY_RECOMMENDATION_TUNABLES;
 
 public class RecommendationEngine implements RecommendationEngineService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
@@ -95,6 +96,18 @@ public class RecommendationEngine implements RecommendationEngineService {
         registerModel(performanceBasedRecommendationModel);
     }
 
+    /**
+     * Loads all three models (cost, performance, stability) for the mixed-term case where
+     * flex is combined with other terms (short/medium/long) and no explicit model is specified.
+     * The processors will apply per-term filtering: stability for flex_term, cost+perf for others.
+     */
+    private void loadAllRecommendationModels() {
+        recommendationModels = new ArrayList<>();
+        registerModel(new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES));
+        registerModel(new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES));
+        registerModel(new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES));
+    }
+
     private void loadDefaultRecommendationModelForAutoAndRecreate() {
         // create performance model by default
         recommendationModels = new ArrayList<>();
@@ -125,6 +138,9 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // Todo: add custom performance parameters over here from the user inputs
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
+            }  else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
+                StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES);
+                registerModel(stabilityBasedRecommendationModel);
             } else {
                 // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
@@ -303,8 +319,28 @@ public class RecommendationEngine implements RecommendationEngineService {
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
-                    // default for monitoring
-                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                    // No term specified — derive the right term set from the requested models.
+                    List<String> configuredModels = (kruizeObject.getRecommendation_settings() != null
+                            && kruizeObject.getRecommendation_settings().getModelSettings() != null
+                            && kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null)
+                            ? kruizeObject.getRecommendation_settings().getModelSettings().getModels()
+                            : Collections.emptyList();
+                    boolean hasStability = configuredModels.contains(KruizeConstants.JSONKeys.STABILITY);
+                    boolean hasOtherModels = configuredModels.stream().anyMatch(m ->
+                            KruizeConstants.JSONKeys.COST.equalsIgnoreCase(m) ||
+                            KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(m));
+
+                    if (hasStability && hasOtherModels) {
+                        // stability + cost/perf with no terms → all four terms (short/medium/long + flex);
+                        // processors route stability→flex_term, cost/perf→regular terms.
+                        KruizeObject.setAllTermsIncludingFlex(terms, kruizeObject);
+                    } else if (hasStability) {
+                        // stability-only with no term → auto-default to flex term.
+                        KruizeObject.setFlexTerm(terms, kruizeObject);
+                    } else {
+                        // default for monitoring (cost/perf or no model specified)
+                        KruizeObject.setDefaultTerms(terms, kruizeObject);
+                    }
                 } else {
                     // Process terms
                     KruizeObject.setCustomTerms(terms, kruizeObject);
@@ -342,9 +378,27 @@ public class RecommendationEngine implements RecommendationEngineService {
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
-                    // recommendation setting are null -> use default values
-                    // both cost and perf model to be called
-                    loadDefaultRecommendationModels();
+                    // No model specified — derive the right model set from the requested terms.
+                    List<String> configuredTerms = (kruizeObject.getRecommendation_settings() != null
+                            && kruizeObject.getRecommendation_settings().getTermSettings() != null
+                            && kruizeObject.getRecommendation_settings().getTermSettings().getTerms() != null)
+                            ? kruizeObject.getRecommendation_settings().getTermSettings().getTerms()
+                            : Collections.emptyList();
+                    boolean isMixedFlexCase = configuredTerms.contains(KruizeConstants.JSONKeys.FLEX)
+                            && configuredTerms.size() > 1;
+                    boolean isFlexOnlyTerm = configuredTerms.size() == 1
+                            && configuredTerms.contains(KruizeConstants.JSONKeys.FLEX);
+                    if (isMixedFlexCase) {
+                        // flex + other terms, no model → load all three; processors filter per-term.
+                        loadAllRecommendationModels();
+                    } else if (isFlexOnlyTerm) {
+                        // flex-only term, no model → auto-default to stability model.
+                        loadCustomRecommendationModels(
+                                Collections.singletonList(KruizeConstants.JSONKeys.STABILITY), Collections.emptyMap());
+                    } else {
+                        // default: both cost and perf model
+                        loadDefaultRecommendationModels();
+                    }
                 } else {
                     // models present
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
@@ -499,12 +553,13 @@ public class RecommendationEngine implements RecommendationEngineService {
         // Remove whitespaces
         recommendationTerm = recommendationTerm.trim();
 
-        // Check if term is not empty and also must be one of short, medium or long term
+        // Check if term is not empty and also must be one of short, medium, long or flex term
         if (recommendationTerm.isEmpty() ||
                 (
                         !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM) &&
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.FLEX_TERM)
                 )
         ) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
