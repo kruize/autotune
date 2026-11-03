@@ -30,8 +30,12 @@ demo=all
 target="crc"
 KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 KRUIZE_OPERATOR_IMAGE=""
+KRUIZE_OPTIMIZER_IMAGE=""
 KRUIZE_OPERATOR=1
-KRUIZE_OPERATOR_BRANCH="mvp_demo"
+export KRUIZE_OPERATOR_BRANCH="mvp_demo"
+export AUTOTUNE_BRANCH="mvp_demo"
+export KRUIZE_OPTIMIZER_BRANCH="mvp_demo"
+export BENCHMARKS_BRANCH=""
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
@@ -41,10 +45,11 @@ WAIT_TIME=20
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [-s Kruize operator branch] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [-p Kruize optimizer image] [-s Kruize operator branch] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k] [-f] [-w wait time for metrics for bulk demo] [--branch <branch>] [--autotune-branch <branch>] [--operator-branch <branch>] [--optimizer-branch <branch>] [--benchmarks-branch <branch>]"
 	echo "c = supports minikube, kind and openshift cluster-type"
 	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
 	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
+	echo "p = Kruize optimizer image. Default - It will use the latest kruize optimizer image"
 	echo "s = Kruize operator git repo branch. Default - mvp_demo"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
@@ -53,6 +58,11 @@ function usage() {
 	echo "k = Disable operator and install kruize using deploy scripts instead."
 	echo "f = Sets up minikube/kind clusters"
 	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default ${WAIT_TIME} secs"
+	echo "--branch             = Sets branch for autotune, operator, optimizer and benchmarks repos"
+	echo "--autotune-branch    = Autotune git repo branch. Default - mvp_demo"
+	echo "--operator-branch    = Kruize operator git repo branch (same as -s). Default - mvp_demo"
+	echo "--optimizer-branch   = Kruize optimizer git repo branch. Default - mvp_demo"
+	echo "--benchmarks-branch  = Benchmarks git repo branch. Default - empty"
 	exit 1
 }
 
@@ -327,6 +337,23 @@ function run_demo() {
 				CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
 			fi
 		fi
+		if [ "${KRUIZE_OPERATOR_BRANCH}" != "" ]; then
+			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+				CMD+=( -s ${KRUIZE_OPERATOR_BRANCH})
+			fi
+		fi
+	fi
+
+	if [ "${AUTOTUNE_BRANCH}" != "" ]; then
+		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+			CMD+=( --autotune-branch ${AUTOTUNE_BRANCH})
+		fi
+	fi
+
+	if [ "${BENCHMARKS_BRANCH}" != "" ]; then
+		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+			CMD+=( --benchmarks-branch ${BENCHMARKS_BRANCH})
+		fi
 	fi
 
 	if [[ "${CLUSTER_TYPE}" == minikube || "${CLUSTER_TYPE}" == "kind" ]]; then
@@ -350,6 +377,12 @@ function run_demo() {
 	fi
 
 	if [ "${DEMO_NAME}" == "optimizer" ]; then
+		if [ "${KRUIZE_OPTIMIZER_IMAGE}" != "" ]; then
+			CMD+=( -p ${KRUIZE_OPTIMIZER_IMAGE})
+		fi
+		if [ "${KRUIZE_OPTIMIZER_BRANCH}" != "" ]; then
+			CMD+=( --optimizer-branch ${KRUIZE_OPTIMIZER_BRANCH})
+		fi
 		CMD+=( --skip-app)
 	fi
 
@@ -453,9 +486,59 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:w:r:i:o:s:a:b:t:fkh gopts
+while getopts c:w:r:i:o:p:s:a:b:t:fkh-: gopts
 do
 	case ${gopts} in
+	-)
+		case "${OPTARG}" in
+			branch=*)
+				val="${OPTARG#*=}"
+				export AUTOTUNE_BRANCH="${val}"
+				export KRUIZE_OPERATOR_BRANCH="${val}"
+				export KRUIZE_OPTIMIZER_BRANCH="${val}"
+				export BENCHMARKS_BRANCH="${val}"
+				;;
+			branch)
+				val="${!OPTIND}"; OPTIND=$((OPTIND + 1))
+				export AUTOTUNE_BRANCH="${val}"
+				export KRUIZE_OPERATOR_BRANCH="${val}"
+				export KRUIZE_OPTIMIZER_BRANCH="${val}"
+				export BENCHMARKS_BRANCH="${val}"
+				;;
+			autotune-branch=*)
+				export AUTOTUNE_BRANCH="${OPTARG#*=}"
+				;;
+			autotune-branch)
+				val="${!OPTIND}"; OPTIND=$((OPTIND + 1))
+				export AUTOTUNE_BRANCH="${val}"
+				;;
+			operator-branch=*)
+				export KRUIZE_OPERATOR_BRANCH="${OPTARG#*=}"
+				;;
+			operator-branch)
+				val="${!OPTIND}"; OPTIND=$((OPTIND + 1))
+				export KRUIZE_OPERATOR_BRANCH="${val}"
+				;;
+			optimizer-branch=*)
+				export KRUIZE_OPTIMIZER_BRANCH="${OPTARG#*=}"
+				;;
+			optimizer-branch)
+				val="${!OPTIND}"; OPTIND=$((OPTIND + 1))
+				export KRUIZE_OPTIMIZER_BRANCH="${val}"
+				;;
+			benchmarks-branch=*)
+				export BENCHMARKS_BRANCH="${OPTARG#*=}"
+				;;
+			benchmarks-branch)
+				val="${!OPTIND}"; OPTIND=$((OPTIND + 1))
+				export BENCHMARKS_BRANCH="${val}"
+				;;
+			*)
+				echo "Invalid option: --${OPTARG}"
+				usage
+				;;
+		esac
+		;;
 	c)
 		CLUSTER_TYPE=${OPTARG}
 		;;
@@ -471,8 +554,11 @@ do
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
 		;;
+	p)
+		export KRUIZE_OPTIMIZER_IMAGE="${OPTARG}"
+		;;
 	s)
-		KRUIZE_OPERATOR_BRANCH="${OPTARG}"
+		export KRUIZE_OPERATOR_BRANCH="${OPTARG}"
 		;;
 	a)
 		KRUIZE_DEMOS_REPO="${OPTARG}"		
