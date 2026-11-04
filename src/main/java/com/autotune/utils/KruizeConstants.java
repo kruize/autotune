@@ -298,6 +298,7 @@ public class KruizeConstants {
         public static final String PROFILE_BASED = "profile_based";
         public static final String COST = "cost";
         public static final String PERFORMANCE = "performance";
+        public static final String STABILITY = "stability";
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String RECOMMENDATION_MODELS = "recommendation_models";
