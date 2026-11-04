@@ -17,9 +17,13 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
+import com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationScope;
+import com.autotune.analyzer.recommendations.model.RecommendationModel;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
@@ -27,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -187,6 +192,71 @@ public abstract class BaseRecommendationProcessor {
         }
 
         return new CurrentConfigValues(currentCPURequest, currentCPULimit, currentMemRequest, currentMemLimit);
+    }
+
+    /**
+     * Classifies a resource into its elementary scope state from its requests variation.
+     * Precondition: variation.amount has already been threshold-snapped by RecommendationEngine,
+     * so 0.0 means within threshold.
+     *
+     * @param variationItem the requests variation of the resource, may be null
+     * @param isIdle        true if the resource is idle (CPU only)
+     */
+    protected RecommendationScope classifyResource(RecommendationConfigItem variationItem, boolean isIdle) {
+        if (isIdle) return RecommendationScope.IDLE;
+        if (null == variationItem || null == variationItem.getAmount()) return RecommendationScope.OPTIMISED;
+        double amount = variationItem.getAmount();
+        if (amount > 0.0) return RecommendationScope.UNDER_PROVISIONED;
+        if (amount < 0.0) return RecommendationScope.OVER_PROVISIONED;
+        return RecommendationScope.OPTIMISED;
+    }
+
+    /**
+     * Resolves the effective scopes: the user-provided resource_scope_settings if present, else the model default.
+     * Call once per model, outside the per-recommendation work.
+     * <p>
+     * The user-provided lists are re-parsed into a fresh object rather than trusting the parsed sets on the stored
+     * one, because Gson bypasses setters and an experiment reloaded from the DB has unparsed (null) sets.
+     */
+    protected ResourceScopeSettings resolveEffectiveScopes(RecommendationSettings settings, RecommendationModel model) {
+        if (null != settings && null != settings.getResourceScopeSettings()) {
+            ResourceScopeSettings userScopes = settings.getResourceScopeSettings();
+            ResourceScopeSettings effective = new ResourceScopeSettings(userScopes.getCpu(), userScopes.getMemory());
+            effective.parse();
+            return effective;
+        }
+        return model.getDefaultResourceScopeSettings();
+    }
+
+    /**
+     * Returns true if the recommendation satisfies the effective scopes.
+     * Per-resource AND logic: every constrained resource must match. A null set means the key was absent,
+     * i.e. unconstrained, and always passes.
+     * <p>
+     * The idle state is read from the model's own notifications (NOTICE_CPU_RECORDS_ARE_IDLE), where the engine
+     * adds it; it is not present in the term level notifications.
+     */
+    protected boolean isRecommendationInScope(MappedRecommendationForModel rec, ResourceScopeSettings effectiveScopes) {
+        EnumSet<RecommendationScope> cpuScopes = effectiveScopes.getParsedCpuScopes();
+        EnumSet<RecommendationScope> memScopes = effectiveScopes.getParsedMemoryScopes();
+
+        boolean cpuAll = null == cpuScopes || cpuScopes.contains(RecommendationScope.ALL);
+        boolean memAll = null == memScopes || memScopes.contains(RecommendationScope.ALL);
+        if (cpuAll && memAll) return true; // fast path, nothing to filter
+
+        boolean isCpuIdle = null != rec.getNotificationHashMap()
+                && rec.getNotificationHashMap().containsKey(RecommendationConstants.NotificationCodes.NOTICE_CPU_RECORDS_ARE_IDLE);
+
+        RecommendationScope cpuState = RecommendationScope.OPTIMISED;
+        RecommendationScope memState = RecommendationScope.OPTIMISED;
+        if (null != rec.getVariation() && null != rec.getVariation().getRequests()) {
+            cpuState = classifyResource(rec.getVariation().getRequests().get(AnalyzerConstants.RecommendationItem.CPU), isCpuIdle);
+            memState = classifyResource(rec.getVariation().getRequests().get(AnalyzerConstants.RecommendationItem.MEMORY), false);
+        } else if (isCpuIdle) {
+            cpuState = RecommendationScope.IDLE;
+        }
+
+        return (cpuAll || cpuScopes.contains(cpuState)) && (memAll || memScopes.contains(memState));
     }
 
     /**

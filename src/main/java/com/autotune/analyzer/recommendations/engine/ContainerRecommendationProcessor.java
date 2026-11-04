@@ -18,6 +18,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
 import com.autotune.analyzer.recommendations.model.RecommendationModel;
@@ -220,6 +221,16 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                             monitoringStartTime, model, containerData, monitoringEndTime, kruizeObject, currentConfig, termsEntry);
 
                     if (null == mappedRecommendationForModel) continue;
+
+                    // Drop the model's recommendation if it is outside the resource scope (user-provided or model default).
+                    // Note: if every model of every term is dropped, recommendationAvailable stays false and the caller
+                    // reports INFO_NOT_ENOUGH_DATA, as no recommendation is available for the requested scope.
+                    ResourceScopeSettings effectiveScopes = resolveEffectiveScopes(kruizeObject.getRecommendation_settings(), model);
+                    if (!isRecommendationInScope(mappedRecommendationForModel, effectiveScopes)) {
+                        LOGGER.debug("[{}] {} recommendation for model {} is outside the resource scope, skipping",
+                                kruizeObject.getExperimentName(), recommendationTerm, model.getModelName());
+                        continue;
+                    }
 
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
