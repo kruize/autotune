@@ -81,19 +81,4 @@ These set of queries fetch list of namespaces, workloads and containers for spec
 | containersForAdditionalLabel | sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) <br/> * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m])) |
 
 
-### Supported query placeholders
-
-Metadata profile query templates can use the following `$...$` placeholders, which are substituted at runtime:
-
-| Placeholder                      | Substituted by                       | Notes                                                                                                              |
-|----------------------------------|--------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `$MEASUREMENT_DURATION_IN_MIN$`  | Measurement duration (integer)       | Used in all profiles.                                                                                              |
-| `$UNSUPPORTED_WORKLOAD_TYPES$`   | Workload type exclusion filters      | Used in all profiles.                                                                                              |
-| `$NAMESPACE_FILTERS$`            | Namespace include/exclude filters    | Bulk profiles only.                                                                                                |
-| `$WORKLOAD_FILTERS$`             | Workload include/exclude filters     | Bulk profiles only.                                                                                                |
-| `$CONTAINER_FILTERS$`            | Container include/exclude filters    | Bulk profiles only.                                                                                                |
-| `$LABELS$`                       | Pod label filters                    | Bulk profiles only.                                                                                                |
-
-> **Important:** All filter placeholders (`$UNSUPPORTED_WORKLOAD_TYPES$`, `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$`) produce values that already include a leading `, `. Do not add a preceding comma before these placeholders in query templates. Separate them from adjacent filters using a space only.
-
 * #####  Refer [REST APIs doc](/design/MetadataProfileAPI.md) supported for more details.
