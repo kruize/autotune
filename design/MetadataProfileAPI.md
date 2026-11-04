@@ -290,7 +290,7 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{$NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       },
@@ -302,7 +302,19 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
+      },
+      {
+        "name": "workloadsWithPodLabelFilter",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "sum",
+            "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       },
@@ -314,7 +326,7 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       }
@@ -369,48 +381,14 @@ Kruize metadata profile queries support a set of `$...$` placeholder tokens that
 
 The following table lists every placeholder Kruize recognises. Adding any other `$...$` token to a query will cause a validation error.
 
-| Placeholder | Where valid | Applied to query templates | Substituted by | Description |
-|---|---|---|---|---|
-| `$NAMESPACE_FILTERS$` | Bulk profiles only | `namespacesForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` at import time | Expands to a PromQL label selector that filters by the requested namespaces (include/exclude lists from the import request). |
-| `$WORKLOAD_FILTERS$` | Bulk profiles only | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` at import time | Expands to a PromQL label selector that filters by the requested workloads. |
-| `$CONTAINER_FILTERS$` | Bulk profiles only | `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` at import time | Expands to a PromQL label selector that filters by the requested containers. |
-| `$LABELS$` | Bulk profiles only | `workloadsWithPodLabelFilter` | `DataSourceMetadataOperator` at import time | Expands to a PromQL label selector derived from the pod label filter in the import request. |
-| `$MEASUREMENT_DURATION_IN_MIN$` | Bulk profiles **and** update payloads | All query templates | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Replaced with the measurement duration in minutes (e.g. `15`). Used inside range-vector brackets: `[$MEASUREMENT_DURATION_IN_MIN$m]`. |
-| `$UNSUPPORTED_WORKLOAD_TYPES$` | Bulk profiles **and** update payloads | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Expands to a `workload_type!~"..."` filter that excludes unsupported workload types (DeploymentConfig, ConfigMap, CatalogSource). |
-
-### Bulk-only vs update-payload queries
-
-| Profile type | Used by | Bulk-only placeholders allowed | Template variables allowed |
-|---|---|---|---|
-| **Bulk metadata profile** (`createMetadataProfile`) | `DataSourceMetadataOperator` during `dsmetadata` import | ✅ `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$` | ✅ `$MEASUREMENT_DURATION_IN_MIN$`, `$UNSUPPORTED_WORKLOAD_TYPES$` |
-| **Update payload** (`updateMetadataProfile`) | Validated immediately against the live datasource | ❌ Not permitted (see below) | ✅ `$MEASUREMENT_DURATION_IN_MIN$`, `$UNSUPPORTED_WORKLOAD_TYPES$` |
-
-**Update payloads must not contain bulk-only placeholders** because Kruize validates each query by running it against the datasource immediately. Bulk-only placeholders are only meaningful at data-gathering time when the import request provides the filter values; they have no defined value during an update call.
-
-> **Stored vs validated form:** `$MEASUREMENT_DURATION_IN_MIN$` and `$UNSUPPORTED_WORKLOAD_TYPES$` are substituted *only for the purpose of validation* — they are expanded temporarily to execute the query against Prometheus, but the profile is saved to the database with the original placeholder tokens intact. Substitution at query execution time is handled by `DataSourceMetadataOperator`.
-
-### Validation behaviour
-
-When `updateMetadataProfile` receives a payload, Kruize validates each query as follows:
-
-1. **Bulk-only placeholder check** — if the query contains `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, or `$LABELS$`, the request is rejected with HTTP 400:
-   ```
-   Query for metric 'namespacesForAdditionalLabel' contains bulk-only placeholder(s) [$NAMESPACE_FILTERS$]
-   that are not valid in updateMetadata payloads.
-   ```
-
-2. **Unknown placeholder check** — if the query contains any `$...$` token that Kruize does not recognise at all, the request is rejected with HTTP 400:
-   ```
-   Query for metric 'namespacesForAdditionalLabel' contains unknown placeholder(s) [$CLUSTER_FILTERS$]
-   that are not recognised by Kruize. Add the placeholder to KruizeConstants.KRUIZE_BULK_API.SUPPORTED_PLACEHOLDERS
-   or remove it from the query.
-   ```
-
-3. **Template variable substitution (validation only)** — `$MEASUREMENT_DURATION_IN_MIN$` and `$UNSUPPORTED_WORKLOAD_TYPES$` are substituted with representative values *only for the purpose of running the validation query against Prometheus*. The profile is stored with these placeholders unchanged.
-
-4. **Sum-by clause check** — the query must contain a `sum by (...)` clause whose label set matches one of the expected identifier patterns (namespace, workload/workload_type, container/image).
-
-5. **Live datasource execution** — the substituted query is executed against the configured datasource. A Prometheus 400 or empty result set causes a validation error.
+| Placeholder                     | Where valid                           | Applied to query templates                                                                    | Substituted by                                                                                      | Description                                                                                                                           |
+|---------------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `$NAMESPACE_FILTERS$`           | Bulk profiles only                    | `namespacesForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested namespaces (include/exclude lists from the import request).          |
+| `$WORKLOAD_FILTERS$`            | Bulk profiles only                    | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested workloads.                                                           |
+| `$CONTAINER_FILTERS$`           | Bulk profiles only                    | `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested containers.                                                          |
+| `$LABELS$`                      | Bulk profiles only                    | `workloadsWithPodLabelFilter`                                                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector derived from the pod label filter in the import request.                                           |
+| `$MEASUREMENT_DURATION_IN_MIN$` | Bulk profiles **and** update payloads | All query templates                                                                           | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Replaced with the measurement duration in minutes (e.g. `15`). Used inside range-vector brackets: `[$MEASUREMENT_DURATION_IN_MIN$m]`. |
+| `$UNSUPPORTED_WORKLOAD_TYPES$`  | Bulk profiles **and** update payloads | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Expands to a `workload_type!~"..."` filter that excludes unsupported workload types (DeploymentConfig, ConfigMap, CatalogSource).     |
 
 ### Adding a new placeholder
 
@@ -433,7 +411,7 @@ This is quick guide instructions to update metadata profile as follows.
 |-----------|--------|----------|----------------------------------|
 | name      | string | required | The name of the metadata profile |
 
-> **Note:** Bulk-only placeholders (`$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$`) are **not permitted** in update payloads — they have no value outside a data-import call. The template variables `$MEASUREMENT_DURATION_IN_MIN$` and `$UNSUPPORTED_WORKLOAD_TYPES$` **are** allowed; they are substituted temporarily for query validation but stored as placeholders in the database. See [Query Placeholders](#query-placeholders) for details.
+> **Note:** All filter placeholders (`$UNSUPPORTED_WORKLOAD_TYPES$`, `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$`) produce values that already include a leading `, `. Do not add a preceding comma before these placeholders in query templates. Separate them from adjacent filters using a space only.
 
 **Request with name query parameter**
 
@@ -470,7 +448,7 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{$NAMESPACE_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
@@ -482,7 +460,7 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\", workload=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
@@ -494,7 +472,7 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\", workload=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
@@ -506,7 +484,7 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\", container!=\"\", container=\"kruize\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     }
@@ -532,34 +510,3 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
 
 </details>
 
-### Error Responses
-
-<details>
-<summary><b>Bulk-only placeholder in update payload (HTTP 400)</b></summary>
-
-```json
-{
-  "message": "Validation failed: Query for metric 'namespacesForAdditionalLabel' contains bulk-only placeholder(s) [$NAMESPACE_FILTERS$] that are not valid in updateMetadata payloads. The updateMetadata API requires pre-expanded queries.",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
-}
-```
-
-</details>
-
-<details>
-<summary><b>Unknown placeholder in query (HTTP 400)</b></summary>
-
-```json
-{
-  "message": "Validation failed: Query for metric 'namespacesForAdditionalLabel' contains unknown placeholder(s) [$CLUSTER_FILTERS$] that are not recognised by Kruize. Add the placeholder to KruizeConstants.KRUIZE_BULK_API.SUPPORTED_PLACEHOLDERS or remove it from the query.",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
-}
-```
-
-</details>
-
-<br>
