@@ -407,7 +407,7 @@ if __name__ == '__main__':
     exec_time = end_time - start_time
     print(f"Execution time: {exec_time} seconds")
 
-       if failed == 0:
+    if failed == 0:
         sys.exit(0)
     else:
         sys.exit(1)

@@ -17,12 +17,14 @@
 ### Script to run scale test with Kruize in local monitoring mode ##
 #
 
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+CURRENT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-
-# Source the common functions scripts
+# Source the common functions scripts (this file resets CURRENT_DIR/KRUIZE_REPO for its own layout)
 . ${CURRENT_DIR}/../../common/common_functions.sh
+
+# Restore paths relative to this script (repo root is four levels up from bulk_scale_test/)
+CURRENT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+KRUIZE_REPO="$(cd "${CURRENT_DIR}/../../../.." && pwd)"
 
 RESULTS_DIR=kruize_bulk_scale_test_results
 APP_NAME=kruize
@@ -42,7 +44,7 @@ replicas=3
 ds_url="http://thanos-query-frontend-example-query.thanos-operator-system.svc.cluster.local:9090/"
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
+KRUIZE_IMAGE="quay.io/kusumach/autotune_operator:0.12_rc3"
 
 function usage() {
 	echo
@@ -167,8 +169,9 @@ do
 done
 
 start_time=$(get_date)
-LOG_DIR="${RESULTS_DIR}/bulk-scale-test-$(date +%Y%m%d%H%M)"
-mkdir -p ${LOG_DIR}
+# Absolute path: kruize_local_config_patch and deploy run after pushd into KRUIZE_REPO.
+LOG_DIR="${CURRENT_DIR}/${RESULTS_DIR}/bulk-scale-test-$(date +%Y%m%d%H%M)"
+mkdir -p "${LOG_DIR}"
 
 LOG="${LOG_DIR}/bulk-scale-test.log"
 
@@ -259,9 +262,9 @@ db_size_mb=$((db_size / (1024 * 1024) + 1))
 echo "Postgres DB size in MB = ${db_size_mb}"
 
 # This should be a computed value
-total_recos_count = 300000
-echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}""
-python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}"
+total_recos_count=300000
+echo "python3 parse_metrics.py -d \"${LOG_DIR}/results\" -r \"${total_recos_count}\""
+python3 parse_metrics.py -d "${LOG_DIR}/results" -r "${total_recos_count}"
 
 echo "###########################################################################"
 echo ""
