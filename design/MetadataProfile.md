@@ -88,11 +88,11 @@ Metadata profile query templates can use the following `$...$` placeholders, whi
 | Placeholder                      | Substituted by                       | Notes                                                                                                              |
 |----------------------------------|--------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `$MEASUREMENT_DURATION_IN_MIN$`  | Measurement duration (integer)       | Used in all profiles.                                                                                              |
-| `$UNSUPPORTED_WORKLOAD_TYPES$`   | Workload type exclusion filters      | Substituted value **includes a leading comma** (`, workload_type!~...`). Do not add a comma before this placeholder in the query template — it will result in a double comma and an invalid PromQL query. Use a space instead: `{workload!="" $UNSUPPORTED_WORKLOAD_TYPES$}`. |
-| `$NAMESPACE_FILTERS$`            | Namespace include/exclude filters    | Bulk profiles only. Value includes a leading comma.                                                                |
-| `$WORKLOAD_FILTERS$`             | Workload include/exclude filters     | Bulk profiles only. Value includes a leading comma.                                                                |
-| `$CONTAINER_FILTERS$`            | Container include/exclude filters    | Bulk profiles only. Value includes a leading comma.                                                                |
-| `$LABELS$`                       | Pod label filters                    | Bulk profiles only. Value includes a leading comma.                                                                |
+| `$UNSUPPORTED_WORKLOAD_TYPES$`   | Workload type exclusion filters      | Used in all profiles.                                                                                              |
+| `$NAMESPACE_FILTERS$`            | Namespace include/exclude filters    | Bulk profiles only.                                                                                                |
+| `$WORKLOAD_FILTERS$`             | Workload include/exclude filters     | Bulk profiles only.                                                                                                |
+| `$CONTAINER_FILTERS$`            | Container include/exclude filters    | Bulk profiles only.                                                                                                |
+| `$LABELS$`                       | Pod label filters                    | Bulk profiles only.                                                                                                |
 
 > **Important:** All filter placeholders (`$UNSUPPORTED_WORKLOAD_TYPES$`, `$NAMESPACE_FILTERS$`, `$WORKLOAD_FILTERS$`, `$CONTAINER_FILTERS$`, `$LABELS$`) produce values that already include a leading `, `. Do not add a preceding comma before these placeholders in query templates. Separate them from adjacent filters using a space only.
 
