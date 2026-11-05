@@ -621,3 +621,22 @@ spec:
         - name: nginx-config-volume
           configMap:
             name: nginx-config
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kruize
+  namespace: openshift-tuning
+  labels:
+    app: kruize
+  annotations:
+    haproxy.router.openshift.io/cors-allowed-origins: ""
+    haproxy.router.openshift.io/cors-allowed-methods: "GET, POST"
+    haproxy.router.openshift.io/cors-allowed-headers: "Content-Type, Accept"
+spec:
+  port:
+    targetPort: kruize-port
+  to:
+    kind: Service
+    name: kruize
+    weight: 100
