@@ -1,0 +1,104 @@
+name: Bump Release Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'New release version (e.g. 0.12 or 0.12.0)'
+        required: true
+        type: string
+      target_branch:
+        description: 'Target branch to open PR against (leave blank for currently selected branch)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Target Base Branch
+        id: target
+        run: |
+          TARGET="${{ inputs.target_branch }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="${{ github.ref_name }}"
+          fi
+          echo "branch=${TARGET}" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ steps.target.outputs.branch }}
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Bump Version in pom.xml and Manifests
+        id: bump
+        run: |
+          TARGET="${{ steps.target.outputs.branch }}"
+          
+          # Clean version input (strip leading 'v' and trim whitespace)
+          RAW_NEW_VER="${{ inputs.new_version }}"
+          NEW_VER="${RAW_NEW_VER#v}"
+          NEW_VER="$(echo -e "${NEW_VER}" | tr -d '[:space:]')"
+          
+          # 1. Extract current POM version
+          OLD_VER=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          
+          echo "Target Branch: ${TARGET}"
+          echo "Current Version: ${OLD_VER}"
+          echo "New Version: ${NEW_VER}"
+
+          if [ "${OLD_VER}" = "${NEW_VER}" ]; then
+            echo "::error::Current version (${OLD_VER}) is already equal to target version (${NEW_VER})."
+            exit 1
+          fi
+
+          echo "old_version=${OLD_VER}" >> $GITHUB_OUTPUT
+          echo "new_version=${NEW_VER}" >> $GITHUB_OUTPUT
+
+          # 2. Update Maven POM version
+          mvn versions:set -DnewVersion="${NEW_VER}" -DgenerateBackupPoms=false
+
+          # 3. Update all CRC YAML manifests
+          find manifests/crc -name "*.yaml" -exec sed -i \
+            "s|quay.io/kruize/autotune_operator:${OLD_VER}|quay.io/kruize/autotune_operator:${NEW_VER}|g" {} +
+
+      - name: Verify Build
+        run: mvn clean compile
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          commit-message: |
+            Bump Kruize release version to ${{ steps.bump.outputs.new_version }}
+
+            Signed-off-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          title: "Bump Kruize release version to ${{ steps.bump.outputs.new_version }} [${{ steps.target.outputs.branch }}]"
+          body: |
+            ### Automated Version Bump
+            - **Target Base Branch:** `${{ steps.target.outputs.branch }}`
+            - **Previous Version:** `${{ steps.bump.outputs.old_version }}`
+            - **New Version:** `${{ steps.bump.outputs.new_version }}`
+            
+            #### Changed Files:
+            - `pom.xml`
+            - `manifests/crc/BYODB-installation/minikube/kruize-crc-minikube.yaml`
+            - `manifests/crc/BYODB-installation/openshift/kruize-crc-openshift.yaml`
+            - `manifests/crc/default-db-included-installation/aks/kruize-crc-aks.yaml`
+            - `manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml`
+            - `manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml`
+          base: ${{ steps.target.outputs.branch }}
+          branch: "automated/bump-version"
+          delete-branch: true
