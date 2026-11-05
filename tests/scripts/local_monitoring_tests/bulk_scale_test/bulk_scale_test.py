@@ -49,6 +49,47 @@ def get_server():
         return server
 
 
+def reload_kruize_profile_cache(namespace="openshift-tuning", attempts=5, settle_seconds=5):
+    """
+    createMetricProfile / createMetadataProfile only update in-memory maps on the
+    pod that handled the request. With multiple replicas, other pods keep an empty
+    cache and bulk jobs fail with "Metadata profile not found". Restart all
+    replicas so every pod reloads profiles from the DB before bulk starts.
+    """
+    print("Restarting kruize pods so all replicas reload metric/metadata profiles...")
+    subprocess.run(
+        ["kubectl", "rollout", "restart", "deployment/kruize", "-n", namespace],
+        check=False,
+    )
+    result = subprocess.run(
+        ["kubectl", "rollout", "status", "deployment/kruize", "-n", namespace, "--timeout=180s"],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout.strip() or result.stderr.strip())
+    if result.returncode != 0:
+        print("WARNING: kruize rollout status did not succeed; continuing anyway")
+
+    sleep(settle_seconds)
+
+    for i in range(1, attempts + 1):
+        metric = list_metric_profiles(name="resource-optimization-local-monitoring", verbose=True, logging=False)
+        metadata = list_metadata_profiles(name="cluster-metadata-local-monitoring", verbose=True, logging=False)
+        print(
+            f"Profile reload check {i}/{attempts}: "
+            f"metric={metric.status_code} metadata={metadata.status_code}"
+        )
+        if metric.status_code == 200 and metadata.status_code == 200:
+            print("Metric and metadata profiles visible after reload")
+            return
+        sleep(2)
+
+    print(
+        "WARNING: profiles still not consistently visible after reload; "
+        "bulk jobs may complete with 0 experiments"
+    )
+
+
 def setup_logger(name, log_file, level=logging.INFO):
 
     handler = logging.FileHandler(log_file)
@@ -370,6 +411,8 @@ if __name__ == '__main__':
     print(metadata_profile_json_file) 
     create_metadata_profile(metadata_profile_json_file)
 
+    # Ensure every kruize replica has profiles in memory (multi-replica cache)
+    reload_kruize_profile_cache()
 
     # List datasources
     datasource_name = None
