@@ -197,7 +197,7 @@ spec:
       - name: kube-state-metrics  # <--- Target ONLY this container
         args:
           - --port=8081
-          - --metric-labels-allowlist=pods=[app,com.redhat.component-name,version]
+          - --metric-labels-allowlist=pods=[app,com.redhat.component-name,ibm.runtimes.intelligence.monitoring,version]
 ```
 
 > [!TIP]
