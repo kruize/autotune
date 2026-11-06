@@ -1,4 +1,4 @@
-# KRUIZE TEST PLAN RELEASE 0.11
+# KRUIZE TEST PLAN RELEASE 0.12
 
 - [INTRODUCTION](#introduction)
 - [FEATURES TO BE TESTED](#features-to-be-tested)
@@ -26,7 +26,7 @@ This document describes the test plan for Kruize release 0.12
 
 ## FEATURES TO BE TESTED
 
-* Bulk Profile / Bulk Config CRUD API support with validation, logging, and granular updates
+* Bulk Config CRUD API support with validation, logging, and granular updates
 * Cluster name support in datasources and Bulk API
 * Label filter support in Bulk API with query template substitution for pod label filters
 * Model settings and term settings support in Bulk API
