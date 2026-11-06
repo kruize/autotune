@@ -17,6 +17,7 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
@@ -181,6 +182,16 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
 
                     if (null == mappedRecommendationForModel)
                         continue;
+
+                    // Drop the model's recommendation if it is outside the resource scope (user-provided or model default).
+                    // Note: if every model is dropped for every term, the namespace recommendation is reported as
+                    // not available, as no recommendation exists for the requested scope.
+                    ResourceScopeSettings effectiveScopes = resolveEffectiveScopes(kruizeObject.getRecommendation_settings(), model);
+                    if (!isRecommendationInScope(mappedRecommendationForModel, effectiveScopes)) {
+                        LOGGER.debug("[{}] {} namespace recommendation for model {} is outside the resource scope, skipping",
+                                kruizeObject.getExperimentName(), recommendationTerm, model.getModelName());
+                        continue;
+                    }
 
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
