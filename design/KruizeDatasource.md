@@ -8,6 +8,7 @@ This document describes the datasource configuration options, supported authenti
 2. [Datasource Configuration Structure](#datasource-configuration-structure)
 3. [Supported Authentication Methods](#supported-authentication-methods)
 4. [Certificate Requirements](#certificate-requirements)
+5. [Cluster Configuration](#cluster-configuration)
 ---
 
 ## Overview
@@ -24,13 +25,14 @@ Kruize supports connecting to various monitoring datasources (Prometheus, Thanos
 
 ### Required Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `datasources` | array | Yes | Array of datasource configurations |
-| `datasources[].name` | string | Yes | Name of the datasource instance |
-| `datasources[].provider` | string | Yes | Provider type (e.g., "prometheus") |
-| `datasources[].url` OR `serviceName`+`namespace` | string | Yes | Connection endpoint |
-| `datasources[].authentication` | object | No | Authentication configuration (defaults to "none") |
+| Field                                            | Type   | Required | Description                                            |
+|--------------------------------------------------|--------|----------|--------------------------------------------------------|
+| `datasources`                                    | array  | Yes      | Array of datasource configurations                     |
+| `datasources[].name`                             | string | Yes      | Name of the datasource instance                        |
+| `datasources[].provider`                         | string | Yes      | Provider type (e.g., "prometheus")                     |
+| `datasources[].url` OR `serviceName`+`namespace` | string | Yes      | Connection endpoint                                    |
+| `datasources[].authentication`                   | object | No       | Authentication configuration (defaults to "none")      |
+| `datasources[].clusters`                         | JSON array (stored as JSONB) | No       | Array of cluster name strings associated with this datasource. In JSON configuration this is a plain array of strings (e.g. `["cluster-a"]`); in the database it is persisted as a JSONB column. |
 
 ### URL vs ServiceName
 
@@ -358,11 +360,35 @@ spec:
           secretName: kruize-mtls-certs
 ```
 
+---
+
+## Cluster Configuration
+
+Associate multiple clusters with a single datasource to enable cluster-specific metadata retrieval. This feature allows Kruize to manage datasources that monitor multiple Kubernetes clusters.
+
+> **ℹ️ Note**: The implementation parses, stores, and iterates over all configured clusters. However, this workflow has been designed and validated primarily with single-cluster configurations. Full multi-cluster support is planned for a future release.
+
+### Single Cluster Example
+
+```json
+{
+  "datasources": [
+    {
+      "name": "prometheus-1",
+      "provider": "prometheus",
+      "serviceName": "prometheus-k8s",
+      "namespace": "openshift-monitoring",
+      "clusters": ["default"]
+    }
+  ]
+}
+```
+
 ## Related Documentation
 
 - [Kruize Local API](./KruizeLocalAPI.md)
 
 ---
 
-**Last Updated:** 2026-02-11  
-**Version:** 1.0
+**Last Updated:** 2026-06-18
+**Version:** 1.1

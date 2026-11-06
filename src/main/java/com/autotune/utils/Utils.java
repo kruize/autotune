@@ -24,6 +24,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -39,7 +40,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Contains methods that are of general utility in the codebase
@@ -252,5 +257,56 @@ public class Utils {
                 return null;
             }
         }
+    }
+
+    // Maximum length for a single cluster name (mirrors DNS subdomain limit)
+    private static final int MAX_CLUSTER_NAME_LENGTH = 253;
+
+    /**
+     * Parses a JSONB-backed JsonNode (expected to be a JSON array of strings) into a
+     * {@code List<String>}.
+     * <p>
+     * Each element is validated before inclusion:
+     * <ul>
+     *   <li>Must be a non-null textual node</li>
+     *   <li>Cannot be blank after trimming</li>
+     *   <li>Cannot exceed {@value MAX_CLUSTER_NAME_LENGTH} characters</li>
+     *   <li>Must not be a duplicate (case-sensitive; first occurrence is kept)</li>
+     * </ul>
+     * Invalid or duplicate entries are logged and skipped; the method never returns {@code null}.
+     *
+     * @param clustersNode the JsonNode stored in the {@code clusters} JSONB column
+     * @return list of valid, deduplicated cluster-name strings, never {@code null}
+     */
+    public static List<String> parseClusterList(JsonNode clustersNode) {
+        if (clustersNode == null) {
+            LOGGER.warn("clusters JSONB node is null, returning empty list");
+            return new ArrayList<>();
+        }
+        if (!clustersNode.isArray()) {
+            LOGGER.warn("clusters JSONB node is not an array (was: {}), returning empty list", clustersNode.getNodeType());
+            return new ArrayList<>();
+        }
+        // LinkedHashSet preserves insertion order while eliminating duplicates
+        Set<String> clusters = new LinkedHashSet<>();
+        for (JsonNode node : clustersNode) {
+            if (node == null || !node.isTextual()) {
+                LOGGER.warn("Skipping non-textual cluster entry: {}", node);
+                continue;
+            }
+            String name = node.asText().trim();
+            if (name.isEmpty()) {
+                LOGGER.warn("Skipping blank cluster name entry");
+                continue;
+            }
+            if (name.length() > MAX_CLUSTER_NAME_LENGTH) {
+                LOGGER.warn("Skipping cluster name '{}': exceeds max length of {} characters", name, MAX_CLUSTER_NAME_LENGTH);
+                continue;
+            }
+            if (!clusters.add(name)) {
+                LOGGER.warn("Skipping duplicate cluster name: '{}'", name);
+            }
+        }
+        return new ArrayList<>(clusters);
     }
 }

@@ -15,6 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.kruizeObject.ModelSettings;
+import com.autotune.analyzer.kruizeObject.TermSettings;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,32 @@ public class BulkInput {
     private String metadata_profile;
     private String measurement_duration;
     private String requestId; //TODO: to be used for the Kafka consumer case to map requestID with jobID
+
+    /**
+     * Cluster name to use for all experiments in this bulk job.
+     * If provided, overrides cluster name from datasource metadata.
+     * If not provided, cluster name from metadata will be used.
+     */
+    private String cluster_name;
+
+    /**
+     * Optional model settings to customize which recommendation models to generate.
+     * If not provided, all models will be generated.
+     */
+    private ModelSettings model_settings;
+
+    /**
+     * Optional term settings to customize which recommendation terms to generate.
+     * If not provided, all terms will be generated.
+     */
+    private TermSettings term_settings;
+
+    /**
+     * Experiment types to create in this bulk job (e.g. CONTAINER, NAMESPACE).
+     * If provided, only experiments of the specified type(s) will be created.
+     * If not provided or empty, defaults to container experiments.
+     */
+    private List<AnalyzerConstants.ExperimentType> experiment_types;
 
     // Getters and Setters
 
@@ -47,7 +76,8 @@ public class BulkInput {
     @JsonIgnore
     public boolean isEmpty() {
         return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
-                && datasource == null);
+                && datasource == null && cluster_name == null && model_settings == null && term_settings == null
+                && experiment_types == null);
     }
 
     public TimeRange getTime_range() {
@@ -90,6 +120,41 @@ public class BulkInput {
 
     public void setMeasurement_duration(String measurement_duration) {this.measurement_duration = measurement_duration;}
 
+    public String getCluster_name() {
+        return cluster_name;
+    }
+
+    public void setCluster_name(String cluster_name) {
+        this.cluster_name = cluster_name;
+    }
+
+    public ModelSettings getModel_settings() {
+        return model_settings;
+    }
+
+    public void setModel_settings(ModelSettings model_settings) {
+        this.model_settings = model_settings;
+    }
+
+    public TermSettings getTerm_settings() {
+        return term_settings;
+    }
+
+    public void setTerm_settings(TermSettings term_settings) {
+        this.term_settings = term_settings;
+    }
+
+
+    public List<AnalyzerConstants.ExperimentType> getExperiment_types() {
+        return experiment_types;
+    }
+
+    public void setExperiment_types(List<AnalyzerConstants.ExperimentType> experiment_types) {
+        if (experiment_types != null && !experiment_types.isEmpty()) {
+            this.experiment_types = experiment_types;
+        }
+    }
+
     // Nested class for FilterWrapper that contains 'exclude' and 'include'
     public static class FilterWrapper {
         private Filter exclude;
@@ -117,7 +182,7 @@ public class BulkInput {
         private List<String> namespace;
         private List<String> workload;
         private List<String> containers;
-        private Map<String, String> labels;
+        private Map<String, Object> labels;
 
         // Getters and Setters
         public List<String> getNamespace() {
@@ -144,11 +209,11 @@ public class BulkInput {
             this.containers = containers;
         }
 
-        public Map<String, String> getLabels() {
+        public Map<String, Object> getLabels() {
             return labels;
         }
 
-        public void setLabels(Map<String, String> labels) {
+        public void setLabels(Map<String, Object> labels) {
             this.labels = labels;
         }
     }

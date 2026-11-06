@@ -57,6 +57,7 @@ public class Analyzer {
         context.addServlet(ListDatasources.class, ServerContext.LIST_DATASOURCES);
         context.addServlet(DSMetadataService.class, ServerContext.DATASOURCE_METADATA);
         context.addServlet(BulkService.class, ServerContext.BULK_SERVICE);
+        context.addServlet(BulkConfigService.class, ServerContext.BULK_CONFIG_SERVICE);
         context.addServlet(MetadataProfileService.class, ServerContext.CREATE_METADATA_PROFILE);
         context.addServlet(MetadataProfileService.class, ServerContext.LIST_METADATA_PROFILES);
         context.addServlet(MetadataProfileService.class, ServerContext.DELETE_METADATA_PROFILE);

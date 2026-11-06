@@ -5,7 +5,7 @@ import com.autotune.utils.KruizeConstants;
 public class AuthenticationStrategyFactory {
 
     public static AuthenticationStrategy createAuthenticationStrategy(AuthenticationConfig authConfig) {
-        AuthType type = authConfig.getType();
+        AuthType type = (authConfig != null && authConfig.getType() != null) ? authConfig.getType() : AuthType.NONE;
         switch (type) {
             case NONE:
                 return new NoAuthStrategy();

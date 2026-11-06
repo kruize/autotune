@@ -16,7 +16,13 @@
 
 package com.autotune.database.table;
 
+import com.autotune.utils.Utils;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.List;
 
 /**
  * This is a Java class named KruizeDataSourceEntry annotated with JPA annotations.
@@ -42,6 +48,12 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
+
+    /** JSONB array of cluster names, e.g. {@code ["cluster-a","cluster-b"]}. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private JsonNode clusters;
+
     @ManyToOne(cascade = CascadeType.PERSIST) // Cascade PERSIST to auto-save authentication entry
     @JoinColumn(name = "authentication_id", nullable = false) // Foreign key column in the datasource table
     private KruizeAuthenticationEntry kruizeAuthenticationEntry;
@@ -100,5 +112,23 @@ public class KruizeDataSourceEntry {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public JsonNode getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(JsonNode clusters) {
+        this.clusters = clusters;
+    }
+
+    /**
+     * Returns the clusters JSONB column parsed into a {@code List<String>}.
+     * Delegates to {@link Utils#parseClusterList(JsonNode)}.
+     *
+     * @return list of cluster names; empty list if the column is null or malformed
+     */
+    public List<String> getClusterList() {
+        return Utils.parseClusterList(clusters);
     }
 }
