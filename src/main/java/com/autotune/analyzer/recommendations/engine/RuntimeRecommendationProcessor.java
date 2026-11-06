@@ -94,10 +94,11 @@ public final class RuntimeRecommendationProcessor {
             RecommendationConfigItem recommendationMemLimits) {
 
         List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-        String datasourceName = kruizeObject.getDataSource();
-        if (datasourceName == null) {
-            LOGGER.warn("Datasource missing, skipping runtime recommendations");
-            return null;
+        if (kruizeObject.getDataSource() == null) {
+            if (kruizeObject.getDatasources() == null || kruizeObject.getDatasources().isEmpty()) {
+                LOGGER.warn("Datasource missing, skipping runtime recommendations");
+                return null;
+            }
         }
         Map<String, KruizeLayer> layerMap = containerData.getLayerMap();
         LOGGER.debug("layerMap: {}", new Gson().toJson(layerMap));
