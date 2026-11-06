@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.model;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -25,6 +26,12 @@ public interface RecommendationModel {
 
     Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
     Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> context, ArrayList<RecommendationNotification> notifications);
+
+    /**
+     * Scopes applied when the experiment does not provide resource_scope_settings.
+     * The returned object has its scopes already parsed.
+     */
+    ResourceScopeSettings getDefaultResourceScopeSettings();
 
     public String getModelName();
     void validate();
