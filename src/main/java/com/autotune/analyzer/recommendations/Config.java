@@ -30,11 +30,12 @@ public class Config {
     // resources is a Map of map which wraps requests and limits.
     // New API endpoint make use of this to nest requests and limits under resources in its response.
     @SerializedName(KruizeConstants.JSONKeys.RESOURCES)
-    private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources;
+    private Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> resources;
 
-    // Existing API endpoints use requests and limits as-is
-    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests;
-    private Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits;
+    // Existing API endpoints use requests and limits as-is.
+    // Values may be RecommendationConfigItem (cpu/memory) or MultiResourceRecommendation (accelerators).
+    private Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests;
+    private Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits;
     private List<RecommendationConfigEnv> env;
 
     public Integer getReplicas() {
@@ -45,27 +46,27 @@ public class Config {
         this.replicas = replicas;
     }
 
-    public Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getResources() {
+    public Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> getResources() {
         return resources;
     }
 
-    public void setResources(Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> resources) {
+    public void setResources(Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation>> resources) {
         this.resources = resources;
     }
 
-    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getRequests() {
+    public Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> getRequests() {
         return requests;
     }
 
-    public void setRequests(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests) {
+    public void setRequests(Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests) {
         this.requests = requests;
     }
 
-    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getLimits() {
+    public Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> getLimits() {
         return limits;
     }
 
-    public void setLimits(Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits) {
+    public void setLimits(Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits) {
         this.limits = limits;
     }
 
