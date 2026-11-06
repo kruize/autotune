@@ -84,6 +84,8 @@ public class KruizeSupportedTypes {
 
     public static final Set<String> RUNTIMES_SUPPORTED_DATASOURCES = new HashSet<>(Arrays.asList("thanos-querier"));
 
+    public static final Set<String> DATASOURCES_SUPPORTED = new HashSet<>(Arrays.asList("prometheus", "thanos", "cryostat"));
+
     private KruizeSupportedTypes() {
     }
 }
