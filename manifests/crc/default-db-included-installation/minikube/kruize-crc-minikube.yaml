@@ -292,7 +292,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.11.2
+          image: quay.io/kruize/autotune_operator:0.12
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -372,7 +372,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.11.2
+              image: quay.io/kruize/autotune_operator:0.12
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -514,7 +514,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.11.2
+              image: quay.io/kruize/autotune_operator:0.12
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
