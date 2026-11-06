@@ -8,3 +8,6 @@ __pycache__/
 
 # macOS specific files
 .DS_Store
+
+# Maven build directory
+target/

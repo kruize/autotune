@@ -887,7 +887,8 @@ public class RecommendationEngine implements RecommendationEngineService {
 
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
-            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0 && null != generatedCpuRequest) {
+            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0 && null != generatedCpuRequest
+                    && generatedCpuRequest > 0.0) {
                 double diffCpuRequestPercentage = CommonUtils.getPercentage(generatedCpuRequest, currentCpuRequestValue);
                 // Check if variation percentage is negative
                 if (diffCpuRequestPercentage < 0.0) {
@@ -923,12 +924,28 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
+                } else {
+                    // Threshold exceeded: generatedCpuRequest and currentCpuRequestValue differ
+                    // by more than cpuThreshold percent.  The generatedCpuRequest > 0 guard above
+                    // ensures we never reach here with a degenerate zero recommendation.
+                    // generatedCpuRequest == currentCpuRequestValue → diff == 0 → always optimised,
+                    // so that case cannot land here.
+                    if (generatedCpuRequest > currentCpuRequestValue) {
+                        // Recommended value is higher than current - under-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_UNDER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    } else {
+                        // Recommended value is lower than current - over-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OVER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    }
                 }
             }
         }
 
         if (isRecommendedCPULimitAvailable) {
-            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0 && null != generatedCpuLimit) {
+            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0 && null != generatedCpuLimit
+                    && generatedCpuLimit > 0.0) {
                 double diffCPULimitPercentage = CommonUtils.getPercentage(generatedCpuLimit, currentCpuLimitValue);
                 // Check if variation percentage is negative
                 if (diffCPULimitPercentage < 0.0) {
@@ -963,12 +980,28 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
+                } else {
+                    // Threshold exceeded: generatedCpuLimit and currentCpuLimitValue differ
+                    // by more than cpuThreshold percent.  The generatedCpuLimit > 0 guard above
+                    // ensures we never reach here with a degenerate zero recommendation.
+                    // generatedCpuLimit == currentCpuLimitValue → diff == 0 → always optimised,
+                    // so that case cannot land here.
+                    if (generatedCpuLimit > currentCpuLimitValue) {
+                        // Recommended value is higher than current - under-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_UNDER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    } else {
+                        // Recommended value is lower than current - over-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OVER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    }
                 }
             }
         }
 
         if (isRecommendedMemoryRequestAvailable) {
-            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0 && null != generatedMemRequest) {
+            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0 && null != generatedMemRequest
+                    && generatedMemRequest > 0.0) {
                 double diffMemRequestPercentage = CommonUtils.getPercentage(generatedMemRequest, currentMemRequestValue);
                 // Check if variation percentage is negative
                 if (diffMemRequestPercentage < 0.0) {
@@ -1003,12 +1036,24 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
+                } else {
+                    // Threshold exceeded - add provisioning status notification
+                    if (generatedMemRequest > currentMemRequestValue) {
+                        // Recommended value is higher than current - under-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_UNDER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    } else {
+                        // Recommended value is lower than current - over-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OVER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    }
                 }
             }
         }
 
         if (isRecommendedMemoryLimitAvailable) {
-            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0 && null != generatedMemLimit) {
+            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0 && null != generatedMemLimit
+                    && generatedMemLimit > 0.0) {
                 double diffMemLimitPercentage = CommonUtils.getPercentage(generatedMemLimit, currentMemLimitValue);
                 // Check if variation percentage is negative
                 if (diffMemLimitPercentage < 0.0) {
@@ -1043,6 +1088,17 @@ public class RecommendationEngine implements RecommendationEngineService {
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
+                } else {
+                    // Threshold exceeded - add provisioning status notification
+                    if (generatedMemLimit > currentMemLimitValue) {
+                        // Recommended value is higher than current - under-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_UNDER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    } else {
+                        // Recommended value is lower than current - over-provisioned
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OVER_PROVISIONED);
+                        engineNotifications.add(recommendationNotification);
+                    }
                 }
             }
         }

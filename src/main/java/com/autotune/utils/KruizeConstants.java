@@ -23,6 +23,9 @@ import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -956,7 +959,39 @@ public class KruizeConstants {
         public static final String START_TIME = "start_time";
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
-        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        // Named filter placeholders for query templates ($ wrapped for consistency)
+        public static final String NAMESPACE_FILTERS = "$NAMESPACE_FILTERS$";
+        public static final String WORKLOAD_FILTERS = "$WORKLOAD_FILTERS$";
+        public static final String CONTAINER_FILTERS = "$CONTAINER_FILTERS$";
+        public static final String LABELS = "$LABELS$";
+
+        /**
+         * Central list of ALL $...$ placeholders that Kruize supports across bulk and update profiles.
+         * Bulk-only placeholders (NAMESPACE_FILTERS, WORKLOAD_FILTERS, CONTAINER_FILTERS, LABELS) are
+         * expanded by DataSourceMetadataOperator at data-gathering time and must not appear in
+         * updateMetadata payloads.
+         * Template variables (MEASUREMENT_DURATION_IN_MIN, UNSUPPORTED_WORKLOAD_TYPES) are valid in
+         * both bulk and update profiles and are substituted before query execution.
+         */
+        public static final List<String> SUPPORTED_PLACEHOLDERS = Collections.unmodifiableList(Arrays.asList(
+                NAMESPACE_FILTERS,
+                WORKLOAD_FILTERS,
+                CONTAINER_FILTERS,
+                LABELS,
+                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
+                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE
+        ));
+
+        /**
+         * Placeholders that are valid in updateMetadata payloads (substituted before validation).
+         * Any placeholder in SUPPORTED_PLACEHOLDERS but not here is bulk-only and must not appear
+         * in update payloads.
+         */
+        public static final List<String> UPDATE_PAYLOAD_PLACEHOLDERS = Collections.unmodifiableList(Arrays.asList(
+                AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE,
+                AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE
+        ));
+
         public static final String SUMMARY = "summary";
         public static final String SUMMARY_FILTER = "summaryFilter";
         public static final String EXPERIMENTS = "experiments";
@@ -973,6 +1008,16 @@ public class KruizeConstants {
         public static final String INVALID_TIME_RANGE = "Time range must be between 24 hours and 15 days";
         public static final String INVALID_DATE_FORMAT = "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)";
         public static final String TIME_RANGE_EXCEPTION = "Exception occurred while validating the time range";
+
+        // cluster_name validation
+        /**
+         * Maximum allowed length for a cluster_name value.
+         * 253 is the maximum length of a DNS subdomain as defined in RFC 1123,
+         * which Kubernetes adopts as the upper bound for cluster-scoped identifiers.
+         */
+        public static final int MAX_CLUSTER_NAME_LENGTH = 253;
+        public static final String CLUSTER_NAME_EMPTY = "cluster_name cannot be an empty string";
+        public static final String CLUSTER_NAME_TOO_LONG = "cluster_name is too long (max %d characters, got %d)";
 
 
 
@@ -1085,6 +1130,18 @@ public class KruizeConstants {
             }
 
 
+        }
+
+        public static class LabelFilterConstants {
+            public static final String LOG_LABEL_EXPERIMENT_NAME_ERROR = "Error building label string for experiment name: {}";
+            public static final String LOG_LABEL_ALL_INVALID = "All label entries were invalid or empty — no pod label filter will be applied";
+            public static final String LOG_LABEL_NULL_KEY = "Skipping label with null or empty key";
+            public static final String LOG_LABEL_NULL_VALUE = "Skipping label '{}' with null value";
+            public static final String LOG_LABEL_NULL_LIST_ENTRY = "Skipping null entry in label '{}' list";
+            public static final String LOG_LABEL_NON_STRING_ENTRY = "Skipping non-string entry in label '{}' list: {}";
+            public static final String LOG_LABEL_NO_VALID_VALUES = "Label '{}' has no valid values after filtering, skipping";
+            public static final String LOG_LABEL_EMPTY_VALUE = "Skipping label '{}' with empty string value";
+            public static final String LOG_LABEL_UNSUPPORTED_TYPE = "Skipping label '{}' with unsupported value type: {}";
         }
     }
 

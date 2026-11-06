@@ -82,10 +82,18 @@
 | 323003 |  NOTICE  |       CPU_RECORDS_NOT_AVAILABLE       |               Specifies that the CPU recordings are NOT AVAILABLE               |    CPU metrics are not available, No CPU Recommendations can be generated    | DATA USER |
 | 323004 |  NOTICE  |        CPU_REQUESTS_OPTIMISED         |            Specifies that the workload is optimised wrt CPU REQUESTS            |          Workload is optimised wrt CPU REQUESTS, no changes needed           | DATA USER |
 | 323005 |  NOTICE  |         CPU_LIMITS_OPTIMISED          |             Specifies that the workload is optimised wrt CPU LIMITS             |           Workload is optimised wrt CPU LIMITS, no changes needed            | DATA USER |
+| 323006 |  NOTICE  |    CPU_REQUESTS_UNDER_PROVISIONED     |        Specifies that the workload is under-provisioned for CPU requests        |                Workload is under-provisioned wrt CPU REQUESTS                | DATA USER |
+| 323007 |  NOTICE  |     CPU_REQUESTS_OVER_PROVISIONED     |        Specifies that the workload is over-provisioned for CPU requests         |                Workload is over-provisioned wrt CPU REQUESTS                 | DATA USER |
+| 323008 |  NOTICE  |     CPU_LIMITS_UNDER_PROVISIONED      |         Specifies that the workload is under-provisioned for CPU limits         |                 Workload is under-provisioned wrt CPU LIMITS                 | DATA USER |
+| 323009 |  NOTICE  |      CPU_LIMITS_OVER_PROVISIONED      |         Specifies that the workload is over-provisioned for CPU limits          |                 Workload is over-provisioned wrt CPU LIMITS                  | DATA USER |
 | 324001 |  NOTICE  |        MEMORY_RECORDS_ARE_ZERO        |                  Specifies that the Memory recordings are ZERO                  |       Memory usage is zero, No Memory Recommendations can be generated       | DATA USER |
 | 324002 |  NOTICE  |     MEMORY_RECORDS_NOT_AVAILABLE      |             Specifies that the Memory recordings are NOT AVAILABLE              | Memory metrics are not available, No Memory Recommendations can be generated | DATA USER |
 | 324003 |  NOTICE  |       MEMORY_REQUESTS_OPTIMISED       |          Specifies that the workload is optimised wrt MEMORY REQUESTS           |         Workload is optimised wrt MEMORY REQUESTS, no changes needed         | DATA USER |
 | 324004 |  NOTICE  |        MEMORY_LIMITS_OPTIMISED        |           Specifies that the workload is optimised wrt MEMORY LIMITS            |          Workload is optimised wrt MEMORY LIMITS, no changes needed          | DATA USER |
+| 324005 |  NOTICE  |   MEMORY_REQUESTS_UNDER_PROVISIONED   |      Specifies that the workload is under-provisioned for Memory requests       |              Workload is under-provisioned wrt MEMORY REQUESTS               | DATA USER |
+| 324006 |  NOTICE  |   MEMORY_REQUESTS_OVER_PROVISIONED    |       Specifies that the workload is over-provisioned for Memory requests       |               Workload is over-provisioned wrt MEMORY REQUESTS               | DATA USER |
+| 324007 |  NOTICE  |    MEMORY_LIMITS_UNDER_PROVISIONED    |       Specifies that the workload is under-provisioned for Memory limits        |               Workload is under-provisioned wrt MEMORY LIMITS                | DATA USER |
+| 324008 |  NOTICE  |    MEMORY_LIMITS_OVER_PROVISIONED     |        Specifies that the workload is over-provisioned for Memory limits        |                Workload is over-provisioned wrt MEMORY LIMITS                | DATA USER |
 | 328001 |  NOTICE  |       ACCELERATOR_NOT_SUPPORTED       |       Specifies that the accelerator provided is not supported by kruize        |                    Accelerator is not supported by kruize                    | DATA USER |
 | 423001 | WARNING  |           CPU_LIMIT_NOT_SET           |              Specifies that the CPU Limits are not set for the pod              |                              CPU Limit Not Set                               | DATA USER |
 | 523001 | CRITICAL |          CPU_REQUEST_NOT_SET          |             Specifies that the CPU Requests are not set for the pod             |                             CPU Request Not Set                              | DATA USER |
@@ -131,8 +139,16 @@
 | 221005              |  ERROR   |     NOT_ENOUGH_DATA_FOR_POD_COUNT     |                0                 |          0          |       1        |        0         |
 | 323004              |  NOTICE  |        CPU_REQUESTS_OPTIMISED         |                0                 |          0          |       0        |        1         |
 | 323005              |  NOTICE  |         CPU_LIMITS_OPTIMISED          |                0                 |          0          |       0        |        1         |
+| 323006              |  NOTICE  |    CPU_REQUESTS_UNDER_PROVISIONED     |                0                 |          0          |       0        |        1         |
+| 323007              |  NOTICE  |     CPU_REQUESTS_OVER_PROVISIONED     |                0                 |          0          |       0        |        1         |
+| 323008              |  NOTICE  |     CPU_LIMITS_UNDER_PROVISIONED      |                0                 |          0          |       0        |        1         |
+| 323009              |  NOTICE  |      CPU_LIMITS_OVER_PROVISIONED      |                0                 |          0          |       0        |        1         |
 | 324003              |  NOTICE  |       MEMORY_REQUESTS_OPTIMISED       |                0                 |          0          |       0        |        1         |
 | 324004              |  NOTICE  |        MEMORY_LIMITS_OPTIMISED        |                0                 |          0          |       0        |        1         |
+| 324005              |  NOTICE  |   MEMORY_REQUESTS_UNDER_PROVISIONED   |                0                 |          0          |       0        |        1         |
+| 324006              |  NOTICE  |   MEMORY_REQUESTS_OVER_PROVISIONED    |                0                 |          0          |       0        |        1         |
+| 324007              |  NOTICE  |    MEMORY_LIMITS_UNDER_PROVISIONED    |                0                 |          0          |       0        |        1         |
+| 324008              |  NOTICE  |    MEMORY_LIMITS_OVER_PROVISIONED     |                0                 |          0          |       0        |        1         |
 | 328001              |  NOTICE  |       ACCELERATOR_NOT_SUPPORTED       |                0                 |          0          |       0        |        1         |
 | 221001              |  ERROR   |        NUM_PODS_CANNOT_BE_ZERO        |                0                 |          0          |       0        |        1         |
 | 221002              |  ERROR   |      NUM_PODS_CANNOT_BE_NEGATIVE      |                0                 |          0          |       0        |        1         |
