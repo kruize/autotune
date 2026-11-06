@@ -195,6 +195,10 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE);
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.STABILITY)) {
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_STABILITY_RECOMMENDATIONS_AVAILABLE);
                     } else if (null != model.getModelName()) {
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
