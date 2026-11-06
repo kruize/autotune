@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+import java.util.List;
 
 /**
  * Interface for different layer presence detection strategies
@@ -33,11 +34,11 @@ public interface LayerPresenceDetector {
      * Detect if the layer is present in the given namespace and container
      * @param namespace The Kubernetes namespace to check
      * @param containerName The container name to check (optional, can be null)
-     * @param datasourceName The datasource name to use for detection
+     * @param datasourceNames The datasource names configured for the experiment
      * @return true if the layer is detected, false otherwise
      * @throws Exception if detection fails due to connectivity or other issues
      */
-    boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception;
+    boolean detectPresence(String namespace, String containerName, List<String> datasourceNames) throws Exception;
 
 
 }

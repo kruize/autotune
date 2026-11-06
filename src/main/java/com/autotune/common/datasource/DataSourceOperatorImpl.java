@@ -3,6 +3,7 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.cryostat.CryostatDataOperatorImpl;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.exceptions.datasource.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -27,6 +28,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DataSourceOperatorImpl implements DataSourceOperator {
 
@@ -161,15 +163,18 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
     /**
      * Returns the instance of specific operator class based on provider type
      *
-     * @param provider String containg the name of provider
+     * @param provider String containing the name of provider
      * @return instance of specific operator
      */
     @Override
     public DataSourceOperatorImpl getOperator(String provider) {
-        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            return PrometheusDataOperatorImpl.getInstance();
-        }
-        return null;
+        return switch (provider.toLowerCase()) {
+            case KruizeConstants.SupportedDatasources.PROMETHEUS ->
+                    PrometheusDataOperatorImpl.getInstance();
+            case KruizeConstants.SupportedDatasources.CRYOSTAT ->
+                    CryostatDataOperatorImpl.getInstance();
+            default -> null;
+        };
     }
 
     /**
