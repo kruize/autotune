@@ -34,9 +34,6 @@ This document describes the test plan for Kruize release 0.12
 * Notification support for over/under provisioned workloads
 * Metadata profile validation updates and documentation
 * Exclude Configmap and CatalogSource from workloads while collecting metadata
-* Filter only relevant workloads that are supported by Kruize
-* Resource requests and limits added to apps in all deployment yamls
-* TLS protocol validation unit tests
 
 
 ------
@@ -48,10 +45,6 @@ This document describes the test plan for Kruize release 0.12
 * Allow PUT bulkConfigs with scheduling-only recommendation_settings
 * Revert metadata profile query names to support both bulk and default flows
 * Fix issue with bulk config service when called from optimizer
-* Fix Prometheus metrics not exposed after micrometer 1.17.0 upgrade
-* Security fix: remove credential disclosure and tighten CORS policy (CWE-522)
-* CVE fixes: jackson, micrometer, and Netty version updates
-* Dependabot workflow update to raise PRs against mvp_demo
 
 
 ---
@@ -75,9 +68,6 @@ This document describes the test plan for Kruize release 0.12
 | 3 | MetadataProfile validation tests                                                               | Added unit tests for updateMetadata validation including query classification, Prometheus validation, placeholder handling, and filter injection | [2098](https://github.com/kruize/autotune/pull/2098) | PASSED  |          |
 | 4 | Label filter tests for Bulk API                                                                | Added unit tests for label filter builder, query template substitution, include/exclude filters, key sanitization, and value escaping            | [2045](https://github.com/kruize/autotune/pull/2045) | PASSED  |          |
 | 5 | Cluster name support tests                                                                     | Added comprehensive tests for cluster name validation across REST API, business logic passthrough, DB persistence, and input validation          | [1985](https://github.com/kruize/autotune/pull/1985) | PASSED  |          |
-| 6 | TLS protocol validation unit tests                                                             | Added unit tests for TLS protocol handling validating acceptance of TLS 1.2/1.3 and rejection of legacy protocols                                | [1898](https://github.com/kruize/autotune/pull/1898) | PASSED  |          |
-| 7 | Security: credential disclosure and CORS policy fix (CWE-522)                                  | Verified credentials are not exposed in API responses and CORS policy restricts cross-origin access | [2038](https://github.com/kruize/autotune/pull/2038) | PASSED  | Validated as part of remote monitoring functional tests |
-| 8 | CVE fixes: jackson, micrometer, and Netty dependency updates                                   | Verified no regressions from jackson, micrometer, and Netty version upgrades via functional and stress tests | [2078](https://github.com/kruize/autotune/pull/2078), [2076](https://github.com/kruize/autotune/pull/2076), [2057](https://github.com/kruize/autotune/pull/2057) | PASSED  | No functional regressions observed |
 
 ---
 
