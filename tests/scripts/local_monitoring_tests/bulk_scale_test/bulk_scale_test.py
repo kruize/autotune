@@ -259,6 +259,60 @@ def collect_kruize_metrics(resultsdir, worker_number, server):
     except Exception as e:
         print(f"Failed to collect kruize metrics for worker {worker_number}: {e}")
 
+# Filled from Kruize /datasources at startup — whatever URL was passed via
+# bulk_scale_test.sh --url=... (kubegenX export, real Thanos, prometheus, …).
+datasource_url = ""
+
+
+def wait_for_datasource_ready(logger, timeout_seconds=300, poll_seconds=5):
+    """
+    Probe the Prometheus-compatible datasource already registered with Kruize.
+    No kubegenX / dataset / export names — only the HTTP URL Kruize uses.
+    Probes from the kruize pod so in-cluster Service DNS works.
+    """
+    if not datasource_url:
+        logger.warning("datasource_url unset; skipping readiness probe")
+        return True
+
+    ready_url = datasource_url.rstrip("/") + "/-/ready"
+    query_url = datasource_url.rstrip("/") + "/api/v1/query?query=vector(1)"
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        try:
+            probe = subprocess.run(
+                [
+                    "oc", "exec", "-n", "openshift-tuning", "deploy/kruize", "-c", "kruize", "--",
+                    "curl", "-sf", "--max-time", "5", ready_url,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if probe.returncode != 0:
+                # Some Prom builds lack /-/ready; fall back to a trivial query.
+                probe = subprocess.run(
+                    [
+                        "oc", "exec", "-n", "openshift-tuning", "deploy/kruize", "-c", "kruize", "--",
+                        "curl", "-sf", "--max-time", "5", query_url,
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+            if probe.returncode == 0:
+                logger.info(f"Datasource ready: {datasource_url}")
+                return True
+            logger.warning(
+                f"Datasource not ready ({ready_url}): rc={probe.returncode} "
+                f"err={probe.stderr[-200:]!r}; retrying..."
+            )
+        except Exception as e:
+            logger.warning(f"Datasource readiness probe failed: {e}; retrying...")
+        sleep(poll_seconds)
+    logger.error(f"Datasource not ready after {timeout_seconds}s: {datasource_url}")
+    return False
+
+
 def invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time, worker_number, tsdb_id):
     try:
         scale_log_dir = resultsdir + "/scale_logs"
@@ -273,27 +327,26 @@ def invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, c
         logger = setup_logger(f"logger_{log_id}", log_file)
         logger.info(f"log id = {log_id}")
 
-        # Invoke the bulk service
+        # Optional readiness gate against whatever Prom URL Kruize registered (not dataset-specific).
+        wait_for_datasource_ready(logger, timeout_seconds=120)
+
         logger.info("Invoking bulk service with bulk json")
         bulk_response = post_bulk_api(bulk_json, logger)
-
-        # Obtain the job id from the response from bulk service
         job_id_json = bulk_response.json()
-
         job_id = job_id_json['job_id']
-
-        # Get the bulk job status using the job id
-        return_status = fetch_bulk_job_status(job_id, log_id, logger)
-        return return_status
+        return fetch_bulk_job_status(job_id, log_id, logger)
 
     except Exception as e:
         return {'error': str(e)}
 
 def run_worker(resultsdir, worker_number, worker_configs, current_start_time, current_end_time, tsdb_id, server):
     # A worker invokes the bulk service, one at a time, with each of the configurations assigned to it
-    results = [invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time,
-                                                  worker_number, tsdb_id)
-               for config in worker_configs]
+    results = [
+        invoke_bulk_with_time_range_labels(
+            resultsdir, config, current_start_time, current_end_time, worker_number, tsdb_id
+        )
+        for config in worker_configs
+    ]
 
     # Record the kruize metrics in the worker's csv once it is done with the tsdb block
     collect_kruize_metrics(resultsdir, worker_number, server)
@@ -414,19 +467,27 @@ if __name__ == '__main__':
     # Ensure every kruize replica has profiles in memory (multi-replica cache)
     reload_kruize_profile_cache()
 
-    # List datasources
+    # List datasources — bulk_scale_test only cares about the registered Prom URL,
+    # never about kubegenX dataset/export names.
     datasource_name = None
     list_response = list_datasources(datasource_name)
     list_response_json = list_response.json()
+    ds0 = list_response_json['datasources'][0]
 
     if prometheus == 0:
-        if list_response_json['datasources'][0]['name'] != "thanos":
+        if ds0['name'] != "thanos":
             print("Failed! Thanos datasource is not registered with Kruize!")
             sys.exit(1)
     else:
-        if list_response_json['datasources'][0]['name'] != "prometheus-1":
+        if ds0['name'] != "prometheus-1":
             print("Failed! Prometheus-1 datasource is not registered with Kruize!")
             sys.exit(1)
+
+    datasource_url = (ds0.get("url") or "").strip()
+    if not datasource_url:
+        print("Failed! Registered datasource has empty url")
+        sys.exit(1)
+    print(f"Using datasource url from Kruize: {datasource_url}")
 
     server = get_server()
     if server == "":

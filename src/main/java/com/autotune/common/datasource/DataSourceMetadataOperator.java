@@ -200,9 +200,9 @@ public class DataSourceMetadataOperator {
         // Get query templates for each field
         String namespaceQueryTemplate = getQueryTemplate("namespace", metadataProfile);
         String workloadQueryTemplate;
-        String containerQueryTemplate = getQueryTemplate("container", metadataProfile);
+        String containerQueryTemplate;
 
-        // Determine if pod label filters are present — if so, use label-aware workload template
+        // Determine if pod label filters are present — if so, use label-aware workload + container templates
         String includePodLabelFilter = includeResources.getOrDefault("podLabelFilter", "");
         String excludePodLabelFilter = excludeResources.getOrDefault("podLabelFilter", "");
         boolean hasLabelFilter = !includePodLabelFilter.isEmpty() || !excludePodLabelFilter.isEmpty();
@@ -214,9 +214,18 @@ public class DataSourceMetadataOperator {
                     AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER, metadataProfileName);
                 return null;
             }
-            LOGGER.info("Label filter present — using {} template for workload query", AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER);
+            containerQueryTemplate = dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER_METADATA_QUERY_WITH_LABEL_FILTER);
+            if (containerQueryTemplate == null) {
+                LOGGER.error("Pod label filtering requested but '{}' query not found in metadata profile '{}'",
+                    AnalyzerConstants.CONTAINER_METADATA_QUERY_WITH_LABEL_FILTER, metadataProfileName);
+                return null;
+            }
+            LOGGER.info("Label filter present — using {} / {} templates",
+                    AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER,
+                    AnalyzerConstants.CONTAINER_METADATA_QUERY_WITH_LABEL_FILTER);
         } else {
             workloadQueryTemplate = getQueryTemplate("workload", metadataProfile);
+            containerQueryTemplate = getQueryTemplate("container", metadataProfile);
         }
 
         // Validate all templates are present
@@ -244,7 +253,8 @@ public class DataSourceMetadataOperator {
         String containerQuery = containerQueryTemplate
                 .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, namespaceFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, containerFilters)
-                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters);
+                .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
+                .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
         String dataSourceName = dataSourceInfo.getName();
 
@@ -269,68 +279,97 @@ public class DataSourceMetadataOperator {
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);
 
+        // Build metadata on a local object so concurrent/sequential bulk jobs cannot race on the
+        // singleton field mid-import (which previously produced over-counts or empty follow-on jobs).
+        DataSourceMetadataInfo localMetadataInfo;
+
         JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
         LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
         if (!op.validateResultArray(namespacesDataResultArray)) {
-            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
-        } else {
-            /**
-             * Key: Name of namespace
-             * Value: DataSourceNamespace object corresponding to a namespace
-             */
-            HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-            LOGGER.debug("datasourceNamespaces: {}", datasourceNamespaces.keySet());
-            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
-
-            /**
-             * Outer map:
-             * Key: Name of namespace
-             * <p>
-             * Inner map:
-             * Key: Name of workload
-             * Value: DataSourceWorkload object matching the name
-             * TODO -  get workload metadata for a given namespace
-             */
-            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
-            LOGGER.debug("workloadDataResultArray: {}", workloadDataResultArray);
-
-            if (op.validateResultArray(workloadDataResultArray)) {
-                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
-            }
-            if (hasLabelFilter && datasourceWorkloads.isEmpty()) {
-                LOGGER.info("Label filter matched zero workloads — skipping experiment creation");
-                // Clear singleton to avoid leaving partial state (namespaces populated but no workloads/containers)
-                this.dataSourceMetadataInfo = null;
-                return null;
-            }
-            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
-                    datasourceWorkloads);
-
-            /**
-             * Outer map:
-             * Key: Name of workload
-             * <p>
-             * Inner map:
-             * Key: Name of container
-             * Value: DataSourceContainer object matching the name
-             * TODO - get container metadata for a given workload
-             */
-            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = fetchQueryResults(dataSourceInfo, containerQuery, startTime, endTime, steps);
-
-            LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
-
-            if (op.validateResultArray(containerDataResultArray)) {
-                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
-            }
-            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
-                    datasourceWorkloads, datasourceContainers);
-            return getDataSourceMetadataInfo(dataSourceInfo);
+            localMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
+            publishMetadata(localMetadataInfo);
+            return null;
         }
 
-        return null;
+        /**
+         * Key: Name of namespace
+         * Value: DataSourceNamespace object corresponding to a namespace
+         */
+        HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+        LOGGER.debug("datasourceNamespaces: {}", datasourceNamespaces.keySet());
+        localMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
 
+        /**
+         * Outer map:
+         * Key: Name of namespace
+         * <p>
+         * Inner map:
+         * Key: Name of workload
+         * Value: DataSourceWorkload object matching the name
+         * TODO -  get workload metadata for a given namespace
+         */
+        HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+        JsonArray workloadDataResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+        LOGGER.debug("workloadDataResultArray: {}", workloadDataResultArray);
+
+        if (op.validateResultArray(workloadDataResultArray)) {
+            datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+        }
+        if (hasLabelFilter && datasourceWorkloads.isEmpty()) {
+            LOGGER.info("Label filter matched zero workloads — skipping experiment creation");
+            publishMetadata(null);
+            return null;
+        }
+        dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, localMetadataInfo,
+                datasourceWorkloads);
+
+        /**
+         * Outer map:
+         * Key: Name of workload
+         * <p>
+         * Inner map:
+         * Key: Name of container
+         * Value: DataSourceContainer object matching the name
+         * TODO - get container metadata for a given workload
+         */
+        HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+        JsonArray containerDataResultArray = fetchQueryResults(dataSourceInfo, containerQuery, startTime, endTime, steps);
+
+        LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
+
+        if (op.validateResultArray(containerDataResultArray)) {
+            datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
+        }
+        if (hasLabelFilter && !datasourceWorkloads.isEmpty() && datasourceContainers.isEmpty()) {
+            LOGGER.error("Label filter matched workloads but zero containers — check '{}' in metadata profile '{}'",
+                    AnalyzerConstants.CONTAINER_METADATA_QUERY_WITH_LABEL_FILTER, metadataProfileName);
+            publishMetadata(null);
+            return null;
+        }
+        dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, localMetadataInfo,
+                datasourceWorkloads, datasourceContainers);
+
+        publishMetadata(localMetadataInfo);
+        return snapshotMetadata(dataSourceName, localMetadataInfo);
+    }
+
+    /**
+     * Atomically publish the latest metadata snapshot for non-bulk callers of getDataSourceMetadataInfo.
+     */
+    private synchronized void publishMetadata(DataSourceMetadataInfo metadata) {
+        this.dataSourceMetadataInfo = metadata;
+    }
+
+    /**
+     * Return a per-caller view of the just-built metadata without sharing the live singleton map.
+     */
+    private DataSourceMetadataInfo snapshotMetadata(String dataSourceName, DataSourceMetadataInfo source) {
+        if (source == null || source.getDatasources() == null || !source.getDatasources().containsKey(dataSourceName)) {
+            return null;
+        }
+        HashMap<String, DataSource> target = new HashMap<>();
+        target.put(dataSourceName, source.getDatasources().get(dataSourceName));
+        return new DataSourceMetadataInfo(target);
     }
 
     // Helper function to map fields to query templates.

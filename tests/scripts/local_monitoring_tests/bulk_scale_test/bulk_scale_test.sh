@@ -101,17 +101,52 @@ function kruize_local_config_patch() {
 		sed_inplace 's#"url": ""#"url": "'"${ds_url}"'"#' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	fi
 
-	# Replace memory requests and limits for Kruize to 4Gi and 8Gi respectively for scale test
-	sed_inplace '/- name: kruize$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"4Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"8Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+	# Scale-test resource bumps (Python: portable; BSD/macOS sed rejects GNU brace programs).
+	python3 - "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
 
-	# Replace memory requests and limits for Kruize DB to 10Gi and 16 Gi respectively for scale test
-	sed_inplace '/- name: kruize-db$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"10Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"16Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+def bump_container(doc, container_name, req_mem, lim_mem, cpu=None):
+    # Only stop at the next container list entry with the SAME indent (ignore nested "- name:" keys).
+    m = re.search(rf'^(?P<indent>[ \t]*)- name: {re.escape(container_name)}\n', doc, re.M)
+    if not m:
+        raise SystemExit(f"container {container_name!r} not found in {path}")
+    indent = m.group("indent")
+    start = m.start()
+    rest = doc[m.end():]
+    end_m = re.search(rf'^{re.escape(indent)}- name: ', rest, re.M)
+    end = m.end() + (end_m.start() if end_m else len(rest))
+    block = doc[start:end]
 
-	sed_inplace 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-    cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
-	    
-	#sed_inplace 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9][0-9]*/"bulkapilimit" : 10000/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-	sed_inplace 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9][0-9]*Mi/\1\2 1Gi/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+    def set_mem(section, value, blob):
+        pat = rf'({section}:\n(?:[ \t]+[^\n]*\n)*?[ \t]+memory:\s*)"[^"]*"'
+        new, n = re.subn(pat, rf'\g<1>"{value}"', blob, count=1)
+        if n != 1:
+            raise SystemExit(f"failed to set {section} memory for {container_name!r}")
+        return new
+
+    def set_cpu(section, value, blob):
+        pat = rf'({section}:\n(?:[ \t]+[^\n]*\n)*?[ \t]+cpu:\s*)"[^"]*"'
+        new, n = re.subn(pat, rf'\g<1>"{value}"', blob, count=1)
+        if n != 1:
+            raise SystemExit(f"failed to set {section} cpu for {container_name!r}")
+        return new
+
+    block = set_mem("requests", req_mem, block)
+    block = set_mem("limits", lim_mem, block)
+    if cpu is not None:
+        block = set_cpu("requests", cpu, block)
+        block = set_cpu("limits", cpu, block)
+    return doc[:start] + block + doc[end:]
+
+text = bump_container(text, "kruize", "4Gi", "8Gi", cpu="2")
+text = bump_container(text, "kruize-db", "10Gi", "16Gi")
+text = re.sub(r'(storage:\s*)[0-9]+Mi', r'\g<1>1Gi', text)
+open(path, "w").write(text)
+print(f"patched resources in {path}")
+PY
+	cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
 }
 
 
