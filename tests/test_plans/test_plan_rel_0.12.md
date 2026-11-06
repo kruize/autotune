@@ -60,6 +60,7 @@ This document describes the test plan for Kruize release 0.12
 
 * Minikube Cluster
 * Openshift Cluster
+* Kind Cluster (demo testing)
 
 ---
 
@@ -75,6 +76,8 @@ This document describes the test plan for Kruize release 0.12
 | 4 | Label filter tests for Bulk API                                                                | Added unit tests for label filter builder, query template substitution, include/exclude filters, key sanitization, and value escaping            | [2045](https://github.com/kruize/autotune/pull/2045) | PASSED  |          |
 | 5 | Cluster name support tests                                                                     | Added comprehensive tests for cluster name validation across REST API, business logic passthrough, DB persistence, and input validation          | [1985](https://github.com/kruize/autotune/pull/1985) | PASSED  |          |
 | 6 | TLS protocol validation unit tests                                                             | Added unit tests for TLS protocol handling validating acceptance of TLS 1.2/1.3 and rejection of legacy protocols                                | [1898](https://github.com/kruize/autotune/pull/1898) | PASSED  |          |
+| 7 | Security: credential disclosure and CORS policy fix (CWE-522)                                  | Verified credentials are not exposed in API responses and CORS policy restricts cross-origin access | [2038](https://github.com/kruize/autotune/pull/2038) | PASSED  | Validated as part of remote monitoring functional tests |
+| 8 | CVE fixes: jackson, micrometer, and Netty dependency updates                                   | Verified no regressions from jackson, micrometer, and Netty version upgrades via functional and stress tests | [2078](https://github.com/kruize/autotune/pull/2078), [2076](https://github.com/kruize/autotune/pull/2076), [2057](https://github.com/kruize/autotune/pull/2057) | PASSED  | No functional regressions observed |
 
 ---
 
@@ -129,7 +132,7 @@ No new regressions seen
 ### SCALE TEST RESULTS
 
 Evaluate Kruize Scalability on OCP, with 5k experiments by uploading resource usage data for 15 days and update recommendations.
-Changes do not have scalability implications. Short scalability test will be run as part of the release testing
+Changes do not have scalability implications for container experiments. Short scalability test for container experiments will be run as part of the release testing. Namespace, mixed, and GPU workload scalability tests were not run for 0.12 as the changes in this release do not affect those workload paths
 
 Short Scalability run configuration:
 - 5K exps / 15 days of results / 2 containers per exp
