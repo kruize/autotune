@@ -79,6 +79,7 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
  */
 public class DBHelpers {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBHelpers.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 
     private DBHelpers() {
@@ -1183,30 +1184,36 @@ public class DBHelpers {
                 for (KruizeDataSourceEntry kruizeDataSource : kruizeDataSourceList) {
                     try {
                         DataSourceInfo dataSourceInfo;
-                        AuthenticationConfig authConfig = null;
+                        AuthenticationConfig authConfig = AuthenticationConfig.noAuth();
                         JSONObject authJson = null;
                         if (kruizeDataSource.getKruizeAuthenticationEntry() != null) {
                             try {
-                                JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
                                 String authType = kruizeDataSource.getKruizeAuthenticationEntry().getAuthenticationType();
-                                // Parse the JsonNode credentials into a JSONObject
-                                if (!credentialsNode.toString().equalsIgnoreCase(AnalyzerConstants.NULL)) {
-                                    JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
-                                    authJson = new JSONObject()
-                                            .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
-                                            .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
+                                if (authType != null && !authType.equalsIgnoreCase(AnalyzerConstants.NONE)) {
+                                    JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
+                                    // Parse the JsonNode credentials into a JSONObject
+                                    if (credentialsNode != null && !credentialsNode.toString().equalsIgnoreCase(AnalyzerConstants.NULL)) {
+                                        JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
+                                        authJson = new JSONObject()
+                                                .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
+                                                .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
+                                    }
+                                    authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
                                 }
-                                authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
                             } catch (Exception e) {
                                 LOGGER.error("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject", e);
                             }
                         }
-                        if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
+                        // Get cluster list from database entry
+                        List<String> clusterList = kruizeDataSource.getClusterList();
+                        
+                        String serviceName = kruizeDataSource.getServiceName();
+                        if ((serviceName == null || serviceName.isEmpty()) && null != kruizeDataSource.getUrl()) {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig);
+                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig, clusterList);
                         } else {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig);
+                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig, clusterList);
                         }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
@@ -1237,7 +1244,15 @@ public class DBHelpers {
                     kruizeDataSource.setProvider(dataSourceInfo.getProvider());
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
                     kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
-                    kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                    // Only set URL if it's not null (service-based datasources have null URL)
+                    if (dataSourceInfo.getUrl() != null) {
+                        kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                    }
+                    // Convert List<String> clusters to JsonNode and store as JSONB
+                    List<String> clusterList = dataSourceInfo.getClusters();
+                    if (clusterList != null && !clusterList.isEmpty()) {
+                        kruizeDataSource.setClusters(OBJECT_MAPPER.valueToTree(clusterList));
+                    }
                 } catch (Exception e) {
                     kruizeDataSource = null;
                     LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());
@@ -1465,6 +1480,10 @@ public class DBHelpers {
                 KruizeAuthenticationEntry kruizeAuthenticationEntry;
                 try {
                     kruizeAuthenticationEntry = new KruizeAuthenticationEntry();
+                    if (authenticationConfig == null || authenticationConfig.getType() == null) {
+                        LOGGER.error("authenticationConfig or its type is null, skipping auth entry save");
+                        return null;
+                    }
                     kruizeAuthenticationEntry.setAuthenticationType(authenticationConfig.getType().toString());
                     // set the authentication details
                     if (authenticationConfig.getCredentials() != null) {

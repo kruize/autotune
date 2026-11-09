@@ -215,6 +215,7 @@ public class AnalyzerErrorConstants {
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+            public static final String BULK_INVALID_EXPERIMENT_TYPES = "Invalid experiment_types value(s): %s. Valid values are: container, namespace";
 
             private CreateExperimentAPI() {
 
@@ -357,6 +358,10 @@ public class AnalyzerErrorConstants {
             public static final String EXPECTED_IDENTIFIERS = "Expected one of the following identifier sets";
             public static final String INVALID_QUERY_NO_RESULT = "Invalid query, no result returned by the metric query: %s.";
             public static final String QUERY_SYNTAX_ERROR_MESSAGE = ". Please review the metric query: %s for syntax errors.";
+            public static final String UNRESOLVED_PLACEHOLDER_IN_QUERY = "Query for metric '%s' contains bulk-only placeholder(s): %s. " +
+                    "The updateMetadata API requires pre-expanded queries.";
+            public static final String UNKNOWN_PLACEHOLDER_IN_QUERY = "Query for metric '%s' contains unknown placeholder(s) %s " +
+                    "that are not recognised by Kruize.";
             public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
             public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
         }
