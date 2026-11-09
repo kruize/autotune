@@ -102,9 +102,16 @@ function kruize_local_config_patch() {
 	fi
 
 	# Scale-test resource bumps (Python: portable; BSD/macOS sed rejects GNU brace programs).
+	# Also re-assert local monitoring flags — remote scale tests strip them from this shared manifest.
 	python3 - "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" <<'PY'
 import re, sys
 path = sys.argv[1]
+text = open(path).read()
+if '"local": "true"' not in text:
+    text = text.replace('      "recommendationsURL"', '      "local": "true",\n      "recommendationsURL"', 1)
+if '"isROSEnabled": "false"' not in text:
+    text = text.replace('      "local": "true",', '      "isROSEnabled": "false",\n      "local": "true",', 1)
+open(path, "w").write(text)
 text = open(path).read()
 
 def bump_container(doc, container_name, req_mem, lim_mem, cpu=None):
@@ -141,7 +148,7 @@ def bump_container(doc, container_name, req_mem, lim_mem, cpu=None):
     return doc[:start] + block + doc[end:]
 
 text = bump_container(text, "kruize", "4Gi", "8Gi", cpu="2")
-text = bump_container(text, "kruize-db", "10Gi", "16Gi")
+text = bump_container(text, "kruize-db", "10Gi", "30Gi", cpu="2")
 text = re.sub(r'(storage:\s*)[0-9]+Mi', r'\g<1>1Gi', text)
 open(path, "w").write(text)
 print(f"patched resources in {path}")
