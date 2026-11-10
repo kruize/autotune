@@ -1,0 +1,302 @@
+[
+  {
+    "name": "smoke_afghanistan-jiaxiang-county",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "afghanistan-jiaxiang-county"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_albania-old-san-juan-historic-district",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "albania-old-san-juan-historic-district"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_albania-suffolk",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "albania-suffolk"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_algeria-cotui",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "algeria-cotui"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_algeria-pasquotank-county",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "algeria-pasquotank-county"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_algeria-wuzhen",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "algeria-wuzhen"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_antigua-and-barbuda-chamkarmon-district",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "antigua-and-barbuda-chamkarmon-district"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_antigua-and-barbuda-patulul",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "antigua-and-barbuda-patulul"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_antigua-and-barbuda-sangrur",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "antigua-and-barbuda-sangrur"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_argentina-galle",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "argentina-galle"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_armenia-bojongloa-kaler",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "armenia-bojongloa-kaler"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_armenia-iranshahr-county",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "armenia-iranshahr-county"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_australia-ghotki",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "australia-ghotki"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_australia-vecses-district",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "australia-vecses-district"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  },
+  {
+    "name": "smoke_australia-yanbian-korean-autonomous-pref",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    },
+    "filter": {
+      "include": {
+        "namespace": [
+          "australia-erkrath"
+        ],
+        "workload": [
+          "australia-yanbian-korean-autonomous-prefecture"
+        ],
+        "containers": [
+          "app"
+        ]
+      }
+    }
+  }
+]

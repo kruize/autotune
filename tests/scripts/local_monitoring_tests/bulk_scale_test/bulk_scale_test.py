@@ -199,47 +199,75 @@ def fetch_bulk_recommendations(job_status_json, logger):
         return -1
 
 def fetch_bulk_job_status(job_id, log_id, logger):
-    # Get the bulk job status using the job id
-    include = "summary,experiments"
+    # Poll with summary only — include=experiments on 500–750-exp jobs
+    # routinely 504s the OpenShift route and aborts the worker mid-window.
     deadline = time.time() + job_timeout
+    job_status_json = None
+    job_status = "FAILED"
 
-    # Loop until job status is COMPLETED / FAILED or the timeout expires
     while True:
-        bulk_job_response = get_bulk_job_status(job_id, include, logger)
-        job_status_json = bulk_job_response.json()
-        job_status = job_status_json['summary']['status']
-        total_exps = job_status_json['summary']['total_experiments']
-        processed_exps = job_status_json['summary']['processed_experiments']
-        logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
-        if job_status == "COMPLETED":
-            break
-        if job_status == "FAILED":
-            logger.info("Job FAILED!")
-            break
+        try:
+            bulk_job_response = get_bulk_job_status(job_id, "summary", logger)
+            if bulk_job_response.status_code != 200:
+                logger.warning(
+                    f"summary poll HTTP {bulk_job_response.status_code} for job {job_id}; retrying..."
+                )
+                if time.time() > deadline:
+                    logger.error(f"Job {job_id} did not complete within {job_timeout} seconds!")
+                    break
+                sleep(10)
+                continue
+            job_status_json = bulk_job_response.json()
+            job_status = job_status_json['summary']['status']
+            total_exps = job_status_json['summary']['total_experiments']
+            processed_exps = job_status_json['summary']['processed_experiments']
+            logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
+            if job_status == "COMPLETED":
+                break
+            if job_status == "FAILED":
+                logger.info("Job FAILED!")
+                break
+        except Exception as e:
+            logger.warning(f"summary poll failed for job {job_id}: {e}; retrying...")
         if time.time() > deadline:
             logger.error(f"Job {job_id} did not complete within {job_timeout} seconds!")
             job_status = "FAILED"
             break
         sleep(5)
 
+    # Final fetch with experiments (retry — large payloads can still 504 once)
+    if job_status != "FAILED":
+        for attempt in range(1, 6):
+            try:
+                final = get_bulk_job_status(job_id, "summary,experiments", logger)
+                if final.status_code == 200:
+                    job_status_json = final.json()
+                    break
+                logger.warning(
+                    f"experiments fetch HTTP {final.status_code} attempt {attempt}/5; retrying..."
+                )
+            except Exception as e:
+                logger.warning(f"experiments fetch attempt {attempt}/5 failed: {e}")
+            sleep(15)
+        else:
+            logger.error(f"Could not fetch experiments for completed job {job_id}")
+            job_status = "FAILED"
+
     logger.info(f"log id - {log_id} job id - {job_id} job status - {job_status}")
 
-    # Dump the job status json into a file
     job_status_dir = results_dir + "/job_status_jsons"
     os.makedirs(job_status_dir, exist_ok=True)
-
     job_file = job_status_dir + "/job_status_" + str(log_id) + ".json"
     logger.info(f"Storing job status in {job_file}")
-    with open(job_file, 'w') as f:
-        json.dump(job_status_json, f, indent=4)
+    if job_status_json is not None:
+        with open(job_file, 'w') as f:
+            json.dump(job_status_json, f, indent=4)
 
-    # Fetch the list of experiments for which recommendations are available
-    if job_status != "FAILED":
-        status = fetch_bulk_recommendations(job_status_json, logger)
-        return status
-    else:
-        logger.info(f"Check {job_file} for job status")
-        return -1
+    if job_status != "FAILED" and job_status_json is not None:
+        return fetch_bulk_recommendations(job_status_json, logger)
+
+    logger.info(f"Check {job_file} for job status")
+    return -1
 
 def collect_kruize_metrics(resultsdir, worker_number, server):
     # Collect a single kruize metrics data point into the worker's own csv (one csv per worker,

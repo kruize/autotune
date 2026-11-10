@@ -1,0 +1,58 @@
+[
+  {
+    "name": "aychsbeesee_mx-central-401",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "mx-central-401"
+    }
+  },
+  {
+    "name": "aychsbeesee_ca-west-85",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "ca-west-85"
+    }
+  },
+  {
+    "name": "aychsbeesee_eu-south-19",
+    "labels": {
+      "org_id": "aychsbeesee",
+      "cluster_id": "eu-south-19"
+    }
+  },
+  {
+    "name": "pepsiko_mx-central-197",
+    "labels": {
+      "org_id": "pepsiko",
+      "cluster_id": "mx-central-197"
+    }
+  },
+  {
+    "name": "pepsiko_ap-northeast-206",
+    "labels": {
+      "org_id": "pepsiko",
+      "cluster_id": "ap-northeast-206"
+    }
+  },
+  {
+    "name": "pepsiko_us-west-287",
+    "labels": {
+      "org_id": "pepsiko",
+      "cluster_id": "us-west-287"
+    }
+  },
+  {
+    "name": "del_ap-south-377",
+    "labels": {
+      "org_id": "del",
+      "cluster_id": "ap-south-377"
+    }
+  },
+  {
+    "name": "del_il-central-106",
+    "labels": {
+      "org_id": "del",
+      "cluster_id": "il-central-106"
+    }
+  }
+]
