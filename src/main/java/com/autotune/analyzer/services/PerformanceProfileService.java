@@ -245,8 +245,9 @@ public class PerformanceProfileService extends HttpServlet {
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName),
                     HttpServletResponse.SC_OK);
         } catch (Exception e) {
+            // log the actual cause on the server side but do not disclose it to the client
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
-            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 

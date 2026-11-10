@@ -38,6 +38,7 @@ import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,10 +107,14 @@ public class MetricProfileService extends HttpServlet {
                 }
             } else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
+        } catch (JSONException | JsonParseException | InvalidValueException e) {
+            // malformed or invalid input is a client error
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_INVALID_INPUT, e.getMessage());
+            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Validation failed: " + e.getMessage());
-        } catch (InvalidValueException e) {
-            throw new RuntimeException(e);
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR, e.getMessage(), e);
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 

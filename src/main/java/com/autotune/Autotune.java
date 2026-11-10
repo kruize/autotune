@@ -41,11 +41,13 @@ import com.autotune.utils.CloudWatchAppender;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSHandler;
+import com.autotune.utils.filter.SecurityHeadersHandler;
 import io.prometheus.metrics.exporter.servlet.javax.PrometheusMetricsServlet;
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -94,8 +96,9 @@ public class Autotune {
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setMaxThreads(ServerContext.KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
         Server server = new Server(threadPool);
-        // Create a connector (e.g., HTTP)
-        ServerConnector connector = new ServerConnector(server);
+        // Create a connector (e.g., HTTP) that does not disclose the server type/version in the "Server" header
+        ServerConnector connector = new ServerConnector(server,
+                new HttpConnectionFactory(SecurityHeadersHandler.createHttpConfiguration()));
         connector.setPort(ServerContext.KRUIZE_SERVER_PORT);
         // Set the connector to the server
         server.addConnector(connector);
@@ -110,7 +113,10 @@ public class Autotune {
         context.addEventListener(contextListener);
         CrossOriginHandler corsHandler = KruizeCORSHandler.getHandler();
         corsHandler.setHandler(context);
-        server.setHandler(corsHandler);
+        // Outermost handler: adds security headers (e.g. X-Content-Type-Options) to every response
+        SecurityHeadersHandler securityHeadersHandler = new SecurityHeadersHandler();
+        securityHeadersHandler.setHandler(corsHandler);
+        server.setHandler(securityHeadersHandler);
         server.addBean(new KruizeErrorHandler());
 
 
