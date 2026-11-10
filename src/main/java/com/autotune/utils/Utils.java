@@ -128,6 +128,15 @@ public class Utils {
         if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET)
             return AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET;
 
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.JOB)
+            return AnalyzerConstants.K8sObjectConstants.Types.JOB;
+
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.CONFIGMAP)
+            return AnalyzerConstants.K8sObjectConstants.Types.CONFIGMAP;
+
+        if (objectType == AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE)
+            return AnalyzerConstants.K8sObjectConstants.Types.CATALOGSOURCE;
+
         return null;
     }
 

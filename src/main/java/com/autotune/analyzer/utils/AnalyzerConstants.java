@@ -1145,31 +1145,38 @@ public class AnalyzerConstants {
     }
 
     /**
+     * K8S object types that Kruize does not support for recommendations.
+     */
+    public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = Collections.unmodifiableList(Arrays.asList(
+            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
+            K8S_OBJECT_TYPES.CONFIGMAP,
+            K8S_OBJECT_TYPES.CATALOGSOURCE
+    ));
+
+    /**
      * Returns a PromQL filter string for unsupported workload types.
-     * This method generates a filter that excludes workload types not supported by Kruize.
-     * Currently, only DEPLOYMENT_CONFIG is unsupported.
+     * This method generates a filter that excludes workload types not supported by Kruize
+     * (see {@link #UNSUPPORTED_K8S_OBJECT_TYPES}).
      * Uses case-insensitive regex matching to handle different naming conventions from various data sources.
      *
      * @return A string in the format 'workload_type!~"(?i)type1", workload_type!~"(?i)type2"'
      *         or empty string if all types are supported
+     * @throws IllegalArgumentException if an unsupported type has no string mapping, as the resulting
+     *         filter would otherwise silently exclude the literal string "null"
      */
     public static String getUnsupportedWorkloadTypesFilter() {
-        // List of unsupported K8S object types
-        List<K8S_OBJECT_TYPES> unsupportedTypes = Arrays.asList(
-            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
-            K8S_OBJECT_TYPES.CONFIGMAP,
-            K8S_OBJECT_TYPES.CATALOGSOURCE
-        );
-        
         // Build the filter string with case-insensitive regex matching
         StringBuilder filter = new StringBuilder();
-        for (K8S_OBJECT_TYPES type : unsupportedTypes) {
-            if (filter.length() > 0) {
-                filter.append(", ");
-            }
+        for (K8S_OBJECT_TYPES type : UNSUPPORTED_K8S_OBJECT_TYPES) {
             // Use regex with case-insensitive flag to match any case variation
             // This handles: DeploymentConfig, deploymentConfig, deploymentconfig, etc.
             String typeString = Utils.getAppropriateK8sObjectTypeString(type);
+            if (null == typeString) {
+                throw new IllegalArgumentException("No workload type string mapping found for unsupported K8S object type: " + type);
+            }
+            if (!filter.isEmpty()) {
+                filter.append(", ");
+            }
             filter.append("workload_type!~").append("\"(?i)").append(typeString).append("\"");
         }
         
