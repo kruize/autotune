@@ -65,8 +65,13 @@ class MetadataProfileValidationTest {
     private static final String WORKLOAD_QUERY =
             "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
+    // NOTE: kube_pod_labels is deliberately NOT container-filtered. kube-state-metrics sets the
+    // container label on kube_pod_labels to an internal container (e.g. kube-rbac-proxy-main),
+    // never the application container, so $CONTAINER_FILTERS$ here would match zero series.
+    // Container scoping is applied in the containersForAdditionalLabel query instead
+    // (kube_pod_container_info, which carries the real container value). See issue #2119.
     private static final String WORKLOAD_WITH_LABEL_QUERY =
-            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     private static final String CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
@@ -377,7 +382,7 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("All four bulk-only placeholders in workloadsWithPodLabelFilter query are rejected")
+        @DisplayName("Bulk-only placeholders in workloadsWithPodLabelFilter query are rejected")
         void allBulkOnlyPlaceholdersInLabelFilterQueryRejected() {
             StringBuilder errorString = new StringBuilder();
             validation.validateMetricQueryPattern(
@@ -388,6 +393,19 @@ class MetadataProfileValidationTest {
 
             assertFalse(errorString.isEmpty(),
                     "Bulk-only placeholders must be rejected in workloadsWithPodLabelFilter update payload");
+        }
+
+        @Test
+        @DisplayName("workloadsWithPodLabelFilter query does not carry a container filter (issue #2119)")
+        void labelFilterQueryHasNoContainerFilter() {
+            // Regression guard: $CONTAINER_FILTERS$ must never be reintroduced into the
+            // kube_pod_labels selector — its container label is always an internal container
+            // (e.g. kube-rbac-proxy-main), so a container filter there matches zero series and
+            // silently drops all workload label metadata.
+            assertFalse(WORKLOAD_WITH_LABEL_QUERY.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+                    "kube_pod_labels query must NOT contain $CONTAINER_FILTERS$");
+            assertTrue(CONTAINER_QUERY.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+                    "container query (kube_pod_container_info) must still carry $CONTAINER_FILTERS$");
         }
 
         @Test
