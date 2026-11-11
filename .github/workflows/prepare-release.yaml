@@ -1,0 +1,149 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New Causa version (e.g., 0.12 or 0.0.8)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One queue per requested version, so runs for different versions are never
+# replaced by a newer pending dispatch.
+concurrency:
+  group: prepare-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  update-version-and-open-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version input
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version '$VERSION'. Expected format: MAJOR.MINOR[.PATCH] (e.g., 0.12 or 0.0.8)"
+            exit 1
+          fi
+          # The version is used in a branch name, so it must form a valid Git ref
+          # (rejects e.g. consecutive dots or a trailing '.lock').
+          if ! git check-ref-format --branch "bump-version-$VERSION" >/dev/null 2>&1; then
+            echo "::error::Version '$VERSION' would produce an invalid branch name 'bump-version-$VERSION'."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: mvp_demo
+          fetch-depth: 0
+          # Do not leave the write token in .git/config where Maven plugins/extensions
+          # from the checked-out code could read it.
+          persist-credentials: false
+
+      # Project targets Java 21 (maven.compiler.release in pom.xml)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      # Maven runs without any token in its environment (project-controlled plugins/extensions
+      # could otherwise read it).
+      - name: Ensure requested version is newer
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          CURRENT=$(mvn -B -ntp -q -DforceStdout -Dexpression=project.version help:evaluate)
+          echo "Current version: $CURRENT, requested version: $VERSION"
+          LATEST=$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -n1)
+          if [ "$CURRENT" = "$VERSION" ] || [ "$LATEST" != "$VERSION" ]; then
+            echo "::error::Requested version '$VERSION' must be newer than the current version '$CURRENT'."
+            exit 1
+          fi
+
+      - name: Ensure no other version bump PR is open
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OTHER=$(gh pr list --repo "$GITHUB_REPOSITORY" --base mvp_demo --state open --json number,headRefName \
+            --jq "[.[] | select(.headRefName | startswith(\"bump-version-\")) | select(.headRefName != \"bump-version-$VERSION\")] | map(\"#\" + (.number | tostring)) | join(\", \")")
+          if [ -n "$OTHER" ]; then
+            echo "::error::Other version bump PR(s) are still open ($OTHER). Merge or close them first."
+            exit 1
+          fi
+
+      - name: Update pom.xml version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          mvn -B -ntp versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+
+      - name: Update autotune_operator image tag in manifests
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # VERSION is validated above to contain only [0-9A-Za-z.-], so it is safe in the sed replacement.
+          grep -rlE 'quay\.io/kruize/autotune_operator:' manifests | while read -r f; do
+            sed -i -E "s#(quay\.io/kruize/autotune_operator:)[0-9A-Za-z._-]+#\1${VERSION}#g" "$f"
+          done
+          git diff --stat -- manifests
+
+      # Uses peter-evans/create-pull-request to detect pom.xml and manifests changes, commit, and create the PR.
+      # PRs created with GITHUB_TOKEN do not trigger other workflows (e.g. compile/test checks),
+      # so configure a PAT or GitHub App token as the RELEASE_PR_TOKEN secret.
+      - name: Create Pull Request to mvp_demo
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
+          base: mvp_demo
+          branch: "bump-version-${{ inputs.version }}"
+          commit-message: "chore(release): bump pom.xml and manifests version to ${{ inputs.version }}"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          title: "chore: update pom.xml and manifests version to ${{ inputs.version }}"
+          body: "Automated PR updating Causa version (pom.xml and autotune_operator image tags in manifests) to `${{ inputs.version }}` targeting `mvp_demo`."
+          add-paths: |
+            pom.xml
+            manifests/
+          sign-commits: true
+          delete-branch: true
+
+      # Opens downstream PR into master if not already present. The head is the version-bump
+      # branch when one was created, so the requested version is included even before the
+      # bump PR is merged into mvp_demo.
+      - name: Create PR to master
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          BUMP_BRANCH: ${{ steps.cpr.outputs.pull-request-branch }}
+        run: |
+          HEAD_BRANCH="${BUMP_BRANCH:-mvp_demo}"
+          # Checkout did not persist credentials, so authenticate git via gh for fetching.
+          gh auth setup-git
+          git fetch origin master "$HEAD_BRANCH"
+
+          EXISTING_PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "An open PR from $HEAD_BRANCH to master already exists (#$EXISTING_PR). Skipping creation."
+          elif [ "$(git merge-tree --write-tree origin/master "origin/$HEAD_BRANCH")" = "$(git rev-parse origin/master^{tree})" ]; then
+            # Merging would not change master's tree (also true for already squash-merged
+            # changes), so a PR would be empty. Commit counts are deliberately not used.
+            echo "$HEAD_BRANCH would introduce no content changes to master. Skipping creation."
+          else
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base master \
+              --head "$HEAD_BRANCH" \
+              --title "Merge: sync $HEAD_BRANCH into master for release $VERSION" \
+              --body "Automated pull request to promote updates from \`$HEAD_BRANCH\` to \`master\` for release \`$VERSION\`."
+          fi
