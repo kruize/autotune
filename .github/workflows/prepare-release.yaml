@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New Causa version (e.g., 0.12 or 0.0.8)'
+        description: 'New Kruize version (e.g., 0.12 or 0.0.8)'
         required: true
         type: string
 
@@ -111,7 +111,7 @@ jobs:
           committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
           author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
           title: "chore: update pom.xml and manifests version to ${{ inputs.version }}"
-          body: "Automated PR updating Causa version (pom.xml and autotune_operator image tags in manifests) to `${{ inputs.version }}` targeting `mvp_demo`."
+          body: "Automated PR updating Kruize version (pom.xml and autotune_operator image tags in manifests) to `${{ inputs.version }}` targeting `mvp_demo`."
           add-paths: |
             pom.xml
             manifests/
