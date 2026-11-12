@@ -21,7 +21,9 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -75,6 +79,47 @@ class MetadataProfileValidationTest {
 
     private static final String CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+
+    // The shipped bulk metadata-profile manifests (relative to the module root, which is the test
+    // working directory). The regression guard reads these real files so reintroducing
+    // $CONTAINER_FILTERS$ into either one fails the build — see labelFilterQueryHasNoContainerFilter.
+    private static final String BULK_METADATA_PROFILE_JSON =
+            "manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json";
+    private static final String BULK_METADATA_PROFILE_YAML =
+            "manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.yaml";
+
+    /**
+     * Returns the Prometheus query defined for {@code variableName} in a metadata-profile manifest
+     * on disk (JSON or YAML), so tests assert against what actually ships rather than a constant.
+     */
+    private static String manifestQueryForVariable(String manifestPath, String variableName) throws Exception {
+        String text = Files.readString(Path.of(manifestPath));
+        if (manifestPath.endsWith(".json")) {
+            JsonObject root = JsonParser.parseString(text).getAsJsonObject();
+            for (JsonElement element : root.getAsJsonArray("query_variables")) {
+                JsonObject queryVariable = element.getAsJsonObject();
+                if (variableName.equals(queryVariable.get("name").getAsString())) {
+                    return queryVariable.getAsJsonArray("aggregation_functions")
+                            .get(0).getAsJsonObject().get("query").getAsString();
+                }
+            }
+            throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
+        }
+        // YAML: scope to this variable's block (from its "- name:" to the next one), then take its query line.
+        int blockStart = text.indexOf("- name: " + variableName);
+        if (blockStart < 0) {
+            throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
+        }
+        int nextBlock = text.indexOf("- name: ", blockStart + 1);
+        String block = nextBlock >= 0 ? text.substring(blockStart, nextBlock) : text.substring(blockStart);
+        int queryAt = block.indexOf("query:");
+        if (queryAt < 0) {
+            throw new AssertionError("no query for '" + variableName + "' in " + manifestPath);
+        }
+        String line = block.substring(queryAt + "query:".length());
+        int eol = line.indexOf('\n');
+        return (eol >= 0 ? line.substring(0, eol) : line).trim();
+    }
 
     // ---- Update-payload queries (valid for updateMetadata) ----
     // Bulk-only placeholders are replaced with concrete label selectors.
@@ -396,16 +441,23 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("workloadsWithPodLabelFilter query does not carry a container filter (issue #2119)")
-        void labelFilterQueryHasNoContainerFilter() {
-            // Regression guard: $CONTAINER_FILTERS$ must never be reintroduced into the
-            // kube_pod_labels selector — its container label is always an internal container
+        @DisplayName("Shipped manifests: workloadsWithPodLabelFilter carries no container filter (issue #2119)")
+        void labelFilterQueryHasNoContainerFilter() throws Exception {
+            // Regression guard reading the ACTUAL shipped manifests (JSON and YAML), not test
+            // constants: reintroducing $CONTAINER_FILTERS$ into the kube_pod_labels selector of
+            // either manifest fails the build. Its container label is always an internal container
             // (e.g. kube-rbac-proxy-main), so a container filter there matches zero series and
-            // silently drops all workload label metadata.
-            assertFalse(WORKLOAD_WITH_LABEL_QUERY.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
-                    "kube_pod_labels query must NOT contain $CONTAINER_FILTERS$");
-            assertTrue(CONTAINER_QUERY.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
-                    "container query (kube_pod_container_info) must still carry $CONTAINER_FILTERS$");
+            // silently drops all workload label metadata. Container scoping belongs only in the
+            // containersForAdditionalLabel (kube_pod_container_info) query.
+            for (String manifest : new String[]{BULK_METADATA_PROFILE_JSON, BULK_METADATA_PROFILE_YAML}) {
+                String labelQuery = manifestQueryForVariable(manifest, "workloadsWithPodLabelFilter");
+                String containerQuery = manifestQueryForVariable(manifest, "containersForAdditionalLabel");
+
+                assertFalse(labelQuery.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+                        manifest + " — workloadsWithPodLabelFilter (kube_pod_labels) query must NOT contain $CONTAINER_FILTERS$");
+                assertTrue(containerQuery.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+                        manifest + " — containersForAdditionalLabel (kube_pod_container_info) query must still carry $CONTAINER_FILTERS$");
+            }
         }
 
         @Test
