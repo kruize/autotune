@@ -371,7 +371,7 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
-                        if (!validModels.contains(model)) {
+                        if (!validModels.contains(model.toLowerCase())) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
@@ -379,7 +379,6 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
-
                 }
 
                 String depType = "";

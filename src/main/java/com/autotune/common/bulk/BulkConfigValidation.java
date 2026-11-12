@@ -46,7 +46,8 @@ public class BulkConfigValidation {
 
     private static final Set<String> VALID_MODELS = new HashSet<>(Arrays.asList(
             KruizeConstants.JSONKeys.PERFORMANCE,
-            KruizeConstants.JSONKeys.COST
+            KruizeConstants.JSONKeys.COST,
+            KruizeConstants.JSONKeys.STABILITY
     ));
 
     private static final Set<String> VALID_EXPERIMENT_TYPES = new HashSet<>(Arrays.asList(

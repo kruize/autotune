@@ -832,7 +832,7 @@ public class RecommendationConstants {
             public static String DEFAULT_NAME = "default";
             public static String COST = "cost";
             public static String PERFORMANCE = "performance";
-            public static String STABILITY = "stability";
+            public static final String STABILITY = KruizeConstants.JSONKeys.STABILITY;
 
             private ModelNames() {
 
@@ -887,10 +887,11 @@ public class RecommendationConstants {
             public static final Integer FIFTY_PERCENTILE = 50;
             public static final Integer COST_ACCELERATOR_PERCENTILE = 60;
             public static final Integer PERFORMANCE_ACCELERATOR_PERCENTILE = 98;
-            // Phase 1: static — same values as performance; conservative enough for sparse data
-            public static final Integer STABILITY_CPU_PERCENTILE = 98;
-            public static final Integer STABILITY_MEMORY_PERCENTILE = 100;
-            public static final Integer STABILITY_ACCELERATOR_PERCENTILE = 98;
+            // Phase 1 placeholder: stability intentionally aliases the performance percentiles,
+            // so its output is currently identical to the performance model.
+            public static final Integer STABILITY_CPU_PERCENTILE = PERFORMANCE_CPU_PERCENTILE;
+            public static final Integer STABILITY_MEMORY_PERCENTILE = PERFORMANCE_MEMORY_PERCENTILE;
+            public static final Integer STABILITY_ACCELERATOR_PERCENTILE = PERFORMANCE_ACCELERATOR_PERCENTILE;
         }
 
         public static class RuntimeConstants {

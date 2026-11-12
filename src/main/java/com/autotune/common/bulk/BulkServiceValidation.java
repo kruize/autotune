@@ -62,7 +62,8 @@ public class BulkServiceValidation {
     // Valid model and term names (case-insensitive)
     private static final List<String> VALID_MODELS = Arrays.asList(
             KruizeConstants.JSONKeys.PERFORMANCE,
-            KruizeConstants.JSONKeys.COST
+            KruizeConstants.JSONKeys.COST,
+            KruizeConstants.JSONKeys.STABILITY
     );
     private static final List<String> VALID_TERMS = Arrays.asList(
             KruizeConstants.JSONKeys.SHORT,
