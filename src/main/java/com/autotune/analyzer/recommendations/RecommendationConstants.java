@@ -414,7 +414,7 @@ public class RecommendationConstants {
         public static final int INFO_FLEX_TERM_RECOMMENDATIONS_AVAILABLE = 111104;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
-        public static final int INFO_STABILITY_RECOMMENDATIONS_AVAILABLE   = 112105;
+        public static final int INFO_STABILITY_RECOMMENDATIONS_AVAILABLE = 112105;
         public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
         public static final int INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE = 112104;
 
@@ -776,8 +776,8 @@ public class RecommendationConstants {
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
         public static final String LONG_TERM_RECOMMENDATIONS_AVAILABLE = "Long Term Recommendations Available";
-        public static final String FLEX_TERM_RECOMMENDATIONS_AVAILABLE    = "Flex Term Recommendations Available";
-        public static final String STABILITY_RECOMMENDATIONS_AVAILABLE    = "Stability Recommendations Available";
+        public static final String FLEX_TERM_RECOMMENDATIONS_AVAILABLE = "Flex Term Recommendations Available";
+        public static final String STABILITY_RECOMMENDATIONS_AVAILABLE = "Stability Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
@@ -888,8 +888,8 @@ public class RecommendationConstants {
             public static final Integer COST_ACCELERATOR_PERCENTILE = 60;
             public static final Integer PERFORMANCE_ACCELERATOR_PERCENTILE = 98;
             // Phase 1: static — same values as performance; conservative enough for sparse data
-            public static final Integer STABILITY_CPU_PERCENTILE         = 98;
-            public static final Integer STABILITY_MEMORY_PERCENTILE      = 100;
+            public static final Integer STABILITY_CPU_PERCENTILE = 98;
+            public static final Integer STABILITY_MEMORY_PERCENTILE = 100;
             public static final Integer STABILITY_ACCELERATOR_PERCENTILE = 98;
         }
 
