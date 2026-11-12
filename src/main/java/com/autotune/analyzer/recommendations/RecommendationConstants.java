@@ -414,9 +414,9 @@ public class RecommendationConstants {
         public static final int INFO_FLEX_TERM_RECOMMENDATIONS_AVAILABLE = 111104;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
-        public static final int INFO_STABILITY_RECOMMENDATIONS_AVAILABLE = 112105;
         public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
         public static final int INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE = 112104;
+        public static final int INFO_STABILITY_RECOMMENDATIONS_AVAILABLE = 112105;
 
         public static final int COST_ENGINE_END = 112199;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;

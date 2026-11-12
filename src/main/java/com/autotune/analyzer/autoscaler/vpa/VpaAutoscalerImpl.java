@@ -284,6 +284,10 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getPerformanceRecommendations().getConfig();
                     } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(user_model)) {
+                        if (null == termRecommendations.getStabilityRecommendations()) {
+                            LOGGER.warn("Stability recommendations not present for container {}, skipping", containerName);
+                            continue;
+                        }
                         recommendationsConfig = termRecommendations.getStabilityRecommendations().getConfig();
                     } else {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);

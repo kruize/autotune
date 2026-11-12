@@ -126,7 +126,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // Todo: add custom performance parameters over here from the user inputs
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
-            }  else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
+            } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
                 StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES);
                 registerModel(stabilityBasedRecommendationModel);
             } else {
@@ -359,7 +359,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
-                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null) {
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
                     // recommendation setting are null -> use default values
                     loadDefaultRecommendationModelForAutoAndRecreate();
                 } else {

@@ -391,7 +391,7 @@ public class BulkConfigValidation {
         // Same empty-list-as-absent treatment as terms above.
         if (settings.getModels() != null && !settings.getModels().isEmpty()) {
             for (String model : settings.getModels()) {
-                if (!VALID_MODELS.contains(model)) {
+                if (!VALID_MODELS.contains(model.toLowerCase())) {
                     return new ValidationOutputData(false,
                             "Invalid model: " + model + ". Valid values are: " + VALID_MODELS,
                             HttpServletResponse.SC_BAD_REQUEST);
