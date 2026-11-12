@@ -443,19 +443,30 @@ class MetadataProfileValidationTest {
         @Test
         @DisplayName("Shipped manifests: workloadsWithPodLabelFilter carries no container filter (issue #2119)")
         void labelFilterQueryHasNoContainerFilter() throws Exception {
-            // Regression guard reading the ACTUAL shipped manifests (JSON and YAML), not test
-            // constants: reintroducing $CONTAINER_FILTERS$ into the kube_pod_labels selector of
-            // either manifest fails the build. Its container label is always an internal container
-            // (e.g. kube-rbac-proxy-main), so a container filter there matches zero series and
-            // silently drops all workload label metadata. Container scoping belongs only in the
-            // containersForAdditionalLabel (kube_pod_container_info) query.
-            for (String manifest : new String[]{BULK_METADATA_PROFILE_JSON, BULK_METADATA_PROFILE_YAML}) {
-                String labelQuery = manifestQueryForVariable(manifest, "workloadsWithPodLabelFilter");
-                String containerQuery = manifestQueryForVariable(manifest, "containersForAdditionalLabel");
+            // $CONTAINER_FILTERS$ must never be reintroduced into the kube_pod_labels selector: its
+            // container label is always an internal container (e.g. kube-rbac-proxy-main), so a
+            // container filter there matches zero series and silently drops all workload label
+            // metadata. Container scoping belongs only in the containersForAdditionalLabel
+            // (kube_pod_container_info) query.
+            String containerFilters = KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS;
 
-                assertFalse(labelQuery.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+            // Always-on invariant — runs everywhere, including source-only builds (the Dockerfile
+            // build stage copies just src/ + pom.xml, so the manifests below aren't available there).
+            assertFalse(WORKLOAD_WITH_LABEL_QUERY.contains(containerFilters),
+                    "WORKLOAD_WITH_LABEL_QUERY (kube_pod_labels) must NOT contain $CONTAINER_FILTERS$");
+            assertTrue(CONTAINER_QUERY.contains(containerFilters),
+                    "CONTAINER_QUERY (kube_pod_container_info) must still carry $CONTAINER_FILTERS$");
+
+            // Manifest-drift guard — when the shipped manifests are on disk (full repo checkout),
+            // assert the same on their actual queries, so reintroducing $CONTAINER_FILTERS$ into the
+            // JSON or YAML fails this test. Skipped per-file in source-only builds that lack them.
+            for (String manifest : new String[]{BULK_METADATA_PROFILE_JSON, BULK_METADATA_PROFILE_YAML}) {
+                if (!Files.exists(Path.of(manifest))) {
+                    continue;
+                }
+                assertFalse(manifestQueryForVariable(manifest, "workloadsWithPodLabelFilter").contains(containerFilters),
                         manifest + " — workloadsWithPodLabelFilter (kube_pod_labels) query must NOT contain $CONTAINER_FILTERS$");
-                assertTrue(containerQuery.contains(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS),
+                assertTrue(manifestQueryForVariable(manifest, "containersForAdditionalLabel").contains(containerFilters),
                         manifest + " — containersForAdditionalLabel (kube_pod_container_info) query must still carry $CONTAINER_FILTERS$");
             }
         }
