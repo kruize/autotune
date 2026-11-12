@@ -17,12 +17,14 @@
 ### Script to run scale test with Kruize in local monitoring mode ##
 #
 
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+CURRENT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-
-# Source the common functions scripts
+# Source the common functions scripts (this file resets CURRENT_DIR/KRUIZE_REPO for its own layout)
 . ${CURRENT_DIR}/../../common/common_functions.sh
+
+# Restore paths relative to this script (repo root is four levels up from bulk_scale_test/)
+CURRENT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+KRUIZE_REPO="$(cd "${CURRENT_DIR}/../../../.." && pwd)"
 
 RESULTS_DIR=kruize_bulk_scale_test_results
 APP_NAME=kruize
@@ -42,7 +44,7 @@ replicas=3
 ds_url="http://thanos-query-frontend-example-query.thanos-operator-system.svc.cluster.local:9090/"
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
+KRUIZE_IMAGE="quay.io/kusumach/autotune_operator:0.12_rc3"
 
 function usage() {
 	echo
@@ -99,17 +101,59 @@ function kruize_local_config_patch() {
 		sed_inplace 's#"url": ""#"url": "'"${ds_url}"'"#' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
 	fi
 
-	# Replace memory requests and limits for Kruize to 4Gi and 8Gi respectively for scale test
-	sed_inplace '/- name: kruize$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"4Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"8Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+	# Scale-test resource bumps (Python: portable; BSD/macOS sed rejects GNU brace programs).
+	# Also re-assert local monitoring flags — remote scale tests strip them from this shared manifest.
+	python3 - "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+if '"local": "true"' not in text:
+    text = text.replace('      "recommendationsURL"', '      "local": "true",\n      "recommendationsURL"', 1)
+if '"isROSEnabled": "false"' not in text:
+    text = text.replace('      "local": "true",', '      "isROSEnabled": "false",\n      "local": "true",', 1)
+open(path, "w").write(text)
+text = open(path).read()
 
-	# Replace memory requests and limits for Kruize DB to 10Gi and 16 Gi respectively for scale test
-	sed_inplace '/- name: kruize-db$/,/ports:/{/requests:/,/limits:/{/memory:/s/"[^"]*"/"10Gi"/}; /limits:/,/ports:/{/memory:/s/"[^"]*"/"16Gi"/}}' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+def bump_container(doc, container_name, req_mem, lim_mem, cpu=None):
+    # Only stop at the next container list entry with the SAME indent (ignore nested "- name:" keys).
+    m = re.search(rf'^(?P<indent>[ \t]*)- name: {re.escape(container_name)}\n', doc, re.M)
+    if not m:
+        raise SystemExit(f"container {container_name!r} not found in {path}")
+    indent = m.group("indent")
+    start = m.start()
+    rest = doc[m.end():]
+    end_m = re.search(rf'^{re.escape(indent)}- name: ', rest, re.M)
+    end = m.end() + (end_m.start() if end_m else len(rest))
+    block = doc[start:end]
 
-	sed_inplace 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-    cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
-	    
-	#sed_inplace 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9][0-9]*/"bulkapilimit" : 10000/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-	sed_inplace 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9][0-9]*Mi/\1\2 1Gi/' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+    def set_mem(section, value, blob):
+        pat = rf'({section}:\n(?:[ \t]+[^\n]*\n)*?[ \t]+memory:\s*)"[^"]*"'
+        new, n = re.subn(pat, rf'\g<1>"{value}"', blob, count=1)
+        if n != 1:
+            raise SystemExit(f"failed to set {section} memory for {container_name!r}")
+        return new
+
+    def set_cpu(section, value, blob):
+        pat = rf'({section}:\n(?:[ \t]+[^\n]*\n)*?[ \t]+cpu:\s*)"[^"]*"'
+        new, n = re.subn(pat, rf'\g<1>"{value}"', blob, count=1)
+        if n != 1:
+            raise SystemExit(f"failed to set {section} cpu for {container_name!r}")
+        return new
+
+    block = set_mem("requests", req_mem, block)
+    block = set_mem("limits", lim_mem, block)
+    if cpu is not None:
+        block = set_cpu("requests", cpu, block)
+        block = set_cpu("limits", cpu, block)
+    return doc[:start] + block + doc[end:]
+
+text = bump_container(text, "kruize", "4Gi", "8Gi", cpu="2")
+text = bump_container(text, "kruize-db", "10Gi", "30Gi", cpu="2")
+text = re.sub(r'(storage:\s*)[0-9]+Mi', r'\g<1>1Gi', text)
+open(path, "w").write(text)
+print(f"patched resources in {path}")
+PY
+	cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${LOG_DIR}"
 }
 
 
@@ -167,8 +211,9 @@ do
 done
 
 start_time=$(get_date)
-LOG_DIR="${RESULTS_DIR}/bulk-scale-test-$(date +%Y%m%d%H%M)"
-mkdir -p ${LOG_DIR}
+# Absolute path: kruize_local_config_patch and deploy run after pushd into KRUIZE_REPO.
+LOG_DIR="${CURRENT_DIR}/${RESULTS_DIR}/bulk-scale-test-$(date +%Y%m%d%H%M)"
+mkdir -p "${LOG_DIR}"
 
 LOG="${LOG_DIR}/bulk-scale-test.log"
 
@@ -259,9 +304,9 @@ db_size_mb=$((db_size / (1024 * 1024) + 1))
 echo "Postgres DB size in MB = ${db_size_mb}"
 
 # This should be a computed value
-total_recos_count = 300000
-echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}""
-python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_recos_count}"
+total_recos_count=300000
+echo "python3 parse_metrics.py -d \"${LOG_DIR}/results\" -r \"${total_recos_count}\""
+python3 parse_metrics.py -d "${LOG_DIR}/results" -r "${total_recos_count}"
 
 echo "###########################################################################"
 echo ""

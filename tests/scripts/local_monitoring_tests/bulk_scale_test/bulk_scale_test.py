@@ -49,6 +49,47 @@ def get_server():
         return server
 
 
+def reload_kruize_profile_cache(namespace="openshift-tuning", attempts=5, settle_seconds=5):
+    """
+    createMetricProfile / createMetadataProfile only update in-memory maps on the
+    pod that handled the request. With multiple replicas, other pods keep an empty
+    cache and bulk jobs fail with "Metadata profile not found". Restart all
+    replicas so every pod reloads profiles from the DB before bulk starts.
+    """
+    print("Restarting kruize pods so all replicas reload metric/metadata profiles...")
+    subprocess.run(
+        ["kubectl", "rollout", "restart", "deployment/kruize", "-n", namespace],
+        check=False,
+    )
+    result = subprocess.run(
+        ["kubectl", "rollout", "status", "deployment/kruize", "-n", namespace, "--timeout=180s"],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout.strip() or result.stderr.strip())
+    if result.returncode != 0:
+        print("WARNING: kruize rollout status did not succeed; continuing anyway")
+
+    sleep(settle_seconds)
+
+    for i in range(1, attempts + 1):
+        metric = list_metric_profiles(name="resource-optimization-local-monitoring", verbose=True, logging=False)
+        metadata = list_metadata_profiles(name="cluster-metadata-local-monitoring", verbose=True, logging=False)
+        print(
+            f"Profile reload check {i}/{attempts}: "
+            f"metric={metric.status_code} metadata={metadata.status_code}"
+        )
+        if metric.status_code == 200 and metadata.status_code == 200:
+            print("Metric and metadata profiles visible after reload")
+            return
+        sleep(2)
+
+    print(
+        "WARNING: profiles still not consistently visible after reload; "
+        "bulk jobs may complete with 0 experiments"
+    )
+
+
 def setup_logger(name, log_file, level=logging.INFO):
 
     handler = logging.FileHandler(log_file)
@@ -158,47 +199,75 @@ def fetch_bulk_recommendations(job_status_json, logger):
         return -1
 
 def fetch_bulk_job_status(job_id, log_id, logger):
-    # Get the bulk job status using the job id
-    include = "summary,experiments"
+    # Poll with summary only — include=experiments on 500–750-exp jobs
+    # routinely 504s the OpenShift route and aborts the worker mid-window.
     deadline = time.time() + job_timeout
+    job_status_json = None
+    job_status = "FAILED"
 
-    # Loop until job status is COMPLETED / FAILED or the timeout expires
     while True:
-        bulk_job_response = get_bulk_job_status(job_id, include, logger)
-        job_status_json = bulk_job_response.json()
-        job_status = job_status_json['summary']['status']
-        total_exps = job_status_json['summary']['total_experiments']
-        processed_exps = job_status_json['summary']['processed_experiments']
-        logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
-        if job_status == "COMPLETED":
-            break
-        if job_status == "FAILED":
-            logger.info("Job FAILED!")
-            break
+        try:
+            bulk_job_response = get_bulk_job_status(job_id, "summary", logger)
+            if bulk_job_response.status_code != 200:
+                logger.warning(
+                    f"summary poll HTTP {bulk_job_response.status_code} for job {job_id}; retrying..."
+                )
+                if time.time() > deadline:
+                    logger.error(f"Job {job_id} did not complete within {job_timeout} seconds!")
+                    break
+                sleep(10)
+                continue
+            job_status_json = bulk_job_response.json()
+            job_status = job_status_json['summary']['status']
+            total_exps = job_status_json['summary']['total_experiments']
+            processed_exps = job_status_json['summary']['processed_experiments']
+            logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
+            if job_status == "COMPLETED":
+                break
+            if job_status == "FAILED":
+                logger.info("Job FAILED!")
+                break
+        except Exception as e:
+            logger.warning(f"summary poll failed for job {job_id}: {e}; retrying...")
         if time.time() > deadline:
             logger.error(f"Job {job_id} did not complete within {job_timeout} seconds!")
             job_status = "FAILED"
             break
         sleep(5)
 
+    # Final fetch with experiments (retry — large payloads can still 504 once)
+    if job_status != "FAILED":
+        for attempt in range(1, 6):
+            try:
+                final = get_bulk_job_status(job_id, "summary,experiments", logger)
+                if final.status_code == 200:
+                    job_status_json = final.json()
+                    break
+                logger.warning(
+                    f"experiments fetch HTTP {final.status_code} attempt {attempt}/5; retrying..."
+                )
+            except Exception as e:
+                logger.warning(f"experiments fetch attempt {attempt}/5 failed: {e}")
+            sleep(15)
+        else:
+            logger.error(f"Could not fetch experiments for completed job {job_id}")
+            job_status = "FAILED"
+
     logger.info(f"log id - {log_id} job id - {job_id} job status - {job_status}")
 
-    # Dump the job status json into a file
     job_status_dir = results_dir + "/job_status_jsons"
     os.makedirs(job_status_dir, exist_ok=True)
-
     job_file = job_status_dir + "/job_status_" + str(log_id) + ".json"
     logger.info(f"Storing job status in {job_file}")
-    with open(job_file, 'w') as f:
-        json.dump(job_status_json, f, indent=4)
+    if job_status_json is not None:
+        with open(job_file, 'w') as f:
+            json.dump(job_status_json, f, indent=4)
 
-    # Fetch the list of experiments for which recommendations are available
-    if job_status != "FAILED":
-        status = fetch_bulk_recommendations(job_status_json, logger)
-        return status
-    else:
-        logger.info(f"Check {job_file} for job status")
-        return -1
+    if job_status != "FAILED" and job_status_json is not None:
+        return fetch_bulk_recommendations(job_status_json, logger)
+
+    logger.info(f"Check {job_file} for job status")
+    return -1
 
 def collect_kruize_metrics(resultsdir, worker_number, server):
     # Collect a single kruize metrics data point into the worker's own csv (one csv per worker,
@@ -218,6 +287,60 @@ def collect_kruize_metrics(resultsdir, worker_number, server):
     except Exception as e:
         print(f"Failed to collect kruize metrics for worker {worker_number}: {e}")
 
+# Filled from Kruize /datasources at startup — whatever URL was passed via
+# bulk_scale_test.sh --url=... (kubegenX export, real Thanos, prometheus, …).
+datasource_url = ""
+
+
+def wait_for_datasource_ready(logger, timeout_seconds=300, poll_seconds=5):
+    """
+    Probe the Prometheus-compatible datasource already registered with Kruize.
+    No kubegenX / dataset / export names — only the HTTP URL Kruize uses.
+    Probes from the kruize pod so in-cluster Service DNS works.
+    """
+    if not datasource_url:
+        logger.warning("datasource_url unset; skipping readiness probe")
+        return True
+
+    ready_url = datasource_url.rstrip("/") + "/-/ready"
+    query_url = datasource_url.rstrip("/") + "/api/v1/query?query=vector(1)"
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        try:
+            probe = subprocess.run(
+                [
+                    "oc", "exec", "-n", "openshift-tuning", "deploy/kruize", "-c", "kruize", "--",
+                    "curl", "-sf", "--max-time", "5", ready_url,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if probe.returncode != 0:
+                # Some Prom builds lack /-/ready; fall back to a trivial query.
+                probe = subprocess.run(
+                    [
+                        "oc", "exec", "-n", "openshift-tuning", "deploy/kruize", "-c", "kruize", "--",
+                        "curl", "-sf", "--max-time", "5", query_url,
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+            if probe.returncode == 0:
+                logger.info(f"Datasource ready: {datasource_url}")
+                return True
+            logger.warning(
+                f"Datasource not ready ({ready_url}): rc={probe.returncode} "
+                f"err={probe.stderr[-200:]!r}; retrying..."
+            )
+        except Exception as e:
+            logger.warning(f"Datasource readiness probe failed: {e}; retrying...")
+        sleep(poll_seconds)
+    logger.error(f"Datasource not ready after {timeout_seconds}s: {datasource_url}")
+    return False
+
+
 def invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time, worker_number, tsdb_id):
     try:
         scale_log_dir = resultsdir + "/scale_logs"
@@ -232,27 +355,26 @@ def invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, c
         logger = setup_logger(f"logger_{log_id}", log_file)
         logger.info(f"log id = {log_id}")
 
-        # Invoke the bulk service
+        # Optional readiness gate against whatever Prom URL Kruize registered (not dataset-specific).
+        wait_for_datasource_ready(logger, timeout_seconds=120)
+
         logger.info("Invoking bulk service with bulk json")
         bulk_response = post_bulk_api(bulk_json, logger)
-
-        # Obtain the job id from the response from bulk service
         job_id_json = bulk_response.json()
-
         job_id = job_id_json['job_id']
-
-        # Get the bulk job status using the job id
-        return_status = fetch_bulk_job_status(job_id, log_id, logger)
-        return return_status
+        return fetch_bulk_job_status(job_id, log_id, logger)
 
     except Exception as e:
         return {'error': str(e)}
 
 def run_worker(resultsdir, worker_number, worker_configs, current_start_time, current_end_time, tsdb_id, server):
     # A worker invokes the bulk service, one at a time, with each of the configurations assigned to it
-    results = [invoke_bulk_with_time_range_labels(resultsdir, config, current_start_time, current_end_time,
-                                                  worker_number, tsdb_id)
-               for config in worker_configs]
+    results = [
+        invoke_bulk_with_time_range_labels(
+            resultsdir, config, current_start_time, current_end_time, worker_number, tsdb_id
+        )
+        for config in worker_configs
+    ]
 
     # Record the kruize metrics in the worker's csv once it is done with the tsdb block
     collect_kruize_metrics(resultsdir, worker_number, server)
@@ -370,20 +492,30 @@ if __name__ == '__main__':
     print(metadata_profile_json_file) 
     create_metadata_profile(metadata_profile_json_file)
 
+    # Ensure every kruize replica has profiles in memory (multi-replica cache)
+    reload_kruize_profile_cache()
 
-    # List datasources
+    # List datasources — bulk_scale_test only cares about the registered Prom URL,
+    # never about kubegenX dataset/export names.
     datasource_name = None
     list_response = list_datasources(datasource_name)
     list_response_json = list_response.json()
+    ds0 = list_response_json['datasources'][0]
 
     if prometheus == 0:
-        if list_response_json['datasources'][0]['name'] != "thanos":
+        if ds0['name'] != "thanos":
             print("Failed! Thanos datasource is not registered with Kruize!")
             sys.exit(1)
     else:
-        if list_response_json['datasources'][0]['name'] != "prometheus-1":
+        if ds0['name'] != "prometheus-1":
             print("Failed! Prometheus-1 datasource is not registered with Kruize!")
             sys.exit(1)
+
+    datasource_url = (ds0.get("url") or "").strip()
+    if not datasource_url:
+        print("Failed! Registered datasource has empty url")
+        sys.exit(1)
+    print(f"Using datasource url from Kruize: {datasource_url}")
 
     server = get_server()
     if server == "":
@@ -407,7 +539,7 @@ if __name__ == '__main__':
     exec_time = end_time - start_time
     print(f"Execution time: {exec_time} seconds")
 
-       if failed == 0:
+    if failed == 0:
         sys.exit(0)
     else:
         sys.exit(1)

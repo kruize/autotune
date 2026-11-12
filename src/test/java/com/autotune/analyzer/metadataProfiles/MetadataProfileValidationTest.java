@@ -66,10 +66,13 @@ class MetadataProfileValidationTest {
             "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     private static final String WORKLOAD_WITH_LABEL_QUERY =
-            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     private static final String CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+
+    private static final String CONTAINER_WITH_LABEL_QUERY =
+            "sum by (container, image, workload, workload_type, namespace) (max_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left() max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     // ---- Update-payload queries (valid for updateMetadata) ----
     // Bulk-only placeholders are replaced with concrete label selectors.
@@ -388,6 +391,20 @@ class MetadataProfileValidationTest {
 
             assertFalse(errorString.isEmpty(),
                     "Bulk-only placeholders must be rejected in workloadsWithPodLabelFilter update payload");
+        }
+
+        @Test
+        @DisplayName("Bulk-only placeholders in containersWithPodLabelFilter query are rejected")
+        void bulkOnlyPlaceholdersInContainerLabelFilterQueryRejected() {
+            StringBuilder errorString = new StringBuilder();
+            validation.validateMetricQueryPattern(
+                    CONTAINER_WITH_LABEL_QUERY,
+                    "containersWithPodLabelFilter",
+                    errorString,
+                    mockDataSourceInfo);
+
+            assertFalse(errorString.isEmpty(),
+                    "Bulk-only placeholders must be rejected in containersWithPodLabelFilter update payload");
         }
 
         @Test
