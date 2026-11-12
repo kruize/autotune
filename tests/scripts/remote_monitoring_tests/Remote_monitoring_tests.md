@@ -31,6 +31,29 @@ Here are the test scenarios:
 - Create multiple namespace experiments with valid namespace
 - Validate the experiment for the presence of experiment_type, creation_date and update_date along with its default values using listExperiments
 
+Negative Tests for Custom Terms
+- Create experiment for a custom term with invalid term name
+- Create experiment for a custom term without passing duration in days
+- Create experiment for a custom term with negative duration in days
+- Create experiment trying to modify default term not allowed
+- Create experiment for a custom term with negative plots datapoint not allowed
+- Create experiment for a custom term with negative plots datapoint delta in days not allowed
+- Create experiment with duplicate custom term name 
+
+Sanity Tests for Custom Terms
+- Create experiment with a valid custom term all fields provided by the user
+- Create experiment with a valid custom term some fields provided by the user and a default term
+- Create experiment with a valid custom term & fractional duration in days value 
+- Create experiment with case-sensitive custom term name is allowed
+
+### **List Experiment API tests**
+
+Here are the test scenarios:
+One test covers all the below scenarios
+- List Experiment should autopopulate the term definition for a Default term. 
+- List Experiment should calculate and populate term definition for a custom term where user has just provided duration_in_days.
+- List Experiment should not override any parameter for a Default term.
+
 ### **Update Results API tests**
 
 Here are the test scenarios:
@@ -131,6 +154,7 @@ Here are the test scenarios:
 - Update recommendations with end_time preceding start_time
 - [SANITY] Update recommendations with valid results for Kruize supported MIG accelerator [A100, H100 and H200]
 - [SANITY] Update recommendations with valid results for Non-MIG Accelerator
+- [SANITY] Update recommendations with valid results for a custom term experiment 
 
 Namespace Related Test Scenarios:
 Sanity Tests
