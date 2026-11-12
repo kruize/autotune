@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.recommendations.MultiResourceRecommendation;
 import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -56,6 +57,7 @@ public interface RecommendationEngineService {
      * @param memoryThreshold                 Memory threshold value
      * @param recommendationAcceleratorRequestMap Map of accelerator recommendations (can be null)
      * @param runtimeListToPopulate           List of runtime recommendations (can be null)
+     * @param currentAccelerators             Current accelerator config for variation (can be null)
      * @return true if population was successful, false otherwise
      */
     boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -66,7 +68,8 @@ public interface RecommendationEngineService {
                                    double cpuThreshold,
                                    double memoryThreshold,
                                    Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
-                                   List<RecommendationConfigEnv> runtimeListToPopulate);
+                                   List<RecommendationConfigEnv> runtimeListToPopulate,
+                                   MultiResourceRecommendation currentAccelerators);
 
     /**
      * Returns the experiment name.
