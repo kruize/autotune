@@ -9,7 +9,7 @@
     <version>0.12</version>
     <properties>
         <fabric8-version>7.8.0</fabric8-version>
-        <org-json-version>20260522</org-json-version>
+        <org-json-version>20260719</org-json-version>
         <jetty-version>12.1.10</jetty-version>
         <log4j-version>2.26.1</log4j-version>
         <java-version>25</java-version>
@@ -196,13 +196,24 @@
     <dependencyManagement>
         <dependencies>
             <!--
-            Force at.yawk.lz4:lz4-java of version 1.11.1 with kafka-clients library.
-            Remove this override when kafka-clients is upgraded to version that has at.yawk.lz4:lz4-java of version >= 1.11.1
+            Force at.yawk.lz4:lz4-java of version 1.11.4 to fix GHSA-mcr4-qmvw-px4g, GHSA-gm45-99xc-r7wv & GHSA-343h-94h5-c4wr with kafka-clients library.
+            Remove this override when kafka-clients is upgraded to version that has at.yawk.lz4:lz4-java of version >= 1.11.4
             -->
             <dependency>
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
-                <version>1.11.3</version>
+                <version>1.11.4</version>
+            </dependency>
+            <!--
+            Align all io.netty modules to 4.1.138.Final to fix GHSA-mfg7-5gfp-c4w3 (netty-codec-dns 4.1.135.Final pulled in via fabric8 vertx http client).
+            Remove this override when fabric8 kubernetes-client is upgraded to version that brings netty >= 4.1.136.Final
+            -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.1.138.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <!--
             Force com.mchange:c3p0 of version 0.14.0 to fix CVE-2026-55153 & CVE-2026-55223 with hibernate-c3p0 library.
