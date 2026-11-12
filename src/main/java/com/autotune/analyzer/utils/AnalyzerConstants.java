@@ -1146,6 +1146,9 @@ public class AnalyzerConstants {
 
     /**
      * K8S object types that Kruize does not support for recommendations.
+     * Used to build the {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter for local monitoring metadata discovery.
+     * Note: DeploymentConfig is excluded from discovery but is still accepted by remote monitoring
+     * createExperiment, so {@code /listK8sObjects} keeps listing it.
      */
     public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = Collections.unmodifiableList(Arrays.asList(
             K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
