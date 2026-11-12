@@ -435,6 +435,21 @@ public class DBHelpers {
             }
 
             /**
+             * Shared compact Gson for kruize_results.extended_data.
+             * Same adapters as the previous per-call builder, without pretty-printing.
+             * Gson is thread-safe after {@code create()}; do not rebuild it per interval.
+             */
+            private static final Gson RESULTS_JSONB_GSON = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .enableComplexMapKeySerialization()
+                    .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+                    .create();
+
+            /**
              * @param apiObject
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
@@ -481,16 +496,6 @@ public class DBHelpers {
              */
             public static KruizeResultsEntry convertExperimentResultToExperimentResultsTable(ExperimentResultData experimentResultData) {
                 KruizeResultsEntry kruizeResultsEntry = null;
-                Gson gson = new GsonBuilder()
-                        .disableHtmlEscaping()
-                        .setPrettyPrinting()
-                        .enableComplexMapKeySerialization()
-                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
-                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                        .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setVersion(experimentResultData.getVersion());
@@ -503,11 +508,10 @@ public class DBHelpers {
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
                     Map<String, List<K8sObject>> k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
-                    String k8sObjectString = gson.toJson(k8sObjectsMap);
-                    ObjectMapper objectMapper = new ObjectMapper();
+                    String k8sObjectString = RESULTS_JSONB_GSON.toJson(k8sObjectsMap);
                     try {
                         kruizeResultsEntry.setExtended_data(
-                                objectMapper.readTree(
+                                OBJECT_MAPPER.readTree(
                                         k8sObjectString
                                 )
                         );

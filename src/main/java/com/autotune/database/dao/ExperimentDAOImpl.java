@@ -56,6 +56,8 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDAOImpl.class);
+    /** Serializes on-demand partition DDL across concurrent updateResults ingest threads. */
+    private static final Object PARTITION_CREATION_LOCK = new Object();
 
     @Override
     public synchronized ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
@@ -268,65 +270,38 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeResultsEntry> addToDBAndFetchFailedResults(List<KruizeResultsEntry> kruizeResultsEntries) {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
-        Transaction tx = null;
         String statusValue = "failure";
         Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            for (KruizeResultsEntry entry : kruizeResultsEntries) {
+            Transaction tx = null;
+            try {
+                // Happy path: one transaction for the whole request (bounded by bulk_update_results_limit).
                 tx = session.beginTransaction();
-                try {
+                for (KruizeResultsEntry entry : kruizeResultsEntries) {
                     session.persist(entry);
-                    session.flush();
-                } catch (PersistenceException e) {
-                    ConstraintViolationException constraintViolationException = null;
-                    String message = "";
-                    // Hibernate 6.1 : PSQLException is wrapped in PersistenceException as ConstraintViolationException when partitions are missing
-                    // Hibernate 6.6 : PSQLException is wrapped in PersistenceException when partitions are missing
-                    if (null != e.getCause()) {
-                        if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
-                            constraintViolationException = (ConstraintViolationException) e.getCause();
-                            Throwable cause = constraintViolationException.getCause();
-                            message = (cause != null ? cause.getMessage() : constraintViolationException.getMessage());
-                        } else {
-                            message = e.getCause().getMessage();
-                        }
-                    } else {
-                        message = e.getMessage();
-                    }
-                    LOGGER.debug(message);
-                    if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
-                        entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
-                        failedResultsEntries.add(entry);
-                    } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
-                        try {
-                            LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
-                            tx.commit();
-                            tx = session.beginTransaction();
-                            // create partitions based on entry object
-                            synchronized (new Object()) {
-                                createPartitions(entry);
-                            }
-                            session.persist(entry);
-                            session.flush();
-                        } catch (Exception partitionException) {
-                            LOGGER.error(partitionException.getMessage());
-                            entry.setErrorReasons(List.of(partitionException.getMessage()));
-                            failedResultsEntries.add(entry);
-                        }
-                    } else {
-                        entry.setErrorReasons(List.of(e.getMessage()));
-                        failedResultsEntries.add(entry);
-                    }
-                } catch (Exception e) {
-                    entry.setErrorReasons(List.of(e.getMessage()));
-                    failedResultsEntries.add(entry);
-                } finally {
-                    tx.commit();
                 }
+                session.flush();
+                tx.commit();
+                statusValue = "success";
+            } catch (Exception batchException) {
+                // PostgreSQL aborts the txn after any statement error; isolate failures per-row.
+                LOGGER.debug("Bulk insert failed, falling back to per-row commits: {}", batchException.getMessage());
+                if (tx != null) {
+                    try {
+                        if (tx.getStatus().canRollback()) {
+                            tx.rollback();
+                        }
+                    } catch (Exception rollbackEx) {
+                        LOGGER.error("Rollback failed after bulk insert error: {}", rollbackEx.getMessage());
+                    }
+                }
+                session.clear();
+                failedResultsEntries.addAll(persistResultsPerRow(session, kruizeResultsEntries));
+                statusValue = "success";
             }
-            statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+            failedResultsEntries.clear();
             failedResultsEntries.addAll(kruizeResultsEntries);
             failedResultsEntries.forEach((entry) -> {
                 entry.setErrorReasons(List.of(e.getMessage()));
@@ -335,6 +310,65 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerAddBulkResultsDB) {
                 MetricsConfig.timerAddBulkResultsDB = MetricsConfig.timerBAddBulkResultsDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerAddBulkResultsDB.stop(MetricsConfig.timerAddBulkResultsDB);
+            }
+        }
+        return failedResultsEntries;
+    }
+
+    /**
+     * Persist results one row / one transaction so duplicate-key and other row-level
+     * failures can be reported without rolling back successful siblings.
+     */
+    private List<KruizeResultsEntry> persistResultsPerRow(Session session, List<KruizeResultsEntry> kruizeResultsEntries) {
+        List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
+        for (KruizeResultsEntry entry : kruizeResultsEntries) {
+            Transaction tx = session.beginTransaction();
+            try {
+                session.persist(entry);
+                session.flush();
+            } catch (PersistenceException e) {
+                String message = "";
+                // Hibernate 6.1 : PSQLException is wrapped in PersistenceException as ConstraintViolationException when partitions are missing
+                // Hibernate 6.6 : PSQLException is wrapped in PersistenceException when partitions are missing
+                if (null != e.getCause()) {
+                    if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException) {
+                        ConstraintViolationException constraintViolationException = (ConstraintViolationException) e.getCause();
+                        Throwable cause = constraintViolationException.getCause();
+                        message = (cause != null ? cause.getMessage() : constraintViolationException.getMessage());
+                    } else {
+                        message = e.getCause().getMessage();
+                    }
+                } else {
+                    message = e.getMessage();
+                }
+                LOGGER.debug(message);
+                if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
+                    entry.setErrorReasons(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS));
+                    failedResultsEntries.add(entry);
+                } else if (message.contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION)) {
+                    try {
+                        LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                        tx.commit();
+                        tx = session.beginTransaction();
+                        synchronized (PARTITION_CREATION_LOCK) {
+                            createPartitions(entry);
+                        }
+                        session.persist(entry);
+                        session.flush();
+                    } catch (Exception partitionException) {
+                        LOGGER.error(partitionException.getMessage());
+                        entry.setErrorReasons(List.of(partitionException.getMessage()));
+                        failedResultsEntries.add(entry);
+                    }
+                } else {
+                    entry.setErrorReasons(List.of(e.getMessage()));
+                    failedResultsEntries.add(entry);
+                }
+            } catch (Exception e) {
+                entry.setErrorReasons(List.of(e.getMessage()));
+                failedResultsEntries.add(entry);
+            } finally {
+                tx.commit();
             }
         }
         return failedResultsEntries;
