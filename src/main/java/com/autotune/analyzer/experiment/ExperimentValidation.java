@@ -361,7 +361,7 @@ public class ExperimentValidation {
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
                         expObj.getRecommendation_settings().getModelSettings().getModels() != null) {
-                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE);
+                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE, KruizeConstants.JSONKeys.STABILITY);
 
                     for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
                         if (model == null || model.trim().isEmpty()) {
@@ -371,7 +371,7 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
-                        if (!validModels.contains(model)) {
+                        if (!validModels.contains(model.toLowerCase())) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);

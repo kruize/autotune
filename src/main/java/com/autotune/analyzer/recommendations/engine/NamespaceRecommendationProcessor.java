@@ -187,14 +187,18 @@ public final class NamespaceRecommendationProcessor extends BaseRecommendationPr
                         timestampRecommendation.addNotification(rn);
                     }
                     RecommendationNotification recommendationNotification = null;
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
+                    if (RecommendationConstants.RecommendationEngine.ModelNames.COST.equalsIgnoreCase(model.getModelName())) {
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE);
-                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
+                    } else if (RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE.equalsIgnoreCase(model.getModelName())) {
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE);
+                    } else if (RecommendationConstants.RecommendationEngine.ModelNames.STABILITY.equalsIgnoreCase(model.getModelName())) {
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_STABILITY_RECOMMENDATIONS_AVAILABLE);
                     } else if (null != model.getModelName()) {
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(

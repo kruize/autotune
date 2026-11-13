@@ -46,7 +46,8 @@ public class BulkConfigValidation {
 
     private static final Set<String> VALID_MODELS = new HashSet<>(Arrays.asList(
             KruizeConstants.JSONKeys.PERFORMANCE,
-            KruizeConstants.JSONKeys.COST
+            KruizeConstants.JSONKeys.COST,
+            KruizeConstants.JSONKeys.STABILITY
     ));
 
     private static final Set<String> VALID_EXPERIMENT_TYPES = new HashSet<>(Arrays.asList(
@@ -390,7 +391,7 @@ public class BulkConfigValidation {
         // Same empty-list-as-absent treatment as terms above.
         if (settings.getModels() != null && !settings.getModels().isEmpty()) {
             for (String model : settings.getModels()) {
-                if (!VALID_MODELS.contains(model)) {
+                if (!VALID_MODELS.contains(model.toLowerCase())) {
                     return new ValidationOutputData(false,
                             "Invalid model: " + model + ". Valid values are: " + VALID_MODELS,
                             HttpServletResponse.SC_BAD_REQUEST);

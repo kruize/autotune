@@ -52,6 +52,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
 import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationConstants.PERFORMANCE_RECOMMENDATION_TUNABLES;
+import static com.autotune.utils.KruizeConstants.StabilityBasedRecommendationConstants.STABILITY_RECOMMENDATION_TUNABLES;
 
 public class RecommendationEngine implements RecommendationEngineService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
@@ -125,6 +126,9 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // Todo: add custom performance parameters over here from the user inputs
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
+            } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
+                StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES);
+                registerModel(stabilityBasedRecommendationModel);
             } else {
                 // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
@@ -355,7 +359,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
-                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null) {
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
                     // recommendation setting are null -> use default values
                     loadDefaultRecommendationModelForAutoAndRecreate();
                 } else {
