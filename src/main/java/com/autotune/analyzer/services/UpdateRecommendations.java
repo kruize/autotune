@@ -106,7 +106,14 @@ public class UpdateRecommendations extends HttpServlet {
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null);
+                long prepareStartNanos = System.nanoTime();
+                KruizeObject kruizeObject;
+                try {
+                    kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null);
+                } finally {
+                    LOGGER.info("updateRecommendations server prepare ms={} experiment={}",
+                            (System.nanoTime() - prepareStartNanos) / 1_000_000L, experiment_name);
+                }
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_SUCCESS_COUNT, calCount));
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
