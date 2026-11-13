@@ -270,7 +270,9 @@ def test_create_metadata_profiles_mandatory_fields(cluster_type, field, expected
     assert data['status'] == expected_status
 
     if response.status_code == ERROR_500_STATUS_CODE:
-        assert data['message'] == CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
+        # HTTP 5xx messages are not disclosed to the client, the cause is only logged by Kruize
+        assert data['message'] == INTERNAL_SERVER_ERROR_MSG
+        assert response.headers['Content-Type'].startswith('application/json')
     else:
         assert data['message'] == CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
 
