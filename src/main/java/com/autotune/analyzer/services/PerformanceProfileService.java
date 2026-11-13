@@ -31,6 +31,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import com.autotune.utils.cache.PerformanceProfileCache;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -237,7 +238,15 @@ public class PerformanceProfileService extends HttpServlet {
             // Delete profile
             ValidationOutputData result = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
             if (!result.isSuccess()) {
-                sendErrorResponse(resp, null, result.getErrorCode(), result.getMessage());
+                int errorCode = null != result.getErrorCode() ? result.getErrorCode() : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                if (errorCode >= HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
+                    // database failure: log the cause server side
+                    LOGGER.error("{}", String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION,
+                            Utils.sanitizeForLog(perfProfileName), Utils.sanitizeForLog(result.getMessage())));
+                    sendErrorResponse(resp, null, errorCode, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
+                } else {
+                    sendErrorResponse(resp, null, errorCode, result.getMessage());
+                }
                 return;
             }
             // remove the profile from the local storage as well
@@ -245,8 +254,10 @@ public class PerformanceProfileService extends HttpServlet {
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName),
                     HttpServletResponse.SC_OK);
         } catch (Exception e) {
-            LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
-            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            // log the actual cause on the server side but do not disclose it to the client
+            LOGGER.error("{}", String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION,
+                    Utils.sanitizeForLog(perfProfileName), Utils.sanitizeForLog(e.getMessage())));
+            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 

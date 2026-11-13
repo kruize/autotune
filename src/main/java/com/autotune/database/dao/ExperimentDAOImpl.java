@@ -992,6 +992,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("No performance profile found with the name: " + perfProfileName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1002,6 +1003,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1065,6 +1067,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     // Remove the experiment from the Results table
                     Query kruizeResultsEntryquery = session.createQuery(DELETE_FROM_RESULTS_BY_EXP_NAME, null);
@@ -1084,6 +1087,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1114,6 +1118,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeLMExperimentEntry not found with experiment name: " + experimentName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     // Remove the experiment from the Recommendations table
                     Query kruizeLMRecommendationEntryquery = session.createQuery(DELETE_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME, null);
@@ -1128,6 +1133,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1157,6 +1163,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeDSMetadataEntry not found with datasource name: " + dataSourceName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1167,6 +1174,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {

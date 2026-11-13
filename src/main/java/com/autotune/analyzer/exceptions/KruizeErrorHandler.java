@@ -18,7 +18,10 @@ package com.autotune.analyzer.exceptions;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.ee8.nested.Request;
@@ -45,6 +48,16 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class KruizeErrorHandler extends ErrorPageErrorHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeErrorHandler.class);
 
+    /**
+     * Jetty by default generates an error body only for GET, POST and HEAD requests. For any other method
+     * (e.g. DELETE, PUT) the error response is sent without a body and without a Content-Type, while all
+     * Kruize endpoints are expected to return a JSON error payload with 'application/json' content type.
+     */
+    @Override
+    public boolean errorPageForMethod(String method) {
+        return true;
+    }
+
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         baseRequest.setMethod("GET");
@@ -52,6 +65,15 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String origMessage = (String) request.getAttribute("javax.servlet.error.message");
         int errorCode = response.getStatus();
+        if (errorCode >= HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
+            // Defense in depth: never return the raw message of a server error to the client, whichever
+            // servlet raised it. The actual cause is logged by the servlet that raised the error.
+            if (null != origMessage && !origMessage.equals(AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG)) {
+                LOGGER.error(KruizeConstants.ErrorMsgs.SERVER_ERROR_MESSAGE_SUPPRESSED, errorCode,
+                        Utils.sanitizeForLog(origMessage));
+            }
+            origMessage = AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG;
+        }
         List<FailedUpdateResultsAPIObject> myList = (List<FailedUpdateResultsAPIObject>) request.getAttribute("data");
         PrintWriter out = response.getWriter();
         Gson gsonObj = new GsonBuilder()

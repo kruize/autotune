@@ -28,22 +28,25 @@ from helpers.list_metric_profiles_without_parameters_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
 
+# Missing mandatory fields are client errors and are reported with HTTP 400.
+# Fields that are read by the converter (JSONObject["<field>"] not found) vs. fields validated later
+# (Missing mandatory parameters: [<field>]) are told apart by the expected message.
 mandatory_fields = [
-    ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("kind", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("metadata", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("apiVersion", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("kind", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("metadata", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("slo", ERROR_STATUS_CODE, ERROR_STATUS),
     ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("objective_function", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("objective_function", ERROR_STATUS_CODE, ERROR_STATUS),
     ("function_type", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("function_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("value_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("function", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("query", ERROR_500_STATUS_CODE, ERROR_STATUS)
+    ("function_variables", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("datasource", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("value_type", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("aggregation_functions", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("function", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("query", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
 
 
@@ -272,10 +275,15 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
-    if response.status_code == ERROR_500_STATUS_CODE:
-        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
-    else:
+    # the error response is a client error: JSON content type and no internal error details
+    assert response.headers['Content-Type'].startswith('application/json')
+    assert data['httpcode'] == ERROR_STATUS_CODE
+
+    if field in ("direction", "function_type"):
         assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
+    else:
+        # the converter reports the missing json key: Validation failed: JSONObject["<field>"] not found.
+        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
 
     response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
