@@ -238,7 +238,6 @@ public class DataSourceMetadataOperator {
         String workloadQuery = workloadQueryTemplate
                 .replace(KruizeConstants.KRUIZE_BULK_API.NAMESPACE_FILTERS, namespaceFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.WORKLOAD_FILTERS, workloadFilters)
-                .replace(KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS, containerFilters)
                 .replace(KruizeConstants.KRUIZE_BULK_API.LABELS, labels);
 
         String containerQuery = containerQueryTemplate

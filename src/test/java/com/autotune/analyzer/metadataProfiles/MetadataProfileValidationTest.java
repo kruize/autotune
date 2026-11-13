@@ -20,6 +20,9 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,9 +32,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -65,11 +73,52 @@ class MetadataProfileValidationTest {
     private static final String WORKLOAD_QUERY =
             "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
+    // NOTE: kube_pod_labels is deliberately NOT container-filtered. kube-state-metrics sets the
+    // container label on kube_pod_labels to an internal container (e.g. kube-rbac-proxy-main),
+    // never the application container, so $CONTAINER_FILTERS$ here would match zero series.
+    // Container scoping is applied in the containersForAdditionalLabel query instead
+    // (kube_pod_container_info, which carries the real container value). See issue #2119.
     private static final String WORKLOAD_WITH_LABEL_QUERY =
-            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+            "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
 
     private static final String CONTAINER_QUERY =
             "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))";
+
+    // The shipped bulk metadata-profile manifests (relative to the module root, which is the test
+    // working directory). The regression guard reads these real files so reintroducing
+    // $CONTAINER_FILTERS$ into either one fails the build — see labelFilterQueryHasNoContainerFilter.
+    private static final String BULK_METADATA_PROFILE_JSON =
+            "manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json";
+    private static final String BULK_METADATA_PROFILE_YAML =
+            "manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.yaml";
+
+    /**
+     * Returns every Prometheus query (one per aggregation function) defined for {@code variableName}
+     * in a metadata-profile manifest on disk (JSON or YAML), so tests assert against what actually
+     * ships rather than a constant. The variable is matched by exact name, and all of its
+     * aggregation functions are returned so a regression in any of them is caught.
+     */
+    private static List<String> manifestQueriesForVariable(String manifestPath, String variableName) throws Exception {
+        String text = Files.readString(Path.of(manifestPath));
+        ObjectMapper mapper = manifestPath.endsWith(".json") ? new ObjectMapper() : new ObjectMapper(new YAMLFactory());
+        JsonNode root = mapper.readTree(text);
+        for (JsonNode queryVariable : root.path("query_variables")) {
+            if (variableName.equals(queryVariable.path("name").asText())) {
+                List<String> queries = new ArrayList<>();
+                for (JsonNode aggregation : queryVariable.path("aggregation_functions")) {
+                    JsonNode query = aggregation.path("query");
+                    if (query.isTextual()) {
+                        queries.add(query.asText());
+                    }
+                }
+                if (queries.isEmpty()) {
+                    throw new AssertionError("no query for '" + variableName + "' in " + manifestPath);
+                }
+                return queries;
+            }
+        }
+        throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
+    }
 
     // ---- Update-payload queries (valid for updateMetadata) ----
     // Bulk-only placeholders are replaced with concrete label selectors.
@@ -377,7 +426,7 @@ class MetadataProfileValidationTest {
         }
 
         @Test
-        @DisplayName("All four bulk-only placeholders in workloadsWithPodLabelFilter query are rejected")
+        @DisplayName("Bulk-only placeholders in workloadsWithPodLabelFilter query are rejected")
         void allBulkOnlyPlaceholdersInLabelFilterQueryRejected() {
             StringBuilder errorString = new StringBuilder();
             validation.validateMetricQueryPattern(
@@ -388,6 +437,36 @@ class MetadataProfileValidationTest {
 
             assertFalse(errorString.isEmpty(),
                     "Bulk-only placeholders must be rejected in workloadsWithPodLabelFilter update payload");
+        }
+
+        @Test
+        @DisplayName("Shipped manifests: workloadsWithPodLabelFilter carries no container filter (issue #2119)")
+        void labelFilterQueryHasNoContainerFilter() throws Exception {
+            // $CONTAINER_FILTERS$ must never be reintroduced into the kube_pod_labels selector: its
+            // container label is always an internal container (e.g. kube-rbac-proxy-main), so a
+            // container filter there matches zero series and silently drops all workload label
+            // metadata. Container scoping belongs only in the containersForAdditionalLabel
+            // (kube_pod_container_info) query.
+            String containerFilters = KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS;
+
+            // Assert against the real shipped manifests, not this class's own query constants (which
+            // cannot detect a regression in shipped code). Source-only builds (the Dockerfile build
+            // stage copies just src/ + pom.xml) don't have the manifests, so the test is reported as
+            // SKIPPED there rather than silently passing.
+            assumeTrue(Files.exists(Path.of(BULK_METADATA_PROFILE_JSON))
+                            && Files.exists(Path.of(BULK_METADATA_PROFILE_YAML)),
+                    "Shipped bulk metadata-profile manifests not found; run from a full repo checkout");
+
+            for (String manifest : new String[]{BULK_METADATA_PROFILE_JSON, BULK_METADATA_PROFILE_YAML}) {
+                for (String query : manifestQueriesForVariable(manifest, "workloadsWithPodLabelFilter")) {
+                    assertFalse(query.contains(containerFilters),
+                            manifest + " — workloadsWithPodLabelFilter (kube_pod_labels) query must NOT contain $CONTAINER_FILTERS$");
+                }
+                for (String query : manifestQueriesForVariable(manifest, "containersForAdditionalLabel")) {
+                    assertTrue(query.contains(containerFilters),
+                            manifest + " — containersForAdditionalLabel (kube_pod_container_info) query must still carry $CONTAINER_FILTERS$");
+                }
+            }
         }
 
         @Test
