@@ -32,6 +32,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -39,12 +40,17 @@ import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
+import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricMetadata;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
@@ -435,6 +441,161 @@ public class DBHelpers {
             }
 
             /**
+             * Shared compact Gson for kruize_results.extended_data.
+             * Same adapters as the previous per-call builder, without pretty-printing.
+             * Gson is thread-safe after {@code create()}; do not rebuild it per interval.
+             */
+            private static final Gson RESULTS_JSONB_GSON = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .enableComplexMapKeySerialization()
+                    .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+                    .create();
+
+            /**
+             * Compact writer for kruize_recommendations.extended_data.
+             * Same adapters and date format as the previous per-call builder, without pretty-printing.
+             */
+            private static final Gson RECOMMENDATION_GSON = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .enableComplexMapKeySerialization()
+                    .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+                    .create();
+
+            private static final ObjectMapper RECOMMENDATION_MAPPER = recommendationMapper();
+
+            private static ObjectMapper recommendationMapper() {
+                ObjectMapper mapper = new ObjectMapper();
+                DateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                mapper.setDateFormat(dateFormat);
+                return mapper;
+            }
+
+            public static String compactRecommendationJson(Object value) {
+                return RECOMMENDATION_GSON.toJson(value);
+            }
+
+            /**
+             * Rebuilds one stored results row from {@code extended_data} with {@link #RESULTS_JSONB_GSON}.
+             * Interval maps match {@code convertUpdateResultsAPIObjToExperimentResultData}: container metrics
+             * when present, otherwise namespace metrics, including the accelerator branch. A null metric
+             * result fails the row. Returns null when the row has no kubernetes objects.
+             */
+            public static ExperimentResultData experimentResultFromResultEntry(KruizeResultsEntry entry, String clusterName) {
+                if (entry == null || entry.getExtended_data() == null) {
+                    return null;
+                }
+                JsonNode kubernetesObjects = entry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                if (kubernetesObjects == null || !kubernetesObjects.isArray()) {
+                    return null;
+                }
+                List<K8sObject> parsedObjects = new ArrayList<>();
+                for (JsonNode node : kubernetesObjects) {
+                    K8sObject k8sObject = RESULTS_JSONB_GSON.fromJson(node.toString(), K8sObject.class);
+                    if (k8sObject == null) {
+                        continue;
+                    }
+                    boolean included = false;
+                    if (k8sObject.getContainerDataMap() != null && !k8sObject.getContainerDataMap().isEmpty()) {
+                        for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                            attachContainerInterval(containerData, entry.getInterval_start_time(), entry.getInterval_end_time());
+                        }
+                        included = true;
+                    } else if (k8sObject.getNamespaceDataMap() != null && !k8sObject.getNamespaceDataMap().isEmpty()) {
+                        for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                            attachNamespaceInterval(namespaceData, entry.getInterval_start_time(), entry.getInterval_end_time());
+                        }
+                        included = true;
+                    }
+                    if (included) {
+                        parsedObjects.add(k8sObject);
+                    }
+                }
+                if (parsedObjects.isEmpty()) {
+                    return null;
+                }
+                ExperimentResultData experimentResultData = new ExperimentResultData();
+                experimentResultData.setVersion(entry.getVersion());
+                experimentResultData.setExperiment_name(entry.getExperiment_name());
+                experimentResultData.setCluster_name(clusterName);
+                experimentResultData.setIntervalStartTime(entry.getInterval_start_time());
+                experimentResultData.setIntervalEndTime(entry.getInterval_end_time());
+                experimentResultData.setKubernetes_objects(parsedObjects);
+                return experimentResultData;
+            }
+
+            private static void attachContainerInterval(ContainerData containerData, Timestamp start, Timestamp end) {
+                if (containerData.getMetrics() == null) {
+                    throw new NullPointerException("metrics");
+                }
+                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
+                for (Metric metric : containerData.getMetrics().values()) {
+                    boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
+                            || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
+                            || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
+                    MetricResults metricResults = metric.getMetricResult();
+                    metricResults.setName(metric.getName());
+                    if (isAcceleratorMetric) {
+                        if (null != metricResults.getMetadata()
+                                && metricResults.getMetadata() instanceof AcceleratorMetricMetadata acceleratorMetricMetadata
+                                && null != acceleratorMetricMetadata.getModelName()) {
+                            boolean isPartitionSupported = RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName());
+                            boolean isPartition = (null != acceleratorMetricMetadata.getProfileName());
+                            NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(
+                                    acceleratorMetricMetadata.getModelName(),
+                                    acceleratorMetricMetadata.getNode(),
+                                    null,
+                                    null,
+                                    acceleratorMetricMetadata.getProfileName(),
+                                    isPartitionSupported,
+                                    isPartition
+                            );
+                            acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()),
+                                    new AcceleratorMetricResult(acceleratorDeviceData, metricResults));
+                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                        }
+                    } else {
+                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                    }
+                }
+                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+                if (!containerData.getMetrics().isEmpty()) {
+                    IntervalResults intervalResults = new IntervalResults(start, end);
+                    intervalResults.setMetricResultsMap(metricResultsHashMap);
+                    intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
+                    resultsMap.put(end, intervalResults);
+                }
+                containerData.setResults(resultsMap);
+            }
+
+            private static void attachNamespaceInterval(NamespaceData namespaceData, Timestamp start, Timestamp end) {
+                if (namespaceData.getMetrics() == null) {
+                    throw new NullPointerException("metrics");
+                }
+                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                for (Metric metric : namespaceData.getMetrics().values()) {
+                    MetricResults metricResults = metric.getMetricResult();
+                    metricResults.setName(metric.getName());
+                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                }
+                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+                if (!namespaceData.getMetrics().isEmpty()) {
+                    IntervalResults intervalResults = new IntervalResults(start, end);
+                    intervalResults.setMetricResultsMap(metricResultsHashMap);
+                    resultsMap.put(end, intervalResults);
+                }
+                namespaceData.setResults(resultsMap);
+            }
+
+            /**
              * @param apiObject
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
@@ -481,16 +642,6 @@ public class DBHelpers {
              */
             public static KruizeResultsEntry convertExperimentResultToExperimentResultsTable(ExperimentResultData experimentResultData) {
                 KruizeResultsEntry kruizeResultsEntry = null;
-                Gson gson = new GsonBuilder()
-                        .disableHtmlEscaping()
-                        .setPrettyPrinting()
-                        .enableComplexMapKeySerialization()
-                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
-                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                        .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
                     kruizeResultsEntry.setVersion(experimentResultData.getVersion());
@@ -503,11 +654,10 @@ public class DBHelpers {
                                     experimentResultData.getIntervalStartTime().getTime()) / (60 * 1000))
                     );
                     Map<String, List<K8sObject>> k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, experimentResultData.getKubernetes_objects());
-                    String k8sObjectString = gson.toJson(k8sObjectsMap);
-                    ObjectMapper objectMapper = new ObjectMapper();
+                    String k8sObjectString = RESULTS_JSONB_GSON.toJson(k8sObjectsMap);
                     try {
                         kruizeResultsEntry.setExtended_data(
-                                objectMapper.readTree(
+                                OBJECT_MAPPER.readTree(
                                         k8sObjectString
                                 )
                         );
@@ -524,32 +674,24 @@ public class DBHelpers {
             }
 
             public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
+                return convertKruizeObjectTORecommendation(kruizeObject, monitoringEndTime, null);
+            }
+
+            /**
+             * When {@code preparedList} is set, persist a new single-timestamp copy of that list.
+             * The prepared list itself is left unchanged for the HTTP response.
+             */
+            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, Timestamp monitoringEndTime,
+                                                                                        ListRecommendationsAPIObject preparedList) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
-                Boolean checkForTimestamp = false;
-                Boolean getLatest = true;
-                Gson gson = new GsonBuilder()
-                        .disableHtmlEscaping()
-                        .setPrettyPrinting()
-                        .enableComplexMapKeySerialization()
-                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
-                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                        .create();
                 try {
-                    ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
-                            kruizeObject, monitoringEndTime);
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = preparedList == null
+                            ? getListRecommendationAPIObjectForDB(kruizeObject, monitoringEndTime)
+                            : recommendationListForDb(preparedList, monitoringEndTime);
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
-                    LOGGER.debug(new GsonBuilder()
-                            .setPrettyPrinting()
-                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                            .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                            .create()
-                            .toJson(listRecommendationsAPIObject));
+                    LOGGER.debug(RECOMMENDATION_GSON.toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
@@ -570,13 +712,10 @@ public class DBHelpers {
                     }
                     kruizeRecommendationEntry.setInterval_end_time(endInterval);
                     Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
-                    String k8sObjectString = gson.toJson(k8sObjectsMap);
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-                    objectMapper.setDateFormat(df);
+                    String k8sObjectString = RECOMMENDATION_GSON.toJson(k8sObjectsMap);
                     try {
                         kruizeRecommendationEntry.setExtended_data(
-                                objectMapper.readTree(
+                                RECOMMENDATION_MAPPER.readTree(
                                         k8sObjectString
                                 )
                         );
@@ -589,6 +728,108 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeRecommendationEntry;
+            }
+
+            /**
+             * New recommendation objects and data maps containing only {@code monitoringEndTime}
+             * (or that object's latest timestamp when the requested key is absent).
+             */
+            static ListRecommendationsAPIObject recommendationListForDb(ListRecommendationsAPIObject source, Timestamp monitoringEndTime) {
+                if (source == null || source.getKubernetesObjects() == null || source.getKubernetesObjects().isEmpty()) {
+                    return null;
+                }
+                List<KubernetesAPIObject> filteredObjects = new ArrayList<>();
+                for (KubernetesAPIObject sourceObject : source.getKubernetesObjects()) {
+                    if (sourceObject == null) {
+                        continue;
+                    }
+                    boolean matchFound = false;
+                    KubernetesAPIObject copy = new KubernetesAPIObject(sourceObject.getName(), sourceObject.getType(), sourceObject.getNamespace());
+                    if (source.isNamespaceExperiment()
+                            && sourceObject.getNamespaceAPIObject() != null
+                            && sourceObject.getNamespaceAPIObject().getNamespaceRecommendations() != null
+                            && sourceObject.getNamespaceAPIObject().getNamespaceRecommendations().getData() != null
+                            && !sourceObject.getNamespaceAPIObject().getNamespaceRecommendations().getData().isEmpty()) {
+                        NamespaceRecommendations sourceRecommendations = sourceObject.getNamespaceAPIObject().getNamespaceRecommendations();
+                        Timestamp selected = selectRecommendationTimestamp(sourceRecommendations.getData(), monitoringEndTime);
+                        if (selected != null) {
+                            matchFound = true;
+                            copy.setNamespaceAPIObject(new NamespaceAPIObject(
+                                    sourceObject.getNamespaceAPIObject().getNamespace(),
+                                    singleTimestampNamespaceRecommendations(sourceRecommendations, selected),
+                                    null));
+                        }
+                    }
+                    List<ContainerAPIObject> containers = new ArrayList<>();
+                    if (sourceObject.getContainerAPIObjects() != null) {
+                        for (ContainerAPIObject container : sourceObject.getContainerAPIObjects()) {
+                            if (container == null
+                                    || container.getContainerRecommendations() == null
+                                    || container.getContainerRecommendations().getData() == null
+                                    || container.getContainerRecommendations().getData().isEmpty()) {
+                                continue;
+                            }
+                            Timestamp selected = selectRecommendationTimestamp(container.getContainerRecommendations().getData(), monitoringEndTime);
+                            if (selected == null) {
+                                continue;
+                            }
+                            matchFound = true;
+                            containers.add(new ContainerAPIObject(
+                                    container.getContainer_name(),
+                                    container.getContainer_image_name(),
+                                    singleTimestampContainerRecommendations(container.getContainerRecommendations(), selected),
+                                    null));
+                        }
+                    }
+                    copy.setContainerAPIObjects(containers);
+                    if (matchFound) {
+                        filteredObjects.add(copy);
+                    }
+                }
+                if (filteredObjects.isEmpty()) {
+                    return null;
+                }
+                ListRecommendationsAPIObject filtered = new ListRecommendationsAPIObject();
+                filtered.setApiVersion(source.getApiVersion());
+                filtered.setExperimentName(source.getExperimentName());
+                filtered.setClusterName(source.getClusterName());
+                filtered.setExperimentType(source.getExperimentType());
+                filtered.setKubernetesObjects(filteredObjects);
+                return filtered;
+            }
+
+            private static Timestamp selectRecommendationTimestamp(HashMap<Timestamp, MappedRecommendationForTimestamp> data, Timestamp monitoringEndTime) {
+                if (data == null || data.isEmpty()) {
+                    return null;
+                }
+                if (monitoringEndTime != null && data.containsKey(monitoringEndTime)) {
+                    return monitoringEndTime;
+                }
+                return data.keySet().stream().max(Timestamp::compareTo).orElse(null);
+            }
+
+            private static ContainerRecommendations singleTimestampContainerRecommendations(ContainerRecommendations source, Timestamp selected) {
+                ContainerRecommendations filtered = new ContainerRecommendations();
+                filtered.setVersion(source.getVersion());
+                if (source.getNotificationMap() != null) {
+                    filtered.setNotificationMap(new HashMap<>(source.getNotificationMap()));
+                }
+                HashMap<Timestamp, MappedRecommendationForTimestamp> oneTimestamp = new HashMap<>();
+                oneTimestamp.put(selected, source.getData().get(selected));
+                filtered.setData(oneTimestamp);
+                return filtered;
+            }
+
+            private static NamespaceRecommendations singleTimestampNamespaceRecommendations(NamespaceRecommendations source, Timestamp selected) {
+                NamespaceRecommendations filtered = new NamespaceRecommendations();
+                filtered.setVersion(source.getVersion());
+                if (source.getNotificationMap() != null) {
+                    filtered.setNotificationMap(new HashMap<>(source.getNotificationMap()));
+                }
+                HashMap<Timestamp, MappedRecommendationForTimestamp> oneTimestamp = new HashMap<>();
+                oneTimestamp.put(selected, source.getData().get(selected));
+                filtered.setData(oneTimestamp);
+                return filtered;
             }
 
 

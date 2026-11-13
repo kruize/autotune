@@ -14,6 +14,7 @@ import com.autotune.analyzer.recommendations.model.*;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -63,6 +64,7 @@ public class RecommendationEngine implements RecommendationEngineService {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
+    private ListRecommendationsAPIObject preparedRecommendationList;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
     private static final Set<String> JVM_INFO_METRICS = Set.of(
@@ -74,6 +76,10 @@ public class RecommendationEngine implements RecommendationEngineService {
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
 
+    }
+
+    public ListRecommendationsAPIObject getPreparedRecommendationList() {
+        return preparedRecommendationList;
     }
 
     /**
@@ -280,6 +286,19 @@ public class RecommendationEngine implements RecommendationEngineService {
      * @return The KruizeObject containing the prepared recommendations.
      */
     public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID) throws FetchMetricsError {
+        return prepareRecommendations(calCount, target_cluster, bulkJobID, false);
+    }
+
+    /**
+     * Prepares recommendations. When {@code resultsAlreadyLoaded} is true and the experiment is remote
+     * monitoring, the term window is hydrated from kruize_results without {@code getResults}. Recommendation
+     * math runs only after that load has returned.
+     *
+     * @param calCount             The count of incoming requests.
+     * @param resultsAlreadyLoaded true when a remote-monitoring caller already hydrated term-window results
+     * @return The KruizeObject containing the prepared recommendations.
+     */
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID, boolean resultsAlreadyLoaded) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -377,9 +396,26 @@ public class RecommendationEngine implements RecommendationEngineService {
             if (intervalEndTimeStr != null) {  //TODO remove this check and avoid same if across this flow
                 interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
             }
-            // update the KruizeObject to have the results data from the available datasource
+            // Results loads close their sessions before JSON is parsed onto the object.
+            boolean remoteLeanLoad = resultsAlreadyLoaded
+                    && kruizeObject.getExperiment_usecase_type() != null
+                    && kruizeObject.getExperiment_usecase_type().isRemote_monitoring();
             try {
-                String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                String errorMsg;
+                if (remoteLeanLoad) {
+                    boolean resultsAvailable = new ExperimentDBService().loadRecommendationResultsOnto(
+                            mainKruizeExperimentMAP, kruizeObject, interval_start_time, interval_end_time);
+                    if (!resultsAvailable) {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                        errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
+                                dateFormat.format(interval_start_time), dateFormat.format(interval_end_time));
+                        LOGGER.error(errorMsg);
+                    } else {
+                        errorMsg = "";
+                    }
+                } else {
+                    errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                }
                 if (!errorMsg.isEmpty()) {
                     throw new Exception(errorMsg);
                 }
@@ -392,9 +428,13 @@ public class RecommendationEngine implements RecommendationEngineService {
                 return kruizeObject;
             }
 
-            // generate recommendation
+            // generate recommendation with no Hibernate session open
             try {
                 generateRecommendations(kruizeObject);
+                if (remoteLeanLoad) {
+                    preparedRecommendationList = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters
+                            .convertKruizeObjectToListRecommendationSO(kruizeObject, false, false, interval_end_time);
+                }
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
@@ -1166,7 +1206,8 @@ public class RecommendationEngine implements RecommendationEngineService {
     private ValidationOutputData addRecommendationsToDB(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject) {
         ValidationOutputData validationOutputData;
         try {
-            validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, kruizeObject, interval_end_time);
+            validationOutputData = new ExperimentDBService().addRecommendationToDB(
+                    mainKruizeExperimentMAP, kruizeObject, interval_end_time, preparedRecommendationList);
         } catch (Exception e) {
             LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.ADDING_RECOMMENDATIONS_TO_DB_FAILED
                     .concat(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME)
