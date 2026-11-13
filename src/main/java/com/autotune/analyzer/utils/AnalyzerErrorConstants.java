@@ -54,6 +54,7 @@ public class AnalyzerErrorConstants {
     }
 
     public static final class AutotuneObjectErrors {
+        public static final String MISSING_DELETE_EXPERIMENT_INPUT = "Experiment details are missing in the request body.";
         public static final String UNSUPPORTED = " is not supported\n";
         public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
         public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";

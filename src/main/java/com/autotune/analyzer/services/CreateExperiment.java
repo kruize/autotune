@@ -172,6 +172,9 @@ public class CreateExperiment extends HttpServlet {
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
+            if (null == createExperimentAPIObjects) {
+                throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_DELETE_EXPERIMENT_INPUT);
+            }
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -199,17 +202,31 @@ public class CreateExperiment extends HttpServlet {
                         }
                         if (validationOutputData.isSuccess()) {
                             mKruizeExperimentMap.remove(ko.getExperimentName());
+                        } else if (null != validationOutputData.getErrorCode()
+                                && validationOutputData.getErrorCode() == HttpServletResponse.SC_NOT_FOUND) {
+                            throw new IllegalArgumentException("Experiment not deleted due to : " + validationOutputData.getMessage());
                         } else {
-                            throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                            // database failure: log the cause server side
+                            LOGGER.error("Experiment {} not deleted due to : {}", Utils.sanitizeForLog(expName),
+                                    Utils.sanitizeForLog(validationOutputData.getMessage()));
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
+                            return;
                         }
                     } else
-                        throw new Exception("Experiment not found!");
+                        throw new IllegalArgumentException("Experiment not found!");
                 }
                 sendSuccessResponse(response, "Experiment deleted successfully.");
             }
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while deleting the experiment: {}", e.getMessage());
+        } catch (JsonParseException | IllegalArgumentException e) {
+            // malformed input or a non-existent experiment is a client error
+            LOGGER.error("Exception occurred while deleting the experiment: {}", Utils.sanitizeForLog(e.getMessage()));
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error("Exception occurred while deleting the experiment: {}", Utils.sanitizeForLog(e.getMessage()), e);
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 

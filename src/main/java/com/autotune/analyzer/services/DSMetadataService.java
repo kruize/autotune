@@ -36,8 +36,10 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import io.micrometer.core.instrument.Timer;
@@ -490,7 +492,7 @@ public class DSMetadataService extends HttpServlet {
 
             inputData = request.getReader().lines().collect(Collectors.joining());
             if (null == inputData || inputData.isEmpty()) {
-                throw new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN);
+                throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN);
             }
             DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
             ValidationOutputData validationOutputData = validateMandatoryFields(metadataAPIObject);
@@ -500,6 +502,7 @@ public class DSMetadataService extends HttpServlet {
                         new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_QUERY_PARAM_EXCPTN),
                         validationOutputData.getErrorCode(),
                         validationOutputData.getMessage());
+                return;
             }
 
             String dataSourceName = metadataAPIObject.getDataSourceName();
@@ -514,6 +517,7 @@ public class DSMetadataService extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
                 );
+                return;
             }
 
             DataSourceMetadataInfo dataSourceMetadata = dataSourceManager.fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
@@ -525,6 +529,7 @@ public class DSMetadataService extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
                 );
+                return;
             }
             dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
 
@@ -537,12 +542,16 @@ public class DSMetadataService extends HttpServlet {
                     dataSourceManager.deleteMetadataFromDataSource(datasource);
                     dataSourceMetadataMap.remove(dataSourceName);
                 } catch (Exception e) {
+                    // log the actual cause on the server side
+                    LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoErrorMsgs.DELETE_METADATA_ERROR,
+                            Utils.sanitizeForLog(e.getMessage()));
                     sendErrorResponse(
                             inputData,
                             response,
-                            e,
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            e.getMessage());
+                            null,
+                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
+                    return;
                 }
             } else {
                 sendErrorResponse(
@@ -552,11 +561,19 @@ public class DSMetadataService extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
                 );
+                return;
             }
             sendSuccessResponse(response, KruizeConstants.DataSourceConstants.DataSourceMetadataInfoSuccessMsgs.DATASOURCE_METADATA_DELETED);
 
-        } catch (Exception e) {
+        } catch (JsonParseException | IllegalArgumentException e) {
+            // malformed or missing input is a client error
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoErrorMsgs.DELETE_METADATA_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()), e);
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 

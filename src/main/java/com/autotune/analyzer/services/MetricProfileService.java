@@ -35,6 +35,8 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
@@ -103,17 +105,33 @@ public class MetricProfileService extends HttpServlet {
 
                     sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_SUCCESS_MSG, metricProfile.getMetadata().get("name").asText()));
                 } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                    // a failed DB insert is a server side failure, the cause is logged but not disclosed to the client
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                            Utils.sanitizeForLog(addedToDB.getMessage()));
+                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
                 }
-            } else
-                sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
-        } catch (JSONException | JsonParseException | InvalidValueException e) {
+            } else {
+                int errorCode = null != validationOutputData.getErrorCode()
+                        ? validationOutputData.getErrorCode() : HttpServletResponse.SC_BAD_REQUEST;
+                if (errorCode >= HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
+                    // server side failure, the cause is logged but not disclosed to the client
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                            Utils.sanitizeForLog(validationOutputData.getMessage()));
+                    sendErrorResponse(response, null, errorCode, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
+                } else {
+                    sendErrorResponse(response, null, errorCode, validationOutputData.getMessage());
+                }
+            }
+        } catch (JSONException | JsonParseException | JsonProcessingException | InvalidValueException e) {
             // malformed or invalid input is a client error
-            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_INVALID_INPUT, e.getMessage());
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_INVALID_INPUT,
+                    Utils.sanitizeForLog(e.getMessage()));
             sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         } catch (Exception e) {
             // unexpected errors are server errors, the details are logged but not disclosed to the client
-            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR, e.getMessage(), e);
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()), e);
             sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
@@ -275,11 +293,13 @@ public class MetricProfileService extends HttpServlet {
                     deleteMetricProfile(metricProfileName);
                     metricProfilesMap.remove(metricProfileName);
                 } catch (Exception e) {
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_ERROR,
+                            Utils.sanitizeForLog(e.getMessage()));
                     sendErrorResponse(
                             response,
-                            e,
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            e.getMessage());
+                            null,
+                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
                     return;
                 }
             } else {
@@ -295,8 +315,10 @@ public class MetricProfileService extends HttpServlet {
             sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_SUCCESS_MSG, metricProfileName));
 
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 
