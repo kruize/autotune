@@ -285,8 +285,8 @@ public class RecommendationEngine implements RecommendationEngineService {
 
     /**
      * Prepares recommendations. When {@code resultsAlreadyLoaded} is true and the experiment is remote
-     * monitoring, results already on the object are used and {@code getResults} is skipped. Recommendation
-     * math runs only after database loads have returned.
+     * monitoring, the term window is hydrated from kruize_results without {@code getResults}. Recommendation
+     * math runs only after that load has returned.
      *
      * @param calCount             The count of incoming requests.
      * @param resultsAlreadyLoaded true when a remote-monitoring caller already hydrated term-window results
@@ -391,24 +391,35 @@ public class RecommendationEngine implements RecommendationEngineService {
                 interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
             }
             // Results loads close their sessions before JSON is parsed onto the object.
-            boolean skipResultsLoad = resultsAlreadyLoaded
+            boolean remoteLeanLoad = resultsAlreadyLoaded
                     && kruizeObject.getExperiment_usecase_type() != null
                     && kruizeObject.getExperiment_usecase_type().isRemote_monitoring();
-            if (!skipResultsLoad) {
-                // update the KruizeObject to have the results data from the available datasource
-                try {
-                    String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
-                    if (!errorMsg.isEmpty()) {
-                        throw new Exception(errorMsg);
+            try {
+                String errorMsg;
+                if (remoteLeanLoad) {
+                    boolean resultsAvailable = new ExperimentDBService().loadRecommendationResultsOnto(
+                            mainKruizeExperimentMAP, kruizeObject, interval_start_time, interval_end_time);
+                    if (!resultsAvailable) {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                        errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
+                                dateFormat.format(interval_start_time), dateFormat.format(interval_end_time));
+                        LOGGER.error(errorMsg);
+                    } else {
+                        errorMsg = "";
                     }
-                } catch (FetchMetricsError e) {
-                    throw new FetchMetricsError(e.getMessage());
-                } catch (Exception e) {
-                    LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
-                    kruizeObject = new KruizeObject();
-                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
-                    return kruizeObject;
+                } else {
+                    errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
                 }
+                if (!errorMsg.isEmpty()) {
+                    throw new Exception(errorMsg);
+                }
+            } catch (FetchMetricsError e) {
+                throw new FetchMetricsError(e.getMessage());
+            } catch (Exception e) {
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+                kruizeObject = new KruizeObject();
+                kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
+                return kruizeObject;
             }
 
             // generate recommendation with no Hibernate session open
