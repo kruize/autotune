@@ -46,6 +46,10 @@ public class ListSupportedK8sObjects extends HttpServlet {
         ListSupportedK8sObjectsSO listSupportedK8sObjectsSO =  new ListSupportedK8sObjectsSO();
         // Iterate over the supported Kubernetes Object type supported by Kruize
         for (AnalyzerConstants.K8S_OBJECT_TYPES k8SObjectType : AnalyzerConstants.K8S_OBJECT_TYPES.values()) {
+            // Skip the types which are unsupported
+            if (AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.contains(k8SObjectType)) {
+                continue;
+            }
             // Get the String value of the K8S object types
             String k8sObjectTypeString = Utils.getAppropriateK8sObjectTypeString(k8SObjectType);
             // Check for null and if it's not null add to the list of K8S objects in the Service Object
