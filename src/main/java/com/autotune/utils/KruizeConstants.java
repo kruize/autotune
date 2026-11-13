@@ -87,6 +87,9 @@ public class KruizeConstants {
         public static final String ADD_METRIC_PROFILE_TO_DB_WITH_VERSION = "Added Metric Profile : {} into the DB with version: {}";
         public static final String DELETE_METRIC_PROFILE_SUCCESS_MSG = "Metric profile: %s deleted successfully.";
         public static final String DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG = "Metric profile deleted successfully from the DB.";
+        public static final String CREATE_METRIC_PROFILE_INVALID_INPUT = "Invalid input for create metric profile request: {}";
+        public static final String CREATE_METRIC_PROFILE_UNEXPECTED_ERROR = "Unexpected error while creating metric profile: {}";
+        public static final String DELETE_METRIC_PROFILE_ERROR = "Error while deleting metric profile: {}";
     }
 
     public static class MetricProfileConstants {
@@ -655,9 +658,19 @@ public class KruizeConstants {
             private DataSourceMetadataInfoSuccessMsgs() {
             }
         }
+
+        public static class DataSourceMetadataInfoErrorMsgs {
+            public static final String DELETE_METADATA_ERROR = "Error while deleting datasource metadata: {}";
+
+            private DataSourceMetadataInfoErrorMsgs() {
+            }
+        }
+
     }
 
     public static class ErrorMsgs {
+        public static final String SERVER_ERROR_MESSAGE_SUPPRESSED = "Server error (HTTP {}) raised, message not returned to the client: {}";
+
         private ErrorMsgs() {
         }
 
@@ -699,12 +712,23 @@ public class KruizeConstants {
          */
         public static final String PATH_WILDCARD = "/*";
         public static final String ALLOWED_ORIGINS = System.getenv().getOrDefault("KRUIZE_ALLOWED_ORIGINS", "");
-        public static final String ALLOWED_METHODS = "POST, GET";
+        public static final String ALLOWED_METHODS = "POST, GET, PUT, DELETE";
         public static final String ALLOWED_HEADERS = "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept";
         public static final String MAX_AGE = "1728000";
 
         private CORSConstants() {
 
+        }
+    }
+
+    /**
+     * This class contains Constants for the security related HTTP response headers
+     */
+    public static final class SecurityHeaders {
+        public static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
+        public static final String NOSNIFF = "nosniff";
+
+        private SecurityHeaders() {
         }
     }
 
@@ -1164,6 +1188,7 @@ public class KruizeConstants {
 
         public static class MetadataProfileErrorMsgs {
 
+            public static final String DELETE_METADATA_PROFILE_ERROR = "Error while deleting metadata profile: {}";
             public static final String ADD_METADATA_PROFILE_TO_DB_ERROR = "Failed to add Metadata Profile due to {}";
             public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "Failed to load Metadata Profiles from DB.";
             public static final String CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR = "Error occurred while reading from MetadataProfile DB object due to : {}";

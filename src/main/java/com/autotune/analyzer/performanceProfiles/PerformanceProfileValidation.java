@@ -26,6 +26,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -323,7 +324,7 @@ public class PerformanceProfileValidation {
         output.setSuccess(false);
         output.setMessage(message);
         output.setErrorCode(errorCode);
-        LOGGER.error("Validation error message: {}", message);
+        LOGGER.error("Validation error message: {}", Utils.sanitizeForLog(message));
     }
 
     /**

@@ -28,6 +28,12 @@ import java.util.HashMap;
  * Contains strings describing the errors encountered
  */
 public class AnalyzerErrorConstants {
+    /**
+     * Generic message returned to the client for unexpected server errors, so that internal
+     * error details are not disclosed. The actual cause is logged on the server side.
+     */
+    public static final String INTERNAL_SERVER_ERROR_MSG = "An internal error occurred while processing the request. Please check the Kruize logs for details.";
+
     private AnalyzerErrorConstants() {
     }
 
@@ -48,6 +54,7 @@ public class AnalyzerErrorConstants {
     }
 
     public static final class AutotuneObjectErrors {
+        public static final String MISSING_DELETE_EXPERIMENT_INPUT = "Experiment details are missing in the request body.";
         public static final String UNSUPPORTED = " is not supported\n";
         public static final String AUTOTUNE_OBJECT_NAME_MISSING = "Autotune object name cannot be null or empty\n";
         public static final String INVALID_MATCHLABEL = "Invalid MatchLabel in selector\n";

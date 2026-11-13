@@ -34,6 +34,7 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
@@ -355,11 +356,13 @@ public class MetadataProfileService extends HttpServlet{
                     deleteMetadataProfile(metadataProfileName);
                     metadataProfilesMap.remove(metadataProfileName);
                 } catch (Exception e) {
+                    LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.DELETE_METADATA_PROFILE_ERROR,
+                            Utils.sanitizeForLog(e.getMessage()));
                     sendErrorResponseMessage(
                             response,
-                            e,
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            e.getMessage());
+                            null,
+                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
                     return;
                 }
             } else {
@@ -375,8 +378,10 @@ public class MetadataProfileService extends HttpServlet{
             sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.DELETE_METADATA_PROFILE_SUCCESS_MSG, metadataProfileName));
 
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            sendErrorResponseMessage(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.DELETE_METADATA_PROFILE_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponseMessage(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 
