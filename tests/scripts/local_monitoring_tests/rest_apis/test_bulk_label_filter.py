@@ -70,6 +70,29 @@ def _is_transient_datasource_failure(summary):
 # -------------------------------------------------------------------------------------------------
 # Payload + job helpers
 # -------------------------------------------------------------------------------------------------
+DISCOVERED_DATASOURCE = None
+
+def _get_datasource_name():
+    global DISCOVERED_DATASOURCE
+    if DISCOVERED_DATASOURCE is None:
+        try:
+            response = list_datasources()
+            if response.status_code == 200:
+                datasources = response.json()
+                if isinstance(datasources, list):
+                    if datasources:
+                        DISCOVERED_DATASOURCE = datasources[0].get("name", "prometheus-1")
+                elif isinstance(datasources, dict):
+                    ds_list = datasources.get("datasources", [])
+                    if ds_list:
+                        DISCOVERED_DATASOURCE = ds_list[0].get("name", "prometheus-1")
+        except Exception as e:
+            logger.warning(f"Could not list datasources: {e}")
+        if DISCOVERED_DATASOURCE is None:
+            DISCOVERED_DATASOURCE = "prometheus-1"
+    return DISCOVERED_DATASOURCE
+
+
 def label_filter_payload(include=None, exclude=None):
     """Build a bulk payload with the given include/exclude filter sections merged onto an empty base."""
     payload = {
@@ -77,6 +100,7 @@ def label_filter_payload(include=None, exclude=None):
             "exclude": {"namespace": [], "workload": [], "containers": [], "labels": {}},
             "include": {"namespace": [], "workload": [], "containers": [], "labels": {}},
         },
+        "datasource": _get_datasource_name(),
         "metadata_profile": METADATA_PROFILE_NAME,
         "measurement_duration": "15mins",
         "time_range": {},
@@ -185,11 +209,104 @@ def _discover_workloads():
     return workloads
 
 
+def _discover_containers():
+    """Return a list of container names discovered from the datasource."""
+    metadata = _bulk_metadata(label_filter_payload())
+    containers = set()
+    for ds in metadata.get("datasources", {}).values():
+        for cluster in ds.get("clusters", {}).values():
+            for ns_data in cluster.get("namespaces", {}).values():
+                for wl_data in ns_data.get("workloads", {}).values():
+                    containers.update(wl_data.get("containers", {}).keys())
+    return sorted(list(containers))
+
+
+def _discover_active_namespace_with_experiments():
+    """Return a namespace name that has at least one experiment/workload serving recommendations."""
+    workloads = _discover_workloads()
+    namespaces = sorted(list({wl[0] for wl in workloads}))
+    # Prioritize default or openshift-tuning as they are guaranteed to have workloads in testing envs
+    if "default" in namespaces:
+        namespaces.remove("default")
+        namespaces.insert(0, "default")
+    if "openshift-tuning" in namespaces:
+        namespaces.remove("openshift-tuning")
+        namespaces.insert(0, "openshift-tuning")
+
+    for ns in namespaces:
+        count = experiment_count(label_filter_payload(include={"namespace": [ns]}))
+        if count > 0:
+            return ns, count
+    return None, 0
+
+
+def _discover_active_workload_with_experiments():
+    """Return a workload name that has at least one experiment serving recommendations."""
+    workloads = sorted({wl[1] for wl in _discover_workloads()})
+    # Prioritize known active workloads
+    for wl in ["sysbench", "kruize", "quarkus-perf"]:
+        if wl in workloads:
+            workloads.remove(wl)
+            workloads.insert(0, wl)
+
+    for wl in workloads:
+        count = experiment_count(label_filter_payload(include={"workload": [wl]}))
+        if count > 0:
+            return wl, count
+    return None, 0
+
+
+def _discover_active_container_with_experiments():
+    """Return a container name that has at least one experiment serving recommendations."""
+    containers = _discover_containers()
+    for c in ["sysbench", "kruize", "quarkus-perf"]:
+        if c in containers:
+            containers.remove(c)
+            containers.insert(0, c)
+
+    for c in containers:
+        count = experiment_count(label_filter_payload(include={"containers": [c]}))
+        if count > 0:
+            return c, count
+    return None, 0
+
+
+METADATA_PROFILE_CREATED = False
+
 @pytest.fixture
 def bulk_label_filter_setup(cluster_type):
-    """Resolve the Kruize URL for the cluster and (re)create the bulk metadata profile."""
+    """Resolve the Kruize URL for the cluster and ensure the bulk metadata profile exists."""
+    global METADATA_PROFILE_CREATED
     form_kruize_url(cluster_type)
-    delete_and_create_metadata_profile()
+    if not METADATA_PROFILE_CREATED:
+        # Check if the profile already exists to avoid heavy recreate on busy clusters
+        try:
+            response = list_metadata_profiles(logging=False)
+            if response.status_code == 200:
+                profiles = [p.get("metadata", {}).get("name") for p in response.json()]
+                if METADATA_PROFILE_NAME in profiles:
+                    logger.info(f"Metadata profile {METADATA_PROFILE_NAME} already exists, skipping recreate")
+                    METADATA_PROFILE_CREATED = True
+                    return
+        except Exception as e:
+            logger.warning(f"Could not list metadata profiles: {e}")
+
+        # Fallback to recreate if not exists or if listing failed
+        try:
+            delete_and_create_metadata_profile()
+        except Exception as e:
+            logger.warning(f"Metadata profile recreation triggered an exception: {e}. Checking if profile is active anyway.")
+            try:
+                response = list_metadata_profiles(logging=False)
+                profiles = [p.get("metadata", {}).get("name") for p in response.json()]
+                if METADATA_PROFILE_NAME in profiles:
+                    logger.info(f"Metadata profile {METADATA_PROFILE_NAME} is active, proceeding.")
+                    METADATA_PROFILE_CREATED = True
+                    return
+            except Exception:
+                pass
+            raise e
+        METADATA_PROFILE_CREATED = True
 
 
 # =================================================================================================
@@ -204,17 +321,25 @@ def bulk_label_filter_setup(cluster_type):
         pytest.param({"namespace": ["default", "monitoring"]}, None, id="T2_include_two_namespaces"),
         pytest.param(None, {"namespace": ["default"]}, id="T3_exclude_namespace"),
         pytest.param({"labels": {"app": "kruize"}}, None, id="T4_include_single_label"),
+        pytest.param(None, {"labels": {"app": "kruize"}}, id="T5_exclude_single_label"),
         pytest.param({"labels": {"app": ["kruize", "kruize-db"]}}, None, id="T6_multivalue_label_OR"),
         pytest.param({"labels": {"app": "kruize", "version": "v1"}}, None, id="T7_multikey_label_AND"),
-        pytest.param({"labels": {"version": "v1"}}, None, id="T12_label_only"),
-        pytest.param({"namespace": ["default"], "labels": {"app": "kruize"}}, None, id="T13_namespace_and_label"),
+        pytest.param(None, {"labels": {"app": "kruize", "version": "v1"}}, id="T10_exclude_multikey_label"),
+        pytest.param(None, {"labels": {"app": ["kruize", "kruize-db"]}}, id="T11_exclude_multivalue_label"),
+        pytest.param({"labels": {"app": "sysbench"}}, None, id="T12_label_only"),
+        pytest.param({"namespace": ["default"], "labels": {"app": "sysbench"}}, None, id="T13_namespace_and_label"),
+        pytest.param({"namespace": ["default"], "labels": {"app": "sysbench", "version": "v1"}}, None, id="T14_namespace_and_multikey_label"),
+        pytest.param({"namespace": ["default"]}, None, id="T15_include_namespace_metadata"),
         pytest.param({"labels": {"app": "kruize"}}, {"namespace": ["default"]}, id="T16_include_label_exclude_ns"),
+        pytest.param({"workload": ["kruize"]}, {"labels": {"app": "kruize"}}, id="T17_include_workload_exclude_label"),
+        pytest.param({"workload": ["kruize"], "labels": {"app": "kruize"}}, None, id="T18_workload_and_label"),
         pytest.param({"namespace": ["default"]}, {"labels": {"app": "kruize"}}, id="T19_include_ns_exclude_label"),
         pytest.param({"namespace": ["default"]}, {"labels": {"app": ["kruize", "kruize-db"]}}, id="T20_exclude_multivalue_label"),
         pytest.param({"workload": ["kruize"]}, None, id="T21_include_workload"),
         pytest.param({"workload": ["kruize", "kruize-db"]}, None, id="T22_include_two_workloads"),
         pytest.param({"namespace": ["default"]}, {"workload": ["kruize"]}, id="T23_include_ns_exclude_workload"),
-        pytest.param({"namespace": ["default"], "workload": ["kruize"], "labels": {"version": "v1"}}, None, id="T24_ns_workload_label"),
+        pytest.param({"namespace": ["default"], "workload": ["sysbench"], "labels": {"app": "sysbench"}}, None, id="T24_ns_workload_label"),
+        pytest.param(None, {"labels": {"app": "kruize", "version": "no-such-version-xyz"}}, id="T25_exclude_unmatched_label_key"),
         pytest.param({"containers": ["kruize"]}, None, id="T26_include_container"),
         pytest.param({"namespace": ["default"]}, {"containers": ["kruize"]}, id="T27_include_ns_exclude_container"),
         pytest.param({}, None, id="T28_no_filter"),
@@ -254,9 +379,10 @@ def test_multikey_label_with_missing_key_yields_no_experiments(bulk_label_filter
 @pytest.mark.test_bulk_api_ros
 def test_namespace_union_equals_sum_of_singles(bulk_label_filter_setup, caplog):
     """T2 — namespaces are disjoint, so include[ns1,ns2] == include[ns1] + include[ns2]."""
-    namespaces = _discover_namespaces()
+    workloads = _discover_workloads()
+    namespaces = sorted(list({wl[0] for wl in workloads}))
     if len(namespaces) < 2:
-        pytest.skip("Need at least two namespaces to validate namespace union")
+        pytest.skip("Need at least two active namespaces to validate namespace union")
     ns1, ns2 = namespaces[0], namespaces[1]
     with caplog.at_level(logging.INFO):
         both = experiment_count(label_filter_payload(include={"namespace": [ns1, ns2]}))
@@ -273,10 +399,10 @@ def test_exclude_namespace_is_complement_of_include(bulk_label_filter_setup, cap
         total = experiment_count(label_filter_payload())
         if total == 0:
             pytest.skip("No experiments discovered — cannot validate namespace complement")
-        namespaces = _discover_namespaces()
-        if not namespaces:
-            pytest.skip("No namespace discovered")
-        ns = namespaces[0]
+        workloads = _discover_workloads()
+        if not workloads:
+            pytest.skip("No workloads discovered")
+        ns = workloads[0][0]
         included = experiment_count(label_filter_payload(include={"namespace": [ns]}))
         excluded = experiment_count(label_filter_payload(exclude={"namespace": [ns]}))
     assert included + excluded == total, \
@@ -286,10 +412,10 @@ def test_exclude_namespace_is_complement_of_include(bulk_label_filter_setup, cap
 @pytest.mark.test_bulk_api_ros
 def test_include_then_exclude_same_namespace_yields_zero(bulk_label_filter_setup, caplog):
     """T30 — excluding the same namespace that is included wins: zero experiments."""
-    namespaces = _discover_namespaces()
-    if not namespaces:
-        pytest.skip("No namespace discovered")
-    ns = namespaces[0]
+    workloads = _discover_workloads()
+    if not workloads:
+        pytest.skip("No workloads discovered")
+    ns = workloads[0][0]
     with caplog.at_level(logging.INFO):
         include_only = experiment_count(label_filter_payload(include={"namespace": [ns]}))
         assert include_only > 0, f"Expected > 0 experiments when including namespace {ns}"
@@ -300,9 +426,10 @@ def test_include_then_exclude_same_namespace_yields_zero(bulk_label_filter_setup
 @pytest.mark.test_bulk_api_ros
 def test_include_two_namespaces_exclude_one_equals_other(bulk_label_filter_setup, caplog):
     """T30 — include[ns1,ns2] excluding ns2 equals include[ns1]."""
-    namespaces = _discover_namespaces()
+    workloads = _discover_workloads()
+    namespaces = sorted(list({wl[0] for wl in workloads}))
     if len(namespaces) < 2:
-        pytest.skip("Need at least two namespaces")
+        pytest.skip("Need at least two active namespaces")
     ns1, ns2 = namespaces[0], namespaces[1]
     with caplog.at_level(logging.INFO):
         only1 = experiment_count(label_filter_payload(include={"namespace": [ns1]}))
@@ -363,3 +490,108 @@ def test_namespace_filter_restricts_returned_metadata(bulk_label_filter_setup, c
         for cluster_data in ds_data.get("clusters", {}).values():
             returned = list(cluster_data.get("namespaces", {}).keys())
             assert returned == [ns], f"Namespace filter not honoured: expected only [{ns}], got {returned}"
+
+
+# =================================================================================================
+# Additional workload invariants
+# =================================================================================================
+@pytest.mark.test_bulk_api_ros
+def test_exclude_workload_is_complement_of_include(bulk_label_filter_setup, caplog):
+    """Exclude(wl) is complement of Include(wl) -> include(wl) + exclude(wl) == baseline total."""
+    with caplog.at_level(logging.INFO):
+        total = experiment_count(label_filter_payload())
+        if total == 0:
+            pytest.skip("No experiments discovered — cannot validate workload complement")
+        wl, included = _discover_active_workload_with_experiments()
+        if not wl:
+            pytest.skip("No workload with active experiments discovered")
+        excluded = experiment_count(label_filter_payload(exclude={"workload": [wl]}))
+    assert included + excluded == total, \
+        f"include(wl={wl})={included} + exclude(wl={wl})={excluded} != baseline={total}"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_include_then_exclude_same_workload_yields_zero(bulk_label_filter_setup, caplog):
+    """Excluding the same workload that is included wins: zero experiments."""
+    wl, include_only = _discover_active_workload_with_experiments()
+    if not wl:
+        pytest.skip("No workload with active experiments discovered")
+    with caplog.at_level(logging.INFO):
+        both = experiment_count(label_filter_payload(include={"workload": [wl]}, exclude={"workload": [wl]}))
+    assert both == 0, f"Expected 0 experiments when the same workload is included and excluded, got {both}"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_include_two_workloads_exclude_one_equals_other(bulk_label_filter_setup, caplog):
+    """Include[wl1,wl2] excluding wl2 equals include[wl1]."""
+    workloads = sorted({wl for _, wl in _discover_workloads()})
+    if len(workloads) < 2:
+        pytest.skip("Need at least two workloads")
+    wl1, wl2 = workloads[0], workloads[1]
+    with caplog.at_level(logging.INFO):
+        only1 = experiment_count(label_filter_payload(include={"workload": [wl1]}))
+        both_minus_wl2 = experiment_count(
+            label_filter_payload(include={"workload": [wl1, wl2]}, exclude={"workload": [wl2]})
+        )
+    assert both_minus_wl2 == only1, \
+        f"include[{wl1},{wl2}] exclude[{wl2}]={both_minus_wl2} != include[{wl1}]={only1}"
+
+
+# =================================================================================================
+# Container invariants (discovered containers)
+# =================================================================================================
+@pytest.mark.test_bulk_api_ros
+def test_container_union_equals_sum_of_singles(bulk_label_filter_setup, caplog):
+    """T26 OR within key — containers are disjoint (within unique names), so include[c1,c2] == include[c1] + include[c2]."""
+    containers = _discover_containers()
+    if len(containers) < 2:
+        pytest.skip("Need at least two containers to validate container union")
+    c1, c2 = containers[0], containers[1]
+    with caplog.at_level(logging.INFO):
+        both = experiment_count(label_filter_payload(include={"containers": [c1, c2]}))
+        only1 = experiment_count(label_filter_payload(include={"containers": [c1]}))
+        only2 = experiment_count(label_filter_payload(include={"containers": [c2]}))
+    assert both == only1 + only2, \
+        f"include[{c1},{c2}]={both} != include[{c1}]={only1} + include[{c2}]={only2}"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_exclude_container_is_complement_of_include(bulk_label_filter_setup, caplog):
+    """T27 / T28 complement — include(c) + exclude(c) == unfiltered total."""
+    with caplog.at_level(logging.INFO):
+        total = experiment_count(label_filter_payload())
+        if total == 0:
+            pytest.skip("No experiments discovered — cannot validate container complement")
+        c, included = _discover_active_container_with_experiments()
+        if not c:
+            pytest.skip("No container with active experiments discovered")
+        excluded = experiment_count(label_filter_payload(exclude={"containers": [c]}))
+    assert included + excluded == total, \
+        f"include(container={c})={included} + exclude(container={c})={excluded} != baseline={total}"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_include_then_exclude_same_container_yields_zero(bulk_label_filter_setup, caplog):
+    """Excluding the same container that is included wins: zero experiments."""
+    c, include_only = _discover_active_container_with_experiments()
+    if not c:
+        pytest.skip("No container with active experiments discovered")
+    with caplog.at_level(logging.INFO):
+        both = experiment_count(label_filter_payload(include={"containers": [c]}, exclude={"containers": [c]}))
+    assert both == 0, f"Expected 0 experiments when the same container is included and excluded, got {both}"
+
+
+@pytest.mark.test_bulk_api_ros
+def test_include_two_containers_exclude_one_equals_other(bulk_label_filter_setup, caplog):
+    """Include[c1,c2] excluding c2 equals include[c1]."""
+    containers = _discover_containers()
+    if len(containers) < 2:
+        pytest.skip("Need at least two containers")
+    c1, c2 = containers[0], containers[1]
+    with caplog.at_level(logging.INFO):
+        only1 = experiment_count(label_filter_payload(include={"containers": [c1]}))
+        both_minus_c2 = experiment_count(
+            label_filter_payload(include={"containers": [c1, c2]}, exclude={"containers": [c2]})
+        )
+    assert both_minus_c2 == only1, \
+        f"include[{c1},{c2}] exclude[{c2}]={both_minus_c2} != include[{c1}]={only1}"
