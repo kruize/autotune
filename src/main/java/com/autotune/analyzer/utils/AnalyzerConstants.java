@@ -305,6 +305,8 @@ public class AnalyzerConstants {
         JOB,
         CONFIGMAP,
         CATALOGSOURCE,
+        CRONJOB,
+        BAREPOD,
     }
 
     public enum RegisterRecommendationModelStatus {
@@ -1017,6 +1019,8 @@ public class AnalyzerConstants {
             public static final String JOB = "job";
             public static final String CONFIGMAP = "ConfigMap";
             public static final String CATALOGSOURCE = "CatalogSource";
+            public static final String CRONJOB = "CronJob";
+            public static final String BAREPOD = "barepod";
 
 
             private Types() {
@@ -1145,16 +1149,13 @@ public class AnalyzerConstants {
     }
 
     /**
-     * K8S object types that Kruize does not support for recommendations.
-     * Used to build the {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter for local monitoring metadata discovery.
-     * Note: DeploymentConfig is excluded from discovery but is still accepted by remote monitoring
-     * createExperiment, so {@code /listK8sObjects} keeps listing it.
+     * K8S object types that Kruize does not support, for both remote and local monitoring.
+     * The supported types are exactly the ones {@link Utils#getApproriateK8sObjectType(String)} resolves
+     * (the remote monitoring createExperiment validation), so this list is the complement of that set.
+     * It is used to build the {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter for local monitoring metadata
+     * discovery and to hide these types from {@code /listK8sObjects}.
      */
-    public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = Collections.unmodifiableList(Arrays.asList(
-            K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG,
-            K8S_OBJECT_TYPES.CONFIGMAP,
-            K8S_OBJECT_TYPES.CATALOGSOURCE
-    ));
+    public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = List.of(K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG, K8S_OBJECT_TYPES.CONFIGMAP, K8S_OBJECT_TYPES.CATALOGSOURCE, K8S_OBJECT_TYPES.CRONJOB, K8S_OBJECT_TYPES.BAREPOD);
 
     /**
      * Returns a PromQL filter string for unsupported workload types.

@@ -46,12 +46,8 @@ public class ListSupportedK8sObjects extends HttpServlet {
         ListSupportedK8sObjectsSO listSupportedK8sObjectsSO =  new ListSupportedK8sObjectsSO();
         // Iterate over the supported Kubernetes Object type supported by Kruize
         for (AnalyzerConstants.K8S_OBJECT_TYPES k8SObjectType : AnalyzerConstants.K8S_OBJECT_TYPES.values()) {
-            // Types in UNSUPPORTED_K8S_OBJECT_TYPES are excluded from local monitoring metadata discovery,
-            // so they are not reported here either.
-            // Exception: DeploymentConfig is only excluded from metadata discovery. Remote monitoring
-            // createExperiment still accepts it, so it must remain in this list.
-            if (AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.contains(k8SObjectType)
-                    && k8SObjectType != AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG) {
+            // Skip the types which are unsupported
+            if (AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.contains(k8SObjectType)) {
                 continue;
             }
             // Get the String value of the K8S object types

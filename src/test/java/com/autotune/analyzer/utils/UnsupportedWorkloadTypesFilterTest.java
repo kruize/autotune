@@ -42,6 +42,53 @@ class UnsupportedWorkloadTypesFilterTest {
         assertEquals("job", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.JOB));
         assertEquals("ConfigMap", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CONFIGMAP));
         assertEquals("CatalogSource", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE));
+        assertEquals("CronJob", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CRONJOB));
+        assertEquals("barepod", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.BAREPOD));
+    }
+
+    @Test
+    @DisplayName("Unsupported list covers every unsupported workload type reported in the issue")
+    void unsupportedListCoversIssueTypes() {
+        assertTrue(AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.containsAll(java.util.List.of(
+                AnalyzerConstants.K8S_OBJECT_TYPES.CONFIGMAP,
+                AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE,
+                AnalyzerConstants.K8S_OBJECT_TYPES.CRONJOB,
+                AnalyzerConstants.K8S_OBJECT_TYPES.BAREPOD)));
+    }
+
+    @Test
+    @DisplayName("Every type is either supported (accepted by remote monitoring createExperiment) or in the unsupported list, never both")
+    void supportedAndUnsupportedAreComplementary() {
+        for (AnalyzerConstants.K8S_OBJECT_TYPES type : AnalyzerConstants.K8S_OBJECT_TYPES.values()) {
+            // DeploymentConfig is the one known exception: it is filtered out of local monitoring metadata
+            // discovery (deprecated from OpenShift 4.14) but is still accepted by remote monitoring createExperiment
+            if (type == AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG) {
+                continue;
+            }
+            // This is the same check ExperimentValidation uses for remote monitoring
+            boolean supported = type == Utils.getApproriateK8sObjectType(Utils.getAppropriateK8sObjectTypeString(type));
+            boolean unsupported = AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.contains(type);
+            assertNotEquals(supported, unsupported,
+                    type + " must be exactly one of supported (remote monitoring) or unsupported");
+        }
+    }
+
+    @Test
+    @DisplayName("DeploymentConfig is the known exception: filtered from local discovery but still accepted by createExperiment")
+    void deploymentConfigIsKnownException() {
+        assertTrue(AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.contains(AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG));
+        assertEquals(AnalyzerConstants.K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG, Utils.getApproriateK8sObjectType("deploymentConfig"));
+    }
+
+    @Test
+    @DisplayName("Types supported by remote monitoring are not excluded by the filter")
+    void supportedTypesAreNotFiltered() {
+        String filter = AnalyzerConstants.getUnsupportedWorkloadTypesFilter();
+        for (String supported : new String[]{"deployment", "statefulset", "replicaset",
+                "replicationController", "daemonset", "job"}) {
+            assertFalse(filter.contains("(?i)" + supported + "\""),
+                    supported + " is supported by remote monitoring and must not be filtered out");
+        }
     }
 
     @Test
@@ -51,11 +98,13 @@ class UnsupportedWorkloadTypesFilterTest {
     }
 
     @Test
-    @DisplayName("Filter excludes DeploymentConfig, ConfigMap and CatalogSource")
+    @DisplayName("Filter excludes DeploymentConfig, ConfigMap, CatalogSource, CronJob and barepod")
     void filterContainsAllUnsupportedTypes() {
         String expected = ", workload_type!~\"(?i)deploymentConfig\""
                 + ", workload_type!~\"(?i)ConfigMap\""
-                + ", workload_type!~\"(?i)CatalogSource\"";
+                + ", workload_type!~\"(?i)CatalogSource\""
+                + ", workload_type!~\"(?i)CronJob\""
+                + ", workload_type!~\"(?i)barepod\"";
         assertEquals(expected, AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
     }
 
