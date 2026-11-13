@@ -32,19 +32,26 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
+import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricMetadata;
+import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
@@ -450,6 +457,146 @@ public class DBHelpers {
                     .create();
 
             /**
+             * Compact writer for kruize_recommendations.extended_data.
+             * Same adapters and date format as the previous per-call builder, without pretty-printing.
+             */
+            private static final Gson RECOMMENDATION_GSON = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .enableComplexMapKeySerialization()
+                    .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+                    .create();
+
+            private static final ObjectMapper RECOMMENDATION_MAPPER = recommendationMapper();
+
+            private static ObjectMapper recommendationMapper() {
+                ObjectMapper mapper = new ObjectMapper();
+                DateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                mapper.setDateFormat(dateFormat);
+                return mapper;
+            }
+
+            public static String compactRecommendationJson(Object value) {
+                return RECOMMENDATION_GSON.toJson(value);
+            }
+
+            /**
+             * Builds the same interval metric map {@code mergeResults} reads, from stored container or
+             * namespace metrics. Does not construct an UpdateResults API object.
+             */
+            public static ExperimentResultData experimentResultFromResultEntry(KruizeResultsEntry entry, String clusterName) {
+                if (entry == null || entry.getExtended_data() == null) {
+                    return null;
+                }
+                JsonNode kubernetesObjects = entry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                if (kubernetesObjects == null || !kubernetesObjects.isArray()) {
+                    return null;
+                }
+                List<K8sObject> parsedObjects = new ArrayList<>();
+                for (JsonNode node : kubernetesObjects) {
+                    K8sObject k8sObject = RESULTS_JSONB_GSON.fromJson(node.toString(), K8sObject.class);
+                    if (k8sObject == null) {
+                        continue;
+                    }
+                    boolean included = false;
+                    if (k8sObject.getContainerDataMap() != null && !k8sObject.getContainerDataMap().isEmpty()) {
+                        for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                            attachIntervalFromContainerMetrics(containerData, entry.getInterval_start_time(), entry.getInterval_end_time());
+                        }
+                        included = true;
+                    } else if (k8sObject.getNamespaceDataMap() != null && !k8sObject.getNamespaceDataMap().isEmpty()) {
+                        for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                            attachIntervalFromNamespaceMetrics(namespaceData, entry.getInterval_start_time(), entry.getInterval_end_time());
+                        }
+                        included = true;
+                    }
+                    if (included) {
+                        parsedObjects.add(k8sObject);
+                    }
+                }
+                if (parsedObjects.isEmpty()) {
+                    return null;
+                }
+                ExperimentResultData experimentResultData = new ExperimentResultData();
+                experimentResultData.setVersion(entry.getVersion());
+                experimentResultData.setExperiment_name(entry.getExperiment_name());
+                experimentResultData.setCluster_name(clusterName);
+                experimentResultData.setIntervalStartTime(entry.getInterval_start_time());
+                experimentResultData.setIntervalEndTime(entry.getInterval_end_time());
+                experimentResultData.setKubernetes_objects(parsedObjects);
+                experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));
+                return experimentResultData;
+            }
+
+            private static void attachIntervalFromContainerMetrics(ContainerData containerData, Timestamp start, Timestamp end) {
+                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
+                if (containerData.getMetrics() != null) {
+                    for (Metric metric : containerData.getMetrics().values()) {
+                        if (metric == null || metric.getName() == null || metric.getMetricResult() == null) {
+                            continue;
+                        }
+                        boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
+                                || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
+                                || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
+                        MetricResults metricResults = metric.getMetricResult();
+                        metricResults.setName(metric.getName());
+                        if (isAcceleratorMetric) {
+                            if (null != metricResults.getMetadata()
+                                    && metricResults.getMetadata() instanceof AcceleratorMetricMetadata acceleratorMetricMetadata) {
+                                if (null != acceleratorMetricMetadata.getModelName()) {
+                                    boolean isPartitionSupported = RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName());
+                                    boolean isPartition = (null != acceleratorMetricMetadata.getProfileName());
+                                    NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(
+                                            acceleratorMetricMetadata.getModelName(),
+                                            acceleratorMetricMetadata.getNode(),
+                                            null,
+                                            null,
+                                            acceleratorMetricMetadata.getProfileName(),
+                                            isPartitionSupported,
+                                            isPartition
+                                    );
+                                    AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
+                                    acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), acceleratorMetricResult);
+                                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                                }
+                            }
+                        } else {
+                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                        }
+                    }
+                }
+                IntervalResults intervalResults = new IntervalResults(start, end);
+                intervalResults.setMetricResultsMap(metricResultsHashMap);
+                intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
+                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+                resultsMap.put(end, intervalResults);
+                containerData.setResults(resultsMap);
+            }
+
+            private static void attachIntervalFromNamespaceMetrics(NamespaceData namespaceData, Timestamp start, Timestamp end) {
+                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                if (namespaceData.getMetrics() != null) {
+                    for (Metric metric : namespaceData.getMetrics().values()) {
+                        if (metric == null || metric.getName() == null || metric.getMetricResult() == null) {
+                            continue;
+                        }
+                        MetricResults metricResults = metric.getMetricResult();
+                        metricResults.setName(metric.getName());
+                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                    }
+                }
+                IntervalResults intervalResults = new IntervalResults(start, end);
+                intervalResults.setMetricResultsMap(metricResultsHashMap);
+                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+                resultsMap.put(end, intervalResults);
+                namespaceData.setResults(resultsMap);
+            }
+
+            /**
              * @param apiObject
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
@@ -531,29 +678,13 @@ public class DBHelpers {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
                 Boolean checkForTimestamp = false;
                 Boolean getLatest = true;
-                Gson gson = new GsonBuilder()
-                        .disableHtmlEscaping()
-                        .setPrettyPrinting()
-                        .enableComplexMapKeySerialization()
-                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
-                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                        .create();
                 try {
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
                             kruizeObject, monitoringEndTime);
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
-                    LOGGER.debug(new GsonBuilder()
-                            .setPrettyPrinting()
-                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                            .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                            .create()
-                            .toJson(listRecommendationsAPIObject));
+                    LOGGER.debug(RECOMMENDATION_GSON.toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
@@ -574,13 +705,10 @@ public class DBHelpers {
                     }
                     kruizeRecommendationEntry.setInterval_end_time(endInterval);
                     Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
-                    String k8sObjectString = gson.toJson(k8sObjectsMap);
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-                    objectMapper.setDateFormat(df);
+                    String k8sObjectString = RECOMMENDATION_GSON.toJson(k8sObjectsMap);
                     try {
                         kruizeRecommendationEntry.setExtended_data(
-                                objectMapper.readTree(
+                                RECOMMENDATION_MAPPER.readTree(
                                         k8sObjectString
                                 )
                         );

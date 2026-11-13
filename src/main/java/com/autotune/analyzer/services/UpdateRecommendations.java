@@ -109,7 +109,7 @@ public class UpdateRecommendations extends HttpServlet {
                 long prepareStartNanos = System.nanoTime();
                 KruizeObject kruizeObject;
                 try {
-                    kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null);
+                    kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null, true);
                 } finally {
                     LOGGER.info("updateRecommendations server prepare ms={} experiment={}",
                             (System.nanoTime() - prepareStartNanos) / 1_000_000L, experiment_name);
@@ -181,7 +181,6 @@ public class UpdateRecommendations extends HttpServlet {
         if (!recommendationList.isEmpty()) {
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
-                    .setPrettyPrinting()
                     .enableComplexMapKeySerialization()
                     .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                     .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
