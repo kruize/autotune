@@ -90,6 +90,7 @@ METRIC_PROFILE_EXISTS_MSG = "Validation failed: Metric Profile already exists: %
 METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
 INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
 LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
+INTERNAL_SERVER_ERROR_MSG = "An internal error occurred while processing the request. Please check the Kruize logs for details."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s]"
 AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [query, aggregation_functions]"
