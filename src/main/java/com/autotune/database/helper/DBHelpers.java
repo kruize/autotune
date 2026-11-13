@@ -32,26 +32,19 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
-import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
-import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricMetadata;
-import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
@@ -484,116 +477,30 @@ public class DBHelpers {
             }
 
             /**
-             * Builds the same interval metric map {@code mergeResults} reads, from stored container or
-             * namespace metrics. Does not construct an UpdateResults API object.
+             * Rebuilds one stored results row with the same converters {@code loadResultsFromDBByName}
+             * uses. {@code clusterName} is the experiment cluster, matching that load path.
+             * Returns null when the row does not produce kubernetes objects.
              */
             public static ExperimentResultData experimentResultFromResultEntry(KruizeResultsEntry entry, String clusterName) {
-                if (entry == null || entry.getExtended_data() == null) {
+                if (entry == null) {
                     return null;
                 }
-                JsonNode kubernetesObjects = entry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
-                if (kubernetesObjects == null || !kubernetesObjects.isArray()) {
+                List<UpdateResultsAPIObject> apiObjects = convertResultEntryToUpdateResultsAPIObject(List.of(entry));
+                if (apiObjects == null || apiObjects.isEmpty()) {
                     return null;
                 }
-                List<K8sObject> parsedObjects = new ArrayList<>();
-                for (JsonNode node : kubernetesObjects) {
-                    K8sObject k8sObject = RESULTS_JSONB_GSON.fromJson(node.toString(), K8sObject.class);
-                    if (k8sObject == null) {
-                        continue;
-                    }
-                    boolean included = false;
-                    if (k8sObject.getContainerDataMap() != null && !k8sObject.getContainerDataMap().isEmpty()) {
-                        for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                            attachIntervalFromContainerMetrics(containerData, entry.getInterval_start_time(), entry.getInterval_end_time());
-                        }
-                        included = true;
-                    } else if (k8sObject.getNamespaceDataMap() != null && !k8sObject.getNamespaceDataMap().isEmpty()) {
-                        for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
-                            attachIntervalFromNamespaceMetrics(namespaceData, entry.getInterval_start_time(), entry.getInterval_end_time());
-                        }
-                        included = true;
-                    }
-                    if (included) {
-                        parsedObjects.add(k8sObject);
-                    }
-                }
-                if (parsedObjects.isEmpty()) {
+                UpdateResultsAPIObject apiObject = apiObjects.get(0);
+                KruizeObject kruizeObject = new KruizeObject();
+                kruizeObject.setClusterName(clusterName);
+                apiObject.setKruizeObject(kruizeObject);
+                ExperimentResultData experimentResultData = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters
+                        .convertUpdateResultsAPIObjToExperimentResultData(apiObject);
+                if (experimentResultData == null
+                        || experimentResultData.getKubernetes_objects() == null
+                        || experimentResultData.getKubernetes_objects().isEmpty()) {
                     return null;
                 }
-                ExperimentResultData experimentResultData = new ExperimentResultData();
-                experimentResultData.setVersion(entry.getVersion());
-                experimentResultData.setExperiment_name(entry.getExperiment_name());
-                experimentResultData.setCluster_name(clusterName);
-                experimentResultData.setIntervalStartTime(entry.getInterval_start_time());
-                experimentResultData.setIntervalEndTime(entry.getInterval_end_time());
-                experimentResultData.setKubernetes_objects(parsedObjects);
-                experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));
                 return experimentResultData;
-            }
-
-            private static void attachIntervalFromContainerMetrics(ContainerData containerData, Timestamp start, Timestamp end) {
-                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
-                if (containerData.getMetrics() != null) {
-                    for (Metric metric : containerData.getMetrics().values()) {
-                        if (metric == null || metric.getName() == null || metric.getMetricResult() == null) {
-                            continue;
-                        }
-                        boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
-                                || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
-                                || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
-                        MetricResults metricResults = metric.getMetricResult();
-                        metricResults.setName(metric.getName());
-                        if (isAcceleratorMetric) {
-                            if (null != metricResults.getMetadata()
-                                    && metricResults.getMetadata() instanceof AcceleratorMetricMetadata acceleratorMetricMetadata) {
-                                if (null != acceleratorMetricMetadata.getModelName()) {
-                                    boolean isPartitionSupported = RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName());
-                                    boolean isPartition = (null != acceleratorMetricMetadata.getProfileName());
-                                    NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(
-                                            acceleratorMetricMetadata.getModelName(),
-                                            acceleratorMetricMetadata.getNode(),
-                                            null,
-                                            null,
-                                            acceleratorMetricMetadata.getProfileName(),
-                                            isPartitionSupported,
-                                            isPartition
-                                    );
-                                    AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
-                                    acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), acceleratorMetricResult);
-                                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                                }
-                            }
-                        } else {
-                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                        }
-                    }
-                }
-                IntervalResults intervalResults = new IntervalResults(start, end);
-                intervalResults.setMetricResultsMap(metricResultsHashMap);
-                intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
-                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
-                resultsMap.put(end, intervalResults);
-                containerData.setResults(resultsMap);
-            }
-
-            private static void attachIntervalFromNamespaceMetrics(NamespaceData namespaceData, Timestamp start, Timestamp end) {
-                HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                if (namespaceData.getMetrics() != null) {
-                    for (Metric metric : namespaceData.getMetrics().values()) {
-                        if (metric == null || metric.getName() == null || metric.getMetricResult() == null) {
-                            continue;
-                        }
-                        MetricResults metricResults = metric.getMetricResult();
-                        metricResults.setName(metric.getName());
-                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                    }
-                }
-                IntervalResults intervalResults = new IntervalResults(start, end);
-                intervalResults.setMetricResultsMap(metricResultsHashMap);
-                HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
-                resultsMap.put(end, intervalResults);
-                namespaceData.setResults(resultsMap);
             }
 
             /**

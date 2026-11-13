@@ -16,15 +16,18 @@
 package com.autotune.database.service;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.KruizeResultsEntry;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -42,107 +45,108 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecommendationResultsLeanLoadTest {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Gson GSON = new Gson();
     private static final String EXPERIMENT = "demo";
+    private static final String CLUSTER = "cluster-a";
+    private static final String CONTAINER = "tfb-server-0";
     private static final Timestamp START = Timestamp.from(Instant.parse("2026-01-15T00:00:00Z"));
     private static final Timestamp END = Timestamp.from(Instant.parse("2026-01-15T00:15:00Z"));
 
     @Test
-    @DisplayName("container metric lands on the row end timestamp")
-    void attachesContainerMetricFromStoredJson() throws Exception {
-        ContainerData containerData = new ContainerData("app", "image:latest", null, new HashMap<>());
-        KruizeObject kruizeObject = experimentWith(containerObject(containerData));
-        KruizeResultsEntry entry = entry("""
-                {
-                  "kubernetes_objects": [
-                    {
-                      "type": "deployment",
-                      "name": "demo-app",
-                      "namespace": "default",
-                      "containers": {
-                        "app": {
-                          "container_name": "app",
-                          "container_image_name": "image:latest",
-                          "metrics": {
-                            "cpuUsage": {
-                              "name": "cpuUsage",
-                              "results": {
-                                "aggregation_info": { "sum": 12.5 }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-                """);
+    @DisplayName("container metrics round-trip through results jsonb and match the old converter")
+    void containerRoundTripMatchesOldConverter() {
+        HashMap<AnalyzerConstants.MetricName, Metric> metrics = new HashMap<>();
+        metrics.put(AnalyzerConstants.MetricName.cpuUsage, metric("""
+                {"name":"cpuUsage","results":{"aggregation_info":{"min":0.54,"max":0.94,"sum":0.52,"avg":0.12,"format":"cores"}}}
+                """));
+        metrics.put(AnalyzerConstants.MetricName.cpuRequest, metric("""
+                {"name":"cpuRequest","results":{"aggregation_info":{"sum":3.4,"avg":2.1,"format":"cores"}}}
+                """));
+        ContainerData containerData = new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, metrics);
+        HashMap<String, ContainerData> containers = new HashMap<>();
+        containers.put(CONTAINER, containerData);
+        K8sObject k8sObject = new K8sObject("tfb-qrh-deployment", "deployment", "default");
+        k8sObject.setContainerDataMap(containers);
 
+        KruizeResultsEntry stored = storedEntry(List.of(k8sObject));
+        ExperimentResultData lean = DBHelpers.Converters.KruizeObjectConverters.experimentResultFromResultEntry(stored, CLUSTER);
+        ExperimentResultData old = oldConverter(stored);
+
+        assertNotNull(lean);
+        assertMetric(lean, AnalyzerConstants.MetricName.cpuUsage, 0.12, "cores");
+        assertMetric(lean, AnalyzerConstants.MetricName.cpuRequest, 2.1, "cores");
+        assertMetric(old, AnalyzerConstants.MetricName.cpuUsage, 0.12, "cores");
+        assertEquals(metricAt(old, AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getAvg(),
+                metricAt(lean, AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getAvg());
+        assertEquals(metricAt(old, AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getFormat(),
+                metricAt(lean, AnalyzerConstants.MetricName.cpuUsage).getAggregationInfoResult().getFormat());
+        assertEquals(metricAt(old, AnalyzerConstants.MetricName.cpuRequest).getAggregationInfoResult().getFormat(),
+                metricAt(lean, AnalyzerConstants.MetricName.cpuRequest).getAggregationInfoResult().getFormat());
+
+        ContainerData experimentContainer = new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, new HashMap<>());
+        KruizeObject kruizeObject = experimentWith(containerObject(experimentContainer));
         boolean attached = new ExperimentDBService().attachRecommendationResultEntries(
-                Map.of(EXPERIMENT, kruizeObject), null, List.of(entry));
+                Map.of(EXPERIMENT, kruizeObject), CLUSTER, List.of(stored));
 
         assertTrue(attached);
-        IntervalResults intervalResults = containerData.getResults().get(END);
+        IntervalResults intervalResults = experimentContainer.getResults().get(END);
         assertNotNull(intervalResults);
-        MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
-        assertNotNull(metricResults);
-        assertEquals(12.5, metricResults.getAggregationInfoResult().getSum());
+        assertEquals(0.12, intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage)
+                .getAggregationInfoResult().getAvg());
+        assertEquals("cores", intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage)
+                .getAggregationInfoResult().getFormat());
     }
 
     @Test
-    @DisplayName("namespace metric lands on NamespaceData results")
-    void attachesNamespaceMetricFromStoredJson() throws Exception {
-        NamespaceData namespaceData = new NamespaceData("payments", null, new HashMap<>());
-        K8sObject k8sObject = new K8sObject();
-        k8sObject.setNamespace("payments");
+    @DisplayName("namespace metric round-trip matches the old converter")
+    void namespaceRoundTripMatchesOldConverter() {
+        HashMap<AnalyzerConstants.MetricName, Metric> metrics = new HashMap<>();
+        metrics.put(AnalyzerConstants.MetricName.namespaceCpuUsage, metric("""
+                {"name":"namespaceCpuUsage","results":{"aggregation_info":{"sum":3.0,"avg":1.5,"format":"cores"}}}
+                """));
+        NamespaceData namespaceData = new NamespaceData("payments", null, metrics);
         HashMap<String, NamespaceData> namespaces = new HashMap<>();
         namespaces.put("payments", namespaceData);
+        K8sObject k8sObject = new K8sObject();
+        k8sObject.setNamespace("payments");
         k8sObject.setNamespaceDataMap(namespaces);
-        KruizeObject kruizeObject = experimentWith(k8sObject);
-        KruizeResultsEntry entry = entry("""
-                {
-                  "kubernetes_objects": [
-                    {
-                      "namespace": "payments",
-                      "namespaces": {
-                        "payments": {
-                          "namespace": "payments",
-                          "metrics": {
-                            "namespaceCpuUsage": {
-                              "name": "namespaceCpuUsage",
-                              "results": {
-                                "aggregation_info": { "sum": 3.0 }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-                """);
 
+        KruizeResultsEntry stored = storedEntry(List.of(k8sObject));
+        ExperimentResultData lean = DBHelpers.Converters.KruizeObjectConverters.experimentResultFromResultEntry(stored, CLUSTER);
+        ExperimentResultData old = oldConverter(stored);
+
+        assertNotNull(lean);
+        MetricResults leanMetric = namespaceMetric(lean);
+        MetricResults oldMetric = namespaceMetric(old);
+        assertEquals(1.5, leanMetric.getAggregationInfoResult().getAvg());
+        assertEquals("cores", leanMetric.getAggregationInfoResult().getFormat());
+        assertEquals(oldMetric.getAggregationInfoResult().getAvg(), leanMetric.getAggregationInfoResult().getAvg());
+        assertEquals(oldMetric.getAggregationInfoResult().getFormat(), leanMetric.getAggregationInfoResult().getFormat());
+
+        NamespaceData experimentNamespace = new NamespaceData("payments", null, new HashMap<>());
+        K8sObject experimentObject = new K8sObject();
+        experimentObject.setNamespace("payments");
+        HashMap<String, NamespaceData> experimentNamespaces = new HashMap<>();
+        experimentNamespaces.put("payments", experimentNamespace);
+        experimentObject.setNamespaceDataMap(experimentNamespaces);
         boolean attached = new ExperimentDBService().attachRecommendationResultEntries(
-                Map.of(EXPERIMENT, kruizeObject), null, List.of(entry));
+                Map.of(EXPERIMENT, experimentWith(experimentObject)), CLUSTER, List.of(stored));
 
         assertTrue(attached);
-        IntervalResults intervalResults = namespaceData.getResults().get(END);
+        IntervalResults intervalResults = experimentNamespace.getResults().get(END);
         assertNotNull(intervalResults);
-        assertTrue(intervalResults.getMetricResultsMap().containsKey(AnalyzerConstants.MetricName.namespaceCpuUsage));
-        assertEquals(3.0, intervalResults.getMetricResultsMap()
-                .get(AnalyzerConstants.MetricName.namespaceCpuUsage)
-                .getAggregationInfoResult()
-                .getSum());
+        assertEquals(3.0, intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuUsage)
+                .getAggregationInfoResult().getSum());
     }
 
     @Test
     @DisplayName("empty result list does not attach")
     void emptyEntryListReturnsFalse() {
-        ContainerData containerData = new ContainerData("app", "image:latest", null, new HashMap<>());
+        ContainerData containerData = new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, new HashMap<>());
         KruizeObject kruizeObject = experimentWith(containerObject(containerData));
 
         boolean attached = new ExperimentDBService().attachRecommendationResultEntries(
-                Map.of(EXPERIMENT, kruizeObject), null, List.of());
+                Map.of(EXPERIMENT, kruizeObject), CLUSTER, List.of());
 
         assertFalse(attached);
         assertNull(containerData.getResults());
@@ -160,6 +164,58 @@ class RecommendationResultsLeanLoadTest {
         assertTrue(json.contains("1970-01-01T00:00:00.000Z"));
     }
 
+    private static ExperimentResultData oldConverter(KruizeResultsEntry stored) {
+        List<UpdateResultsAPIObject> apiObjects = DBHelpers.Converters.KruizeObjectConverters
+                .convertResultEntryToUpdateResultsAPIObject(List.of(stored));
+        UpdateResultsAPIObject apiObject = apiObjects.get(0);
+        KruizeObject kruizeObject = new KruizeObject();
+        kruizeObject.setClusterName(CLUSTER);
+        apiObject.setKruizeObject(kruizeObject);
+        return com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters
+                .convertUpdateResultsAPIObjToExperimentResultData(apiObject);
+    }
+
+    private static void assertMetric(ExperimentResultData data, AnalyzerConstants.MetricName name, double avg, String format) {
+        MetricResults metricResults = metricAt(data, name);
+        assertNotNull(metricResults);
+        assertEquals(avg, metricResults.getAggregationInfoResult().getAvg());
+        assertEquals(format, metricResults.getAggregationInfoResult().getFormat());
+    }
+
+    private static MetricResults metricAt(ExperimentResultData data, AnalyzerConstants.MetricName name) {
+        ContainerData containerData = data.getKubernetes_objects().get(0).getContainerDataMap().get(CONTAINER);
+        assertNotNull(containerData.getResults());
+        IntervalResults intervalResults = containerData.getResults().get(END);
+        assertNotNull(intervalResults);
+        return intervalResults.getMetricResultsMap().get(name);
+    }
+
+    private static MetricResults namespaceMetric(ExperimentResultData data) {
+        NamespaceData namespaceData = data.getKubernetes_objects().get(0).getNamespaceDataMap().get("payments");
+        IntervalResults intervalResults = namespaceData.getResults().get(END);
+        assertNotNull(intervalResults);
+        return intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuUsage);
+    }
+
+    private static KruizeResultsEntry storedEntry(List<K8sObject> kubernetesObjects) {
+        ExperimentResultData experimentResultData = new ExperimentResultData();
+        experimentResultData.setVersion("v2.0");
+        experimentResultData.setExperiment_name(EXPERIMENT);
+        experimentResultData.setCluster_name(CLUSTER);
+        experimentResultData.setIntervalStartTime(START);
+        experimentResultData.setIntervalEndTime(END);
+        experimentResultData.setKubernetes_objects(kubernetesObjects);
+        KruizeResultsEntry stored = DBHelpers.Converters.KruizeObjectConverters
+                .convertExperimentResultToExperimentResultsTable(experimentResultData);
+        assertNotNull(stored);
+        assertNotNull(stored.getExtended_data());
+        return stored;
+    }
+
+    private static Metric metric(String json) {
+        return GSON.fromJson(json, Metric.class);
+    }
+
     private static KruizeObject experimentWith(K8sObject k8sObject) {
         KruizeObject kruizeObject = new KruizeObject();
         kruizeObject.setExperimentName(EXPERIMENT);
@@ -168,19 +224,10 @@ class RecommendationResultsLeanLoadTest {
     }
 
     private static K8sObject containerObject(ContainerData containerData) {
-        K8sObject k8sObject = new K8sObject("demo-app", "deployment", "default");
+        K8sObject k8sObject = new K8sObject("tfb-qrh-deployment", "deployment", "default");
         HashMap<String, ContainerData> containers = new HashMap<>();
-        containers.put("app", containerData);
+        containers.put(CONTAINER, containerData);
         k8sObject.setContainerDataMap(containers);
         return k8sObject;
-    }
-
-    private static KruizeResultsEntry entry(String extendedData) throws Exception {
-        KruizeResultsEntry entry = new KruizeResultsEntry();
-        entry.setExperiment_name(EXPERIMENT);
-        entry.setInterval_start_time(START);
-        entry.setInterval_end_time(END);
-        entry.setExtended_data(MAPPER.readTree(extendedData));
-        return entry;
     }
 }

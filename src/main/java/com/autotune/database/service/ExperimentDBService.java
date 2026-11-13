@@ -256,8 +256,8 @@ public class ExperimentDBService {
 
     /**
      * Loads the term window with the same cluster and interval_end_time predicate as
-     * {@link #loadResultsFromDBByName}, then attaches metrics onto result maps without the
-     * UpdateResults API conversion. The DAO session is closed before JSON is parsed.
+     * {@link #loadResultsFromDBByName}, then rebuilds result maps with that method's converters.
+     * The DAO session is closed before JSON is parsed.
      *
      * @return false when the window has no rows
      */
