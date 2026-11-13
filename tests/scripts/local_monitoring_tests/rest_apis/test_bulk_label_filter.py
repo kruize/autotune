@@ -93,11 +93,38 @@ def _get_datasource_name():
     return DISCOVERED_DATASOURCE
 
 
+_CACHED_SYSTEM_NAMESPACES = None
+
+def _get_system_namespaces():
+    """Return a list of system namespaces to exclude so Kruize does not run heavy global queries on system pods."""
+    global _CACHED_SYSTEM_NAMESPACES
+    if _CACHED_SYSTEM_NAMESPACES is None:
+        _CACHED_SYSTEM_NAMESPACES = []
+        try:
+            # We fetch namespaces directly from the cluster metadata view
+            metadata = _bulk_metadata({
+                "datasource": _get_datasource_name(),
+                "metadata_profile": METADATA_PROFILE_NAME,
+                "measurement_duration": "15mins",
+                "time_range": {},
+            })
+            namespaces = []
+            for ds in metadata.get("datasources", {}).values():
+                for cluster in ds.get("clusters", {}).values():
+                    namespaces.extend(cluster.get("namespaces", {}).keys())
+            _CACHED_SYSTEM_NAMESPACES = [ns for ns in namespaces if ns.startswith("openshift-") or ns.startswith("kube-")]
+        except Exception:
+            pass
+        if not _CACHED_SYSTEM_NAMESPACES:
+            _CACHED_SYSTEM_NAMESPACES = ["openshift-monitoring", "openshift-kube-apiserver", "openshift-etcd", "openshift-kube-controller-manager", "openshift-apiserver"]
+    return _CACHED_SYSTEM_NAMESPACES
+
+
 def label_filter_payload(include=None, exclude=None):
     """Build a bulk payload with the given include/exclude filter sections merged onto an empty base."""
     payload = {
         "filter": {
-            "exclude": {"namespace": [], "workload": [], "containers": [], "labels": {}},
+            "exclude": {"namespace": list(_get_system_namespaces()), "workload": [], "containers": [], "labels": {}},
             "include": {"namespace": [], "workload": [], "containers": [], "labels": {}},
         },
         "datasource": _get_datasource_name(),
@@ -108,7 +135,11 @@ def label_filter_payload(include=None, exclude=None):
     if include:
         payload["filter"]["include"].update(include)
     if exclude:
-        payload["filter"]["exclude"].update(exclude)
+        for key, value in exclude.items():
+            if key == "namespace":
+                payload["filter"]["exclude"]["namespace"].extend(value)
+            else:
+                payload["filter"]["exclude"][key] = value
     return payload
 
 
