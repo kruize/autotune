@@ -280,6 +280,19 @@ public class RecommendationEngine implements RecommendationEngineService {
      * @return The KruizeObject containing the prepared recommendations.
      */
     public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID) throws FetchMetricsError {
+        return prepareRecommendations(calCount, target_cluster, bulkJobID, false);
+    }
+
+    /**
+     * Prepares recommendations. When {@code resultsAlreadyLoaded} is true and the experiment is remote
+     * monitoring, results already on the object are used and {@code getResults} is skipped. Recommendation
+     * math runs only after database loads have returned.
+     *
+     * @param calCount             The count of incoming requests.
+     * @param resultsAlreadyLoaded true when a remote-monitoring caller already hydrated term-window results
+     * @return The KruizeObject containing the prepared recommendations.
+     */
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID, boolean resultsAlreadyLoaded) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -377,22 +390,28 @@ public class RecommendationEngine implements RecommendationEngineService {
             if (intervalEndTimeStr != null) {  //TODO remove this check and avoid same if across this flow
                 interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
             }
-            // update the KruizeObject to have the results data from the available datasource
-            try {
-                String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
-                if (!errorMsg.isEmpty()) {
-                    throw new Exception(errorMsg);
+            // Results loads close their sessions before JSON is parsed onto the object.
+            boolean skipResultsLoad = resultsAlreadyLoaded
+                    && kruizeObject.getExperiment_usecase_type() != null
+                    && kruizeObject.getExperiment_usecase_type().isRemote_monitoring();
+            if (!skipResultsLoad) {
+                // update the KruizeObject to have the results data from the available datasource
+                try {
+                    String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                    if (!errorMsg.isEmpty()) {
+                        throw new Exception(errorMsg);
+                    }
+                } catch (FetchMetricsError e) {
+                    throw new FetchMetricsError(e.getMessage());
+                } catch (Exception e) {
+                    LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+                    kruizeObject = new KruizeObject();
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
+                    return kruizeObject;
                 }
-            } catch (FetchMetricsError e) {
-                throw new FetchMetricsError(e.getMessage());
-            } catch (Exception e) {
-                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
-                kruizeObject = new KruizeObject();
-                kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
-                return kruizeObject;
             }
 
-            // generate recommendation
+            // generate recommendation with no Hibernate session open
             try {
                 generateRecommendations(kruizeObject);
                 // store the recommendations in the DB

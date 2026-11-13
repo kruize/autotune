@@ -419,21 +419,20 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerAddRecDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
-                KruizeRecommendationEntry existingRecommendationEntry = loadRecommendationsByExperimentNameAndDate(recommendationEntry.getExperiment_name(), recommendationEntry.getCluster_name(), recommendationEntry.getInterval_end_time());
-                if (null == existingRecommendationEntry) {
-                    tx = session.beginTransaction();
-                    session.persist(recommendationEntry);
-                    tx.commit();
-                    validationOutputData.setSuccess(true);
-                    statusValue = "success";
-                } else {
-                    tx = session.beginTransaction();
-                    existingRecommendationEntry.setExtended_data(recommendationEntry.getExtended_data());
-                    session.merge(existingRecommendationEntry);
-                    tx.commit();
-                    validationOutputData.setSuccess(true);
-                    statusValue = "success";
-                }
+                tx = session.beginTransaction();
+                String extendedData = recommendationEntry.getExtended_data() == null
+                        ? null
+                        : recommendationEntry.getExtended_data().toString();
+                session.createNativeQuery(UPSERT_KRUIZE_RECOMMENDATION)
+                        .setParameter("version", recommendationEntry.getVersion(), String.class)
+                        .setParameter("experimentName", recommendationEntry.getExperiment_name(), String.class)
+                        .setParameter("clusterName", recommendationEntry.getCluster_name(), String.class)
+                        .setParameter("intervalEndTime", recommendationEntry.getInterval_end_time(), Timestamp.class)
+                        .setParameter("extendedData", extendedData, String.class)
+                        .executeUpdate();
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
             } catch (Exception e) {
                 LOGGER.error("Not able to save recommendation due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
