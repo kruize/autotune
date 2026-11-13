@@ -20,10 +20,11 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,9 +34,12 @@ import org.mockito.MockedStatic;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -89,36 +93,31 @@ class MetadataProfileValidationTest {
             "manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.yaml";
 
     /**
-     * Returns the Prometheus query defined for {@code variableName} in a metadata-profile manifest
-     * on disk (JSON or YAML), so tests assert against what actually ships rather than a constant.
+     * Returns every Prometheus query (one per aggregation function) defined for {@code variableName}
+     * in a metadata-profile manifest on disk (JSON or YAML), so tests assert against what actually
+     * ships rather than a constant. The variable is matched by exact name, and all of its
+     * aggregation functions are returned so a regression in any of them is caught.
      */
-    private static String manifestQueryForVariable(String manifestPath, String variableName) throws Exception {
+    private static List<String> manifestQueriesForVariable(String manifestPath, String variableName) throws Exception {
         String text = Files.readString(Path.of(manifestPath));
-        if (manifestPath.endsWith(".json")) {
-            JsonObject root = JsonParser.parseString(text).getAsJsonObject();
-            for (JsonElement element : root.getAsJsonArray("query_variables")) {
-                JsonObject queryVariable = element.getAsJsonObject();
-                if (variableName.equals(queryVariable.get("name").getAsString())) {
-                    return queryVariable.getAsJsonArray("aggregation_functions")
-                            .get(0).getAsJsonObject().get("query").getAsString();
+        ObjectMapper mapper = manifestPath.endsWith(".json") ? new ObjectMapper() : new ObjectMapper(new YAMLFactory());
+        JsonNode root = mapper.readTree(text);
+        for (JsonNode queryVariable : root.path("query_variables")) {
+            if (variableName.equals(queryVariable.path("name").asText())) {
+                List<String> queries = new ArrayList<>();
+                for (JsonNode aggregation : queryVariable.path("aggregation_functions")) {
+                    JsonNode query = aggregation.path("query");
+                    if (query.isTextual()) {
+                        queries.add(query.asText());
+                    }
                 }
+                if (queries.isEmpty()) {
+                    throw new AssertionError("no query for '" + variableName + "' in " + manifestPath);
+                }
+                return queries;
             }
-            throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
         }
-        // YAML: scope to this variable's block (from its "- name:" to the next one), then take its query line.
-        int blockStart = text.indexOf("- name: " + variableName);
-        if (blockStart < 0) {
-            throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
-        }
-        int nextBlock = text.indexOf("- name: ", blockStart + 1);
-        String block = nextBlock >= 0 ? text.substring(blockStart, nextBlock) : text.substring(blockStart);
-        int queryAt = block.indexOf("query:");
-        if (queryAt < 0) {
-            throw new AssertionError("no query for '" + variableName + "' in " + manifestPath);
-        }
-        String line = block.substring(queryAt + "query:".length());
-        int eol = line.indexOf('\n');
-        return (eol >= 0 ? line.substring(0, eol) : line).trim();
+        throw new AssertionError("query_variable '" + variableName + "' not found in " + manifestPath);
     }
 
     // ---- Update-payload queries (valid for updateMetadata) ----
@@ -450,24 +449,23 @@ class MetadataProfileValidationTest {
             // (kube_pod_container_info) query.
             String containerFilters = KruizeConstants.KRUIZE_BULK_API.CONTAINER_FILTERS;
 
-            // Always-on invariant — runs everywhere, including source-only builds (the Dockerfile
-            // build stage copies just src/ + pom.xml, so the manifests below aren't available there).
-            assertFalse(WORKLOAD_WITH_LABEL_QUERY.contains(containerFilters),
-                    "WORKLOAD_WITH_LABEL_QUERY (kube_pod_labels) must NOT contain $CONTAINER_FILTERS$");
-            assertTrue(CONTAINER_QUERY.contains(containerFilters),
-                    "CONTAINER_QUERY (kube_pod_container_info) must still carry $CONTAINER_FILTERS$");
+            // Assert against the real shipped manifests, not this class's own query constants (which
+            // cannot detect a regression in shipped code). Source-only builds (the Dockerfile build
+            // stage copies just src/ + pom.xml) don't have the manifests, so the test is reported as
+            // SKIPPED there rather than silently passing.
+            assumeTrue(Files.exists(Path.of(BULK_METADATA_PROFILE_JSON))
+                            && Files.exists(Path.of(BULK_METADATA_PROFILE_YAML)),
+                    "Shipped bulk metadata-profile manifests not found; run from a full repo checkout");
 
-            // Manifest-drift guard — when the shipped manifests are on disk (full repo checkout),
-            // assert the same on their actual queries, so reintroducing $CONTAINER_FILTERS$ into the
-            // JSON or YAML fails this test. Skipped per-file in source-only builds that lack them.
             for (String manifest : new String[]{BULK_METADATA_PROFILE_JSON, BULK_METADATA_PROFILE_YAML}) {
-                if (!Files.exists(Path.of(manifest))) {
-                    continue;
+                for (String query : manifestQueriesForVariable(manifest, "workloadsWithPodLabelFilter")) {
+                    assertFalse(query.contains(containerFilters),
+                            manifest + " — workloadsWithPodLabelFilter (kube_pod_labels) query must NOT contain $CONTAINER_FILTERS$");
                 }
-                assertFalse(manifestQueryForVariable(manifest, "workloadsWithPodLabelFilter").contains(containerFilters),
-                        manifest + " — workloadsWithPodLabelFilter (kube_pod_labels) query must NOT contain $CONTAINER_FILTERS$");
-                assertTrue(manifestQueryForVariable(manifest, "containersForAdditionalLabel").contains(containerFilters),
-                        manifest + " — containersForAdditionalLabel (kube_pod_container_info) query must still carry $CONTAINER_FILTERS$");
+                for (String query : manifestQueriesForVariable(manifest, "containersForAdditionalLabel")) {
+                    assertTrue(query.contains(containerFilters),
+                            manifest + " — containersForAdditionalLabel (kube_pod_container_info) query must still carry $CONTAINER_FILTERS$");
+                }
             }
         }
 
