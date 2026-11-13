@@ -14,6 +14,7 @@ import com.autotune.analyzer.recommendations.model.*;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
+import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -63,6 +64,7 @@ public class RecommendationEngine implements RecommendationEngineService {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
+    private ListRecommendationsAPIObject preparedRecommendationList;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
     private static final Set<String> JVM_INFO_METRICS = Set.of(
@@ -74,6 +76,10 @@ public class RecommendationEngine implements RecommendationEngineService {
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
 
+    }
+
+    public ListRecommendationsAPIObject getPreparedRecommendationList() {
+        return preparedRecommendationList;
     }
 
     /**
@@ -425,6 +431,10 @@ public class RecommendationEngine implements RecommendationEngineService {
             // generate recommendation with no Hibernate session open
             try {
                 generateRecommendations(kruizeObject);
+                if (remoteLeanLoad) {
+                    preparedRecommendationList = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters
+                            .convertKruizeObjectToListRecommendationSO(kruizeObject, false, false, interval_end_time);
+                }
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
@@ -1196,7 +1206,8 @@ public class RecommendationEngine implements RecommendationEngineService {
     private ValidationOutputData addRecommendationsToDB(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject) {
         ValidationOutputData validationOutputData;
         try {
-            validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, kruizeObject, interval_end_time);
+            validationOutputData = new ExperimentDBService().addRecommendationToDB(
+                    mainKruizeExperimentMAP, kruizeObject, interval_end_time, preparedRecommendationList);
         } catch (Exception e) {
             LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.ADDING_RECOMMENDATIONS_TO_DB_FAILED
                     .concat(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME)

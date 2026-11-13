@@ -64,6 +64,28 @@ public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
     private static int requestCount = 0;
+    private static final ExclusionStrategy RECOMMENDATION_RESPONSE_EXCLUSION = new ExclusionStrategy() {
+        @Override
+        public boolean shouldSkipField(FieldAttributes field) {
+            return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
+                    || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
+        }
+
+        @Override
+        public boolean shouldSkipClass(Class<?> clazz) {
+            return false;
+        }
+    };
+    private static final Gson RECOMMENDATION_RESPONSE_GSON = new GsonBuilder()
+            .disableHtmlEscaping()
+            .enableComplexMapKeySerialization()
+            .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+            .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
+            .registerTypeAdapter(MetricAggregationInfoResults.class, new MetricAggregationInfoResultsIntSerializer())
+            .setExclusionStrategies(RECOMMENDATION_RESPONSE_EXCLUSION)
+            .create();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -122,7 +144,7 @@ public class UpdateRecommendations extends HttpServlet {
                     sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
                     LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS, experiment_name,
                             sdf.format(interval_end_time)));
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time, recommendationEngine.getPreparedRecommendationList());
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
                     LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
@@ -147,49 +169,32 @@ public class UpdateRecommendations extends HttpServlet {
         }
     }
 
-    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
+    private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time,
+                                     ListRecommendationsAPIObject preparedList) throws IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
-        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
-        try {
-            LOGGER.debug(ko.getKubernetes_objects().toString());
-            ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
-                    convertKruizeObjectToListRecommendationSO(
-                            ko,
-                            false,
-                            false,
-                            interval_end_time);
-            recommendationList.add(listRecommendationsAPIObject);
-        } catch (Exception e) {
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE,
-                    ko.getExperimentName(), e.getMessage()));
+        List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
+        if (preparedList != null) {
+            recommendationList.add(preparedList);
+        } else {
+            try {
+                LOGGER.debug(ko.getKubernetes_objects().toString());
+                ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
+                        convertKruizeObjectToListRecommendationSO(
+                                ko,
+                                false,
+                                false,
+                                interval_end_time);
+                recommendationList.add(listRecommendationsAPIObject);
+            } catch (Exception e) {
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE,
+                        ko.getExperimentName(), e.getMessage()));
+            }
         }
-        ExclusionStrategy strategy = new ExclusionStrategy() {
-            @Override
-            public boolean shouldSkipField(FieldAttributes field) {
-                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
-            }
-
-            @Override
-            public boolean shouldSkipClass(Class<?> clazz) {
-                return false;
-            }
-        };
         String gsonStr = "[]";
         if (!recommendationList.isEmpty()) {
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                    .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
-                    .registerTypeAdapter(MetricAggregationInfoResults.class, new MetricAggregationInfoResultsIntSerializer())
-                    .setExclusionStrategies(strategy)
-                    .create();
-            gsonStr = gsonObj.toJson(recommendationList);
+            gsonStr = RECOMMENDATION_RESPONSE_GSON.toJson(recommendationList);
         }
         if (KruizeDeploymentInfo.log_http_req_resp)
             LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_RESPONSE, new Gson().toJson(JsonParser.parseString(gsonStr))));
