@@ -16,18 +16,15 @@
 package com.autotune.analyzer.serviceObjects.verification.validators;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.serviceObjects.NamespaceAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.data.result.NamespaceData;
-import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.utils.KruizeConstants;
-import jakarta.validation.*;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +45,18 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
     public boolean isValid(UpdateResultsAPIObject updateResultsAPIObject, ConstraintValidatorContext context) {
         LOGGER.debug("KubernetesElementsValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
-        String errorMessage = "";
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+            // Assuming that there is only one Kubernetes object
+            KubernetesAPIObject resultKubeObj = updateResultsAPIObject.getKubernetesObjects().get(0);
+            List<ContainerAPIObject> containerAPIObjects = resultKubeObj.getContainerAPIObjects();
+            NamespaceAPIObject namespaceAPIObject = resultKubeObj.getNamespaceAPIObject();
+            // The domain convert omitted this object when it had neither containers nor a namespace,
+            // and the following get(0) failed before any field comparison.
+            if ((containerAPIObjects == null || containerAPIObjects.isEmpty()) && namespaceAPIObject == null) {
+                throw new IndexOutOfBoundsException("Index 0 out of bounds for length 0");
+            }
+
             String expName = kruizeObject.getExperimentName();
             String errorMsg = "";
             boolean kubeObjsMisMatch = false;
@@ -59,10 +64,9 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             // Check if Kubernetes Object Namespaces is matched
             if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
                 // Validate the absence of type, name and namespace objects
-                // Assuming that there is only one Kubernetes object
-                String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
-                String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
-                String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
+                String kubeObjTypeInResultData = resultKubeObj.getType();
+                String kubeObjNameInResultsData = resultKubeObj.getName();
+                String kubeObjNameSpaceInResultsData = resultKubeObj.getNamespace();
 
                 if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
                     kubeObjsMisMatch = true;
@@ -75,9 +79,8 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
             // Check if Kubernetes Object Type is matched
-            // Assuming that there is only one Kubernetes object
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
-            String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
+            String kubeObjTypeInResultData = resultKubeObj.getType();
 
             if (kubeObjTypeInKruizeObject != null && !kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
                 kubeObjsMisMatch = true;
@@ -91,9 +94,8 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
             // Check if Kubernetes Object Name is matched
-            // Assuming that there is only one Kubernetes object
             String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
-            String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
+            String kubeObjNameInResultsData = resultKubeObj.getName();
 
             if (kubeObjNameInKruizeObject != null && !kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
                 kubeObjsMisMatch = true;
@@ -108,9 +110,8 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
 
             // Check if Kubernetes Object NameSpace is matched
-            // Assuming that there is only one Kubernetes object
             String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
-            String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
+            String kubeObjNameSpaceInResultsData = resultKubeObj.getNamespace();
 
             if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
                 if (kubeObjNameSpaceInKruizeObject != null && !kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
@@ -124,17 +125,14 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                             ));
                 }
             }
-            // Validate blank or null container names and image names
+            // Validate blank or null container names
             // Assuming that there is only one Kubernetes object
-            List<ContainerData> resultContainers = new ArrayList<>();
-            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
-                    resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getContainerDataMap() != null) {
-                resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
+            List<String> validationErrors = new ArrayList<>();
+            if (containerAPIObjects != null && !containerAPIObjects.isEmpty()) {
+                for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+                    validationErrors.addAll(validateContainerName(containerAPIObject.getContainer_name()));
+                }
             }
-
-            List<String> validationErrors = resultContainers.stream()
-                    .flatMap(containerData -> validateContainerData(containerData).stream())
-                    .toList();
 
             if (!validationErrors.isEmpty()) {
                 kubeObjsMisMatch = true;
@@ -143,15 +141,10 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
             // Validate for blank or null Namespace Name
             // Assuming that there is only one Kubernetes object
-            List<NamespaceData> resultNamespaces = new ArrayList<>();
-            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
-                    resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getNamespaceDataMap() != null) {
-                resultNamespaces = resultData.getKubernetes_objects().get(0).getNamespaceDataMap().values().stream().toList();
+            List<String> validationErrorsNamespace = new ArrayList<>();
+            if ((containerAPIObjects == null || containerAPIObjects.isEmpty()) && namespaceAPIObject != null) {
+                validationErrorsNamespace.addAll(validateNamespaceName(namespaceAPIObject.getNamespace()));
             }
-
-            List<String> validationErrorsNamespace = resultNamespaces.stream()
-                    .flatMap(namespaceData -> validateNamespaceData(namespaceData).stream())
-                    .toList();
 
             if (!validationErrorsNamespace.isEmpty()) {
                 kubeObjsMisMatch = true;
@@ -192,20 +185,26 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
     }
 
     /**
-     * Validation method for a single ContainerData object
-     * @param containerData contains the container data in which the container name is present which needs to be validated
-     * @return list of errors if any, while validating the containerData Object
+     * Validation method for a single container name from the updateResults API object
+     * @param containerName container name to validate
+     * @return list of errors if any, while validating the container name
      */
-    private static List<String> validateContainerData(ContainerData containerData) {
+    private static List<String> validateContainerName(String containerName) {
         List<String> errors = new ArrayList<>();
-        if (containerData.getContainer_name() == null || containerData.getContainer_name().trim().isEmpty()) {
+        if (containerName == null || containerName.trim().isEmpty()) {
             errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME);
         }
         return errors;
     }
-    private static List<String> validateNamespaceData(NamespaceData namespaceData) {
+
+    /**
+     * Validation method for a single namespace name from the updateResults API object
+     * @param namespaceName namespace name to validate
+     * @return list of errors if any, while validating the namespace name
+     */
+    private static List<String> validateNamespaceName(String namespaceName) {
         List<String> errors = new ArrayList<>();
-        if (namespaceData.getNamespace_name() == null || namespaceData.getNamespace_name().trim().isEmpty()) {
+        if (namespaceName == null || namespaceName.trim().isEmpty()) {
             errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_NAMESPACE_NAME);
         }
         return errors;
