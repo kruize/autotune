@@ -256,7 +256,7 @@ public class ExperimentDBService {
 
     /**
      * Loads the term window with the same cluster and interval_end_time predicate as
-     * {@link #loadResultsFromDBByName}, then rebuilds result maps with that method's converters.
+     * {@link #loadResultsFromDBByName}, then rebuilds result maps from extended_data.
      * The DAO session is closed before JSON is parsed.
      *
      * @return false when the window has no rows
@@ -386,6 +386,11 @@ public class ExperimentDBService {
 
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, KruizeObject kruizeObject,
                                                       Timestamp interval_end_time) {
+        return addRecommendationToDB(experimentsMap, kruizeObject, interval_end_time, null);
+    }
+
+    public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, KruizeObject kruizeObject,
+                                                      Timestamp interval_end_time, ListRecommendationsAPIObject preparedList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
         if (null == kruizeObject) {
             return validationOutputData;
@@ -401,7 +406,7 @@ public class ExperimentDBService {
 
         if (KruizeDeploymentInfo.is_ros_enabled && kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
-                    convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
+                    convertKruizeObjectTORecommendation(kruizeObject, interval_end_time, preparedList);
             if (null != kr) {
                 ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
                 if (!tempValObj.isSuccess()) {
