@@ -4,6 +4,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.database.helper.RecommendationResultRow;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.*;
 
@@ -99,6 +100,13 @@ public interface ExperimentDAO {
     // Load all results for a particular experimentName
 
     List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
+
+    /**
+     * JDBC fetch of the columns the recommendation hydrate reads. Same predicates as
+     * {@link #loadResultsByExperimentName} when both timestamps are set. A null bound
+     * returns an empty list.
+     */
+    List<RecommendationResultRow> loadRecommendationResultRows(String experimentName, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;

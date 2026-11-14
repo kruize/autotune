@@ -67,6 +67,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -531,6 +532,63 @@ public class DBHelpers {
                 experimentResultData.setIntervalEndTime(entry.getInterval_end_time());
                 experimentResultData.setKubernetes_objects(parsedObjects);
                 return experimentResultData;
+            }
+
+            /**
+             * Same rebuild as {@link #experimentResultFromResultEntry}, parsing {@code extended_data}
+             * text once with {@link #RESULTS_JSONB_GSON}. Returns null when the JSON is missing or
+             * no kubernetes object is included.
+             */
+            public static ExperimentResultData experimentResultFromExtendedDataJson(String experimentName,
+                                                                                    String clusterName,
+                                                                                    String version,
+                                                                                    Timestamp intervalStartTime,
+                                                                                    Timestamp intervalEndTime,
+                                                                                    String extendedDataJson) {
+                if (extendedDataJson == null || extendedDataJson.isEmpty()) {
+                    return null;
+                }
+                ResultsExtendedData extendedData = RESULTS_JSONB_GSON.fromJson(extendedDataJson, ResultsExtendedData.class);
+                if (extendedData == null || extendedData.kubernetesObjects == null) {
+                    return null;
+                }
+                List<K8sObject> parsedObjects = new ArrayList<>();
+                for (K8sObject k8sObject : extendedData.kubernetesObjects) {
+                    if (k8sObject == null) {
+                        continue;
+                    }
+                    boolean included = false;
+                    if (k8sObject.getContainerDataMap() != null && !k8sObject.getContainerDataMap().isEmpty()) {
+                        for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                            attachContainerInterval(containerData, intervalStartTime, intervalEndTime);
+                        }
+                        included = true;
+                    } else if (k8sObject.getNamespaceDataMap() != null && !k8sObject.getNamespaceDataMap().isEmpty()) {
+                        for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                            attachNamespaceInterval(namespaceData, intervalStartTime, intervalEndTime);
+                        }
+                        included = true;
+                    }
+                    if (included) {
+                        parsedObjects.add(k8sObject);
+                    }
+                }
+                if (parsedObjects.isEmpty()) {
+                    return null;
+                }
+                ExperimentResultData experimentResultData = new ExperimentResultData();
+                experimentResultData.setVersion(version);
+                experimentResultData.setExperiment_name(experimentName);
+                experimentResultData.setCluster_name(clusterName);
+                experimentResultData.setIntervalStartTime(intervalStartTime);
+                experimentResultData.setIntervalEndTime(intervalEndTime);
+                experimentResultData.setKubernetes_objects(parsedObjects);
+                return experimentResultData;
+            }
+
+            private static final class ResultsExtendedData {
+                @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
+                private List<K8sObject> kubernetesObjects;
             }
 
             private static void attachContainerInterval(ContainerData containerData, Timestamp start, Timestamp end) {

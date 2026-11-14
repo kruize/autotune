@@ -46,6 +46,17 @@ public class DBConstants {
                         KruizeConstants.JSONKeys.EXPERIMENT_NAME,
                         KruizeConstants.JSONKeys.CALCULATED_START_TIME,
                         KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        /**
+         * JDBC form of {@link #SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT}.
+         * The HQL name is historical and has no LIMIT. No ORDER BY: the recommendation
+         * hydrate does not depend on row order.
+         */
+        public static final String SELECT_RECOMMENDATION_RESULT_ROWS =
+                "SELECT experiment_name, interval_start_time, interval_end_time, version, extended_data "
+                        + "FROM kruize_results "
+                        + "WHERE experiment_name = ? AND interval_end_time >= ? AND interval_end_time <= ?";
+        public static final String SELECT_RECOMMENDATION_RESULT_ROWS_AND_CLUSTER_NAME = " AND cluster_name = ?";
+        public static final String SELECT_RECOMMENDATION_RESULT_ROWS_AND_CLUSTER_NAME_IS_NULL = " AND cluster_name is null";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_START_END_TIME = String.format("from KruizeResultsEntry k " +
                         "WHERE k.experiment_name = :%s and k.interval_start_time >= :%s and " +
                         "k.interval_end_time <= :%s ",

@@ -36,6 +36,7 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
+import com.autotune.database.helper.RecommendationResultRow;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMLayerEntry;
@@ -266,17 +267,50 @@ public class ExperimentDBService {
                                                  KruizeObject kruizeObject,
                                                  Timestamp calculated_start_time,
                                                  Timestamp interval_end_time) throws Exception {
-        List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(
+        long startedNs = System.nanoTime();
+        List<RecommendationResultRow> rows = experimentDAO.loadRecommendationResultRows(
                 kruizeObject.getExperimentName(), kruizeObject.getClusterName(), calculated_start_time, interval_end_time);
-        if (kruizeResultsEntries == null || kruizeResultsEntries.isEmpty()) {
-            return false;
+        long afterJdbcNs = System.nanoTime();
+        boolean found = rows != null && !rows.isEmpty();
+        if (found) {
+            String clusterName = kruizeObject.getClusterName();
+            List<ExperimentResultData> resultDataList = new ArrayList<>();
+            for (RecommendationResultRow row : rows) {
+                try {
+                    ExperimentResultData experimentResultData = DBHelpers.Converters.KruizeObjectConverters
+                            .experimentResultFromExtendedDataJson(
+                                    row.getExperimentName(),
+                                    clusterName,
+                                    row.getVersion(),
+                                    row.getIntervalStartTime(),
+                                    row.getIntervalEndTime(),
+                                    row.getExtendedDataJson());
+                    if (experimentResultData != null
+                            && experimentResultData.getKubernetes_objects() != null
+                            && !experimentResultData.getKubernetes_objects().isEmpty()) {
+                        resultDataList.add(experimentResultData);
+                    }
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+                } catch (Exception e) {
+                    LOGGER.error("Unexpected error: {}", e.getMessage());
+                }
+            }
+            if (!resultDataList.isEmpty()) {
+                new ExperimentInterfaceImpl().addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
+            } else {
+                LOGGER.warn("None of the {} kruize_results rows for experiment {} between {} and {} could be read; continuing with no results for this window",
+                        rows.size(), kruizeObject.getExperimentName(), calculated_start_time, interval_end_time);
+            }
         }
-        boolean anyRowRead = attachRecommendationResultEntries(mainKruizeExperimentMap, kruizeObject.getClusterName(), kruizeResultsEntries);
-        if (!anyRowRead) {
-            LOGGER.warn("None of the {} kruize_results rows for experiment {} between {} and {} could be read; continuing with no results for this window",
-                    kruizeResultsEntries.size(), kruizeObject.getExperimentName(), calculated_start_time, interval_end_time);
-        }
-        return true;
+        long doneNs = System.nanoTime();
+        LOGGER.debug("RECO_LOAD experiment={} rows={} jdbcMs={} parseMs={} totalMs={}",
+                kruizeObject.getExperimentName(),
+                rows == null ? 0 : rows.size(),
+                (afterJdbcNs - startedNs) / 1_000_000,
+                (doneNs - afterJdbcNs) / 1_000_000,
+                (doneNs - startedNs) / 1_000_000);
+        return found;
     }
 
     /**
