@@ -272,6 +272,8 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                         termRecommendations = value.getMediumTermRecommendations();
                     } else if (KruizeConstants.JSONKeys.LONG_TERM.equals(user_selected_term)) {
                         termRecommendations = value.getLongTermRecommendations();
+                    } else if (KruizeConstants.JSONKeys.FLEX_TERM.equals(user_selected_term) || KruizeConstants.JSONKeys.FLEX.equals(user_selected_term)) {
+                        termRecommendations = value.getFlexTermRecommendations();
                     } else {
                         throw new IllegalArgumentException("Unknown term: " + user_selected_term);
                     }
