@@ -15,9 +15,14 @@
  *******************************************************************************/
 package com.autotune.common.bulk;
 
+import com.autotune.analyzer.kruizeObject.TermSettings;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -185,5 +190,52 @@ class BulkServiceValidationTest {
         }
     }
 
+    @Nested
+    @DisplayName("Term Settings Validation Tests")
+    class TermSettingsValidationTests {
+
+        @Test
+        @DisplayName("Should accept null term settings")
+        void shouldAcceptNullTermSettings() {
+            String result = BulkServiceValidation.validateTermSettings(null);
+            assertEquals("", result, "Null term settings should be valid (optional field)");
+        }
+
+        @Test
+        @DisplayName("Should accept flex term")
+        void shouldAcceptFlexTerm() {
+            TermSettings termSettings = new TermSettings();
+            termSettings.setTerms(List.of("flex"));
+            String result = BulkServiceValidation.validateTermSettings(termSettings);
+            assertEquals("", result, "Flex term should be accepted");
+        }
+
+        @Test
+        @DisplayName("Should accept all valid terms including flex case-insensitively")
+        void shouldAcceptAllValidTerms() {
+            TermSettings termSettings = new TermSettings();
+            termSettings.setTerms(Arrays.asList("Short", "MEDIUM", "Long", "FLEX"));
+            String result = BulkServiceValidation.validateTermSettings(termSettings);
+            assertEquals("", result, "All valid terms including flex should be accepted case-insensitively");
+        }
+
+        @Test
+        @DisplayName("Should reject invalid term name")
+        void shouldRejectInvalidTermName() {
+            TermSettings termSettings = new TermSettings();
+            termSettings.setTerms(List.of("invalid_term"));
+            String result = BulkServiceValidation.validateTermSettings(termSettings);
+            assertTrue(result.contains("Invalid term name: invalid_term"), "Invalid term name should be rejected");
+        }
+
+        @Test
+        @DisplayName("Should reject empty terms list")
+        void shouldRejectEmptyTermsList() {
+            TermSettings termSettings = new TermSettings();
+            termSettings.setTerms(Collections.emptyList());
+            String result = BulkServiceValidation.validateTermSettings(termSettings);
+            assertTrue(result.contains("cannot be null or empty"), "Empty terms list should be rejected");
+        }
+    }
 
 }

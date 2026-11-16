@@ -277,6 +277,12 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     } else {
                         throw new IllegalArgumentException("Unknown term: " + user_selected_term);
                     }
+
+                    if (null == termRecommendations) {
+                        LOGGER.warn("Recommendations not present for term {} and container {}, skipping", user_selected_term, containerName);
+                        continue;
+                    }
+
                     // vpa changes for models
                     String user_model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
                     Config recommendationsConfig;
