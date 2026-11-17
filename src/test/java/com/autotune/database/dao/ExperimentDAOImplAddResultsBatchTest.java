@@ -19,16 +19,21 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeResultsEntry;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
+import org.hibernate.HibernateException;
+import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -239,6 +244,243 @@ public class ExperimentDAOImplAddResultsBatchTest {
             verify(dao, atLeastOnce()).addPartitions(anyString(), anyString(), anyString(), anyInt(), anyString());
             verify(retrySession).persist(entry);
             verify(retryTx).commit();
+        }
+    }
+
+    // ---- Round 2 review fixes ----
+
+    @Test
+    @DisplayName("Batch: a close() failure after commit does not turn stored rows into failures")
+    public void testBatchCloseFailureAfterCommitIsSuccess() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction tx = mock(Transaction.class);
+        Session session = sessionWith(tx);
+        when(sessionFactory.openSession()).thenReturn(session);
+        doThrow(new HibernateException("close failed")).when(session).close();
+
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry second = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(first, second));
+
+            assertTrue(failed.isEmpty());
+            assertNull(first.getErrorReasons());
+            assertNull(second.getErrorReasons());
+            verify(sessionFactory, times(1)).openSession();   // no per-row replay
+            InOrder order = inOrder(session, tx);
+            order.verify(tx).commit();
+            order.verify(session).close();
+            verify(tx, never()).rollback();
+        }
+    }
+
+    @Test
+    @DisplayName("Per-row: a close() failure after commit does not report that row as failed")
+    public void testPerRowCloseFailureAfterCommitIsSuccess() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction okTx = mock(Transaction.class);
+        Transaction dupTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session okSession = sessionWith(okTx);
+        Session dupSession = sessionWith(dupTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, okSession, dupSession);
+
+        KruizeResultsEntry ok = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry dup = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        doThrow(duplicateKey()).when(batchSession).flush();
+        doThrow(new HibernateException("close failed")).when(okSession).close();
+        doThrow(duplicateKey()).when(dupSession).flush();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(ok, dup));
+
+            assertEquals(List.of(dup), failed);
+            assertNull(ok.getErrorReasons());
+            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), dup.getErrorReasons());
+            InOrder okOrder = inOrder(okSession, okTx);
+            okOrder.verify(okTx).commit();
+            okOrder.verify(okSession).close();
+            verify(okTx, never()).rollback();
+        }
+    }
+
+    @Test
+    @DisplayName("Batch commit outcome unknown: per-row duplicates count as stored, other errors still fail")
+    public void testBatchCommitFailureTreatsDuplicatesAsStored() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction storedTx = mock(Transaction.class);
+        Transaction newTx = mock(Transaction.class);
+        Transaction badTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session storedSession = sessionWith(storedTx);
+        Session newSession = sessionWith(newTx);
+        Session badSession = sessionWith(badTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, storedSession, newSession, badSession);
+
+        KruizeResultsEntry stored = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry fresh = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        // flush succeeded, commit() threw: the batch may or may not have been stored
+        doThrow(new PersistenceException("commit acknowledgement lost")).when(batchTx).commit();
+        doThrow(duplicateKey()).when(storedSession).flush();
+        doThrow(dbError("value too long")).when(badSession).flush();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(stored, fresh, bad));
+
+            assertEquals(List.of(bad), failed);
+            assertNull(stored.getErrorReasons());
+            assertNull(fresh.getErrorReasons());
+            assertEquals(List.of("could not execute statement"), bad.getErrorReasons());
+            InOrder batchOrder = inOrder(batchSession, batchTx);
+            batchOrder.verify(batchSession).flush();
+            batchOrder.verify(batchTx).commit();
+            batchOrder.verify(batchTx).rollback();
+            verify(storedTx).rollback();
+            verify(storedTx, never()).commit();
+            verify(newTx).commit();
+            verify(badTx).rollback();
+        }
+    }
+
+    @Test
+    @DisplayName("A row failure with a null message is recorded for that row only")
+    public void testNullMessageRowFailureIsRecorded() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction badTx = mock(Transaction.class);
+        Transaction okTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session badSession = sessionWith(badTx);
+        Session okSession = sessionWith(okTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, badSession, okSession);
+
+        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry ok = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        doThrow(new PersistenceException()).when(batchSession).flush();
+        doThrow(new PersistenceException()).when(badSession).flush();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(bad, ok));
+
+            assertEquals(List.of(bad), failed);
+            assertEquals(List.of(PersistenceException.class.getName()), bad.getErrorReasons());
+            assertNull(ok.getErrorReasons());
+            verify(badTx).rollback();
+            verify(okTx).commit();
+        }
+    }
+
+    @Test
+    @DisplayName("Connection failure on the batch skips the per-row fallback and fails every row")
+    public void testConnectionFailureSkipsPerRowFallback() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession);
+
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry second = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        JDBCConnectionException down = new JDBCConnectionException("Unable to acquire JDBC Connection",
+                new SQLException("Connection refused", "08001"));
+        doThrow(down).when(batchSession).flush();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(first, second));
+
+            assertEquals(List.of(first, second), failed);
+            assertEquals(List.of(down.getMessage()), first.getErrorReasons());
+            assertEquals(List.of(down.getMessage()), second.getErrorReasons());
+            verify(sessionFactory, times(1)).openSession();   // no per-row sessions
+            verify(batchTx).rollback();
+            verify(batchTx, never()).commit();
+            verify(batchSession).close();
+        }
+    }
+
+    @Test
+    @DisplayName("Connection lost during the per-row fallback stops the loop and fails the remaining rows")
+    public void testConnectionFailureStopsPerRowLoop() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction okTx = mock(Transaction.class);
+        Transaction lostTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session okSession = sessionWith(okTx);
+        Session lostSession = sessionWith(lostTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, okSession, lostSession);
+
+        KruizeResultsEntry ok = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry lost = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        KruizeResultsEntry skipped = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        PersistenceException connectionLost = new PersistenceException("could not execute statement",
+                new SQLException("terminating connection due to administrator command", "57P01"));
+        doThrow(duplicateKey()).when(batchSession).flush();
+        doThrow(connectionLost).when(lostSession).flush();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(ok, lost, skipped));
+
+            assertEquals(List.of(lost, skipped), failed);
+            assertNull(ok.getErrorReasons());
+            assertEquals(List.of("could not execute statement"), lost.getErrorReasons());
+            assertEquals(List.of("could not execute statement"), skipped.getErrorReasons());
+            verify(sessionFactory, times(3)).openSession();   // the last row is never attempted
+            verify(okTx).commit();
+            verify(lostTx).rollback();
+            verify(lostTx, never()).commit();
+        }
+    }
+
+    @Test
+    @DisplayName("Hibernate 'detached entity passed to persist' for an existing key maps to RESULTS_ALREADY_EXISTS")
+    public void testDetachedEntityMapsToResultsAlreadyExists() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction okTx = mock(Transaction.class);
+        Transaction dupTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session okSession = sessionWith(okTx);
+        Session dupSession = sessionWith(dupTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, okSession, dupSession);
+
+        KruizeResultsEntry ok = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry dup = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        // What Session.persist() throws in Hibernate 6.6 when the assigned id already exists in the DB
+        String detached = "detached entity passed to persist: " + KruizeResultsEntry.class.getName();
+        doThrow(new EntityExistsException(detached, new PersistentObjectException(detached))).when(batchSession).persist(dup);
+        doThrow(new EntityExistsException(detached, new PersistentObjectException(detached))).when(dupSession).persist(dup);
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(ok, dup));
+
+            assertEquals(List.of(dup), failed);
+            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), dup.getErrorReasons());
+            assertNull(ok.getErrorReasons());
+            verify(okTx).commit();
+            InOrder dupOrder = inOrder(dupSession, dupTx);
+            dupOrder.verify(dupSession).beginTransaction();
+            dupOrder.verify(dupSession).persist(dup);
+            dupOrder.verify(dupTx).rollback();
+            verify(dupSession, never()).flush();
+            verify(dupTx, never()).commit();
         }
     }
 }

@@ -28,12 +28,17 @@ import com.autotune.database.table.lm.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.query.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.slf4j.Logger;
@@ -41,6 +46,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLTransientConnectionException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -65,6 +73,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     private static final Object PARTITION_CREATION_LOCK = new Object();
     /** Transaction-scoped advisory lock key for partition DDL (arbitrary constant, ASCII "KRUIZE"). */
     private static final long PARTITION_DDL_ADVISORY_LOCK_KEY = 0x4B5255495A45L;
+    private static final int MAX_CAUSE_DEPTH = 16;
+    private static final String SQLSTATE_UNIQUE_VIOLATION = "23505";
+    private static final String UNABLE_TO_ACQUIRE_CONNECTION = "Unable to acquire JDBC Connection";
 
     @Override
     public synchronized ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
@@ -289,19 +300,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try {
             // Happy path: one transaction for the whole request (bounded by bulk_update_results_limit).
-            if (!persistResultsBatch(kruizeResultsEntries)) {
-                // Batch failed and was rolled back; its session is closed. Isolate failures per row.
-                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries));
+            BatchFailure batchFailure = persistResultsBatch(kruizeResultsEntries);
+            if (null != batchFailure) {
+                if (!batchFailure.atCommit() && isConnectionFailure(batchFailure.cause())) {
+                    // DB unavailable: a per-row pass would only add up to N more doomed attempts.
+                    throw batchFailure.cause();
+                }
+                // Batch was rolled back (or its commit outcome is unknown); its session is closed.
+                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries, batchFailure.atCommit()));
             }
             statusValue = "success";
         } catch (Exception e) {
-            // Only reached when the batch session cannot be opened at all (e.g. DB unreachable);
-            // nothing was committed in that case, so every row is reported as failed.
+            // Reached when the batch session cannot be opened or the DB connection is lost before
+            // commit; nothing was committed in that case, so every row is reported as failed.
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
             failedResultsEntries.clear();
             failedResultsEntries.addAll(kruizeResultsEntries);
+            String reason = errorMessage(e);
             failedResultsEntries.forEach((entry) -> {
-                entry.setErrorReasons(List.of(e.getMessage()));
+                entry.setErrorReasons(List.of(reason));
             });
         } finally {
             if (null != timerAddBulkResultsDB) {
@@ -312,29 +329,36 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return failedResultsEntries;
     }
 
+    /** Why the batch did not commit; atCommit means flush succeeded and commit() threw (outcome unknown). */
+    private record BatchFailure(Exception cause, boolean atCommit) {
+    }
+
     /**
      * Persist all rows in one session and one transaction.
      *
-     * @return true when the batch committed; false when it failed and was rolled back
-     * (the session is closed either way, so the caller must not reuse it).
+     * @return null when the batch committed (a later close() failure does not change that);
+     * otherwise the failure. The session is closed either way, so the caller must not reuse it.
      */
-    private boolean persistResultsBatch(List<KruizeResultsEntry> kruizeResultsEntries) {
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();
-                for (KruizeResultsEntry entry : kruizeResultsEntries) {
-                    session.persist(entry);
-                }
-                session.flush();
-                tx.commit();
-                return true;
-            } catch (Exception batchException) {
-                // PostgreSQL aborts the txn after any statement error; caller falls back to per-row.
-                LOGGER.debug("Bulk insert failed, falling back to per-row commits: {}", batchException.getMessage());
-                rollbackQuietly(tx);
-                return false;
+    private BatchFailure persistResultsBatch(List<KruizeResultsEntry> kruizeResultsEntries) {
+        Session session = KruizeHibernateUtil.getSessionFactory().openSession();
+        Transaction tx = null;
+        boolean flushed = false;
+        try {
+            tx = session.beginTransaction();
+            for (KruizeResultsEntry entry : kruizeResultsEntries) {
+                session.persist(entry);
             }
+            session.flush();
+            flushed = true;
+            tx.commit();
+            return null;
+        } catch (Exception batchException) {
+            // PostgreSQL aborts the txn after any statement error; caller falls back to per-row.
+            LOGGER.debug("Bulk insert failed, falling back to per-row commits: {}", batchException.getMessage());
+            rollbackQuietly(tx);
+            return new BatchFailure(batchException, flushed);
+        } finally {
+            closeQuietly(session);
         }
     }
 
@@ -343,10 +367,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * row-level failures are reported without affecting successful siblings. A failed row's
      * transaction is rolled back (never committed) and its session is discarded, as Hibernate
      * requires after a persistence exception. Never throws: every failure is recorded per row.
+     *
+     * @param batchCommitUnknown the batch flushed and only its commit() threw. Every insert had
+     *                           already succeeded, so no row was a pre-existing duplicate: a
+     *                           duplicate now means the batch commit landed and the row is stored.
      */
-    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries) {
+    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries, boolean batchCommitUnknown) {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
-        for (KruizeResultsEntry entry : kruizeResultsEntries) {
+        for (int i = 0; i < kruizeResultsEntries.size(); i++) {
+            KruizeResultsEntry entry = kruizeResultsEntries.get(i);
             Exception failure = persistSingleResult(entry);
             if (null != failure && isMissingPartition(failure)) {
                 LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
@@ -355,10 +384,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
                 failure = persistSingleResult(entry);
             }
-            if (null != failure) {
-                entry.setErrorReasons(List.of(rowErrorReason(failure)));
-                failedResultsEntries.add(entry);
+            if (null == failure) {
+                continue;
             }
+            if (isConnectionFailure(failure)) {
+                // DB went away mid-fallback: fail this row and the rest instead of retrying each one.
+                LOGGER.error("Per-row insert lost the DB connection, failing remaining rows: {}", failure.getMessage());
+                String reason = errorMessage(failure);
+                for (KruizeResultsEntry remaining : kruizeResultsEntries.subList(i, kruizeResultsEntries.size())) {
+                    remaining.setErrorReasons(List.of(reason));
+                    failedResultsEntries.add(remaining);
+                }
+                break;
+            }
+            if (batchCommitUnknown && isDuplicate(failure)) {
+                LOGGER.debug("Row already stored by the batch commit: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
+                continue;
+            }
+            entry.setErrorReasons(List.of(rowErrorReason(failure)));
+            failedResultsEntries.add(entry);
         }
         return failedResultsEntries;
     }
@@ -366,24 +410,28 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Insert one row in its own session and transaction.
      *
-     * @return null on commit, otherwise the exception (the transaction has been rolled back).
+     * @return null on commit (a later close() failure does not change that), otherwise the
+     * exception (the transaction has been rolled back).
      */
     private Exception persistSingleResult(KruizeResultsEntry entry) {
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();
-                session.persist(entry);
-                session.flush();
-                tx.commit();
-                return null;
-            } catch (Exception e) {
-                rollbackQuietly(tx);
-                return e;
-            }
-        } catch (Exception sessionException) {
-            // openSession() or close() failed
-            return sessionException;
+        Session session;
+        try {
+            session = KruizeHibernateUtil.getSessionFactory().openSession();
+        } catch (Exception openException) {
+            return openException;
+        }
+        Transaction tx = null;
+        try {
+            tx = session.beginTransaction();
+            session.persist(entry);
+            session.flush();
+            tx.commit();
+            return null;
+        } catch (Exception e) {
+            rollbackQuietly(tx);
+            return e;
+        } finally {
+            closeQuietly(session);
         }
     }
 
@@ -398,6 +446,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         } catch (Exception rollbackEx) {
             LOGGER.error("Rollback failed after results insert error: {}", rollbackEx.getMessage());
+        }
+    }
+
+    /** close() runs after commit/rollback; its failure must not replace the transaction outcome. */
+    private static void closeQuietly(Session session) {
+        try {
+            session.close();
+        } catch (Exception closeEx) {
+            LOGGER.warn("Session close failed after results insert: {}", closeEx.getMessage());
         }
     }
 
@@ -427,16 +484,64 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 && persistenceMessage(e).contains(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION);
     }
 
-    /** Same error reasons the per-row path has always reported. */
+    /** Same error reasons the per-row path has always reported, never null. */
     private static String rowErrorReason(Exception e) {
-        if (e instanceof PersistenceException) {
-            String message = persistenceMessage(e);
-            LOGGER.debug(message);
-            if (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT)) {
-                return AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS;
+        if (isDuplicate(e)) {
+            return AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS;
+        }
+        return errorMessage(e);
+    }
+
+    /** Non-null reason for List.of(): the message, or the exception class when there is none. */
+    private static String errorMessage(Exception e) {
+        String message = e.getMessage();
+        return (null == message || message.isBlank()) ? e.getClass().getName() : message;
+    }
+
+    /**
+     * Existing key: unique violation from PostgreSQL, or Hibernate rejecting the row before the
+     * INSERT (6.6 persist() of an assigned id that is already in the DB is "detached entity
+     * passed to persist", surfaced as EntityExistsException).
+     */
+    private static boolean isDuplicate(Throwable e) {
+        int depth = 0;
+        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+            if (t instanceof EntityExistsException || t instanceof NonUniqueObjectException
+                    || t instanceof PersistentObjectException) {
+                return true;
+            }
+            if (t instanceof SQLException sqlException && SQLSTATE_UNIQUE_VIOLATION.equals(sqlException.getSQLState())) {
+                return true;
+            }
+            String message = t.getMessage();
+            if (null != message && (message.contains(DUPLICATE_KEY) || message.contains(DUPLICATE_KEY_ALT))) {
+                return true;
             }
         }
-        return e.getMessage();
+        return false;
+    }
+
+    /** DB unreachable or refusing connections, as opposed to a problem with one row. */
+    private static boolean isConnectionFailure(Throwable e) {
+        int depth = 0;
+        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+            if (t instanceof JDBCConnectionException || t instanceof SQLTransientConnectionException
+                    || t instanceof SQLNonTransientConnectionException) {
+                return true;
+            }
+            if (t instanceof SQLException sqlException && null != sqlException.getSQLState()) {
+                String state = sqlException.getSQLState();
+                // 08xxx connection exception, 53300 too_many_connections, 57P0x server shutting down / not accepting
+                if (state.startsWith("08") || state.equals("53300") || state.startsWith("57P0")) {
+                    return true;
+                }
+            }
+            if (t instanceof JDBCException && null != t.getMessage()
+                    && t.getMessage().contains(UNABLE_TO_ACQUIRE_CONNECTION)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void createPartitions(KruizeResultsEntry entry) {
