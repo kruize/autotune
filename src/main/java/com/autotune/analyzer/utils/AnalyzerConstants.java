@@ -1145,11 +1145,12 @@ public class AnalyzerConstants {
     }
 
     /**
-     * K8S object types that Kruize does not support, for both remote and local monitoring.
-     * The supported types are exactly the ones {@link Utils#getApproriateK8sObjectType(String)} resolves
-     * (the remote monitoring createExperiment validation), so this list is the complement of that set.
-     * It is used to build the {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter for local monitoring metadata
-     * discovery and to hide these types from {@code /listK8sObjects}.
+     * K8S object types excluded from local monitoring metadata discovery. It is used to build the
+     * {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter.
+     * The types remote monitoring createExperiment accepts are the ones {@link Utils#getApproriateK8sObjectType(String)}
+     * resolves, and this list is the complement of that set with one known exception:
+     * DeploymentConfig is excluded from local discovery (deprecated from OpenShift 4.14) but createExperiment still
+     * accepts it, so {@code /listK8sObjects} (which reports createExperiment's accepted types) still lists it.
      */
     public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = List.of(K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG, K8S_OBJECT_TYPES.CONFIGMAP, K8S_OBJECT_TYPES.CATALOGSOURCE);
 

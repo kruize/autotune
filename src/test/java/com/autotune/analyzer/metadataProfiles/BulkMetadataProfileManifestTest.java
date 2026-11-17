@@ -28,14 +28,17 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Guards the shipped bulk metadata profile: every workload/container query, including the
- * label-aware {@code workloadsWithPodLabelFilter} query, must carry {@code $UNSUPPORTED_WORKLOAD_TYPES$}
- * so that unsupported workloads are not discovered when a pod label filter is used.
+ * Guards the shipped metadata profiles: every workload/container query (including the label-aware
+ * {@code workloadsWithPodLabelFilter} query of the bulk profile) must carry {@code $UNSUPPORTED_WORKLOAD_TYPES$}
+ * so that unsupported workloads are not discovered.
  */
 class BulkMetadataProfileManifestTest {
 
     private static final Path MANIFEST =
             Paths.get("manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json");
+
+    private static final Path NON_BULK_MANIFEST =
+            Paths.get("manifests/autotune/metadata-profiles/cluster_metadata_local_monitoring.json");
 
     private static String queryOf(JSONObject queryVariable) {
         return queryVariable.getJSONArray("aggregation_functions").getJSONObject(0).getString("query");
@@ -69,5 +72,22 @@ class BulkMetadataProfileManifestTest {
                         name + " must contain " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE);
             }
         }
+    }
+
+    @Test
+    @DisplayName("Non-bulk profile: workload and container queries contain $UNSUPPORTED_WORKLOAD_TYPES$")
+    void nonBulkProfileQueriesHaveUnsupportedTypesPlaceholder() throws Exception {
+        JSONArray variables = new JSONObject(Files.readString(NON_BULK_MANIFEST)).getJSONArray("query_variables");
+        int checked = 0;
+        for (int i = 0; i < variables.length(); i++) {
+            JSONObject variable = variables.getJSONObject(i);
+            String name = variable.getString("name");
+            if (name.startsWith("workloads") || name.startsWith("containers")) {
+                checked++;
+                assertTrue(queryOf(variable).contains(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE),
+                        name + " must contain " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE);
+            }
+        }
+        assertEquals(2, checked, "expected a workload and a container query");
     }
 }
