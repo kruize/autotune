@@ -16,6 +16,7 @@
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeResultsEntry;
@@ -27,13 +28,19 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.jdbc.Work;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -241,7 +248,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
             assertNull(entry.getErrorReasons());
             verify(firstTryTx).rollback();
             verify(firstTryTx, never()).commit();
-            verify(dao, atLeastOnce()).addPartitions(anyString(), anyString(), anyString(), anyInt(), anyString());
+            verify(dao, atLeastOnce()).addPartitions(eq(DBConstants.TABLE_NAMES.KRUIZE_RESULTS), anyString(), anyString(), anyInt(), anyString());
             verify(retrySession).persist(entry);
             verify(retryTx).commit();
         }
@@ -311,8 +318,8 @@ public class ExperimentDAOImplAddResultsBatchTest {
     }
 
     @Test
-    @DisplayName("Batch commit outcome unknown: per-row duplicates count as stored, other errors still fail")
-    public void testBatchCommitFailureTreatsDuplicatesAsStored() {
+    @DisplayName("Batch commit outcome unknown: per-row duplicates still report RESULTS_ALREADY_EXISTS")
+    public void testBatchCommitFailureStillReportsDuplicates() {
         SessionFactory sessionFactory = mock(SessionFactory.class);
         Transaction batchTx = mock(Transaction.class);
         Transaction storedTx = mock(Transaction.class);
@@ -337,8 +344,8 @@ public class ExperimentDAOImplAddResultsBatchTest {
 
             List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(stored, fresh, bad));
 
-            assertEquals(List.of(bad), failed);
-            assertNull(stored.getErrorReasons());
+            assertEquals(List.of(stored, bad), failed);
+            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), stored.getErrorReasons());
             assertNull(fresh.getErrorReasons());
             assertEquals(List.of("could not execute statement"), bad.getErrorReasons());
             InOrder batchOrder = inOrder(batchSession, batchTx);
@@ -481,6 +488,156 @@ public class ExperimentDAOImplAddResultsBatchTest {
             dupOrder.verify(dupTx).rollback();
             verify(dupSession, never()).flush();
             verify(dupTx, never()).commit();
+        }
+    }
+
+    // ---- Round 3 review fixes ----
+
+    private static KruizeResultsEntry copyOf(KruizeResultsEntry e) {
+        KruizeResultsEntry c = resultsEntry(e.getExperiment_name(), e.getInterval_end_time().toInstant());
+        c.setInterval_start_time(e.getInterval_start_time());
+        c.setVersion(e.getVersion());
+        c.setCluster_name(e.getCluster_name());
+        c.setDuration_minutes(e.getDuration_minutes());
+        c.setExtended_data(e.getExtended_data());
+        c.setMeta_data(e.getMeta_data());
+        return c;
+    }
+
+    /** Session whose primary-key lookup returns the given rows. */
+    @SuppressWarnings("unchecked")
+    private static Session lookupSessionReturning(List<KruizeResultsEntry> rows) {
+        Session session = mock(Session.class);
+        Query<KruizeResultsEntry> query = mock(Query.class, RETURNS_SELF);
+        when(session.createQuery(anyString(), eq(KruizeResultsEntry.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(rows);
+        return session;
+    }
+
+    /** One row whose per-row flush succeeds but whose commit() throws; the 3rd openSession is the lookup. */
+    private static List<KruizeResultsEntry> runWithLostRowCommit(KruizeResultsEntry entry, Session lookupSession,
+                                                                 SessionFactory sessionFactory, Transaction rowTx) {
+        Transaction batchTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session rowSession = sessionWith(rowTx);
+        doThrow(duplicateKey()).when(batchSession).flush();
+        doThrow(new PersistenceException("commit acknowledgement lost")).when(rowTx).commit();
+        if (null == lookupSession) {
+            when(sessionFactory.openSession()).thenReturn(batchSession, rowSession)
+                    .thenThrow(new HibernateException("lookup failed"));
+        } else {
+            when(sessionFactory.openSession()).thenReturn(batchSession, rowSession, lookupSession);
+        }
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+            return new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(entry));
+        }
+    }
+
+    private static KruizeResultsEntry entryWithPayload() throws Exception {
+        KruizeResultsEntry entry = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        entry.setCluster_name("default");
+        entry.setExtended_data(new ObjectMapper().readTree("{\"cpu\":{\"avg\":1.0},\"pods\":[1,2]}"));
+        return entry;
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws but the row is stored with the same payload: counted as stored")
+    public void testLostRowCommitWithMatchingRowIsStored() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction rowTx = mock(Transaction.class);
+        KruizeResultsEntry entry = entryWithPayload();
+        KruizeResultsEntry stored = copyOf(entry);
+        // jsonb reorders keys and may print numbers differently
+        stored.setExtended_data(new ObjectMapper().readTree("{\"pods\":[1,2],\"cpu\":{\"avg\":1.00}}"));
+        Session lookupSession = lookupSessionReturning(List.of(stored));
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSession, sessionFactory, rowTx);
+
+        assertTrue(failed.isEmpty());
+        assertNull(entry.getErrorReasons());
+        verify(sessionFactory, times(3)).openSession();
+        InOrder order = inOrder(rowTx, lookupSession);
+        order.verify(rowTx).commit();
+        order.verify(lookupSession).createQuery(anyString(), eq(KruizeResultsEntry.class));
+        verify(lookupSession, never()).persist(any());
+        verify(lookupSession).close();
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws and the stored row has a different payload: reported failed")
+    public void testLostRowCommitWithMismatchingRowFails() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+        KruizeResultsEntry other = copyOf(entry);
+        other.setExtended_data(new ObjectMapper().readTree("{\"cpu\":{\"avg\":2.0},\"pods\":[1,2]}"));
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionReturning(List.of(other)),
+                sessionFactory, mock(Transaction.class));
+
+        assertEquals(List.of(entry), failed);
+        assertEquals(List.of("commit acknowledgement lost"), entry.getErrorReasons());
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws and the row is not in the DB: reported failed")
+    public void testLostRowCommitWithMissingRowFails() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionReturning(List.of()),
+                sessionFactory, mock(Transaction.class));
+
+        assertEquals(List.of(entry), failed);
+        assertEquals(List.of("commit acknowledgement lost"), entry.getErrorReasons());
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws and the lookup fails: reported failed with the original error")
+    public void testLostRowCommitWithFailingLookupFails() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, null, sessionFactory, mock(Transaction.class));
+
+        assertEquals(List.of(entry), failed);
+        assertEquals(List.of("commit acknowledgement lost"), entry.getErrorReasons());
+        verify(sessionFactory, times(3)).openSession();
+    }
+
+    @Test
+    @DisplayName("addPartitions sets a local lock_timeout before taking the advisory lock")
+    public void testAddPartitionsSetsLockTimeoutBeforeAdvisoryLock() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction tx = mock(Transaction.class);
+        Session session = sessionWith(tx);
+        Connection connection = mock(Connection.class);
+        Statement statement = mock(Statement.class);
+        PreparedStatement lock = mock(PreparedStatement.class);
+        NativeQuery<?> ddl = mock(NativeQuery.class);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(connection.createStatement()).thenReturn(statement);
+        when(connection.prepareStatement(anyString())).thenReturn(lock);
+        doReturn(ddl).when(session).createNativeQuery(anyString());
+        doAnswer(inv -> {
+            inv.<Work>getArgument(0).execute(connection);
+            return null;
+        }).when(session).doWork(any(Work.class));
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            // 31 Jan by_month: exactly one partition DDL
+            new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, "01", "2024", 31,
+                    DBConstants.PARTITION_TYPES.BY_MONTH);
+
+            InOrder order = inOrder(session, statement, connection, lock, ddl, tx);
+            order.verify(session).beginTransaction();
+            order.verify(statement).execute("SET LOCAL lock_timeout = '30s'");
+            order.verify(connection).prepareStatement("SELECT pg_advisory_xact_lock(?)");
+            order.verify(lock).execute();
+            order.verify(ddl).executeUpdate();
+            order.verify(tx).commit();
         }
     }
 }

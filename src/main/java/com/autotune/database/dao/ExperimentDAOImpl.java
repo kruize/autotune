@@ -27,6 +27,7 @@ import com.autotune.database.table.*;
 import com.autotune.database.table.lm.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.NoResultException;
@@ -49,6 +50,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTransientConnectionException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -73,6 +75,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     private static final Object PARTITION_CREATION_LOCK = new Object();
     /** Transaction-scoped advisory lock key for partition DDL (arbitrary constant, ASCII "KRUIZE"). */
     private static final long PARTITION_DDL_ADVISORY_LOCK_KEY = 0x4B5255495A45L;
+    /** Bounds the wait for the partition DDL advisory lock (and the DDL's own locks) in addPartitions. */
+    private static final String PARTITION_DDL_LOCK_TIMEOUT = "30s";
     private static final int MAX_CAUSE_DEPTH = 16;
     private static final String SQLSTATE_UNIQUE_VIOLATION = "23505";
     private static final String UNABLE_TO_ACQUIRE_CONNECTION = "Unable to acquire JDBC Connection";
@@ -211,7 +215,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             tx = session.beginTransaction();
             // Serialize partition DDL across all Kruize replicas; released automatically at commit/rollback.
             // Concurrent "CREATE TABLE IF NOT EXISTS ... PARTITION OF" is not race-safe in PostgreSQL.
+            // A lock timeout (SQLState 55P03) throws here and is handled like any other DDL failure below.
             session.doWork(connection -> {
+                try (Statement timeout = connection.createStatement()) {
+                    timeout.execute("SET LOCAL lock_timeout = '" + PARTITION_DDL_LOCK_TIMEOUT + "'");
+                }
                 try (PreparedStatement lock = connection.prepareStatement("SELECT pg_advisory_xact_lock(?)")) {
                     lock.setLong(1, PARTITION_DDL_ADVISORY_LOCK_KEY);
                     lock.execute();
@@ -307,7 +315,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     throw batchFailure.cause();
                 }
                 // Batch was rolled back (or its commit outcome is unknown); its session is closed.
-                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries, batchFailure.atCommit()));
+                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries));
             }
             statusValue = "success";
         } catch (Exception e) {
@@ -329,7 +337,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return failedResultsEntries;
     }
 
-    /** Why the batch did not commit; atCommit means flush succeeded and commit() threw (outcome unknown). */
+    /**
+     * Why the batch did not commit. atCommit means flush succeeded and commit() threw (outcome unknown):
+     * the per-row pass then still runs even for a connection error, since the DB may be reachable again.
+     */
     private record BatchFailure(Exception cause, boolean atCommit) {
     }
 
@@ -367,12 +378,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * row-level failures are reported without affecting successful siblings. A failed row's
      * transaction is rolled back (never committed) and its session is discarded, as Hibernate
      * requires after a persistence exception. Never throws: every failure is recorded per row.
-     *
-     * @param batchCommitUnknown the batch flushed and only its commit() threw. Every insert had
-     *                           already succeeded, so no row was a pre-existing duplicate: a
-     *                           duplicate now means the batch commit landed and the row is stored.
+
      */
-    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries, boolean batchCommitUnknown) {
+    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries) {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
         for (int i = 0; i < kruizeResultsEntries.size(); i++) {
             KruizeResultsEntry entry = kruizeResultsEntries.get(i);
@@ -397,10 +405,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
                 break;
             }
-            if (batchCommitUnknown && isDuplicate(failure)) {
-                LOGGER.debug("Row already stored by the batch commit: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
-                continue;
-            }
             entry.setErrorReasons(List.of(rowErrorReason(failure)));
             failedResultsEntries.add(entry);
         }
@@ -411,7 +415,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * Insert one row in its own session and transaction.
      *
      * @return null on commit (a later close() failure does not change that), otherwise the
-     * exception (the transaction has been rolled back).
+     * exception (the transaction has been rolled back). If commit() itself threw after a
+     * successful flush, the row is looked up once and counted as stored only when it is there
+     * with this entry's payload; no extra query runs on any other path.
      */
     private Exception persistSingleResult(KruizeResultsEntry entry) {
         Session session;
@@ -421,19 +427,69 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             return openException;
         }
         Transaction tx = null;
+        boolean flushed = false;
+        Exception failure;
         try {
             tx = session.beginTransaction();
             session.persist(entry);
             session.flush();
+            flushed = true;
             tx.commit();
             return null;
         } catch (Exception e) {
             rollbackQuietly(tx);
-            return e;
+            failure = e;
         } finally {
             closeQuietly(session);
         }
+        if (flushed && isStoredAsSubmitted(entry)) {
+            LOGGER.warn("Commit reported an error but the row is stored: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
+            return null;
+        }
+        return failure;
     }
+
+    /** Fresh-session lookup by primary key; true only if the stored row carries this entry's data. */
+    private static boolean isStoredAsSubmitted(KruizeResultsEntry entry) {
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            List<KruizeResultsEntry> stored = session.createQuery(SELECT_FROM_RESULTS_BY_EXP_NAME_AND_END_TIME, KruizeResultsEntry.class)
+                    .setParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME, entry.getExperiment_name())
+                    .setParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME, entry.getInterval_end_time())
+                    .getResultList();
+            return stored.size() == 1 && samePayload(stored.get(0), entry);
+        } catch (Exception lookupEx) {
+            LOGGER.warn("Could not verify the outcome of a failed commit: {}", lookupEx.getMessage());
+            return false;
+        }
+    }
+
+    /** Non-key columns of kruize_results; JSON numbers compare by value so jsonb round-trips match. */
+    private static boolean samePayload(KruizeResultsEntry stored, KruizeResultsEntry submitted) {
+        return Objects.equals(stored.getVersion(), submitted.getVersion())
+                && Objects.equals(stored.getCluster_name(), submitted.getCluster_name())
+                && sameInstant(stored.getInterval_start_time(), submitted.getInterval_start_time())
+                && Double.compare(stored.getDuration_minutes(), submitted.getDuration_minutes()) == 0
+                && sameJson(stored.getExtended_data(), submitted.getExtended_data())
+                && sameJson(stored.getMeta_data(), submitted.getMeta_data());
+    }
+
+    private static boolean sameInstant(Timestamp a, Timestamp b) {
+        return (null == a || null == b) ? a == b : a.getTime() == b.getTime();
+    }
+
+    private static boolean sameJson(JsonNode a, JsonNode b) {
+        if (null == a || a.isNull() || null == b || b.isNull()) {
+            return (null == a || a.isNull()) && (null == b || b.isNull());
+        }
+        return a.equals(JSON_VALUE_COMPARATOR, b);
+    }
+
+    private static final Comparator<JsonNode> JSON_VALUE_COMPARATOR = (x, y) -> {
+        if (x.isNumber() && y.isNumber()) {
+            return x.decimalValue().compareTo(y.decimalValue());
+        }
+        return x.equals(y) ? 0 : 1;
+    };
 
     private static void rollbackQuietly(Transaction tx) {
         if (null == tx) {
