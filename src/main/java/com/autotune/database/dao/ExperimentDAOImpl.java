@@ -315,7 +315,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     throw batchFailure.cause();
                 }
                 // Batch was rolled back (or its commit outcome is unknown); its session is closed.
-                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries));
+                failedResultsEntries.addAll(persistResultsPerRow(kruizeResultsEntries, batchFailure.atCommit()));
             }
             statusValue = "success";
         } catch (Exception e) {
@@ -339,7 +339,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Why the batch did not commit. atCommit means flush succeeded and commit() threw (outcome unknown):
-     * the per-row pass then still runs even for a connection error, since the DB may be reachable again.
+     * the per-row pass then still runs even for a connection error, since the DB may be reachable again,
+     * and a duplicate in that pass is reconciled against the stored payload.
      */
     private record BatchFailure(Exception cause, boolean atCommit) {
     }
@@ -378,9 +379,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * row-level failures are reported without affecting successful siblings. A failed row's
      * transaction is rolled back (never committed) and its session is discarded, as Hibernate
      * requires after a persistence exception. Never throws: every failure is recorded per row.
-
+     *
+     * @param batchAtCommit the batch flushed and only its commit() threw, so it may have been stored:
+     *                      a duplicate is then looked up and counted as stored only if the stored
+     *                      row carries this entry's payload. No lookup runs in any other case.
      */
-    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries) {
+    private List<KruizeResultsEntry> persistResultsPerRow(List<KruizeResultsEntry> kruizeResultsEntries, boolean batchAtCommit) {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
         for (int i = 0; i < kruizeResultsEntries.size(); i++) {
             KruizeResultsEntry entry = kruizeResultsEntries.get(i);
@@ -404,6 +408,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     failedResultsEntries.add(remaining);
                 }
                 break;
+            }
+            if (batchAtCommit && isDuplicate(failure) && isStoredAsSubmitted(entry)) {
+                LOGGER.debug("Row stored by the batch commit: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
+                continue;
             }
             entry.setErrorReasons(List.of(rowErrorReason(failure)));
             failedResultsEntries.add(entry);
@@ -474,7 +482,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     private static boolean sameInstant(Timestamp a, Timestamp b) {
-        return (null == a || null == b) ? a == b : a.getTime() == b.getTime();
+        // Timestamp.equals compares milliseconds and nanoseconds (full precision)
+        return (null == a || null == b) ? a == b : a.equals(b);
     }
 
     private static boolean sameJson(JsonNode a, JsonNode b) {

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.utils.KruizeConstants;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
@@ -34,6 +35,7 @@ import org.hibernate.query.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
@@ -43,7 +45,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -318,36 +322,56 @@ public class ExperimentDAOImplAddResultsBatchTest {
     }
 
     @Test
-    @DisplayName("Batch commit outcome unknown: per-row duplicates still report RESULTS_ALREADY_EXISTS")
-    public void testBatchCommitFailureStillReportsDuplicates() {
+    @DisplayName("Batch commit outcome unknown: a duplicate counts as stored only if one stored row matches the payload")
+    public void testBatchCommitFailureStillReportsDuplicates() throws Exception {
         SessionFactory sessionFactory = mock(SessionFactory.class);
         Transaction batchTx = mock(Transaction.class);
         Transaction storedTx = mock(Transaction.class);
+        Transaction otherTx = mock(Transaction.class);
+        Transaction missingTx = mock(Transaction.class);
         Transaction newTx = mock(Transaction.class);
         Transaction badTx = mock(Transaction.class);
         Session batchSession = sessionWith(batchTx);
         Session storedSession = sessionWith(storedTx);
+        Session otherSession = sessionWith(otherTx);
+        Session missingSession = sessionWith(missingTx);
         Session newSession = sessionWith(newTx);
         Session badSession = sessionWith(badTx);
-        when(sessionFactory.openSession()).thenReturn(batchSession, storedSession, newSession, badSession);
 
         KruizeResultsEntry stored = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
-        KruizeResultsEntry fresh = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
-        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        KruizeResultsEntry other = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        KruizeResultsEntry missing = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        KruizeResultsEntry fresh = resultsEntry("exp-a", Instant.parse("2024-01-01T01:00:00Z"));
+        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T01:15:00Z"));
+        KruizeResultsEntry otherPayload = copyOf(other);
+        otherPayload.setVersion("2.0");
+        Session storedLookup = lookupSessionFor(stored, List.of(copyOf(stored)));
+        Session otherLookup = lookupSessionFor(other, List.of(otherPayload));
+        Session missingLookup = lookupSessionFor(missing, List.of());
+        when(sessionFactory.openSession()).thenReturn(batchSession, storedSession, storedLookup, otherSession, otherLookup,
+                missingSession, missingLookup, newSession, badSession);
+
         // flush succeeded, commit() threw: the batch may or may not have been stored
         doThrow(new PersistenceException("commit acknowledgement lost")).when(batchTx).commit();
         doThrow(duplicateKey()).when(storedSession).flush();
+        doThrow(duplicateKey()).when(otherSession).flush();
+        doThrow(duplicateKey()).when(missingSession).flush();
         doThrow(dbError("value too long")).when(badSession).flush();
 
         try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
             hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
 
-            List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(stored, fresh, bad));
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl()
+                    .addToDBAndFetchFailedResults(List.of(stored, other, missing, fresh, bad));
 
-            assertEquals(List.of(stored, bad), failed);
-            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), stored.getErrorReasons());
+            assertEquals(List.of(other, missing, bad), failed);
+            assertNull(stored.getErrorReasons());
+            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), other.getErrorReasons());
+            assertEquals(List.of(AnalyzerErrorConstants.APIErrors.updateResultsAPI.RESULTS_ALREADY_EXISTS), missing.getErrorReasons());
             assertNull(fresh.getErrorReasons());
             assertEquals(List.of("could not execute statement"), bad.getErrorReasons());
+            // one lookup per duplicate only; none for the inserted row or the non-duplicate failure
+            verify(sessionFactory, times(9)).openSession();
             InOrder batchOrder = inOrder(batchSession, batchTx);
             batchOrder.verify(batchSession).flush();
             batchOrder.verify(batchTx).commit();
@@ -504,13 +528,20 @@ public class ExperimentDAOImplAddResultsBatchTest {
         return c;
     }
 
-    /** Session whose primary-key lookup returns the given rows. */
+    /** Session whose lookup returns the given rows only if it is bound to key's experiment_name and interval_end_time. */
     @SuppressWarnings("unchecked")
-    private static Session lookupSessionReturning(List<KruizeResultsEntry> rows) {
+    private static Session lookupSessionFor(KruizeResultsEntry key, List<KruizeResultsEntry> rows) {
         Session session = mock(Session.class);
         Query<KruizeResultsEntry> query = mock(Query.class, RETURNS_SELF);
+        Map<String, Object> bound = new HashMap<>();
         when(session.createQuery(anyString(), eq(KruizeResultsEntry.class))).thenReturn(query);
-        when(query.getResultList()).thenReturn(rows);
+        when(query.setParameter(anyString(), any(Object.class))).thenAnswer(inv -> {
+            bound.put(inv.getArgument(0), inv.getArgument(1));
+            return query;
+        });
+        when(query.getResultList()).thenAnswer(inv -> Map.of(
+                KruizeConstants.JSONKeys.EXPERIMENT_NAME, key.getExperiment_name(),
+                KruizeConstants.JSONKeys.INTERVAL_END_TIME, key.getInterval_end_time()).equals(bound) ? rows : List.of());
         return session;
     }
 
@@ -550,7 +581,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
         KruizeResultsEntry stored = copyOf(entry);
         // jsonb reorders keys and may print numbers differently
         stored.setExtended_data(new ObjectMapper().readTree("{\"pods\":[1,2],\"cpu\":{\"avg\":1.00}}"));
-        Session lookupSession = lookupSessionReturning(List.of(stored));
+        Session lookupSession = lookupSessionFor(entry, List.of(stored));
 
         List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSession, sessionFactory, rowTx);
 
@@ -572,7 +603,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
         KruizeResultsEntry other = copyOf(entry);
         other.setExtended_data(new ObjectMapper().readTree("{\"cpu\":{\"avg\":2.0},\"pods\":[1,2]}"));
 
-        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionReturning(List.of(other)),
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionFor(entry, List.of(other)),
                 sessionFactory, mock(Transaction.class));
 
         assertEquals(List.of(entry), failed);
@@ -585,7 +616,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
         SessionFactory sessionFactory = mock(SessionFactory.class);
         KruizeResultsEntry entry = entryWithPayload();
 
-        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionReturning(List.of()),
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionFor(entry, List.of()),
                 sessionFactory, mock(Transaction.class));
 
         assertEquals(List.of(entry), failed);
@@ -635,9 +666,98 @@ public class ExperimentDAOImplAddResultsBatchTest {
             order.verify(session).beginTransaction();
             order.verify(statement).execute("SET LOCAL lock_timeout = '30s'");
             order.verify(connection).prepareStatement("SELECT pg_advisory_xact_lock(?)");
+            order.verify(lock).setLong(1, 0x4B5255495A45L);   // PARTITION_DDL_ADVISORY_LOCK_KEY
             order.verify(lock).execute();
             order.verify(ddl).executeUpdate();
             order.verify(tx).commit();
+        }
+    }
+
+    // ---- Round 4 review fixes ----
+
+    @Test
+    @DisplayName("Per-row commit throws and the stored start time differs by less than 1 ms: reported failed")
+    public void testLostRowCommitWithSubMillisecondStartTimeDifferenceFails() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+        Timestamp start = Timestamp.valueOf("2024-01-01 00:00:00.123456");
+        entry.setInterval_start_time(start);
+        KruizeResultsEntry stored = copyOf(entry);
+        Timestamp storedStart = new Timestamp(start.getTime());
+        storedStart.setNanos(123_457_000);   // same millisecond, 1 µs later
+        stored.setInterval_start_time(storedStart);
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionFor(entry, List.of(stored)),
+                sessionFactory, mock(Transaction.class));
+
+        assertEquals(List.of(entry), failed);
+        assertEquals(List.of("commit acknowledgement lost"), entry.getErrorReasons());
+    }
+
+    @Test
+    @DisplayName("addPartitions issues one CREATE TABLE IF NOT EXISTS ... PARTITION OF kruize_results per remaining day")
+    public void testAddPartitionsCreatesExpectedKruizeResultsPartitions() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction tx = mock(Transaction.class);
+        Session session = sessionWith(tx);
+        Connection connection = mock(Connection.class);
+        NativeQuery<?> ddl = mock(NativeQuery.class);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(connection.createStatement()).thenReturn(mock(Statement.class));
+        when(connection.prepareStatement(anyString())).thenReturn(mock(PreparedStatement.class));
+        doReturn(ddl).when(session).createNativeQuery(anyString());
+        doAnswer(inv -> {
+            inv.<Work>getArgument(0).execute(connection);
+            return null;
+        }).when(session).doWork(any(Work.class));
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, "01", "2024", 29,
+                    DBConstants.PARTITION_TYPES.BY_MONTH);
+
+            ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+            verify(session, times(3)).createNativeQuery(sql.capture());
+            assertEquals(List.of(
+                    "CREATE TABLE IF NOT EXISTS kruize_results_20240129 PARTITION OF kruize_results FOR VALUES FROM ('2024-01-29 00:00:00.000') TO ('2024-01-29 23:59:59');",
+                    "CREATE TABLE IF NOT EXISTS kruize_results_20240130 PARTITION OF kruize_results FOR VALUES FROM ('2024-01-30 00:00:00.000') TO ('2024-01-30 23:59:59');",
+                    "CREATE TABLE IF NOT EXISTS kruize_results_20240131 PARTITION OF kruize_results FOR VALUES FROM ('2024-01-31 00:00:00.000') TO ('2024-01-31 23:59:59');"),
+                    sql.getAllValues());
+            verify(ddl, times(3)).executeUpdate();
+            verify(tx).commit();
+        }
+    }
+
+    @Test
+    @DisplayName("Missing partition for a 20 Jan row creates kruize_results partitions from 5 Jan and from 1 Jan")
+    public void testMissingPartitionCreatesKruizeResultsPartitionsForEntryDate() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Session batchSession = sessionWith(mock(Transaction.class));
+        Session firstTrySession = sessionWith(mock(Transaction.class));
+        Session retrySession = sessionWith(mock(Transaction.class));
+        when(sessionFactory.openSession()).thenReturn(batchSession, firstTrySession, retrySession);
+
+        KruizeResultsEntry entry = resultsEntry("exp-a", Instant.parse("2024-01-20T12:00:00Z"));
+        entry.setInterval_end_time(Timestamp.valueOf("2024-01-20 12:00:00"));   // local date is 20 Jan in any zone
+        PersistenceException noPartition = dbError(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION + " \"kruize_results\" found for row");
+        doThrow(noPartition).when(batchSession).flush();
+        doThrow(noPartition).when(firstTrySession).flush();
+
+        ExperimentDAOImpl dao = spy(new ExperimentDAOImpl());
+        doNothing().when(dao).addPartitions(anyString(), anyString(), anyString(), anyInt(), anyString());
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            assertTrue(dao.addToDBAndFetchFailedResults(List.of(entry)).isEmpty());
+
+            String results = DBConstants.TABLE_NAMES.KRUIZE_RESULTS;
+            String byMonth = DBConstants.PARTITION_TYPES.BY_MONTH;
+            InOrder order = inOrder(dao, retrySession);
+            order.verify(dao).addPartitions(results, "01", "2024", 5, byMonth);    // 15 days back
+            order.verify(dao).addPartitions(results, "01", "2024", 1, byMonth);    // day < 25: whole month
+            order.verify(retrySession).persist(entry);
         }
     }
 }
