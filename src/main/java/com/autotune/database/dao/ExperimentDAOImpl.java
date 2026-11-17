@@ -78,6 +78,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /** Bounds the wait for the partition DDL advisory lock (and the DDL's own locks) in addPartitions. */
     private static final String PARTITION_DDL_LOCK_TIMEOUT = "30s";
     private static final int MAX_CAUSE_DEPTH = 16;
+    private static final String SQLSTATE_LOCK_NOT_AVAILABLE = "55P03";
+    /** Client-facing reason when an exception has no message; the class and stack trace go to the server log. */
+    private static final String GENERIC_STORE_FAILURE = "Failed to store result";
     private static final String SQLSTATE_UNIQUE_VIOLATION = "23505";
     private static final String UNABLE_TO_ACQUIRE_CONNECTION = "Unable to acquire JDBC Connection";
 
@@ -254,7 +257,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
             tx.commit();
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
+            // Still swallowed (CreatePartition and ExperimentDBService rely on that); a lock timeout is named
+            // explicitly because the row retry that follows only reports "no partition of relation".
+            if (hasSqlState(e, SQLSTATE_LOCK_NOT_AVAILABLE)) {
+                LOGGER.error("Partition DDL lock timeout after {} for {} {}-{}: {}", PARTITION_DDL_LOCK_TIMEOUT,
+                        tableName, year, month, e.getMessage());
+            } else {
+                LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
+            }
         }
     }
 
@@ -402,6 +412,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (isConnectionFailure(failure)) {
                 // DB went away mid-fallback: fail this row and the rest instead of retrying each one.
                 LOGGER.error("Per-row insert lost the DB connection, failing remaining rows: {}", failure.getMessage());
+                if (batchAtCommit) {
+                    LOGGER.error("Batch commit outcome unknown for {} remaining row(s) from {} {}; they are reported failed, "
+                                    + "and a retry is safe (stored rows return RESULTS_ALREADY_EXISTS)",
+                            kruizeResultsEntries.size() - i, entry.getExperiment_name(), entry.getInterval_end_time());
+                }
                 String reason = errorMessage(failure);
                 for (KruizeResultsEntry remaining : kruizeResultsEntries.subList(i, kruizeResultsEntries.size())) {
                     remaining.setErrorReasons(List.of(reason));
@@ -481,9 +496,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 && sameJson(stored.getMeta_data(), submitted.getMeta_data());
     }
 
+    /** Equal at the column's precision: timestamp(6) keeps microseconds and pgjdbc rounds nanos half-up. */
     private static boolean sameInstant(Timestamp a, Timestamp b) {
-        // Timestamp.equals compares milliseconds and nanoseconds (full precision)
-        return (null == a || null == b) ? a == b : a.equals(b);
+        return (null == a || null == b) ? a == b : toMicros(a) == toMicros(b);
+    }
+
+    private static long toMicros(Timestamp t) {
+        return Math.floorDiv(t.getTime(), 1000L) * 1_000_000L + Math.round(t.getNanos() / 1000.0);
     }
 
     private static boolean sameJson(JsonNode a, JsonNode b) {
@@ -495,10 +514,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     private static final Comparator<JsonNode> JSON_VALUE_COMPARATOR = (x, y) -> {
         if (x.isNumber() && y.isNumber()) {
+            if (isNonFinite(x) || isNonFinite(y)) {
+                return x.equals(y) ? 0 : 1;   // decimalValue() throws for NaN/Infinity
+            }
             return x.decimalValue().compareTo(y.decimalValue());
         }
         return x.equals(y) ? 0 : 1;
     };
+
+    private static boolean isNonFinite(JsonNode n) {
+        return (n.isDouble() || n.isFloat()) && !Double.isFinite(n.doubleValue());
+    }
 
     private static void rollbackQuietly(Transaction tx) {
         if (null == tx) {
@@ -557,10 +583,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return errorMessage(e);
     }
 
-    /** Non-null reason for List.of(): the message, or the exception class when there is none. */
+    /** Non-null reason for List.of(): the message, or a generic reason (class and trace logged server-side only). */
     private static String errorMessage(Exception e) {
         String message = e.getMessage();
-        return (null == message || message.isBlank()) ? e.getClass().getName() : message;
+        if (null == message || message.isBlank()) {
+            LOGGER.error("Results insert failed with {} and no message", e.getClass().getName(), e);
+            return GENERIC_STORE_FAILURE;
+        }
+        return message;
+    }
+
+    private static boolean hasSqlState(Throwable e, String sqlState) {
+        int depth = 0;
+        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+            if ((t instanceof SQLException sqlException && sqlState.equals(sqlException.getSQLState()))
+                    || (t instanceof JDBCException jdbcException && sqlState.equals(jdbcException.getSQLState()))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

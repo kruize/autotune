@@ -17,10 +17,15 @@ package com.autotune.database.dao;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
@@ -28,6 +33,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.NativeQuery;
@@ -45,7 +51,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -420,7 +428,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
             List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(bad, ok));
 
             assertEquals(List.of(bad), failed);
-            assertEquals(List.of(PersistenceException.class.getName()), bad.getErrorReasons());
+            assertEquals(List.of("Failed to store result"), bad.getErrorReasons());   // no class name leaked
             assertNull(ok.getErrorReasons());
             verify(badTx).rollback();
             verify(okTx).commit();
@@ -773,5 +781,133 @@ public class ExperimentDAOImplAddResultsBatchTest {
             order.verify(dao).addPartitions(results, "01", "2024", 1, byMonth);    // day < 25: whole month
             order.verify(retrySession).persist(entry);
         }
+    }
+
+    // ---- Round 6 review fixes ----
+
+    /** Runs body and returns the ExperimentDAOImpl log lines it produced ("LEVEL message"). */
+    private static List<String> captureDaoLog(Runnable body) {
+        org.apache.logging.log4j.core.Logger logger =
+                (org.apache.logging.log4j.core.Logger) LogManager.getLogger(ExperimentDAOImpl.class);
+        List<String> lines = new CopyOnWriteArrayList<>();
+        AbstractAppender appender = new AbstractAppender("capture-" + System.nanoTime(), null, null, true, Property.EMPTY_ARRAY) {
+            @Override
+            public void append(LogEvent event) {
+                lines.add(event.getLevel() + " " + event.getMessage().getFormattedMessage());
+            }
+        };
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            body.run();
+        } finally {
+            logger.removeAppender(appender);
+            appender.stop();
+        }
+        return lines;
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws and the stored start time is the submitted one rounded to microseconds: counted as stored")
+    public void testLostRowCommitMatchesAtMicrosecondPrecision() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+        Timestamp submitted = Timestamp.valueOf("2024-01-01 00:00:00");
+        submitted.setNanos(123_456_789);
+        entry.setInterval_start_time(submitted);
+        KruizeResultsEntry stored = copyOf(entry);
+        Timestamp rounded = Timestamp.valueOf("2024-01-01 00:00:00");
+        rounded.setNanos(123_457_000);   // what timestamp(6) stores for .123456789
+        stored.setInterval_start_time(rounded);
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionFor(entry, List.of(stored)),
+                sessionFactory, mock(Transaction.class));
+
+        assertTrue(failed.isEmpty());
+        assertNull(entry.getErrorReasons());
+    }
+
+    @Test
+    @DisplayName("Per-row commit throws and the payload holds a non-finite number: compared without throwing")
+    public void testLostRowCommitWithNonFiniteNumberIsCompared() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        KruizeResultsEntry entry = entryWithPayload();
+        entry.setMeta_data(JsonNodeFactory.instance.objectNode().put("ratio", Double.NaN));
+        KruizeResultsEntry stored = copyOf(entry);
+        stored.setMeta_data(JsonNodeFactory.instance.objectNode().put("ratio", Double.NaN));
+
+        List<KruizeResultsEntry> failed = runWithLostRowCommit(entry, lookupSessionFor(entry, List.of(stored)),
+                sessionFactory, mock(Transaction.class));
+
+        assertTrue(failed.isEmpty());
+        assertNull(entry.getErrorReasons());
+    }
+
+    @Test
+    @DisplayName("addPartitions lock timeout is still swallowed, skips the DDL, and is logged as a lock timeout")
+    public void testAddPartitionsLockTimeoutIsLogged() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction tx = mock(Transaction.class);
+        Session session = sessionWith(tx);
+        Connection connection = mock(Connection.class);
+        PreparedStatement lock = mock(PreparedStatement.class);
+        NativeQuery<?> ddl = mock(NativeQuery.class);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(connection.createStatement()).thenReturn(mock(Statement.class));
+        when(connection.prepareStatement(anyString())).thenReturn(lock);
+        when(lock.execute()).thenThrow(new SQLException("ERROR: canceling statement due to lock timeout", "55P03"));
+        doReturn(ddl).when(session).createNativeQuery(anyString());
+        doAnswer(inv -> {
+            try {
+                inv.<Work>getArgument(0).execute(connection);
+            } catch (SQLException e) {   // what Hibernate's doWork does with a JDBC error
+                throw new GenericJDBCException("could not execute work", e);
+            }
+            return null;
+        }).when(session).doWork(any(Work.class));
+
+        List<String> log;
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+            log = captureDaoLog(() -> new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS,
+                    "01", "2024", 31, DBConstants.PARTITION_TYPES.BY_MONTH));
+        }
+
+        verify(ddl, never()).executeUpdate();
+        verify(tx, never()).commit();
+        assertTrue(log.stream().anyMatch(l -> l.startsWith("ERROR Partition DDL lock timeout after 30s for kruize_results 2024-01")), log.toString());
+    }
+
+    @Test
+    @DisplayName("Connection lost after an unknown batch commit: remaining rows fail with the connection error and the unknown outcome is logged")
+    public void testUnknownBatchOutcomeOnConnectionLossIsLogged() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session lostSession = sessionWith(mock(Transaction.class));
+        when(sessionFactory.openSession()).thenReturn(batchSession, lostSession)
+                .thenThrow(new IllegalStateException("unexpected extra session"));
+
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry second = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        doThrow(new PersistenceException("commit acknowledgement lost")).when(batchTx).commit();
+        PersistenceException connectionLost = new PersistenceException("could not execute statement",
+                new SQLException("Connection refused", "08001"));
+        doThrow(connectionLost).when(lostSession).flush();
+
+        List<String> log;
+        List<KruizeResultsEntry> failed;
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+            List<List<KruizeResultsEntry>> out = new ArrayList<>();
+            log = captureDaoLog(() -> out.add(new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(first, second))));
+            failed = out.get(0);
+        }
+
+        assertEquals(List.of(first, second), failed);
+        assertEquals(List.of("could not execute statement"), first.getErrorReasons());
+        assertEquals(List.of("could not execute statement"), second.getErrorReasons());
+        verify(sessionFactory, times(2)).openSession();   // stops at the first connection failure
+        assertTrue(log.stream().anyMatch(l -> l.startsWith("ERROR Batch commit outcome unknown for 2 remaining row(s)")), log.toString());
     }
 }
