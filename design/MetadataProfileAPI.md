@@ -26,8 +26,6 @@ The following workload types are **not supported** by Kruize:
 
 - **ConfigMap and CatalogSource**: Excluded because they are configuration and catalog resources, rather than actual executing containers that can be monitored to generate recommendations.
 
-- **CronJob and barepod** (pods with no controller owner): Excluded because they are short-lived or one-off workloads, so they do not provide stable usage data for recommendations. Experiments created for them only fail with "Number of pods cannot be zero".
-
 These types are excluded from metadata discovery through the `$UNSUPPORTED_WORKLOAD_TYPES$` placeholder.
 ---
 
@@ -392,7 +390,7 @@ The following table lists every placeholder Kruize recognises. Adding any other 
 | `$CONTAINER_FILTERS$`           | Bulk profiles only                    | `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested containers.                                                                        |
 | `$LABELS$`                      | Bulk profiles only                    | `workloadsWithPodLabelFilter`                                                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector derived from the pod label filter in the import request.                                                         |
 | `$MEASUREMENT_DURATION_IN_MIN$` | Bulk profiles **and** update payloads | All query templates                                                                           | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Replaced with the measurement duration in minutes (e.g. `15`). Used inside range-vector brackets: `[$MEASUREMENT_DURATION_IN_MIN$m]`.               |
-| `$UNSUPPORTED_WORKLOAD_TYPES$`  | Bulk profiles **and** update payloads | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Expands to a `workload_type!~"..."` filter that excludes unsupported workload types (DeploymentConfig, ConfigMap, CatalogSource, CronJob, barepod). |
+| `$UNSUPPORTED_WORKLOAD_TYPES$`  | Bulk profiles **and** update payloads | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Expands to a `workload_type!~"..."` filter that excludes unsupported workload types (DeploymentConfig, ConfigMap, CatalogSource). |
 
 ### Adding a new placeholder
 

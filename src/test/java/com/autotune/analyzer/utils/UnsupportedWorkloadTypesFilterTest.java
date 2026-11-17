@@ -42,8 +42,6 @@ class UnsupportedWorkloadTypesFilterTest {
         assertEquals("job", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.JOB));
         assertEquals("ConfigMap", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CONFIGMAP));
         assertEquals("CatalogSource", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE));
-        assertEquals("CronJob", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.CRONJOB));
-        assertEquals("barepod", Utils.getAppropriateK8sObjectTypeString(AnalyzerConstants.K8S_OBJECT_TYPES.BAREPOD));
     }
 
     @Test
@@ -51,9 +49,7 @@ class UnsupportedWorkloadTypesFilterTest {
     void unsupportedListCoversIssueTypes() {
         assertTrue(AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES.containsAll(java.util.List.of(
                 AnalyzerConstants.K8S_OBJECT_TYPES.CONFIGMAP,
-                AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE,
-                AnalyzerConstants.K8S_OBJECT_TYPES.CRONJOB,
-                AnalyzerConstants.K8S_OBJECT_TYPES.BAREPOD)));
+                AnalyzerConstants.K8S_OBJECT_TYPES.CATALOGSOURCE)));
     }
 
     @Test
@@ -98,13 +94,11 @@ class UnsupportedWorkloadTypesFilterTest {
     }
 
     @Test
-    @DisplayName("Filter excludes DeploymentConfig, ConfigMap, CatalogSource, CronJob and barepod")
+    @DisplayName("Filter excludes DeploymentConfig, ConfigMap and CatalogSource")
     void filterContainsAllUnsupportedTypes() {
         String expected = ", workload_type!~\"(?i)deploymentConfig\""
                 + ", workload_type!~\"(?i)ConfigMap\""
-                + ", workload_type!~\"(?i)CatalogSource\""
-                + ", workload_type!~\"(?i)CronJob\""
-                + ", workload_type!~\"(?i)barepod\"";
+                + ", workload_type!~\"(?i)CatalogSource\"";
         assertEquals(expected, AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
     }
 

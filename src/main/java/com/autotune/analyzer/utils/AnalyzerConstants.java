@@ -305,8 +305,6 @@ public class AnalyzerConstants {
         JOB,
         CONFIGMAP,
         CATALOGSOURCE,
-        CRONJOB,
-        BAREPOD,
     }
 
     public enum RegisterRecommendationModelStatus {
@@ -1019,8 +1017,6 @@ public class AnalyzerConstants {
             public static final String JOB = "job";
             public static final String CONFIGMAP = "ConfigMap";
             public static final String CATALOGSOURCE = "CatalogSource";
-            public static final String CRONJOB = "CronJob";
-            public static final String BAREPOD = "barepod";
 
 
             private Types() {
@@ -1155,7 +1151,7 @@ public class AnalyzerConstants {
      * It is used to build the {@code $UNSUPPORTED_WORKLOAD_TYPES$} filter for local monitoring metadata
      * discovery and to hide these types from {@code /listK8sObjects}.
      */
-    public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = List.of(K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG, K8S_OBJECT_TYPES.CONFIGMAP, K8S_OBJECT_TYPES.CATALOGSOURCE, K8S_OBJECT_TYPES.CRONJOB, K8S_OBJECT_TYPES.BAREPOD);
+    public static final List<K8S_OBJECT_TYPES> UNSUPPORTED_K8S_OBJECT_TYPES = List.of(K8S_OBJECT_TYPES.DEPLOYMENT_CONFIG, K8S_OBJECT_TYPES.CONFIGMAP, K8S_OBJECT_TYPES.CATALOGSOURCE);
 
     /**
      * Returns a PromQL filter string for unsupported workload types.
