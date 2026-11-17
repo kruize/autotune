@@ -102,7 +102,9 @@ public class PerformanceProfileService extends HttpServlet {
             } else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Validation failed: " + e.getMessage());
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error("Unexpected error while creating performance profile: {}", Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         } catch (InvalidValueException e) {
             throw new RuntimeException(e);
         }
@@ -196,7 +198,9 @@ public class PerformanceProfileService extends HttpServlet {
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
             }
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error("Unexpected error while updating performance profile: {}", Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         } catch (InvalidValueException e) {
             throw new RuntimeException(e);
         }
@@ -310,7 +314,7 @@ public class PerformanceProfileService extends HttpServlet {
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
-            LOGGER.error(e.toString());
+            LOGGER.error(Utils.sanitizeForLog(e.toString()));
             if (null == errorMsg)
                 errorMsg = e.getMessage();
         }

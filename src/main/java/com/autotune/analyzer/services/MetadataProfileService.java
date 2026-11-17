@@ -355,6 +355,14 @@ public class MetadataProfileService extends HttpServlet{
                     // Deletes database and in-memory metadata profile object stored
                     deleteMetadataProfile(metadataProfileName);
                     metadataProfilesMap.remove(metadataProfileName);
+                } catch (NoSuchElementException e) {
+                    // the profile is not present in the DB, this is a client error
+                    sendErrorResponseMessage(
+                            response,
+                            null,
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName));
+                    return;
                 } catch (Exception e) {
                     LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.DELETE_METADATA_PROFILE_ERROR,
                             Utils.sanitizeForLog(e.getMessage()));
@@ -420,7 +428,7 @@ public class MetadataProfileService extends HttpServlet{
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
-            LOGGER.error(e.toString());
+            LOGGER.error(Utils.sanitizeForLog(e.toString()));
             if (null == errorMsg)
                 errorMsg = e.getMessage();
         }
@@ -443,22 +451,24 @@ public class MetadataProfileService extends HttpServlet{
     }
 
     /**
-     * This method deletes specified profile name from database and MetadataProfileCollection
+     * This method deletes specified profile name from database and, only after a successful delete,
+     * from the MetadataProfileCollection
      * @param metadataProfileName Name of the metadata profile to be deleted
+     * @throws NoSuchElementException if the profile is not found in the database
+     * @throws IllegalStateException  if the delete from the database fails
      */
     private void deleteMetadataProfile(String metadataProfileName) {
-        try {
-            // delete the metadata profile from DB
-            ValidationOutputData deletedMetadataProfileFromDB = new ExperimentDAOImpl().deleteKruizeLMMetadataProfileEntryByName(metadataProfileName);
-            if (deletedMetadataProfileFromDB.isSuccess()) {
-                // remove in-memory metadata profile
-                MetadataProfileCollection.getInstance().getMetadataProfileCollection().remove(metadataProfileName);
-                LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG);
-            } else {
-                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_FROM_DB_FAILURE_MSG, deletedMetadataProfileFromDB.getMessage());
-            }
-        }  catch (Exception e) {
-            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_FAILURE_MSG, e.getMessage());
+        // delete the metadata profile from DB
+        ValidationOutputData deletedMetadataProfileFromDB = new ExperimentDAOImpl().deleteKruizeLMMetadataProfileEntryByName(metadataProfileName);
+        if (deletedMetadataProfileFromDB.isSuccess()) {
+            // remove in-memory metadata profile
+            MetadataProfileCollection.getInstance().getMetadataProfileCollection().remove(metadataProfileName);
+            LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG);
+        } else if (null != deletedMetadataProfileFromDB.getErrorCode()
+                && HttpServletResponse.SC_NOT_FOUND == deletedMetadataProfileFromDB.getErrorCode()) {
+            throw new NoSuchElementException(deletedMetadataProfileFromDB.getMessage());
+        } else {
+            throw new IllegalStateException(deletedMetadataProfileFromDB.getMessage());
         }
     }
 
@@ -475,7 +485,7 @@ public class MetadataProfileService extends HttpServlet{
      */
     public void sendErrorResponseMessage(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
         if (e != null) {
-            LOGGER.error(e.toString());
+            LOGGER.error(Utils.sanitizeForLog(e.toString()));
             if (errorMsg == null) {
                 errorMsg = e.getMessage();
             }

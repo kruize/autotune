@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -172,22 +173,21 @@ public class CreateExperiment extends HttpServlet {
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
-            if (null == createExperimentAPIObjects) {
+            // a missing body, an empty array or a null entry (e.g. [null]) is a client error
+            if (null == createExperimentAPIObjects || createExperimentAPIObjects.length == 0
+                    || Arrays.stream(createExperimentAPIObjects).anyMatch(Objects::isNull)) {
                 throw new IllegalArgumentException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_DELETE_EXPERIMENT_INPUT);
             }
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
+                // a failure to load the experiment from the DB is propagated to the generic error handler (500)
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
-                    try {
-                        if(rmTable) {
-                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
-                        } else {
-                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
+                    if(rmTable) {
+                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                    } else {
+                        new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
                     }
                 }
 
@@ -224,7 +224,7 @@ public class CreateExperiment extends HttpServlet {
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             // unexpected errors are server errors, the details are logged but not disclosed to the client
-            LOGGER.error("Exception occurred while deleting the experiment: {}", Utils.sanitizeForLog(e.getMessage()), e);
+            LOGGER.error("Exception occurred while deleting the experiment: {}", Utils.sanitizeForLog(e.getMessage()));
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
@@ -246,8 +246,7 @@ public class CreateExperiment extends HttpServlet {
     public void sendErrorResponse(String inputRequestPayload, HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
-            LOGGER.error(e.toString());
-            e.printStackTrace();
+            LOGGER.error(Utils.sanitizeForLog(e.toString()));
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         // check for the input request data to debug issues, if any

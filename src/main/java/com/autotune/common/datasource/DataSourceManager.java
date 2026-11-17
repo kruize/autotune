@@ -29,6 +29,7 @@ import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -151,17 +152,13 @@ public class DataSourceManager {
      * Deletes metadata of the specified data source
      *
      * @param dataSource The metadata associated with the specified data source to be deleted.
+     * @throws DataSourceDoesNotExist if the data source is missing
      */
-    public void deleteMetadataFromDataSource(DataSourceInfo dataSource) {
-
-        try {
-            if (null == dataSource) {
-                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            }
-            dataSourceMetadataOperator.deleteDataSourceMetadata(dataSource);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+    public void deleteMetadataFromDataSource(DataSourceInfo dataSource) throws DataSourceDoesNotExist {
+        if (null == dataSource) {
+            throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
         }
+        dataSourceMetadataOperator.deleteDataSourceMetadata(dataSource);
     }
 
     /**
@@ -204,45 +201,39 @@ public class DataSourceManager {
      * Fetches and deletes DataSourceMetadata of the specified datasource from Database
      *
      * @param dataSourceInfo DataSourceInfo object
+     * @throws DataSourceDoesNotExist if the data source or its metadata entry does not exist
+     * @throws IllegalStateException  if the delete from the database fails
      */
-    public void deleteMetadataFromDBByDataSource(DataSourceInfo dataSourceInfo) {
-        try {
-            if (null == dataSourceInfo) {
-                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            }
-            String dataSourceName = dataSourceInfo.getName();
-            DataSourceMetadataInfo dataSourceMetadataInfo = fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
-            if (null == dataSourceMetadataInfo) {
-                LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName));
-                return;
-            }
-            // delete metadata from DB
-            deleteMetadataFromDB(dataSourceName);
-
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+    public void deleteMetadataFromDBByDataSource(DataSourceInfo dataSourceInfo) throws DataSourceDoesNotExist {
+        if (null == dataSourceInfo) {
+            throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
         }
+        String dataSourceName = dataSourceInfo.getName();
+        DataSourceMetadataInfo dataSourceMetadataInfo = fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
+        if (null == dataSourceMetadataInfo) {
+            LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName));
+            return;
+        }
+        // delete metadata from DB
+        deleteMetadataFromDB(dataSourceName);
     }
 
     /**
      * Deletes DataSourceMetadata entry from Database
      *
      * @param dataSourceName datasource name
+     * @throws DataSourceDoesNotExist if the metadata entry is not found in the database
+     * @throws IllegalStateException  if the delete from the database fails
      */
-    public void deleteMetadataFromDB(String dataSourceName) {
-        ValidationOutputData deletedFromDB = null;
-        try {
-            // add the data source to DB
-            deletedFromDB = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
-            if (deletedFromDB.isSuccess()) {
-                LOGGER.debug("Metadata deleted successfully from the DB.");
-            } else {
-                LOGGER.error("Failed to delete metadata from DB: {}", deletedFromDB.getMessage());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while deleting metadata : {} ", e.getMessage());
+    public void deleteMetadataFromDB(String dataSourceName) throws DataSourceDoesNotExist {
+        ValidationOutputData deletedFromDB = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
+        if (deletedFromDB.isSuccess()) {
+            LOGGER.debug("Metadata deleted successfully from the DB.");
+        } else if (null != deletedFromDB.getErrorCode() && HttpServletResponse.SC_NOT_FOUND == deletedFromDB.getErrorCode()) {
+            throw new DataSourceDoesNotExist(deletedFromDB.getMessage());
+        } else {
+            throw new IllegalStateException(deletedFromDB.getMessage());
         }
-
     }
 
     /**
