@@ -26,12 +26,12 @@ import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +39,8 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for batched {@link ExperimentDAOImpl#addToDBAndFetchFailedResults}.
- * Verifies happy-path single transaction and per-row fallback on duplicate-key failure.
+ * Verifies the happy-path single transaction and the per-row fallback (fresh session per row,
+ * commit only on success, rollback on failure).
  */
 public class ExperimentDAOImplAddResultsBatchTest {
 
@@ -53,6 +54,24 @@ public class ExperimentDAOImplAddResultsBatchTest {
         return entry;
     }
 
+    private static PersistenceException dbError(String message) {
+        return new PersistenceException("could not execute statement", new RuntimeException(message));
+    }
+
+    private static PersistenceException duplicateKey() {
+        return dbError(DBConstants.DB_MESSAGES.DUPLICATE_KEY + " violates unique constraint");
+    }
+
+    /** Session whose beginTransaction() returns tx; tx reports a rollback-able status. */
+    private static Session sessionWith(Transaction tx) {
+        Session session = mock(Session.class);
+        TransactionStatus status = mock(TransactionStatus.class);
+        when(status.canRollback()).thenReturn(true);
+        when(tx.getStatus()).thenReturn(status);
+        when(session.beginTransaction()).thenReturn(tx);
+        return session;
+    }
+
     @Test
     @DisplayName("Happy path persists all rows in a single transaction")
     public void testHappyPathSingleTransaction() {
@@ -62,10 +81,9 @@ public class ExperimentDAOImplAddResultsBatchTest {
         when(sessionFactory.openSession()).thenReturn(session);
         when(session.beginTransaction()).thenReturn(tx);
 
-        List<KruizeResultsEntry> entries = List.of(
-                resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z")),
-                resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"))
-        );
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry second = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        List<KruizeResultsEntry> entries = List.of(first, second);
 
         try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
             hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
@@ -73,12 +91,22 @@ public class ExperimentDAOImplAddResultsBatchTest {
             List<KruizeResultsEntry> failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(entries);
 
             assertTrue(failed.isEmpty());
+            verify(sessionFactory, times(1)).openSession();
             verify(session, times(1)).beginTransaction();
             verify(session, times(2)).persist(any(KruizeResultsEntry.class));
             verify(session, times(1)).flush();
             verify(tx, times(1)).commit();
             verify(tx, never()).rollback();
             verify(session, never()).clear();
+
+            // Rows must be persisted inside the transaction: begin -> persist x2 -> flush -> commit -> close
+            InOrder order = inOrder(session, tx);
+            order.verify(session).beginTransaction();
+            order.verify(session).persist(first);
+            order.verify(session).persist(second);
+            order.verify(session).flush();
+            order.verify(tx).commit();
+            order.verify(session).close();
         }
     }
 
@@ -86,29 +114,20 @@ public class ExperimentDAOImplAddResultsBatchTest {
     @DisplayName("Duplicate on batch flush falls back to per-row commits and reports RESULTS_ALREADY_EXISTS")
     public void testDuplicateFallsBackToPerRow() {
         SessionFactory sessionFactory = mock(SessionFactory.class);
-        Session session = mock(Session.class);
-        Transaction tx = mock(Transaction.class);
-        TransactionStatus txStatus = mock(TransactionStatus.class);
-        when(sessionFactory.openSession()).thenReturn(session);
-        when(session.beginTransaction()).thenReturn(tx);
-        when(tx.getStatus()).thenReturn(txStatus);
-        when(txStatus.canRollback()).thenReturn(true);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction okTx = mock(Transaction.class);
+        Transaction dupTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session okSession = sessionWith(okTx);
+        Session dupSession = sessionWith(dupTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, okSession, dupSession);
 
         KruizeResultsEntry ok = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
         KruizeResultsEntry dup = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
         List<KruizeResultsEntry> entries = List.of(ok, dup);
 
-        AtomicInteger flushCount = new AtomicInteger();
-        doAnswer(invocation -> {
-            int n = flushCount.incrementAndGet();
-            // 1 = batch flush (force fallback); 3 = second per-row flush (duplicate)
-            if (n == 1 || n == 3) {
-                throw new PersistenceException(
-                        "could not execute statement",
-                        new RuntimeException(DBConstants.DB_MESSAGES.DUPLICATE_KEY + " violates unique constraint"));
-            }
-            return null;
-        }).when(session).flush();
+        doThrow(duplicateKey()).when(batchSession).flush();
+        doThrow(duplicateKey()).when(dupSession).flush();
 
         try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
             hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
@@ -122,12 +141,104 @@ public class ExperimentDAOImplAddResultsBatchTest {
                     failed.get(0).getErrorReasons());
             assertNull(ok.getErrorReasons());
 
-            // 1 batch attempt + 2 per-row transactions
-            verify(session, times(3)).beginTransaction();
-            verify(session).clear();
-            verify(tx, atLeastOnce()).rollback();
-            // per-row finally commits for both rows (including the duplicate row's txn finish)
-            verify(tx, times(2)).commit();
+            // 1 batch session + 1 fresh session per row; the failed batch session is not reused
+            verify(sessionFactory, times(3)).openSession();
+            verify(batchTx).rollback();
+            verify(batchTx, never()).commit();
+            verify(batchSession).close();
+
+            // Successful row: begin -> persist(ok) -> flush -> commit, never rolled back
+            InOrder okOrder = inOrder(okSession, okTx);
+            okOrder.verify(okSession).beginTransaction();
+            okOrder.verify(okSession).persist(ok);
+            okOrder.verify(okSession).flush();
+            okOrder.verify(okTx).commit();
+            verify(okTx, never()).rollback();
+            verify(okSession).close();
+
+            // Duplicate row: persisted then rolled back, never committed
+            InOrder dupOrder = inOrder(dupSession, dupTx);
+            dupOrder.verify(dupSession).beginTransaction();
+            dupOrder.verify(dupSession).persist(dup);
+            dupOrder.verify(dupSession).flush();
+            dupOrder.verify(dupTx).rollback();
+            verify(dupTx, never()).commit();
+            verify(dupSession).close();
+        }
+    }
+
+    @Test
+    @DisplayName("A per-row commit failure is reported for that row only and later rows are still saved")
+    public void testPerRowCommitFailureDoesNotAbortLoop() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction firstTx = mock(Transaction.class);
+        Transaction badTx = mock(Transaction.class);
+        Transaction lastTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session firstSession = sessionWith(firstTx);
+        Session badSession = sessionWith(badTx);
+        Session lastSession = sessionWith(lastTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, firstSession, badSession, lastSession);
+
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        KruizeResultsEntry last = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+
+        doThrow(duplicateKey()).when(batchSession).flush();
+        doThrow(new PersistenceException("commit failed")).when(badTx).commit();
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = new ExperimentDAOImpl()
+                    .addToDBAndFetchFailedResults(List.of(first, bad, last));
+
+            assertEquals(List.of(bad), failed);
+            assertEquals(List.of("commit failed"), bad.getErrorReasons());
+            assertNull(first.getErrorReasons());
+            assertNull(last.getErrorReasons());
+
+            verify(firstTx).commit();
+            verify(badTx).rollback();
+            verify(lastSession).persist(last);
+            verify(lastTx).commit();
+            verify(lastTx, never()).rollback();
+        }
+    }
+
+    @Test
+    @DisplayName("Missing partition: row is rolled back, partitions are created, and the row is retried in a new session")
+    public void testMissingPartitionCreatesPartitionsAndRetries() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction firstTryTx = mock(Transaction.class);
+        Transaction retryTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session firstTrySession = sessionWith(firstTryTx);
+        Session retrySession = sessionWith(retryTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, firstTrySession, retrySession);
+
+        KruizeResultsEntry entry = resultsEntry("exp-a", Instant.parse("2024-01-20T00:15:00Z"));
+        PersistenceException noPartition = dbError(DBConstants.DB_MESSAGES.NO_PARTITION_RELATION + " \"kruize_results\" found for row");
+        doThrow(noPartition).when(batchSession).flush();
+        doThrow(noPartition).when(firstTrySession).flush();
+
+        ExperimentDAOImpl dao = spy(new ExperimentDAOImpl());
+        doNothing().when(dao).addPartitions(anyString(), anyString(), anyString(), anyInt(), anyString());
+
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+
+            List<KruizeResultsEntry> failed = dao.addToDBAndFetchFailedResults(List.of(entry));
+
+            assertTrue(failed.isEmpty());
+            assertNull(entry.getErrorReasons());
+            verify(firstTryTx).rollback();
+            verify(firstTryTx, never()).commit();
+            verify(dao, atLeastOnce()).addPartitions(anyString(), anyString(), anyString(), anyInt(), anyString());
+            verify(retrySession).persist(entry);
+            verify(retryTx).commit();
         }
     }
 }
