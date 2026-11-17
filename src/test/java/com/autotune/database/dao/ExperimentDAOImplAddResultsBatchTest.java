@@ -195,11 +195,14 @@ public class ExperimentDAOImplAddResultsBatchTest {
         Session firstSession = sessionWith(firstTx);
         Session badSession = sessionWith(badTx);
         Session lastSession = sessionWith(lastTx);
-        when(sessionFactory.openSession()).thenReturn(batchSession, firstSession, badSession, lastSession);
 
         KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
         KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
         KruizeResultsEntry last = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        // bad's commit throws after flush, so one lookup runs (row not stored); every session is distinct
+        Session badLookup = lookupSessionFor(bad, List.of());
+        when(sessionFactory.openSession()).thenReturn(batchSession, firstSession, badSession, badLookup, lastSession)
+                .thenThrow(new IllegalStateException("unexpected extra session"));
 
         doThrow(duplicateKey()).when(batchSession).flush();
         doThrow(new PersistenceException("commit failed")).when(badTx).commit();
@@ -220,6 +223,17 @@ public class ExperimentDAOImplAddResultsBatchTest {
             verify(lastSession).persist(last);
             verify(lastTx).commit();
             verify(lastTx, never()).rollback();
+
+            // The lookup session is read-only and closed; the next row gets its own fresh session
+            verify(sessionFactory, times(5)).openSession();
+            verify(badLookup, never()).beginTransaction();
+            verify(badLookup, never()).persist(any());
+            InOrder fresh = inOrder(badLookup, lastSession, lastTx);
+            fresh.verify(badLookup).close();
+            fresh.verify(lastSession).beginTransaction();
+            fresh.verify(lastSession).persist(last);
+            fresh.verify(lastTx).commit();
+            fresh.verify(lastSession).close();
         }
     }
 
