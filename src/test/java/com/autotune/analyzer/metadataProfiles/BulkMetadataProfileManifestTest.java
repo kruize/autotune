@@ -18,6 +18,7 @@ package com.autotune.analyzer.metadataProfiles;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +41,16 @@ class BulkMetadataProfileManifestTest {
     private static final Path NON_BULK_MANIFEST =
             Paths.get("manifests/autotune/metadata-profiles/cluster_metadata_local_monitoring.json");
 
+    /**
+     * Reads a shipped manifest. The Docker image build runs "mvn package" in a stage that only has pom.xml and src/,
+     * so the manifests are not available there. The test is skipped in that case and still runs from a full
+     * checkout (local builds and CI).
+     */
+    private static String readManifest(Path manifest) throws java.io.IOException {
+        Assumptions.assumeTrue(Files.exists(manifest), manifest + " not available in this build environment");
+        return Files.readString(manifest);
+    }
+
     private static String queryOf(JSONObject queryVariable) {
         return queryVariable.getJSONArray("aggregation_functions").getJSONObject(0).getString("query");
     }
@@ -47,7 +58,7 @@ class BulkMetadataProfileManifestTest {
     @Test
     @DisplayName("workloadsWithPodLabelFilter query contains $UNSUPPORTED_WORKLOAD_TYPES$")
     void labelAwareWorkloadQueryHasUnsupportedTypesPlaceholder() throws Exception {
-        JSONArray variables = new JSONObject(Files.readString(MANIFEST)).getJSONArray("query_variables");
+        JSONArray variables = new JSONObject(readManifest(MANIFEST)).getJSONArray("query_variables");
         boolean found = false;
         for (int i = 0; i < variables.length(); i++) {
             JSONObject variable = variables.getJSONObject(i);
@@ -63,7 +74,7 @@ class BulkMetadataProfileManifestTest {
     @Test
     @DisplayName("All workload and container queries contain $UNSUPPORTED_WORKLOAD_TYPES$")
     void allWorkloadAndContainerQueriesHaveUnsupportedTypesPlaceholder() throws Exception {
-        JSONArray variables = new JSONObject(Files.readString(MANIFEST)).getJSONArray("query_variables");
+        JSONArray variables = new JSONObject(readManifest(MANIFEST)).getJSONArray("query_variables");
         for (int i = 0; i < variables.length(); i++) {
             JSONObject variable = variables.getJSONObject(i);
             String name = variable.getString("name");
@@ -77,7 +88,7 @@ class BulkMetadataProfileManifestTest {
     @Test
     @DisplayName("Non-bulk profile: workload and container queries contain $UNSUPPORTED_WORKLOAD_TYPES$")
     void nonBulkProfileQueriesHaveUnsupportedTypesPlaceholder() throws Exception {
-        JSONArray variables = new JSONObject(Files.readString(NON_BULK_MANIFEST)).getJSONArray("query_variables");
+        JSONArray variables = new JSONObject(readManifest(NON_BULK_MANIFEST)).getJSONArray("query_variables");
         int checked = 0;
         for (int i = 0; i < variables.length(); i++) {
             JSONObject variable = variables.getJSONObject(i);
