@@ -16,6 +16,7 @@
 package com.autotune.analyzer.metadataProfiles;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assumptions;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,6 +58,53 @@ class BulkMetadataProfileManifestTest {
         return queryVariable.getJSONArray("aggregation_functions").getJSONObject(0).getString("query");
     }
 
+    /** Matches the label selector of the metric that carries workload_type, i.e. the part the filter must reach. */
+    private static final Pattern WORKLOAD_OWNER_SELECTOR =
+            Pattern.compile("namespace_workload_pod:kube_pod_owner:relabel\\{([^}]*)\\}");
+
+    /**
+     * Asserts that every {@code kube_pod_owner:relabel{...}} selector in the query contains the placeholder, and that
+     * after substitution the selector really holds a {@code workload_type!~} matcher for each unsupported type.
+     * A placeholder elsewhere in the query (comment, unrelated text) does not satisfy this.
+     */
+    private static void assertPlaceholderInWorkloadTypeSelector(String name, String query) {
+        Matcher matcher = WORKLOAD_OWNER_SELECTOR.matcher(query);
+        int selectors = 0;
+        while (matcher.find()) {
+            selectors++;
+            String selector = matcher.group(1);
+            assertTrue(selector.contains(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE),
+                    name + ": " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE
+                            + " must be inside the kube_pod_owner:relabel{...} selector, found: {" + selector + "}");
+
+            String effective = selector.replace(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE,
+                    AnalyzerConstants.getUnsupportedWorkloadTypesFilter());
+            for (AnalyzerConstants.K8S_OBJECT_TYPES type : AnalyzerConstants.UNSUPPORTED_K8S_OBJECT_TYPES) {
+                assertTrue(effective.contains("workload_type!~\"(?i)"
+                                + Utils.getAppropriateK8sObjectTypeString(type) + "\""),
+                        name + ": effective selector must exclude " + type + ", found: {" + effective + "}");
+            }
+        }
+        assertTrue(selectors > 0, name + ": no kube_pod_owner:relabel{...} selector found in query");
+    }
+
+    @Test
+    @DisplayName("Selector check accepts the placeholder inside the selector and rejects it elsewhere")
+    void selectorCheckRejectsPlaceholderOutsideSelector() {
+        String placeholder = AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE;
+        assertDoesNotThrow(() -> assertPlaceholderInWorkloadTypeSelector("ok",
+                "sum by (workload) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" "
+                        + placeholder + "}[5m]))"));
+        // placeholder only in unrelated text, selector has no filter
+        assertThrows(AssertionError.class, () -> assertPlaceholderInWorkloadTypeSelector("bad",
+                "sum by (workload) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[5m])) # "
+                        + placeholder));
+        // placeholder in a different metric's selector, owner selector unfiltered
+        assertThrows(AssertionError.class, () -> assertPlaceholderInWorkloadTypeSelector("bad",
+                "kube_pod_container_info{container!=\"\" " + placeholder
+                        + "} * on (pod) namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}"));
+    }
+
     @Test
     @DisplayName("workloadsWithPodLabelFilter query contains $UNSUPPORTED_WORKLOAD_TYPES$")
     void labelAwareWorkloadQueryHasUnsupportedTypesPlaceholder() throws Exception {
@@ -64,8 +114,8 @@ class BulkMetadataProfileManifestTest {
             JSONObject variable = variables.getJSONObject(i);
             if (AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER.equals(variable.getString("name"))) {
                 found = true;
-                assertTrue(queryOf(variable).contains(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE),
-                        "Label-aware workload query must contain " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE);
+                assertPlaceholderInWorkloadTypeSelector(AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER,
+                        queryOf(variable));
             }
         }
         assertTrue(found, AnalyzerConstants.WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER + " not found in manifest");
@@ -79,8 +129,7 @@ class BulkMetadataProfileManifestTest {
             JSONObject variable = variables.getJSONObject(i);
             String name = variable.getString("name");
             if (name.startsWith("workloads") || name.startsWith("containers")) {
-                assertTrue(queryOf(variable).contains(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE),
-                        name + " must contain " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE);
+                assertPlaceholderInWorkloadTypeSelector(name, queryOf(variable));
             }
         }
     }
@@ -95,8 +144,7 @@ class BulkMetadataProfileManifestTest {
             String name = variable.getString("name");
             if (name.startsWith("workloads") || name.startsWith("containers")) {
                 checked++;
-                assertTrue(queryOf(variable).contains(AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE),
-                        name + " must contain " + AnalyzerConstants.UNSUPPORTED_WORKLOAD_TYPES_VARIABLE);
+                assertPlaceholderInWorkloadTypeSelector(name, queryOf(variable));
             }
         }
         assertEquals(2, checked, "expected a workload and a container query");
