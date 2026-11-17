@@ -50,9 +50,11 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class VpaAutoscalerImpl extends AutoscalerImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(VpaAutoscalerImpl.class);
@@ -203,6 +205,20 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap(), namespace, kruizeObject);
                     if (containerRecommendations.isEmpty()){
                         LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT, expName);
+                        // clear any stale recommendation so the VPA does not keep exposing the previous one
+                        VerticalPodAutoscaler vpaObject = getVpaIsPresent(expName);
+                        if (null != vpaObject && null != vpaObject.getStatus() && null != vpaObject.getStatus().getRecommendation()) {
+                            vpaObject.getStatus().setRecommendation(null);
+
+                            NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
+                            client.v1().verticalpodautoscalers()
+                                    .inNamespace(vpaObject.getMetadata().getNamespace())
+                                    .withName(vpaObject.getMetadata().getName())
+                                    .patchStatus(vpaObject);
+
+                            LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.VPA_PATCHED,
+                                    vpaObject.getMetadata().getName()));
+                        }
                     } else {
                         RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
                         recommendedPodResources.setContainerRecommendations(containerRecommendations);
@@ -256,7 +272,10 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
             if (null == recommendationData) {
                 LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT);
             } else {
-                for (MappedRecommendationForTimestamp value : recommendationData.values()) {
+                // process the newest timestamp first so older recommendations are never preferred over it
+                Map<Timestamp, MappedRecommendationForTimestamp> newestFirst = new TreeMap<>(Collections.reverseOrder());
+                newestFirst.putAll(recommendationData);
+                for (MappedRecommendationForTimestamp value : newestFirst.values()) {
                     /*
                      * The short-term performance recommendations is currently the default for VPA and is hardcoded.
                      * TODO:// Implement functionality to choose the desired term and model
@@ -279,8 +298,9 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     }
 
                     if (null == termRecommendations) {
+                        // do not fall back to older timestamps, as that would apply stale recommendations
                         LOGGER.warn("Recommendations not present for term {} and container {}, skipping", user_selected_term, containerName);
-                        continue;
+                        break;
                     }
 
                     // vpa changes for models
@@ -288,13 +308,21 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     Config recommendationsConfig;
 
                     if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(user_model)) {
+                        if (null == termRecommendations.getCostRecommendations()) {
+                            LOGGER.warn("Cost recommendations not present for container {}, skipping", containerName);
+                            break;
+                        }
                         recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
                     } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(user_model)) {
+                        if (null == termRecommendations.getPerformanceRecommendations()) {
+                            LOGGER.warn("Performance recommendations not present for container {}, skipping", containerName);
+                            break;
+                        }
                         recommendationsConfig = termRecommendations.getPerformanceRecommendations().getConfig();
                     } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(user_model)) {
                         if (null == termRecommendations.getStabilityRecommendations()) {
                             LOGGER.warn("Stability recommendations not present for container {}, skipping", containerName);
-                            continue;
+                            break;
                         }
                         recommendationsConfig = termRecommendations.getStabilityRecommendations().getConfig();
                     } else {
