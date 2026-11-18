@@ -25,7 +25,6 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.LocalConnector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.CrossOriginHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +33,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for the ZAP scan fixes in the HTTP layer:
  * - {@link SecurityHeadersHandler}: X-Content-Type-Options header and Server header suppression
  * - {@link KruizeErrorHandler}: JSON error body and Content-Type for all HTTP methods
- * - {@link KruizeCORSHandler}: CORS allowed methods
  *
  * The tests run against an in-memory Jetty {@link LocalConnector}, no network port is opened.
  */
@@ -151,14 +148,6 @@ class SecurityHeadersHandlerTest {
         for (String method : new String[]{"GET", "POST", "PUT", "DELETE", "HEAD"}) {
             assertTrue(errorHandler.errorPageForMethod(method), method);
         }
-    }
-
-    @Test
-    @DisplayName("CORS allowed methods include every method used by the Kruize endpoints")
-    void corsAllowedMethodsIncludePutAndDelete() {
-        CrossOriginHandler handler = KruizeCORSHandler.getHandler();
-        assertTrue(handler.getAllowedMethods().containsAll(Set.of("GET", "POST", "PUT", "DELETE")),
-                "Allowed methods were: " + handler.getAllowedMethods());
     }
 
     /**

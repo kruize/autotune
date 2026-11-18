@@ -85,14 +85,26 @@ class MetricProfileServiceTest {
             + "\"objective_function\":{\"function_type\":\"source\"},\"function_variables\":[";
 
     @Test
-    @DisplayName("Missing aggregation_functions (would be a NullPointerException) returns HTTP 400")
-    void doPostMissingAggregationFunctionsReturnsBadRequest() throws Exception {
+    @DisplayName("Missing mandatory fields in function_variables or aggregation_functions return HTTP 400")
+    void doPostMissingFunctionVariableFieldsReturnsBadRequest() throws Exception {
+        // aggregation_functions entry without a query
         givenRequestBody(VALID_PROFILE_PREFIX
-                + "{\"name\":\"cpuRequest\",\"datasource\":\"prometheus\",\"value_type\":\"double\"}]}}");
-
+                + "{\"name\":\"cpuRequest\",\"datasource\":\"prometheus\",\"value_type\":\"double\","
+                + "\"aggregation_functions\":[{\"function\":\"avg\"}]}]}}");
         service.doPost(request, response);
 
-        verify(response).sendError(eq(HttpServletResponse.SC_BAD_REQUEST), startsWith("Validation failed: "));
+        // aggregation_functions entry without a function
+        givenRequestBody(VALID_PROFILE_PREFIX
+                + "{\"name\":\"cpuRequest\",\"datasource\":\"prometheus\",\"value_type\":\"double\","
+                + "\"aggregation_functions\":[{\"query\":\"sum(container_cpu_usage)\"}]}]}}");
+        service.doPost(request, response);
+
+        // function variable without a datasource
+        givenRequestBody(VALID_PROFILE_PREFIX
+                + "{\"name\":\"cpuRequest\",\"value_type\":\"double\",\"query\":\"sum(container_cpu_usage)\"}]}}");
+        service.doPost(request, response);
+
+        verify(response, times(3)).sendError(eq(HttpServletResponse.SC_BAD_REQUEST), startsWith("Validation failed: "));
         verify(response, never()).sendError(eq(HttpServletResponse.SC_INTERNAL_SERVER_ERROR), anyString());
     }
 
