@@ -202,12 +202,34 @@ Here are the test scenarios:
 
 - List recommendations for a valid namespace experiment
 
-
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization metric profile using the [createMetricProfile API](/design/MetricProfileAPI.md)
 - Creates cluster metadata profile using the [createMetadataProfile API](/design/MetadataProfileAPI.md)
 - Runs the above tests using pytest
+
+### **Resource scope settings tests**
+
+Tests for `recommendation_settings.resource_scope_settings` in the createExperiment API.
+
+`test_resource_scope_settings_create.py` (`sanity` and `negative`) has these scenarios:
+
+- Accept no scope, cpu only, memory only, cpu and memory, `all`, `all` mixed with other values, `idle` for cpu, mixed case and the `optimized` alias
+- Accept a scope on a namespace experiment
+- Reject an unknown model, an empty `resource_scope_settings` object, an empty cpu or memory list
+- Reject an unknown or blank cpu or memory scope
+- Reject `idle` for memory, with or without a valid cpu scope
+- Reject control characters in a scope value with a 400 and a readable message
+
+`test_resource_scope_filtering.py` (`extended`) has these scenarios. The workload state is live data, so each test compares a scoped experiment with an unscoped (`all`/`all`) reference experiment, and skips if the live data has nothing to compare:
+
+- Container: memory `under_provisioned` only, cpu `over_provisioned` only, both over, both under, both optimised, multiple values, `all`/`all`
+- Namespace: memory `under_provisioned` only, cpu `over_provisioned` only
+- Cost and performance without a scope still return everything
+- A scope that removes every model returns no data and the not enough data notification
+- The scope still applies when recommendations are generated again
+
+The `idle` filtering needs a controlled workload state and is covered by the JUnit tests.
 
 ### **Bulk API tests**
 This test script validates the functionality of a bulk POST [API](/design/MonitoringModeAPI.md) and associated GET job status API for a Kubernetes resource optimization service, focusing on the creation and monitoring of job IDs.
