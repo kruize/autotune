@@ -18,9 +18,7 @@ package com.autotune.analyzer.workerimpl;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
@@ -748,20 +746,13 @@ public class BulkJobManager implements Runnable {
         RecommendationSettings rs = new RecommendationSettings();
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
 
-        // Pass through model_settings and term_settings from bulk payload if provided
+        // Pass through model_settings and term_settings from bulk payload if provided;
+        // when omitted they stay unset so the engine's existing defaults apply
         if (bulkInput.getModel_settings() != null) {
             rs.setModelSettings(bulkInput.getModel_settings());
-        } else {
-            ModelSettings modelSettings = new ModelSettings();
-            modelSettings.setModels(Arrays.asList(KruizeConstants.JSONKeys.STABILITY));
-            rs.setModelSettings(modelSettings);
         }
         if (bulkInput.getTerm_settings() != null) {
             rs.setTermSettings(bulkInput.getTerm_settings());
-        } else {
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList(KruizeConstants.JSONKeys.FLEX));
-            rs.setTermSettings(termSettings);
         }
 
         createExperimentAPIObject.setRecommendationSettings(rs);
@@ -816,17 +807,9 @@ public class BulkJobManager implements Runnable {
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
         if (this.bulkInput.getModel_settings() != null) {
             rs.setModelSettings(this.bulkInput.getModel_settings());
-        } else {
-            ModelSettings modelSettings = new ModelSettings();
-            modelSettings.setModels(Arrays.asList(KruizeConstants.JSONKeys.STABILITY));
-            rs.setModelSettings(modelSettings);
         }
         if (this.bulkInput.getTerm_settings() != null) {
             rs.setTermSettings(this.bulkInput.getTerm_settings());
-        } else {
-            TermSettings termSettings = new TermSettings();
-            termSettings.setTerms(Arrays.asList(KruizeConstants.JSONKeys.FLEX));
-            rs.setTermSettings(termSettings);
         }
         createExperimentAPIObject.setRecommendationSettings(rs);
 
