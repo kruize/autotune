@@ -62,8 +62,11 @@ public class MappedRecommendationForTimestamp {
     }
 
     public void setShortTermRecommendations(TermRecommendations shortTermRecommendations) {
-        if (null != shortTermRecommendations && null != recommendationForTermHashMap)
+        if (null != shortTermRecommendations) {
+            if (null == this.recommendationForTermHashMap)
+                this.recommendationForTermHashMap = new HashMap<>();
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.SHORT_TERM, shortTermRecommendations);
+        }
     }
 
     public TermRecommendations getMediumTermRecommendations() {
@@ -73,8 +76,11 @@ public class MappedRecommendationForTimestamp {
     }
 
     public void setMediumTermRecommendations(TermRecommendations mediumTermRecommendations) {
-        if (null != mediumTermRecommendations && null != recommendationForTermHashMap)
+        if (null != mediumTermRecommendations) {
+            if (null == this.recommendationForTermHashMap)
+                this.recommendationForTermHashMap = new HashMap<>();
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.MEDIUM_TERM, mediumTermRecommendations);
+        }
     }
 
     public TermRecommendations getLongTermRecommendations() {
@@ -84,8 +90,25 @@ public class MappedRecommendationForTimestamp {
     }
 
     public void setLongTermRecommendations(TermRecommendations longTermRecommendations) {
-        if (null != longTermRecommendations && null != recommendationForTermHashMap)
+        if (null != longTermRecommendations) {
+            if (null == this.recommendationForTermHashMap)
+                this.recommendationForTermHashMap = new HashMap<>();
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.LONG_TERM, longTermRecommendations);
+        }
+    }
+
+    public TermRecommendations getFlexTermRecommendations() {
+        if (null != this.recommendationForTermHashMap && this.recommendationForTermHashMap.containsKey(KruizeConstants.JSONKeys.FLEX_TERM))
+            return this.recommendationForTermHashMap.get(KruizeConstants.JSONKeys.FLEX_TERM);
+        return null;
+    }
+
+    public void setFlexTermRecommendations(TermRecommendations flexTermRecommendations) {
+        if (null != flexTermRecommendations) {
+            if (null == this.recommendationForTermHashMap)
+                this.recommendationForTermHashMap = new HashMap<>();
+            this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.FLEX_TERM, flexTermRecommendations);
+        }
     }
 
     public HashMap<String, TermRecommendations> getRecommendationForTermHashMap() {
