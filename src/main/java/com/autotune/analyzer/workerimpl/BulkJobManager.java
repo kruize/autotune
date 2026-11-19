@@ -24,7 +24,6 @@ import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.bulk.BulkServiceValidation;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
@@ -747,13 +746,12 @@ public class BulkJobManager implements Runnable {
         RecommendationSettings rs = new RecommendationSettings();
         rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
 
-        // Pass through model_settings and term_settings from bulk payload if provided;
-        // when omitted they stay unset so the engine's existing defaults apply
+        // Pass through model_settings and term_settings from bulk payload if provided
         if (bulkInput.getModel_settings() != null) {
             rs.setModelSettings(bulkInput.getModel_settings());
         }
         if (bulkInput.getTerm_settings() != null) {
-            rs.setTermSettings(BulkServiceValidation.normalizeTermSettings(bulkInput.getTerm_settings()));
+            rs.setTermSettings(bulkInput.getTerm_settings());
         }
 
         createExperimentAPIObject.setRecommendationSettings(rs);
@@ -810,7 +808,7 @@ public class BulkJobManager implements Runnable {
             rs.setModelSettings(this.bulkInput.getModel_settings());
         }
         if (this.bulkInput.getTerm_settings() != null) {
-            rs.setTermSettings(BulkServiceValidation.normalizeTermSettings(this.bulkInput.getTerm_settings()));
+            rs.setTermSettings(this.bulkInput.getTerm_settings());
         }
         createExperimentAPIObject.setRecommendationSettings(rs);
 
