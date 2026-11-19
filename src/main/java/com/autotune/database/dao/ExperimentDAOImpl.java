@@ -61,6 +61,7 @@ import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
+import static com.autotune.database.helper.DBConstants.DB_MESSAGES.UNABLE_TO_ACQUIRE_CONNECTION;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
@@ -73,16 +74,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * Cross-replica serialization is done in {@link #addPartitions} with a PostgreSQL advisory lock.
      */
     private static final Object PARTITION_CREATION_LOCK = new Object();
-    /** Transaction-scoped advisory lock key for partition DDL (arbitrary constant, ASCII "KRUIZE"). */
-    private static final long PARTITION_DDL_ADVISORY_LOCK_KEY = 0x4B5255495A45L;
-    /** Bounds the wait for the partition DDL advisory lock (and the DDL's own locks) in addPartitions. */
-    private static final String PARTITION_DDL_LOCK_TIMEOUT = "30s";
-    private static final int MAX_CAUSE_DEPTH = 16;
-    private static final String SQLSTATE_LOCK_NOT_AVAILABLE = "55P03";
-    /** Client-facing reason when an exception has no message; the class and stack trace go to the server log. */
-    private static final String GENERIC_STORE_FAILURE = "Failed to store result";
-    private static final String SQLSTATE_UNIQUE_VIOLATION = "23505";
-    private static final String UNABLE_TO_ACQUIRE_CONNECTION = "Unable to acquire JDBC Connection";
 
     @Override
     public synchronized ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
@@ -221,10 +212,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             // A lock timeout (SQLState 55P03) throws here and is handled like any other DDL failure below.
             session.doWork(connection -> {
                 try (Statement timeout = connection.createStatement()) {
-                    timeout.execute("SET LOCAL lock_timeout = '" + PARTITION_DDL_LOCK_TIMEOUT + "'");
+                    timeout.execute("SET LOCAL lock_timeout = '" + DBConstants.PARTITION_DDL.LOCK_TIMEOUT + "'");
                 }
                 try (PreparedStatement lock = connection.prepareStatement("SELECT pg_advisory_xact_lock(?)")) {
-                    lock.setLong(1, PARTITION_DDL_ADVISORY_LOCK_KEY);
+                    lock.setLong(1, DBConstants.PARTITION_DDL.ADVISORY_LOCK_KEY);
                     lock.execute();
                 }
             });
@@ -259,8 +250,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             // Still swallowed (CreatePartition and ExperimentDBService rely on that); a lock timeout is named
             // explicitly because the row retry that follows only reports "no partition of relation".
-            if (hasSqlState(e, SQLSTATE_LOCK_NOT_AVAILABLE)) {
-                LOGGER.error("Partition DDL lock timeout after {} for {} {}-{}: {}", PARTITION_DDL_LOCK_TIMEOUT,
+            if (hasSqlState(e, DBConstants.SQL_STATES.LOCK_NOT_AVAILABLE)) {
+                LOGGER.error("Partition DDL lock timeout after {} for {} {}-{}: {}", DBConstants.PARTITION_DDL.LOCK_TIMEOUT,
                         tableName, year, month, e.getMessage());
             } else {
                 LOGGER.error("Exception occurred while adding the partition: {}", e.getMessage());
@@ -588,14 +579,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String message = e.getMessage();
         if (null == message || message.isBlank()) {
             LOGGER.error("Results insert failed with {} and no message", e.getClass().getName(), e);
-            return GENERIC_STORE_FAILURE;
+            return AnalyzerErrorConstants.APIErrors.updateResultsAPI.GENERIC_STORE_FAILURE;
         }
         return message;
     }
 
     private static boolean hasSqlState(Throwable e, String sqlState) {
         int depth = 0;
-        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+        for (Throwable t = e; null != t && depth++ < DBConstants.DB_LIMITS.MAX_CAUSE_DEPTH; t = t.getCause()) {
             if ((t instanceof SQLException sqlException && sqlState.equals(sqlException.getSQLState()))
                     || (t instanceof JDBCException jdbcException && sqlState.equals(jdbcException.getSQLState()))) {
                 return true;
@@ -611,12 +602,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      */
     private static boolean isDuplicate(Throwable e) {
         int depth = 0;
-        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+        for (Throwable t = e; null != t && depth++ < DBConstants.DB_LIMITS.MAX_CAUSE_DEPTH; t = t.getCause()) {
             if (t instanceof EntityExistsException || t instanceof NonUniqueObjectException
                     || t instanceof PersistentObjectException) {
                 return true;
             }
-            if (t instanceof SQLException sqlException && SQLSTATE_UNIQUE_VIOLATION.equals(sqlException.getSQLState())) {
+            if (t instanceof SQLException sqlException && DBConstants.SQL_STATES.UNIQUE_VIOLATION.equals(sqlException.getSQLState())) {
                 return true;
             }
             String message = t.getMessage();
@@ -630,7 +621,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /** DB unreachable or refusing connections, as opposed to a problem with one row. */
     private static boolean isConnectionFailure(Throwable e) {
         int depth = 0;
-        for (Throwable t = e; null != t && depth++ < MAX_CAUSE_DEPTH; t = t.getCause()) {
+        for (Throwable t = e; null != t && depth++ < DBConstants.DB_LIMITS.MAX_CAUSE_DEPTH; t = t.getCause()) {
             if (t instanceof JDBCConnectionException || t instanceof SQLTransientConnectionException
                     || t instanceof SQLNonTransientConnectionException) {
                 return true;

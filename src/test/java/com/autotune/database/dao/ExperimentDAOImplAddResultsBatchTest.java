@@ -688,7 +688,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
             order.verify(session).beginTransaction();
             order.verify(statement).execute("SET LOCAL lock_timeout = '30s'");
             order.verify(connection).prepareStatement("SELECT pg_advisory_xact_lock(?)");
-            order.verify(lock).setLong(1, 0x4B5255495A45L);   // PARTITION_DDL_ADVISORY_LOCK_KEY
+            order.verify(lock).setLong(1, 0x4B5255495A45L);   // DBConstants.PARTITION_DDL.ADVISORY_LOCK_KEY
             order.verify(lock).execute();
             order.verify(ddl).executeUpdate();
             order.verify(tx).commit();
