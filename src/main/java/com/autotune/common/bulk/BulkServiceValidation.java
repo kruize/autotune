@@ -68,7 +68,8 @@ public class BulkServiceValidation {
     private static final List<String> VALID_TERMS = Arrays.asList(
             KruizeConstants.JSONKeys.SHORT,
             KruizeConstants.JSONKeys.MEDIUM,
-            KruizeConstants.JSONKeys.LONG
+            KruizeConstants.JSONKeys.LONG,
+            KruizeConstants.JSONKeys.FLEX
     );
 
     /**
