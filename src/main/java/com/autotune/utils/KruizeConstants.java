@@ -319,6 +319,7 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String RESOURCE_SCOPE_SETTINGS = "resource_scope_settings";
         public static final String MEMORY_PERCENTILE = "memory_percentile";
         public static final String CPU_PERCENTILE = "cpu_percentile";
         public static final String ACCELERATOR_PERCENTILE = "accelerator_percentile";
