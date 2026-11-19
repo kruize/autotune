@@ -50,7 +50,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTransientConnectionException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -204,49 +203,58 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) {
-        Transaction tx;
+        Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            tx = session.beginTransaction();
-            // Serialize partition DDL across all Kruize replicas; released automatically at commit/rollback.
-            // Concurrent "CREATE TABLE IF NOT EXISTS ... PARTITION OF" is not race-safe in PostgreSQL.
-            // A lock timeout (SQLState 55P03) throws here and is handled like any other DDL failure below.
-            session.doWork(connection -> {
-                try (Statement timeout = connection.createStatement()) {
-                    timeout.execute("SET LOCAL lock_timeout = '" + DBConstants.PARTITION_DDL.LOCK_TIMEOUT + "'");
-                }
-                try (PreparedStatement lock = connection.prepareStatement("SELECT pg_advisory_xact_lock(?)")) {
-                    lock.setLong(1, DBConstants.PARTITION_DDL.ADVISORY_LOCK_KEY);
-                    lock.execute();
-                }
-            });
-            // Create a YearMonth object
-            YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
+            try {
+                tx = session.beginTransaction();
+                // Serialize partition DDL across all Kruize replicas; released automatically at commit/rollback.
+                // Concurrent "CREATE TABLE IF NOT EXISTS ... PARTITION OF" is not race-safe in PostgreSQL.
+                // A lock timeout (SQLState 55P03) throws here and is handled like any other DDL failure below.
+                session.doWork(connection -> {
+                    // set_config(..., true) is SET LOCAL with a bind parameter (SET itself cannot take one).
+                    try (PreparedStatement timeout = connection.prepareStatement("SELECT set_config('lock_timeout', ?, true)")) {
+                        timeout.setString(1, DBConstants.PARTITION_DDL.LOCK_TIMEOUT);
+                        timeout.execute();
+                    }
+                    try (PreparedStatement lock = connection.prepareStatement("SELECT pg_advisory_xact_lock(?)")) {
+                        lock.setLong(1, DBConstants.PARTITION_DDL.ADVISORY_LOCK_KEY);
+                        lock.execute();
+                    }
+                });
+                // Create a YearMonth object
+                YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month));
 
-            // check the partition type and create corresponding query
-            if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
-                // Get the last day of the month
-                int lastDayOfMonth = yearMonth.lengthOfMonth();
-                IntStream.range(dayOfTheMonth, lastDayOfMonth + 1).forEach(i -> {
-                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                // check the partition type and create corresponding query
+                if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_MONTH)) {
+                    // Get the last day of the month
+                    int lastDayOfMonth = yearMonth.lengthOfMonth();
+                    IntStream.range(dayOfTheMonth, lastDayOfMonth + 1).forEach(i -> {
+                        String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                                year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                        session.createNativeQuery(daterange).executeUpdate();
+                    });
+                } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
+                    IntStream.range(1, 16).forEach(i -> {
+                        String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
+                                year, month, String.format("%02d", i), year, month, String.format("%02d", i));
+                        session.createNativeQuery(daterange).executeUpdate();
+                    });
+                } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {  //ROS not calling this condition
+                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, dayOfTheMonth, tableName,
+                            year, month, dayOfTheMonth, year, month, dayOfTheMonth);
                     session.createNativeQuery(daterange).executeUpdate();
-                });
-            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_15_DAYS)) {
-                IntStream.range(1, 16).forEach(i -> {
-                    String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", i), tableName,
-                            year, month, String.format("%02d", i), year, month, String.format("%02d", i));
-                    session.createNativeQuery(daterange).executeUpdate();
-                });
-            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {  //ROS not calling this condition
-                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, dayOfTheMonth, tableName,
-                        year, month, dayOfTheMonth, year, month, dayOfTheMonth);
-                session.createNativeQuery(daterange).executeUpdate();
-            } else {
-                LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
-                throw new Exception(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                } else {
+                    LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                    throw new Exception(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
+                }
+
+                tx.commit();
+            } catch (Exception ddlException) {
+                // Roll back while the session is still open, so the advisory lock is released now
+                // rather than when the connection is cleaned up on close / pool check-in.
+                rollbackQuietly(tx);
+                throw ddlException;
             }
-
-            tx.commit();
         } catch (Exception e) {
             // Still swallowed (CreatePartition and ExperimentDBService rely on that); a lock timeout is named
             // explicitly because the row retry that follows only reports "no partition of relation".
@@ -389,38 +397,49 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         List<KruizeResultsEntry> failedResultsEntries = new ArrayList<>();
         for (int i = 0; i < kruizeResultsEntries.size(); i++) {
             KruizeResultsEntry entry = kruizeResultsEntries.get(i);
-            Exception failure = persistSingleResult(entry);
-            if (null != failure && isMissingPartition(failure)) {
-                LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
-                synchronized (PARTITION_CREATION_LOCK) {
-                    createPartitions(entry);
+            try {
+                Exception failure = persistSingleResult(entry);
+                if (null != failure && isMissingPartition(failure)) {
+                    LOGGER.debug(DBConstants.DB_MESSAGES.CREATE_PARTITION_RETRY);
+                    synchronized (PARTITION_CREATION_LOCK) {
+                        createPartitions(entry);
+                    }
+                    failure = persistSingleResult(entry);
                 }
-                failure = persistSingleResult(entry);
-            }
-            if (null == failure) {
-                continue;
-            }
-            if (isConnectionFailure(failure)) {
-                // DB went away mid-fallback: fail this row and the rest instead of retrying each one.
-                LOGGER.error("Per-row insert lost the DB connection, failing remaining rows: {}", failure.getMessage());
-                if (batchAtCommit) {
-                    LOGGER.error("Batch commit outcome unknown for {} remaining row(s) from {} {}; they are reported failed, "
-                                    + "and a retry is safe (stored rows return RESULTS_ALREADY_EXISTS)",
-                            kruizeResultsEntries.size() - i, entry.getExperiment_name(), entry.getInterval_end_time());
+                if (null == failure) {
+                    continue;
                 }
-                String reason = errorMessage(failure);
-                for (KruizeResultsEntry remaining : kruizeResultsEntries.subList(i, kruizeResultsEntries.size())) {
-                    remaining.setErrorReasons(List.of(reason));
-                    failedResultsEntries.add(remaining);
+                if (isConnectionFailure(failure)) {
+                    // DB went away mid-fallback: fail this row and the rest instead of retrying each one.
+                    LOGGER.error("Per-row insert lost the DB connection, failing remaining rows: {}", failure.getMessage());
+                    if (batchAtCommit) {
+                        LOGGER.error("Batch commit outcome unknown for {} remaining row(s) from {} {}; they are reported failed, "
+                                        + "and a retry is safe (stored rows return RESULTS_ALREADY_EXISTS)",
+                                kruizeResultsEntries.size() - i, entry.getExperiment_name(), entry.getInterval_end_time());
+                    }
+                    String reason = errorMessage(failure);
+                    for (KruizeResultsEntry remaining : kruizeResultsEntries.subList(i, kruizeResultsEntries.size())) {
+                        remaining.setErrorReasons(List.of(reason));
+                        failedResultsEntries.add(remaining);
+                    }
+                    break;
                 }
-                break;
+                if (batchAtCommit && isDuplicate(failure) && isStoredAsSubmitted(entry)) {
+                    LOGGER.debug("Row stored by the batch commit: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
+                    continue;
+                }
+                entry.setErrorReasons(List.of(rowErrorReason(failure)));
+                failedResultsEntries.add(entry);
+            } catch (RuntimeException unexpected) {
+                // Keep the "never throws" contract: an unexpected error fails this row only, so rows
+                // already committed are not re-reported as failed by the caller's catch-all.
+                LOGGER.error("Unexpected error while storing result {} {}", entry.getExperiment_name(),
+                        entry.getInterval_end_time(), unexpected);
+                if (!failedResultsEntries.contains(entry)) {
+                    entry.setErrorReasons(List.of(errorMessage(unexpected)));
+                    failedResultsEntries.add(entry);
+                }
             }
-            if (batchAtCommit && isDuplicate(failure) && isStoredAsSubmitted(entry)) {
-                LOGGER.debug("Row stored by the batch commit: {} {}", entry.getExperiment_name(), entry.getInterval_end_time());
-                continue;
-            }
-            entry.setErrorReasons(List.of(rowErrorReason(failure)));
-            failedResultsEntries.add(entry);
         }
         return failedResultsEntries;
     }

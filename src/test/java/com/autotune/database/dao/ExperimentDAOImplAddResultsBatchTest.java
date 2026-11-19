@@ -68,6 +68,9 @@ import static org.mockito.Mockito.*;
  */
 public class ExperimentDAOImplAddResultsBatchTest {
 
+    private static final String SET_LOCAL_LOCK_TIMEOUT = "SELECT set_config('lock_timeout', ?, true)";
+    private static final String ADVISORY_LOCK = "SELECT pg_advisory_xact_lock(?)";
+
     private static KruizeResultsEntry resultsEntry(String experimentName, Instant end) {
         KruizeResultsEntry entry = new KruizeResultsEntry();
         entry.setExperiment_name(experimentName);
@@ -665,12 +668,12 @@ public class ExperimentDAOImplAddResultsBatchTest {
         Transaction tx = mock(Transaction.class);
         Session session = sessionWith(tx);
         Connection connection = mock(Connection.class);
-        Statement statement = mock(Statement.class);
+        PreparedStatement timeout = mock(PreparedStatement.class);
         PreparedStatement lock = mock(PreparedStatement.class);
         NativeQuery<?> ddl = mock(NativeQuery.class);
         when(sessionFactory.openSession()).thenReturn(session);
-        when(connection.createStatement()).thenReturn(statement);
-        when(connection.prepareStatement(anyString())).thenReturn(lock);
+        when(connection.prepareStatement(SET_LOCAL_LOCK_TIMEOUT)).thenReturn(timeout);
+        when(connection.prepareStatement(ADVISORY_LOCK)).thenReturn(lock);
         doReturn(ddl).when(session).createNativeQuery(anyString());
         doAnswer(inv -> {
             inv.<Work>getArgument(0).execute(connection);
@@ -684,14 +687,17 @@ public class ExperimentDAOImplAddResultsBatchTest {
             new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS, "01", "2024", 31,
                     DBConstants.PARTITION_TYPES.BY_MONTH);
 
-            InOrder order = inOrder(session, statement, connection, lock, ddl, tx);
+            InOrder order = inOrder(session, timeout, connection, lock, ddl, tx);
             order.verify(session).beginTransaction();
-            order.verify(statement).execute("SET LOCAL lock_timeout = '30s'");
-            order.verify(connection).prepareStatement("SELECT pg_advisory_xact_lock(?)");
+            order.verify(connection).prepareStatement(SET_LOCAL_LOCK_TIMEOUT);
+            order.verify(timeout).setString(1, "30s");   // bound, not concatenated into the SQL
+            order.verify(timeout).execute();
+            order.verify(connection).prepareStatement(ADVISORY_LOCK);
             order.verify(lock).setLong(1, 0x4B5255495A45L);   // DBConstants.PARTITION_DDL.ADVISORY_LOCK_KEY
             order.verify(lock).execute();
             order.verify(ddl).executeUpdate();
             order.verify(tx).commit();
+            verify(connection, never()).createStatement();
         }
     }
 
@@ -853,8 +859,8 @@ public class ExperimentDAOImplAddResultsBatchTest {
         PreparedStatement lock = mock(PreparedStatement.class);
         NativeQuery<?> ddl = mock(NativeQuery.class);
         when(sessionFactory.openSession()).thenReturn(session);
-        when(connection.createStatement()).thenReturn(mock(Statement.class));
-        when(connection.prepareStatement(anyString())).thenReturn(lock);
+        when(connection.prepareStatement(SET_LOCAL_LOCK_TIMEOUT)).thenReturn(mock(PreparedStatement.class));
+        when(connection.prepareStatement(ADVISORY_LOCK)).thenReturn(lock);
         when(lock.execute()).thenThrow(new SQLException("ERROR: canceling statement due to lock timeout", "55P03"));
         doReturn(ddl).when(session).createNativeQuery(anyString());
         doAnswer(inv -> {
@@ -875,6 +881,7 @@ public class ExperimentDAOImplAddResultsBatchTest {
 
         verify(ddl, never()).executeUpdate();
         verify(tx, never()).commit();
+        verify(tx).rollback();
         assertTrue(log.stream().anyMatch(l -> l.startsWith("ERROR Partition DDL lock timeout after 30s for kruize_results 2024-01")), log.toString());
     }
 
@@ -909,5 +916,81 @@ public class ExperimentDAOImplAddResultsBatchTest {
         assertEquals(List.of("could not execute statement"), second.getErrorReasons());
         verify(sessionFactory, times(2)).openSession();   // stops at the first connection failure
         assertTrue(log.stream().anyMatch(l -> l.startsWith("ERROR Batch commit outcome unknown for 2 remaining row(s)")), log.toString());
+    }
+
+    // ---- Round 11 review fixes ----
+
+    @Test
+    @DisplayName("addPartitions DDL failure rolls back the transaction (releasing the advisory lock) before the session closes")
+    public void testAddPartitionsDdlFailureRollsBackBeforeClose() throws Exception {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction tx = mock(Transaction.class);
+        Session session = sessionWith(tx);
+        Connection connection = mock(Connection.class);
+        NativeQuery<?> ddl = mock(NativeQuery.class);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(connection.prepareStatement(anyString())).thenReturn(mock(PreparedStatement.class));
+        doReturn(ddl).when(session).createNativeQuery(anyString());
+        when(ddl.executeUpdate()).thenThrow(new PersistenceException("relation \"kruize_results\" does not exist"));
+        doAnswer(inv -> {
+            inv.<Work>getArgument(0).execute(connection);
+            return null;
+        }).when(session).doWork(any(Work.class));
+
+        List<String> log;
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+            log = captureDaoLog(() -> new ExperimentDAOImpl().addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RESULTS,
+                    "01", "2024", 31, DBConstants.PARTITION_TYPES.BY_MONTH));   // still swallowed
+        }
+
+        verify(tx, never()).commit();
+        InOrder order = inOrder(tx, session);
+        order.verify(tx).rollback();
+        order.verify(session).close();
+        assertTrue(log.stream().anyMatch(l -> l.startsWith("ERROR Exception occurred while adding the partition")), log.toString());
+    }
+
+    @Test
+    @DisplayName("An unexpected runtime error in the per-row pass fails only that row; committed rows stay successful")
+    public void testUnexpectedPerRowErrorFailsOnlyThatRow() {
+        SessionFactory sessionFactory = mock(SessionFactory.class);
+        Transaction batchTx = mock(Transaction.class);
+        Transaction firstTx = mock(Transaction.class);
+        Transaction badTx = mock(Transaction.class);
+        Transaction lastTx = mock(Transaction.class);
+        Session batchSession = sessionWith(batchTx);
+        Session firstSession = sessionWith(firstTx);
+        Session badSession = sessionWith(badTx);
+        Session lastSession = sessionWith(lastTx);
+        when(sessionFactory.openSession()).thenReturn(batchSession, firstSession, badSession, lastSession)
+                .thenThrow(new IllegalStateException("unexpected extra session"));
+
+        KruizeResultsEntry first = resultsEntry("exp-a", Instant.parse("2024-01-01T00:15:00Z"));
+        KruizeResultsEntry bad = resultsEntry("exp-a", Instant.parse("2024-01-01T00:30:00Z"));
+        KruizeResultsEntry last = resultsEntry("exp-a", Instant.parse("2024-01-01T00:45:00Z"));
+        doThrow(duplicateKey()).when(batchSession).flush();
+        // A failure whose message cannot be read makes the error classification itself throw
+        PersistenceException unreadable = new PersistenceException("unreadable") {
+            @Override
+            public String getMessage() {
+                throw new IllegalStateException("message unavailable");
+            }
+        };
+        doThrow(unreadable).when(badSession).persist(bad);
+
+        List<KruizeResultsEntry> failed;
+        try (MockedStatic<KruizeHibernateUtil> hibernate = mockStatic(KruizeHibernateUtil.class)) {
+            hibernate.when(KruizeHibernateUtil::getSessionFactory).thenReturn(sessionFactory);
+            failed = new ExperimentDAOImpl().addToDBAndFetchFailedResults(List.of(first, bad, last));
+        }
+
+        assertEquals(List.of(bad), failed);
+        assertEquals(List.of("message unavailable"), bad.getErrorReasons());
+        assertNull(first.getErrorReasons());
+        assertNull(last.getErrorReasons());
+        verify(firstTx).commit();
+        verify(badTx, never()).commit();
+        verify(lastTx).commit();
     }
 }
