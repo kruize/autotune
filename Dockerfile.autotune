@@ -104,4 +104,11 @@ EXPOSE 8080
 ENV JAVA_HOME=${AUTOTUNE_HOME}/app/jre \
     PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH"
 
+# Interim mitigation for CVE-2026-114938 (RHSB-2026-018 / Java4Shell).
+# Preferred Red Hat workaround: disable only the AVX-512 Base64 intrinsic.
+# Do not use -XX:UseAVX=2 here; that flag is x86-64 only and prevents the JVM from starting on ARM64.
+# CRC manifests that set JAVA_TOOL_OPTIONS replace this ENV, so they must include the flag too.
+# Remove once the jlinked JRE is built from a fixed OpenJDK (25.0.5.1 or later).
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
+
 ENTRYPOINT bash target/bin/Autotune
