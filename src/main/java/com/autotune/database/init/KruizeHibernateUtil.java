@@ -66,9 +66,9 @@ public class KruizeHibernateUtil {
             configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.settings_hibernate_show_sql);
             configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.settings_hibernate_time_zone);
             // JDBC batching for bulk updateResults inserts (assigned composite IDs; no IDENTITY).
-            configuration.setProperty("hibernate.jdbc.batch_size", "25");
-            configuration.setProperty("hibernate.order_inserts", "true");
-            configuration.setProperty("hibernate.order_updates", "true");
+            configuration.setProperty("hibernate.jdbc.batch_size", KruizeDeploymentInfo.settings_hibernate_jdbc_batch_size);
+            configuration.setProperty("hibernate.order_inserts", KruizeDeploymentInfo.settings_hibernate_order_inserts);
+            configuration.setProperty("hibernate.order_updates", KruizeDeploymentInfo.settings_hibernate_order_updates);
             configuration.addAnnotatedClass(KruizeExperimentEntry.class);
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);

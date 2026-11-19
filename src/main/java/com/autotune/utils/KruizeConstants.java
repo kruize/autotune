@@ -773,6 +773,9 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_HBM2DDL_AUTO = "hibernate_hbm2ddlauto";
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
+        public static final String SETTINGS_HIBERNATE_JDBC_BATCH_SIZE = "hibernate_jdbcbatchsize";
+        public static final String SETTINGS_HIBERNATE_ORDER_INSERTS = "hibernate_orderinserts";
+        public static final String SETTINGS_HIBERNATE_ORDER_UPDATES = "hibernate_orderupdates";
         public static final String PLOTS = "plots";
         public static final String log_recommendation_metrics_level = "log_recommendation_metrics_level";
         public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "logging_cloudwatch_accessKeyId";

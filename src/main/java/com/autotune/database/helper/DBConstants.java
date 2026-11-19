@@ -155,6 +155,23 @@ public class DBConstants {
         public static final int LAST_N_DAYS = 15;
     }
 
+    public static final class PARTITION_DDL {
+        /** Transaction-scoped advisory lock key for partition DDL (arbitrary constant, ASCII "KRUIZE"). */
+        public static final long ADVISORY_LOCK_KEY = 0x4B5255495A45L;
+        /** Bounds the wait for the partition DDL advisory lock (and the DDL's own locks) in addPartitions. */
+        public static final String LOCK_TIMEOUT = "30s";
+    }
+
+    public static final class SQL_STATES {
+        public static final String LOCK_NOT_AVAILABLE = "55P03";
+        public static final String UNIQUE_VIOLATION = "23505";
+    }
+
+    public static final class DB_LIMITS {
+        /** Maximum number of causes inspected when classifying a persistence exception chain. */
+        public static final int MAX_CAUSE_DEPTH = 16;
+    }
+
     public static final class DB_MESSAGES {
         public static final String RECORD_ALREADY_EXISTS = "A record with the name %s already exists within the timestamp range starting from %s and ending on %s.";
         public static final String DUPLICATE_KEY = "duplicate key value";
@@ -168,6 +185,7 @@ public class DBConstants {
         public static final String DB_CREATION_SUCCESS = "DB creation successful !";
         public static final String DB_LIVELINESS_PROBE_SUCCESS = "DB Liveliness probe connection successful!";
         public static final String DUPLICATE_DB_OPERATION = " - Attempted operation has already been executed";
+        public static final String UNABLE_TO_ACQUIRE_CONNECTION = "Unable to acquire JDBC Connection";
 
     }
 
