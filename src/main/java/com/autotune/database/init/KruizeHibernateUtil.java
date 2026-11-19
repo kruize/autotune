@@ -39,10 +39,6 @@ import org.slf4j.LoggerFactory;
 
 public class KruizeHibernateUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeHibernateUtil.class);
-    // JDBC batching for bulk updateResults inserts (assigned composite IDs; no IDENTITY).
-    private static final int HIBERNATE_JDBC_BATCH_SIZE = 25;
-    private static final boolean HIBERNATE_ORDER_INSERTS = true;
-    private static final boolean HIBERNATE_ORDER_UPDATES = true;
     private static SessionFactory sessionFactory;
 
     static {
@@ -69,9 +65,10 @@ public class KruizeHibernateUtil {
             configuration.setProperty("hibernate.hbm2ddl.auto", KruizeDeploymentInfo.settings_hibernate_hbm2ddl_auto);
             configuration.setProperty("hibernate.show_sql", KruizeDeploymentInfo.settings_hibernate_show_sql);
             configuration.setProperty("hibernate.jdbc.time_zone", KruizeDeploymentInfo.settings_hibernate_time_zone);
-            configuration.setProperty("hibernate.jdbc.batch_size", String.valueOf(HIBERNATE_JDBC_BATCH_SIZE));
-            configuration.setProperty("hibernate.order_inserts", String.valueOf(HIBERNATE_ORDER_INSERTS));
-            configuration.setProperty("hibernate.order_updates", String.valueOf(HIBERNATE_ORDER_UPDATES));
+            // JDBC batching for bulk updateResults inserts (assigned composite IDs; no IDENTITY).
+            configuration.setProperty("hibernate.jdbc.batch_size", KruizeDeploymentInfo.settings_hibernate_jdbc_batch_size);
+            configuration.setProperty("hibernate.order_inserts", KruizeDeploymentInfo.settings_hibernate_order_inserts);
+            configuration.setProperty("hibernate.order_updates", KruizeDeploymentInfo.settings_hibernate_order_updates);
             configuration.addAnnotatedClass(KruizeExperimentEntry.class);
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
