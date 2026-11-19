@@ -34,6 +34,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Utility class that performs validation for bulk service requests.
@@ -275,7 +277,7 @@ public class BulkServiceValidation {
             if (model == null || model.trim().isEmpty()) {
                 return "model_settings.models contains null or empty model name";
             }
-            if (!VALID_MODELS.contains(model.toLowerCase())) {
+            if (!VALID_MODELS.contains(model.toLowerCase(Locale.ROOT))) {
                 return "Invalid model name: " + model + ". Valid models are: " + VALID_MODELS;
             }
         }
@@ -301,11 +303,30 @@ public class BulkServiceValidation {
             if (term == null || term.trim().isEmpty()) {
                 return "term_settings.terms contains null or empty term name";
             }
-            if (!VALID_TERMS.contains(term.toLowerCase())) {
+            if (!VALID_TERMS.contains(term.toLowerCase(Locale.ROOT))) {
                 return "Invalid term name: " + term + ". Valid terms are: " + VALID_TERMS;
             }
         }
         return "";
+    }
+
+    /**
+     * Returns a copy of the term settings with term names lower-cased.
+     * Bulk validation accepts term names case-insensitively, but experiment validation
+     * matches them case-sensitively, so terms are normalized before experiment creation.
+     *
+     * @param termSettings the validated term settings (must not be null)
+     * @return a copy with lower-cased terms
+     */
+    public static TermSettings normalizeTermSettings(TermSettings termSettings) {
+        TermSettings normalized = new TermSettings();
+        if (termSettings.getTerms() != null) {
+            normalized.setTerms(termSettings.getTerms().stream()
+                    .map(term -> term == null ? null : term.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toList()));
+        }
+        normalized.setTermsDefinition(termSettings.getTermsDefinition());
+        return normalized;
     }
 
     /**

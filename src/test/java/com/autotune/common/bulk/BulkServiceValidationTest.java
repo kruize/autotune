@@ -236,6 +236,18 @@ class BulkServiceValidationTest {
             String result = BulkServiceValidation.validateTermSettings(termSettings);
             assertTrue(result.contains("cannot be null or empty"), "Empty terms list should be rejected");
         }
+
+        @Test
+        @DisplayName("Should lower-case mixed-case terms before experiment creation")
+        void shouldNormalizeMixedCaseTerms() {
+            TermSettings termSettings = new TermSettings();
+            termSettings.setTerms(Arrays.asList("Short", "MEDIUM", "Long", "FLEX"));
+            TermSettings normalized = BulkServiceValidation.normalizeTermSettings(termSettings);
+            assertEquals(Arrays.asList("short", "medium", "long", "flex"), normalized.getTerms(),
+                    "Terms should be lower-cased so experiment validation accepts them");
+            assertEquals(Arrays.asList("Short", "MEDIUM", "Long", "FLEX"), termSettings.getTerms(),
+                    "Original term settings should not be modified");
+        }
     }
 
 }

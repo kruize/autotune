@@ -24,6 +24,7 @@ import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.bulk.BulkServiceValidation;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
@@ -752,7 +753,7 @@ public class BulkJobManager implements Runnable {
             rs.setModelSettings(bulkInput.getModel_settings());
         }
         if (bulkInput.getTerm_settings() != null) {
-            rs.setTermSettings(bulkInput.getTerm_settings());
+            rs.setTermSettings(BulkServiceValidation.normalizeTermSettings(bulkInput.getTerm_settings()));
         }
 
         createExperimentAPIObject.setRecommendationSettings(rs);
@@ -809,7 +810,7 @@ public class BulkJobManager implements Runnable {
             rs.setModelSettings(this.bulkInput.getModel_settings());
         }
         if (this.bulkInput.getTerm_settings() != null) {
-            rs.setTermSettings(this.bulkInput.getTerm_settings());
+            rs.setTermSettings(BulkServiceValidation.normalizeTermSettings(this.bulkInput.getTerm_settings()));
         }
         createExperimentAPIObject.setRecommendationSettings(rs);
 

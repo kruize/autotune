@@ -41,7 +41,8 @@ public class BulkConfigValidation {
     private static final Set<String> VALID_TERMS = new HashSet<>(Arrays.asList(
             KruizeConstants.JSONKeys.SHORT,
             KruizeConstants.JSONKeys.MEDIUM,
-            KruizeConstants.JSONKeys.LONG
+            KruizeConstants.JSONKeys.LONG,
+            KruizeConstants.JSONKeys.FLEX
     ));
 
     private static final Set<String> VALID_MODELS = new HashSet<>(Arrays.asList(
