@@ -125,6 +125,10 @@ public class RecommendationEngine implements RecommendationEngineService {
                 // Todo: add custom performance parameters over here from the user inputs
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
+            } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
+                // Create Stability based model, sized like performance
+                StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
+                registerModel(stabilityBasedRecommendationModel);
             } else {
                 // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
