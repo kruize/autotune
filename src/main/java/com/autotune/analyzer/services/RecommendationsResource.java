@@ -26,6 +26,7 @@ import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
+import com.autotune.analyzer.recommendations.ResourceRecommendation;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
@@ -441,15 +442,15 @@ public class RecommendationsResource extends HttpServlet {
 
     private void restructureConfigObj(Config config) {
         if (config != null) {
-            Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>>
+            Map<AnalyzerConstants.ResourceSetting, Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation>>
                     resources = new EnumMap<>(AnalyzerConstants.ResourceSetting.class);
 
-            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requests = config.getRequests();
+            Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> requests = config.getRequests();
             if (requests != null) {
                 resources.put(AnalyzerConstants.ResourceSetting.requests, requests);
             }
 
-            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limits = config.getLimits();
+            Map<AnalyzerConstants.RecommendationItem, ResourceRecommendation> limits = config.getLimits();
             if (limits != null) {
                 resources.put(AnalyzerConstants.ResourceSetting.limits, limits);
             }

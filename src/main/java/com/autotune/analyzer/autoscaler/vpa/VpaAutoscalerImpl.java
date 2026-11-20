@@ -287,8 +287,8 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);
                     }
 
-                    Double cpuRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
-                    Double memoryRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
+                    Double cpuRecommendationValue = ((RecommendationConfigItem) recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.CPU)).getAmount();
+                    Double memoryRecommendationValue = ((RecommendationConfigItem) recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.MEMORY)).getAmount();
 
                     LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.RECOMMENDATION_VALUE,
                             AnalyzerConstants.RecommendationItem.CPU, containerName, cpuRecommendationValue));

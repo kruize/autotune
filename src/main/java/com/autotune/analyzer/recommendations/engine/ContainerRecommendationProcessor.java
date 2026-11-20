@@ -113,8 +113,8 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
 
         Config currentConfig = new Config();
         ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
-        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentRequestsMap = new HashMap<>();
+        HashMap<AnalyzerConstants.RecommendationItem, ResourceRecommendation> currentLimitsMap = new HashMap<>();
 
         String experimentName = engineService.getExperimentName();
         Timestamp intervalEndTime = engineService.getInterval_end_time();
@@ -131,7 +131,9 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
         }
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
-            for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+            for (AnalyzerConstants.RecommendationItem recommendationItem : List.of(
+                    AnalyzerConstants.RecommendationItem.CPU,
+                    AnalyzerConstants.RecommendationItem.MEMORY)) {
 
                 AnalyzerConstants.MetricName metricName = getMetricName(resourceSetting, recommendationItem);
                 configItem = RecommendationUtils.getCurrentValue(lastDatapoint, metricName, notifications);
@@ -149,6 +151,13 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                     currentLimitsMap.put(recommendationItem, configItem);
                 }
             }
+        }
+
+        // Accelerator settings apply to limits (same shape as recommended config)
+        MultiResourceRecommendation currentAccelerators =
+                RecommendationUtils.getCurrentValueForAccelerators(filteredResultsMap, monitoringEndTime);
+        if (currentAccelerators != null) {
+            currentLimitsMap.put(AnalyzerConstants.RecommendationItem.ACCELERATORS, currentAccelerators);
         }
 
         for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
@@ -332,7 +341,7 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
             }
 
-            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList);
+            engineService.populateRecommendation(termEntry, mappedRecommendationForModel, notifications, internalMapToPopulate, numPods, cpuThreshold, memoryThreshold, recommendationAcceleratorRequestMap, runtimeRecommList, extractCurrentAccelerators(currentConfig));
         } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
@@ -355,6 +364,18 @@ public final class ContainerRecommendationProcessor extends BaseRecommendationPr
                 })
                 .max(Double::compareTo).get();
         return (int) Math.ceil(max_pods_cpu);
+    }
+
+    private static MultiResourceRecommendation extractCurrentAccelerators(Config currentConfig) {
+        if (currentConfig == null || currentConfig.getLimits() == null) {
+            return null;
+        }
+        ResourceRecommendation resourceRecommendation =
+                currentConfig.getLimits().get(AnalyzerConstants.RecommendationItem.ACCELERATORS);
+        if (resourceRecommendation instanceof MultiResourceRecommendation multiResourceRecommendation) {
+            return multiResourceRecommendation;
+        }
+        return null;
     }
 
     /**
