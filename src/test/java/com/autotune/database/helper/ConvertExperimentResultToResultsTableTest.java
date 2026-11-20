@@ -20,12 +20,14 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.KruizeResultsEntry;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,13 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Compact JSONB contract for {@code convertExperimentResultToExperimentResultsTable}.
- * The stored {@code extended_data} tree must keep kubernetes_objects and contain no pretty-print whitespace.
+ * The stored {@code extended_data} tree must keep kubernetes_objects, and the Gson string it is parsed from
+ * must not be pretty-printed.
  */
 public class ConvertExperimentResultToResultsTableTest {
 
     @Test
     @DisplayName("Results convert stores compact kubernetes_objects JSON and copies interval columns")
-    public void testCompactExtendedData() {
+    public void testCompactExtendedData() throws Exception {
         Instant end = Instant.parse("2024-01-01T00:15:00Z");
         Instant start = end.minusSeconds(900);
 
@@ -71,11 +74,14 @@ public class ConvertExperimentResultToResultsTableTest {
         assertEquals("demo-app", kubernetesObjects.get(0).get("name").asText());
         assertEquals("default", kubernetesObjects.get(0).get("namespace").asText());
 
-        String compact = extendedData.toString();
-        assertFalse(compact.contains("\n"));
-        assertEquals(
-                "{\"kubernetes_objects\":[{\"type\":\"deployment\",\"name\":\"demo-app\",\"namespace\":\"default\"}]}",
-                compact
-        );
+        JsonNode expected = new ObjectMapper().readTree(
+                "{\"kubernetes_objects\":[{\"type\":\"deployment\",\"name\":\"demo-app\",\"namespace\":\"default\"}]}");
+        assertEquals(expected, extendedData);
+
+        // JsonNode.toString() is always compact, so check the Gson string the converter parses.
+        String serialized = DBHelpers.Converters.KruizeObjectConverters.RESULTS_JSONB_GSON.toJson(
+                Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, resultData.getKubernetes_objects()));
+        assertFalse(serialized.contains("\n"), "extended_data JSON must not be pretty-printed: " + serialized);
+        assertEquals(expected, new ObjectMapper().readTree(serialized));
     }
 }
