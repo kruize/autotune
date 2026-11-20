@@ -438,8 +438,10 @@ public class DBHelpers {
              * Shared compact Gson for kruize_results.extended_data.
              * Same adapters as the previous per-call builder, without pretty-printing.
              * Gson is thread-safe after {@code create()}; do not rebuild it per interval.
+             * Package-private so ConvertExperimentResultToResultsTableTest can assert the serialized
+             * string is compact (the stored JsonNode cannot show pretty-printing).
              */
-            private static final Gson RESULTS_JSONB_GSON = new GsonBuilder()
+            static final Gson RESULTS_JSONB_GSON = new GsonBuilder()
                     .disableHtmlEscaping()
                     .enableComplexMapKeySerialization()
                     .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
