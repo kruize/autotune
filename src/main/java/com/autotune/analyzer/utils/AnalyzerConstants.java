@@ -113,6 +113,10 @@ public class AnalyzerConstants {
     // Used to look up the specialised workloadsWithPodLabelFilter entry when pod label filtering is active.
     public static final String WORKLOAD_METADATA_QUERY_WITH_LABEL_FILTER = "workloadsWithPodLabelFilter";
 
+    // Exact name of the label-filter container query entry. Without this, bulk jobs that filter by
+    // org/cluster labels still pull containers cluster-wide (or time out), then create 0 experiments.
+    public static final String CONTAINER_METADATA_QUERY_WITH_LABEL_FILTER = "containersWithPodLabelFilter";
+
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
     public static final String KRUIZE_PROFILE_FILTER = "kruize";
     public static final String NAMESPACE_PROFILE_FILTER = "openshift-tuning|monitoring";

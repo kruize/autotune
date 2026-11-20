@@ -451,6 +451,13 @@ public class DataSourceMetadataHelper {
     }
     public String getQueryFromProfile(MetadataProfile metadataProfile, String metricName) {
         List<Metric> metrics = metadataProfile.getQueryVariables();
+        // Prefer exact name match so specialised entries (e.g. containersWithPodLabelFilter)
+        // are not shadowed by substring matches on shorter keys like "container".
+        for (Metric metric : metrics) {
+            if (metricName.equals(metric.getName())) {
+                return metric.getAggregationFunctionsMap().get(KruizeConstants.JSONKeys.SUM).getQuery();
+            }
+        }
         for (Metric metric : metrics) {
             String name = metric.getName();
             if (name.contains(metricName)) {
