@@ -33,7 +33,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @WebServlet(asyncSupported = true)
 public class ListSupportedK8sObjects extends HttpServlet {
@@ -44,14 +46,8 @@ public class ListSupportedK8sObjects extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Create the Service Object for the List Supported K8S Objects endpoint
         ListSupportedK8sObjectsSO listSupportedK8sObjectsSO =  new ListSupportedK8sObjectsSO();
-        // Iterate over the supported Kubernetes Object type supported by Kruize
-        for (AnalyzerConstants.K8S_OBJECT_TYPES k8SObjectType : AnalyzerConstants.K8S_OBJECT_TYPES.values()) {
-            // Get the String value of the K8S object types
-            String k8sObjectTypeString = Utils.getAppropriateK8sObjectTypeString(k8SObjectType);
-            // Check for null and if it's not null add to the list of K8S objects in the Service Object
-            if (null != k8sObjectTypeString) {
-                listSupportedK8sObjectsSO.addSupportedK8sObject(k8sObjectTypeString);
-            }
+        for (String k8sObjectTypeString : getSupportedK8sObjects()) {
+            listSupportedK8sObjectsSO.addSupportedK8sObject(k8sObjectTypeString);
         }
         String responseGSONString = "";
         // Create a GSON builder
@@ -69,6 +65,24 @@ public class ListSupportedK8sObjects extends HttpServlet {
         // Write the JSON to Response and close the writer
         response.getWriter().println(responseGSONString);
         response.getWriter().close();
+    }
+
+    /**
+     * Returns the Kubernetes object types a client can submit to createExperiment.
+     * This applies the same check as the remote monitoring createExperiment validation
+     * (Utils.getApproriateK8sObjectType). It deliberately does not use UNSUPPORTED_K8S_OBJECT_TYPES,
+     * because that list also holds types which are only excluded from local monitoring metadata discovery
+     * (e.g. DeploymentConfig) but are still valid for remote experiments.
+     */
+    static List<String> getSupportedK8sObjects() {
+        List<String> supported = new ArrayList<>();
+        for (AnalyzerConstants.K8S_OBJECT_TYPES k8SObjectType : AnalyzerConstants.K8S_OBJECT_TYPES.values()) {
+            String k8sObjectTypeString = Utils.getAppropriateK8sObjectTypeString(k8SObjectType);
+            if (null != k8sObjectTypeString && null != Utils.getApproriateK8sObjectType(k8sObjectTypeString)) {
+                supported.add(k8sObjectTypeString);
+            }
+        }
+        return supported;
     }
 
     // Redirect the Get request to the POST handler
