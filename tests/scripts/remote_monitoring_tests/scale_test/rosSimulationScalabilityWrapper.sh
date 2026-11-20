@@ -81,12 +81,20 @@ while [[ $# -gt 0 ]]; do
             outputdir="$2"
             shift 2
 	    ;;
+	--scheme)
+            scheme="$2"
+            shift 2
+	    ;;
         *)
             echo "Unknown option: $1"
             exit 1
             ;;
     esac
 done
+
+if [ -z "${scheme}" ]; then
+    scheme="http"
+fi
 
 if [[ -z "$ip" || -z "$port" || -z "$count" || -z "$minutesjump" || -z "$name_prefix" ]]; then
     echo "Missing required arguments."
@@ -109,7 +117,7 @@ for (( i = 0; i < $iterations; i++ )); do
     current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
     # Build the full command
-    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type} --api-version ${api_version}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type} --api-version ${api_version} --scheme ${scheme}"
 
     # Execute the command
     echo "Executing: $full_command"

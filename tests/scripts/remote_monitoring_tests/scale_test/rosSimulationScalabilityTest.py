@@ -10,6 +10,27 @@ sys.path.append("../../")
 
 from helpers.utils import get_metric_profile_dir
 
+
+session = requests.Session()
+
+
+def request_with_retry(method, url, max_retries=3, **kwargs):
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = session.request(method, url, **kwargs)
+            return response
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            wait = 10 * (2 ** (attempt - 1))
+            print(f"Retry {attempt}/{max_retries} for {url} after {type(e).__name__}, waiting {wait}s...")
+            if attempt == max_retries:
+                print(f"All {max_retries} retries exhausted for {url}")
+                return None
+            time.sleep(wait)
+        except requests.exceptions.RequestException as e:
+            print(f"Non-retryable error for {url}: {e}")
+            return None
+    return None
+
 def loadData(exptype):
     if exptype == "container":
          exp_json_file = "./json_files/create_exp.json"
@@ -41,8 +62,9 @@ def updateRecommendation(experiment_name, endDate):
         payloadRecommendationURL = "%s?experiment_name=%s&interval_end_time=%s" % (
             updateRecommendationURL, experiment_name, endDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-4] + 'Z')
         print(f"calling POST API {payloadRecommendationURL}")
-        response = requests.post(payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
-
+        response = request_with_retry('POST', payloadRecommendationURL, data={}, headers=headers, timeout=timeout)
+        if response is None:
+            return
         # Check the response
         if response.status_code == 201:
             #data = response.json()
@@ -63,7 +85,9 @@ def postResultsInBulk(expName, bulkData):
     try:
         print(f"calling POST API {updateExpURL} with {len(bulkData)} datapoints")
         # Send the request with the payload
-        response = requests.post(updateExpURL, data=json_payload, headers=headers, timeout=timeout)
+        response = request_with_retry('POST', updateExpURL, data=json_payload, headers=headers, timeout=timeout)
+        if response is None:
+            return
         # Check the response
         if response.status_code == 201:
             pass
@@ -91,29 +115,31 @@ if __name__ == "__main__":
     parser.add_argument('--minutesjump', type=int,
                         help='specify the time difference between the start time and end time of the interval.')
     parser.add_argument('--api-version', type=str, help='API version (v1/legacy)', default='legacy')
+    parser.add_argument('--scheme', type=str, help='URL scheme (http/https)', default='http')
 
     # parse the arguments from the command line
     args = parser.parse_args()
     use_new_api = args.api_version.lower() == 'v1'
+    scheme = args.scheme
     print("rosSimulationScalabilityTest :: api_version =", args.api_version)
     if args.port != 0:
-        createExpURL = 'http://%s:%s/createExperiment' % (args.ip, args.port)
-        updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
-        createProfileURL = 'http://%s:%s/createPerformanceProfile' % (args.ip, args.port)
-        updateExpURL = 'http://%s:%s/updateResults' % (args.ip, args.port)
+        createExpURL = '%s://%s:%s/createExperiment' % (scheme, args.ip, args.port)
+        updateExpURL = '%s://%s:%s/updateResults' % (scheme, args.ip, args.port)
+        createProfileURL = '%s://%s:%s/createPerformanceProfile' % (scheme, args.ip, args.port)
+        updateExpURL = '%s://%s:%s/updateResults' % (scheme, args.ip, args.port)
         if use_new_api:
-            updateRecommendationURL = 'http://%s:%s/kruize/api/v1/recommendations' % (args.ip, args.port)
+            updateRecommendationURL = '%s://%s:%s/kruize/api/v1/recommendations' % (scheme, args.ip, args.port)
         else:
-            updateRecommendationURL = 'http://%s:%s/updateRecommendations' % (args.ip, args.port)
+            updateRecommendationURL = '%s://%s:%s/updateRecommendations' % (scheme, args.ip, args.port)
     else:
-        createExpURL = 'http://%s/createExperiment' % (args.ip)
-        updateExpURL = 'http://%s/updateResults' % (args.ip)
-        createProfileURL = 'http://%s/createPerformanceProfile' % (args.ip)
-        updateExpURL = 'http://%s/updateResults' % (args.ip)
+        createExpURL = '%s://%s/createExperiment' % (scheme, args.ip)
+        updateExpURL = '%s://%s/updateResults' % (scheme, args.ip)
+        createProfileURL = '%s://%s/createPerformanceProfile' % (scheme, args.ip)
+        updateExpURL = '%s://%s/updateResults' % (scheme, args.ip)
         if use_new_api:
-            updateRecommendationURL = 'http://%s/kruize/api/v1/recommendations' % (args.ip)
+            updateRecommendationURL = '%s://%s/kruize/api/v1/recommendations' % (scheme, args.ip)
         else:
-            updateRecommendationURL = 'http://%s/updateRecommendations' % (args.ip)
+            updateRecommendationURL = '%s://%s/updateRecommendations' % (scheme, args.ip)
 
     expnameprfix = args.name
     exptype = args.exptype
@@ -123,7 +149,7 @@ if __name__ == "__main__":
     headers = {
         'Content-Type': 'application/json'
     }
-    timeout = (60, 60)
+    timeout = (60, 120)
 
     data, createdata, profile_data = loadData(exptype)
 
@@ -158,6 +184,9 @@ if __name__ == "__main__":
     # Create experiment and post results
     start_time = time.time()
     for i in range(1, expcount + 1):
+        createExp_elapsed_time = 0.0
+        bulkDataPost_elapsed_time = 0.0
+        updateRec_elapsed_time = 0.0
         try:
             successfulCnt = 0
             experiment_name = "%s_%s" % (expnameprfix, i)
@@ -167,8 +196,10 @@ if __name__ == "__main__":
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
             createExp_start_time = time.time()
             print(f"calling POST API {createExpURL}")
-            response = requests.post(createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
-            createExp_elapsed_time = time.time() -createExp_start_time
+            response = request_with_retry('POST', createExpURL, data=create_json_payload, headers=headers, timeout=timeout)
+            createExp_elapsed_time = time.time() - createExp_start_time
+            if response is None:
+                continue
             j = 0
             if args.startdate:
                 data['interval_end_time'] = args.startdate
