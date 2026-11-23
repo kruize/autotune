@@ -88,7 +88,11 @@ fi
 echo ${BUILD_PARAMS}
 
 BUILDTMPFILE=/tmp/docker_build_log.$$
-BUILDER="docker"
+if command -v podman >/dev/null 2>&1; then
+	BUILDER="podman"
+else
+	BUILDER="docker"
+fi
 
 ${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
 build_error=$(grep 'Error:\|unknown flag:' ${BUILDTMPFILE})
