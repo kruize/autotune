@@ -56,10 +56,12 @@
 | 111101 |   INFO   | SHORT_TERM_RECOMMENDATIONS_AVAILABLE  |           Specifies that the Short Term Recommendations are available           |                     Short Term Recommendations Available                     | API USER  |
 | 111102 |   INFO   | MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE |          Specifies that the Medium Term Recommendations are available           |                    Medium Term Recommendations Available                     | API USER  |
 | 111103 |   INFO   |  LONG_TERM_RECOMMENDATIONS_AVAILABLE  |           Specifies that the Long Term Recommendations are available            |                     Long Term Recommendations Available                      | API USER  |
+| 111104 |   INFO   |  FLEX_TERM_RECOMMENDATIONS_AVAILABLE  |            Specifies that the Flex Term Recommendations are available            |                      Flex Term Recommendations Available                      | API USER  |
 | 112101 |   INFO   |    COST_RECOMMENDATIONS_AVAILABLE     |           Specifies that the Cost Based Recommendations are available           |                        Cost Recommendations Available                        | API USER  |
 | 112102 |   INFO   | PERFORMANCE_RECOMMENDATION_AVAILABLE  |       Specifies that the Performance Based Recommendations are available        |                    Performance Recommendations Available                     | API USER  |
 | 112103 |   INFO   | CUSTOM_MODEL_RECOMMENDATION_AVAILABLE |       Specifies that the custom Model Based Recommendations are available       |                    Custom Model Recommendations Available                    | API USER  |
 | 112104 |   INFO   |   RUNTIMES_RECOMMENDATION_AVAILABLE   |            Specifies that the Runtimes Recommendations are available            |                      Runtimes Recommendations Available                      | API USER  |
+| 112105 |   INFO   |  STABILITY_RECOMMENDATIONS_AVAILABLE  |         Specifies that the Stability Based Recommendations are available         |                    Stability Recommendations Available                     | API USER  |
 | 120001 |   INFO   |            NOT_ENOUGH_DATA            |      Specifies that required data is not enough to create a recommendation      |       There is not enough data available to generate a recommendation.       | API USER  |
 | 128001 |   INFO   | ACCELERATOR_RECOMMENDATIONS_AVAILABLE |            Specifies that Accelerator Recommendations are available             |                  Accelerator Recommendations are available                   | API USER  |
 | 221001 |  ERROR   |        NUM_PODS_CANNOT_BE_ZERO        |                Specifies that the number of pods cannot be zero                 |                        Number of pods cannot be zero                         | API USER  |
@@ -119,10 +121,12 @@
 | 111101              |   INFO   | SHORT_TERM_RECOMMENDATIONS_AVAILABLE  |                0                 |          1          |       0        |        0         |
 | 111102              |   INFO   | MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE |                0                 |          1          |       0        |        0         |
 | 111103              |   INFO   |  LONG_TERM_RECOMMENDATIONS_AVAILABLE  |                0                 |          1          |       0        |        0         |
+| 111104              |   INFO   |  FLEX_TERM_RECOMMENDATIONS_AVAILABLE  |                0                 |          1          |       0        |        0         |
 | 112101              |   INFO   |    COST_RECOMMENDATIONS_AVAILABLE     |                0                 |          0          |       1        |        0         |
 | 112102              |   INFO   | PERFORMANCE_RECOMMENDATION_AVAILABLE  |                0                 |          0          |       1        |        0         |
 | 112103              |   INFO   | CUSTOM_MODEL_RECOMMENDATION_AVAILABLE |                0                 |          0          |       1        |        0         |
 | 112104              |   INFO   |   RUNTIMES_RECOMMENDATION_AVAILABLE   |                0                 |          0          |       1        |        0         |
+| 112105              |   INFO   |  STABILITY_RECOMMENDATIONS_AVAILABLE  |                0                 |          0          |       1        |        0         |
 | 223003              |  ERROR   |     FORMAT_MISSING_IN_CPU_SECTION     |                0                 |          1          |       1        |        0         |
 | 223004              |  ERROR   |     INVALID_FORMAT_IN_CPU_SECTION     |                0                 |          1          |       1        |        0         |
 | 224003              |  ERROR   |   FORMAT_MISSING_IN_MEMORY_SECTION    |                0                 |          1          |       1        |        0         |
