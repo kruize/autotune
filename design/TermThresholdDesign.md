@@ -63,9 +63,9 @@ The `flex` term is an opt-in, data-range-agnostic term introduced to serve workl
 - Uses **all available data** from the current time back up to **15 days** — no sub-window restrictions.
 - Minimum threshold is just **2 datapoints (30 minutes)**; the engine uses however much data is available up to the cap.
 - Does **not replace** `short`, `medium`, or `long`. Those remain unchanged.
-- `flex` is **exclusively** used with the `stability` recommendation profile.
+- `flex` is intended to be used with the `stability` recommendation profile, but this is not enforced; it can be used with any model.
 - `flex` is **not part of the default term set** — it must be explicitly requested.
-- `flex` **cannot be combined** with other terms in the same request.
+- `flex` can be combined with other terms in the same request. It is generated independently of them and appears as `flex_term` in the recommendations.
 
 #### Scenarios for Flex Term
 

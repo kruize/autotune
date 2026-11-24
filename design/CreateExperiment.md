@@ -51,11 +51,12 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 |---------------|--------------------------------------------------------------|---------|
 | `cost`        | 60th CPU percentile — minimise resource spend                | Yes     |
 | `performance` | 98th CPU percentile — maximise reliability                   | Yes     |
-| `stability`   | 98th CPU percentile (Phase 1 static), opt-in only, paired exclusively with `flex` | No |
+| `stability`   | 98th CPU percentile (static), opt-in only                    | No      |
 
-### flex + stability opt-in request
+### Requesting flex and stability
 
-`stability` and `flex` must always be specified together. Neither appears by default.
+`flex` and `stability` are opt-in. Neither is part of the default configuration, so they must be listed explicitly in
+`recommendation_settings`. They are intended to be used together, but this is not enforced.
 
 ```json
 "recommendation_settings": {
@@ -68,61 +69,38 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 }
 ```
 
-### Validation rules for flex and stability
+In the recommendations response, the term is keyed as `flex_term` and the model as `stability`.
 
-| Rule | Condition | Error |
-|------|-----------|-------|
-| V-1  | `stability` model paired with any term other than `flex` | `"stability profile only supports the flex term."` |
-| V-2  | `flex` term paired with any model other than `stability` | `"flex term only supports the stability profile."` |
-| V-3  | `flex` term appears alongside any other term in the same request | `"flex term cannot be combined with other terms."` |
+### Validation
 
-**V-1 example** — `stability` with `short`:
-```json
-"recommendation_settings": {
-  "term_settings": { "terms": ["short"] },
-  "model_settings": { "models": ["stability"] }
-}
-```
-Response:
-```json
-{
-  "message": "stability profile only supports the flex term.",
-  "httpcode": 400,
-  "status": "ERROR"
-}
-```
+Kruize validates each value independently:
 
-**V-2 example** — `flex` with `cost`:
-```json
-"recommendation_settings": {
-  "term_settings": { "terms": ["flex"] },
-  "model_settings": { "models": ["cost"] }
-}
-```
-Response:
-```json
-{
-  "message": "flex term only supports the stability profile.",
-  "httpcode": 400,
-  "status": "ERROR"
-}
-```
+| Field      | Accepted values                          | Error for any other value                                          |
+|------------|------------------------------------------|--------------------------------------------------------------------|
+| `terms`    | `short`, `medium`, `long`, `flex`        | `Term name is not supported. Use short, medium, long or flex term.` (400) |
+| `models`   | `cost`, `performance`, `stability`       | `Model name is not supported. Use cost, performance or stability.` (400) |
 
-**V-3 example** — `flex` combined with `short`:
-```json
-"recommendation_settings": {
-  "term_settings": { "terms": ["flex", "short"] },
-  "model_settings": { "models": ["stability"] }
-}
-```
-Response:
-```json
-{
-  "message": "flex term cannot be combined with other terms.",
-  "httpcode": 400,
-  "status": "ERROR"
-}
-```
+Empty or whitespace-only term or model values are rejected with `Empty term or model value.` (400).
+
+There is **no cross-validation** between terms and models. `flex` and `stability` are not required to be paired, and
+`flex` may be combined with other terms. Every requested model is evaluated for every requested term. For example:
+
+| Request                                   | Result                                                          |
+|-------------------------------------------|-----------------------------------------------------------------|
+| terms `["flex"]`, models `["stability"]`  | `stability` recommendations for `flex_term`                     |
+| terms `["flex"]`, no models               | default models (`cost`, `performance`) for `flex_term`          |
+| terms `["short"]`, models `["stability"]` | `stability` recommendations for `short_term`                    |
+| terms `["short", "flex"]`, models `["cost", "stability"]` | `cost` and `stability` recommendations for both `short_term` and `flex_term` |
+
+### Defaults and mode restrictions
+
+| Mode                 | No `term_settings`           | No `model_settings`   | Multiple terms / models |
+|----------------------|------------------------------|-----------------------|-------------------------|
+| `monitor`            | `short`, `medium`, `long`    | `cost`, `performance` | Allowed                 |
+| `auto` / `recreate`  | `short`                      | `performance`         | Not allowed (400)       |
+
+In `auto` and `recreate` mode, exactly one term and one model can be given, so `flex` and `stability` can each be
+selected as that single term or model. Omitting a setting never defaults to `flex` or `stability`.
 
 ---
 
