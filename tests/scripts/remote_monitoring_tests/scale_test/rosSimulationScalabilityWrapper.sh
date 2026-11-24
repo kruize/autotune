@@ -106,10 +106,11 @@ iterations=$(( $limit_days * 24 / $interval_hours ))
 # Loop for each iteration
 for (( i = 0; i < $iterations; i++ )); do
     # Calculate the current start date for this iteration
-    current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
+    # Portable date bump (GNU date -d is not available on macOS)
+    current_startdate=$(python3 -c "from datetime import datetime,timedelta; s='${initial_startdate}'.replace('Z',''); d=datetime.fromisoformat(s)+timedelta(hours=$((i * interval_hours))); print(d.strftime('%Y-%m-%dT%H:%M:%S.000Z'))")
 
     # Build the full command
-    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type} --api-version ${api_version}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate ${current_startdate} --name ${name_prefix} --exptype ${exp_type} --api-version ${api_version}"
 
     # Execute the command
     echo "Executing: $full_command"
