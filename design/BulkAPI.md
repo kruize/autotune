@@ -65,7 +65,6 @@ progress of the job.
   "experiment_types": [
     "container"
   ],
-  "cluster_name": "prod-cluster",
   "model_settings": {
     "models": ["performance", "cost"]
   },
