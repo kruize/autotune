@@ -1,0 +1,2419 @@
+openapi: 3.0.3
+info:
+  title: Kruize Autotune REST API
+  description: |
+    OpenAPI Specification for Kruize Autotune - an autonomous performance tuning and resource optimization engine for Kubernetes workloads.
+    
+    Kruize operates in multiple modes:
+    - **Remote Monitoring Mode (`mode=monitor`, `target_cluster=remote`)**: Gathers metrics via API pushes and generates container/namespace sizing recommendations.
+    - **Local Monitoring Mode (`mode=monitor`, `target_cluster=local`)**: Connects directly to datasources (e.g., Prometheus/Thanos) to import cluster metadata and generate recommendations.
+    - **Autoscaling Mode (`mode=recreate` or `mode=auto`)**: Integrates with Kubernetes Vertical Pod Autoscaler (VPA) and Instaslice / Accelerator Autoscaler to optimize CPU, Memory, and GPU resource allocations automatically.
+    - **Trial Experiment Mode (`mode=experiment`)**: Tunes runtime configurations and container resource allocations via iterative trial experiments.
+    - **Bulk Processing (`/bulk`)**: Automates fleet-wide discovery, experiment registration, and recommendation generation.
+  version: 2.0.0
+  contact:
+    name: Kruize Autotune Community
+    url: https://github.com/kruize/autotune
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: ${TARGET_URL}
+    description: Kruize Instance
+  - url: http://localhost:8080
+    description: Local Kruize Server
+    variables:
+      kruize_host:
+        default: localhost
+        description: Hostname or IP of Kruize server
+      kruize_port:
+        default: "8080"
+        description: Port of Kruize server
+
+tags:
+  - name: System
+    description: Health and telemetry endpoints
+  - name: Experiments
+    description: Lifecycle management of Kruize experiments
+  - name: Results
+    description: Ingestion of metric and performance result timeseries
+  - name: Recommendations
+    description: Sizing and optimization recommendations for containers and namespaces
+  - name: Performance Profiles
+    description: Specification of performance objectives and SLO definitions
+  - name: Metric Profiles
+    description: Metric collection and aggregation profiles for local monitoring
+  - name: Metadata Profiles
+    description: Cluster metadata discovery profiles
+  - name: Datasources & Metadata
+    description: Datasource configuration and cluster metadata queries
+  - name: Bulk Service
+    description: Fleet-wide asynchronous bulk experiment generation and analysis
+  - name: Layers & Tunables
+    description: Tuning layers, tunables, and search spaces
+  - name: Trials
+    description: Experiment trials and experiment manager operations
+  - name: UI Query Support
+    description: Discovery queries for namespaces, deployments, and Kubernetes objects
+
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: Returns the health status of the Autotune / Kruize server.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Healthy
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: Prometheus JVM metrics
+      description: Exposes Prometheus-formatted metrics of Kruize JVM runtime.
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /createExperiment:
+    post:
+      tags:
+        - Experiments
+      summary: Create / Register experiments
+      description: |
+        Registers one or more optimization experiments with Kruize Autotune.
+        Supports container-level and namespace-level experiments across Remote Monitoring, Local Monitoring, Autoscaling, and Trial Experiment modes.
+      operationId: createExperiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateExperimentPayload'
+            example:
+              - version: "v2.0"
+                experiment_name: "quarkus-resteasy-autotune-min-http-response-time-db"
+                cluster_name: "cluster-one-division-bell"
+                performance_profile: "resource-optimization-openshift"
+                mode: "monitor"
+                target_cluster: "remote"
+                experiment_type: "container"
+                kubernetes_objects:
+                  - type: "deployment"
+                    name: "tfb-qrh-deployment"
+                    namespace: "default"
+                    containers:
+                      - container_image_name: "kruize/tfb-db:1.15"
+                        container_name: "tfb-server-0"
+                      - container_image_name: "kruize/tfb-qrh:1.13.2.F_et17"
+                        container_name: "tfb-server-1"
+                trial_settings:
+                  measurement_duration: "15min"
+                recommendation_settings:
+                  threshold: "0.1"
+      responses:
+        '201':
+          description: Experiment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Experiment registered successfully with Autotune. View registered experiments at /listExperiments"
+                httpcode: 201
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Bad request (validation failure or missing mandatory parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '409':
+          description: Experiment with the same name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listExperiments:
+    get:
+      tags:
+        - Experiments
+      summary: List registered experiments
+      description: |
+        Retrieves experiment configurations, metrics results, and recommendations.
+        Supports filtering by experiment name, inclusion of results and recommendations, and latest vs historical records.
+      operationId: listExperimentsGet
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          description: Name of a specific experiment to filter by.
+          schema:
+            type: string
+            example: quarkus-resteasy-kruize-min-http-response-time-db_0
+        - name: results
+          in: query
+          required: false
+          description: Set to `true` to include metric results in the response.
+          schema:
+            type: boolean
+            default: false
+        - name: recommendations
+          in: query
+          required: false
+          description: Set to `true` to include recommendations in the response.
+          schema:
+            type: boolean
+            default: false
+        - name: latest
+          in: query
+          required: false
+          description: When `true` (default), returns only the latest record. When `false`, returns all historical records.
+          schema:
+            type: boolean
+            default: true
+        - name: rm
+          in: query
+          required: false
+          description: Remote monitoring filter flag.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of experiment records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+    post:
+      tags:
+        - Experiments
+      summary: List experiments matching query criteria
+      description: Fetches experiment records based on cluster name and Kubernetes object structure passed in the request body.
+      operationId: listExperimentsPost
+      parameters:
+        - name: results
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: recommendations
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: latest
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cluster_name:
+                  type: string
+                  example: cluster-one-division-bell
+                kubernetes_objects:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/KubernetesObjectQuery'
+      responses:
+        '200':
+          description: List of matching experiments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentResponse'
+        '400':
+          description: Invalid request body or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /updateResults:
+    post:
+      tags:
+        - Results
+      summary: Ingest metric timeseries results
+      description: |
+        Ingests time-windowed resource metric utilization results (CPU, Memory, Accelerator GPU, etc.) for registered experiments.
+        Supports single records or bulk ingestion up to 100 records per call.
+      operationId: updateResults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UpdateResultsPayload'
+            example:
+              - version: "v2.0"
+                experiment_name: "quarkus-resteasy-autotune-min-http-response-time-db"
+                interval_start_time: "2022-01-23T18:25:43.511Z"
+                interval_end_time: "2022-01-23T18:40:43.602Z"
+                kubernetes_objects:
+                  - type: "deployment"
+                    name: "tfb-qrh-deployment"
+                    namespace: "default"
+                    containers:
+                      - container_image_name: "kruize/tfb-qrh:1.13.2.F_et17"
+                        container_name: "tfb-server-0"
+                        metrics:
+                          - name: "cpuUsage"
+                            results:
+                              aggregation_info:
+                                min: 0.14
+                                max: 0.84
+                                sum: 0.84
+                                avg: 0.12
+                                format: "cores"
+                          - name: "memoryUsage"
+                            results:
+                              aggregation_info:
+                                min: 50.6
+                                max: 198.50
+                                sum: 198.50
+                                avg: 40.1
+                                format: "MiB"
+                          - name: "memoryRSS"
+                            results:
+                              aggregation_info:
+                                min: 50.6
+                                max: 123.6
+                                sum: 123.6
+                                avg: 31.91
+                                format: "MiB"
+      responses:
+        '201':
+          description: Metrics results ingested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Updated metrics results successfully with Autotune. View update results at /listExperiments"
+                httpcode: 201
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Validation error or partial/total failure during batch update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateResultsErrorResponse'
+        '409':
+          description: Duplicate entry for the interval timestamp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /updateRecommendations:
+    post:
+      tags:
+        - Recommendations
+      summary: Generate / update recommendations (Remote Monitoring)
+      description: |
+        Generates cost and performance recommendations for a specific experiment in Remote Monitoring mode using stored timeseries metrics.
+        Returns recommendations with term analyses (short-term, medium-term, long-term) and box-plot quartiles.
+      operationId: updateRecommendations
+      parameters:
+        - name: experiment_name
+          in: query
+          required: true
+          description: Name of the experiment.
+          schema:
+            type: string
+            example: temp_1
+        - name: interval_end_time
+          in: query
+          required: true
+          description: End time of evaluation interval in ISO 8601 UTC format (`yyyy-MM-ddTHH:mm:ss.sssZ`).
+          schema:
+            type: string
+            format: date-time
+            example: "2023-01-02T00:15:00.000Z"
+        - name: interval_start_time
+          in: query
+          required: false
+          description: Optional start time of evaluation interval. The difference between start and end must not exceed 15 days.
+          schema:
+            type: string
+            format: date-time
+            example: "2023-01-01T00:15:00.000Z"
+      responses:
+        '201':
+          description: Recommendations successfully generated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendationRecord'
+        '400':
+          description: Missing parameters, invalid timestamps, experiment not found, or time window exceeds 15 days
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /generateRecommendations:
+    post:
+      tags:
+        - Recommendations
+      summary: Generate recommendations from datasource (Local Monitoring)
+      description: |
+        Directly queries the configured monitoring datasource (e.g. Prometheus) to calculate and return container / namespace recommendations for the experiment.
+      operationId: generateRecommendations
+      parameters:
+        - name: experiment_name
+          in: query
+          required: true
+          description: Name of the experiment.
+          schema:
+            type: string
+            example: temp_1
+        - name: interval_end_time
+          in: query
+          required: false
+          description: Evaluation end timestamp in ISO 8601 UTC format. Defaults to latest available metric timestamp in datasource.
+          schema:
+            type: string
+            format: date-time
+            example: "2023-01-02T00:15:00.000Z"
+        - name: interval_start_time
+          in: query
+          required: false
+          description: Evaluation start timestamp in ISO 8601 UTC format.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '201':
+          description: Recommendations generated successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendationRecord'
+        '400':
+          description: Invalid request parameters or experiment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listRecommendations:
+    get:
+      tags:
+        - Recommendations
+      summary: List existing recommendations
+      description: Retrieves generated recommendations for experiments.
+      operationId: listRecommendations
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          description: Filter recommendations for a specific experiment.
+          schema:
+            type: string
+            example: quarkus-resteasy-kruize-min-http-response-time-db_0
+        - name: latest
+          in: query
+          required: false
+          description: If true, returns only the latest recommendation record.
+          schema:
+            type: boolean
+            default: true
+        - name: monitoring_end_time
+          in: query
+          required: false
+          description: Specific timestamp to retrieve recommendations for (`yyyy-MM-ddTHH:mm:ss.sssZ`).
+          schema:
+            type: string
+            format: date-time
+            example: "2022-12-20T17:55:05.000Z"
+      responses:
+        '200':
+          description: List of recommendation records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendationRecord'
+        '400':
+          description: Invalid experiment name or timestamp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /kruize/api/v1/recommendations:
+    post:
+      tags:
+        - Recommendations
+      summary: Generate Kubernetes-native structured recommendations (v1 API)
+      description: |
+        Generates recommendations structured with Kubernetes-native resources (`resources.requests` and `resources.limits`), matching standard Kubernetes pod / deployment manifest formatting.
+      operationId: generateKruizeV1Recommendations
+      parameters:
+        - name: experiment_name
+          in: query
+          required: true
+          schema:
+            type: string
+            example: temp_1
+        - name: interval_end_time
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-01-02T00:15:00.000Z"
+        - name: interval_start_time
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '201':
+          description: Kubernetes-native recommendation response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendationRecord'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+    get:
+      tags:
+        - Recommendations
+      summary: List Kubernetes-native structured recommendations (v1 API)
+      description: Retrieves recommendations structured with Kubernetes-native resources layout.
+      operationId: listKruizeV1Recommendations
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: latest
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+        - name: monitoring_end_time
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendationRecord'
+
+  /createPerformanceProfile:
+    post:
+      tags:
+        - Performance Profiles
+      summary: Create performance profile
+      description: Registers a new performance profile defining SLO objectives, function variables, datasource queries, and aggregation functions.
+      operationId: createPerformanceProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceProfilePayload'
+      responses:
+        '201':
+          description: Performance profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Performance Profile : resource-optimization-openshift created successfully. View all performance profiles at /listPerformanceProfiles"
+                httpcode: 201
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Invalid performance profile structure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '409':
+          description: Performance profile already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listPerformanceProfiles:
+    get:
+      tags:
+        - Performance Profiles
+      summary: List performance profiles
+      description: Returns list of all performance profiles or details of a specific profile.
+      operationId: listPerformanceProfiles
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Name of the performance profile to retrieve.
+          schema:
+            type: string
+            example: resource-optimization-openshift
+      responses:
+        '200':
+          description: Performance profile details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceProfileResponse'
+
+  /updatePerformanceProfile:
+    put:
+      tags:
+        - Performance Profiles
+      summary: Update performance profile
+      description: Updates an existing performance profile definition and increments its version.
+      operationId: updatePerformanceProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceProfilePayload'
+      responses:
+        '200':
+          description: Performance profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Performance Profile : resource-optimization-openshift updated successfully to version 2.0. View all performance profiles at /listPerformanceProfiles"
+                httpcode: 200
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Invalid request or profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /deletePerformanceProfile:
+    delete:
+      tags:
+        - Performance Profiles
+      summary: Delete performance profile
+      description: Deletes the specified performance profile by name.
+      operationId: deletePerformanceProfile
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Name of performance profile to delete.
+          schema:
+            type: string
+            example: resource-optimization-openshift
+      responses:
+        '200':
+          description: Performance profile deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Performance profile resource-optimization-openshift deleted successfully. View Performance Profiles at /listPerformanceProfiles"
+                httpcode: 200
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Performance profile not found or parameter missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /createMetricProfile:
+    post:
+      tags:
+        - Metric Profiles
+      summary: Create metric profile
+      description: Registers a metric profile (KruizePerformanceProfile resource) defining PromQL metrics, aggregation functions, and variables for local monitoring.
+      operationId: createMetricProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetricProfilePayload'
+      responses:
+        '201':
+          description: Metric profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '400':
+          description: Invalid metric profile payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listMetricProfiles:
+    get:
+      tags:
+        - Metric Profiles
+      summary: List metric profiles
+      description: Returns all metric profiles or a specific metric profile by name.
+      operationId: listMetricProfiles
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Name of metric profile to filter.
+          schema:
+            type: string
+            example: resource-optimization-openshift
+      responses:
+        '200':
+          description: Metric profile details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricProfileResponse'
+
+  /deleteMetricProfile:
+    delete:
+      tags:
+        - Metric Profiles
+      summary: Delete metric profile
+      description: Deletes a metric profile by name.
+      operationId: deleteMetricProfile
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Name of the metric profile to delete.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metric profile deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /createMetadataProfile:
+    post:
+      tags:
+        - Metadata Profiles
+      summary: Create metadata profile
+      description: Registers a metadata profile defining queries to discover cluster namespaces, workloads, and container metadata.
+      operationId: createMetadataProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataProfilePayload'
+      responses:
+        '201':
+          description: Metadata profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                message: "Metadata Profile : cluster-metadata-local-monitoring created successfully. View all metadata profiles at /listMetadataProfiles"
+                httpcode: 201
+                documentationLink: ""
+                status: "SUCCESS"
+        '400':
+          description: Invalid metadata profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listMetadataProfiles:
+    get:
+      tags:
+        - Metadata Profiles
+      summary: List metadata profiles
+      description: Retrieves all metadata profiles, or filters by profile name, with optional query verbose output.
+      operationId: listMetadataProfiles
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Metadata profile name to filter by.
+          schema:
+            type: string
+            example: cluster-metadata-local-monitoring
+        - name: verbose
+          in: query
+          required: false
+          description: When `true`, returns full query details for each profile.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of metadata profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetadataProfileResponse'
+
+  /updateMetadataProfile:
+    put:
+      tags:
+        - Metadata Profiles
+      summary: Update metadata profile
+      description: Updates an existing metadata profile definition.
+      operationId: updateMetadataProfile
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Name of the metadata profile to update.
+          schema:
+            type: string
+            example: cluster-metadata-local-monitoring
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataProfilePayload'
+      responses:
+        '201':
+          description: Metadata profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /deleteMetadataProfile:
+    delete:
+      tags:
+        - Metadata Profiles
+      summary: Delete metadata profile
+      description: Deletes a metadata profile by name.
+      operationId: deleteMetadataProfile
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Name of the metadata profile to delete.
+          schema:
+            type: string
+            example: cluster-metadata-local-monitoring
+      responses:
+        '201':
+          description: Metadata profile deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /datasources:
+    get:
+      tags:
+        - Datasources & Metadata
+      summary: List configured datasources
+      description: Retrieves details of available monitoring datasources (Prometheus, Thanos) and their connection configuration.
+      operationId: listDatasources
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Filter by datasource name.
+          schema:
+            type: string
+            example: prometheus-1
+      responses:
+        '200':
+          description: List of datasources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasourcesListResponse'
+
+  /dsmetadata:
+    post:
+      tags:
+        - Datasources & Metadata
+      summary: Import cluster metadata from datasource
+      description: Triggers metadata discovery from a target datasource using a specified metadata profile.
+      operationId: importDatasourceMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportMetadataPayload'
+            example:
+              version: "v1.0"
+              datasource_name: "prometheus-1"
+              metadata_profile: "cluster-metadata-local-monitoring"
+              measurement_duration: "15min"
+      responses:
+        '201':
+          description: Metadata successfully imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportMetadataResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+    get:
+      tags:
+        - Datasources & Metadata
+      summary: List imported cluster metadata
+      description: Retrieves imported cluster metadata hierarchy (clusters, namespaces, workloads, containers).
+      operationId: listDatasourceMetadata
+      parameters:
+        - name: datasource
+          in: query
+          required: false
+          schema:
+            type: string
+            example: prometheus-1
+        - name: cluster_name
+          in: query
+          required: false
+          schema:
+            type: string
+            example: default
+        - name: namespace
+          in: query
+          required: false
+          schema:
+            type: string
+            example: default
+        - name: workload
+          in: query
+          required: false
+          schema:
+            type: string
+            example: tfb-qrh-deployment
+        - name: verbose
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Cluster metadata hierarchy
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      tags:
+        - Datasources & Metadata
+      summary: Delete datasource metadata
+      description: Deletes cached imported metadata for a datasource.
+      operationId: deleteDatasourceMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+                - datasource_name
+              properties:
+                version:
+                  type: string
+                  example: "v1.0"
+                datasource_name:
+                  type: string
+                  example: "prometheus-1"
+      responses:
+        '201':
+          description: Datasource metadata deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /bulk:
+    post:
+      tags:
+        - Bulk Service
+      summary: Trigger fleet-wide bulk processing
+      description: |
+        Initiates asynchronous bulk discovery, experiment registration, and recommendation generation across multiple workloads/namespaces based on inclusion and exclusion filters.
+        Returns a `job_id` to poll for progress.
+      operationId: submitBulkJob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkRequestPayload'
+      responses:
+        '200':
+          description: Bulk job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkJobAcceptedResponse'
+              example:
+                job_id: "123e4567-e89b-12d3-a456-426614174000"
+        '400':
+          description: Invalid bulk request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+    get:
+      tags:
+        - Bulk Service
+      summary: Query bulk job status and results
+      description: Retrieves the execution status, summary, and generated experiment recommendations for a bulk job by `job_id`.
+      operationId: getBulkJobStatus
+      parameters:
+        - name: job_id
+          in: query
+          required: true
+          description: The unique identifier for the bulk job.
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: include
+          in: query
+          required: false
+          description: Specifies which sections to include (e.g., `summary`, `experiments`, `all`).
+          schema:
+            type: string
+            default: summary
+            example: summary
+      responses:
+        '200':
+          description: Bulk job status and results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkJobStatusResponse'
+        '400':
+          description: Job ID missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '404':
+          description: Job ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /createLayer:
+    post:
+      tags:
+        - Layers & Tunables
+      summary: Create tuning layer
+      description: Registers a new tuning layer (e.g. generic container, HotSpot JVM, Quarkus framework) with associated tunables and bounds.
+      operationId: createLayer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLayerPayload'
+      responses:
+        '201':
+          description: Layer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+        '400':
+          description: Invalid layer payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listLayers:
+    get:
+      tags:
+        - Layers & Tunables
+      summary: List tuning layers
+      description: Returns all registered tuning layers or filters by layer name.
+      operationId: listLayers
+      parameters:
+        - name: layer_name
+          in: query
+          required: false
+          schema:
+            type: string
+            example: container
+      responses:
+        '200':
+          description: List of layers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LayerResponse'
+
+  /createExperimentTrial:
+    post:
+      tags:
+        - Trials
+      summary: Create trial experiment
+      description: Registers trial execution settings and deployment configurations for local trial-based optimization.
+      operationId: createExperimentTrial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateExperimentTrialPayload'
+      responses:
+        '201':
+          description: Trial experiment registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /listStacks:
+    get:
+      tags:
+        - Trials
+      summary: List application stacks
+      description: Lists application stacks monitored by Autotune trial experiment mode.
+      operationId: listStacks
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of application stacks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /listStackLayers:
+    get:
+      tags:
+        - Trials
+      summary: List stack layers
+      description: Returns application stacks monitored along with detected layers.
+      operationId: listStackLayers
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stacks with layers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /listStackTunables:
+    get:
+      tags:
+        - Trials
+      summary: List stack tunables
+      description: Returns tunables for application stacks.
+      operationId: listStackTunables
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: layer_name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stack tunables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /listKruizeTunables:
+    get:
+      tags:
+        - Layers & Tunables
+      summary: List Kruize supported tunables
+      description: Returns all supported tunables grouped by SLO class and layer.
+      operationId: listKruizeTunables
+      parameters:
+        - name: slo_class
+          in: query
+          required: false
+          schema:
+            type: string
+            example: response_time
+        - name: layer_name
+          in: query
+          required: false
+          schema:
+            type: string
+            example: container
+      responses:
+        '200':
+          description: List of tunables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /searchSpace:
+    get:
+      tags:
+        - Trials
+      summary: Generate search space
+      description: Generates the hyperparameter tuning search space for trial analysis.
+      operationId: getSearchSpace
+      parameters:
+        - name: experiment_name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search space configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /query/listNamespaces:
+    get:
+      tags:
+        - UI Query Support
+      summary: List cluster namespaces
+      description: Helper endpoint to list available namespaces in the target cluster or datasource.
+      operationId: listNamespaces
+      responses:
+        '200':
+          description: List of namespaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /query/listDeployments:
+    get:
+      tags:
+        - UI Query Support
+      summary: List deployments in namespace
+      description: Helper endpoint to list deployments in a specific namespace.
+      operationId: listDeployments
+      parameters:
+        - name: namespace
+          in: query
+          required: true
+          schema:
+            type: string
+            example: default
+      responses:
+        '200':
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /query/listK8sObjects:
+    get:
+      tags:
+        - UI Query Support
+      summary: List supported Kubernetes object types
+      description: Returns supported workload object types (Deployment, StatefulSet, ReplicaSet, DaemonSet, Job).
+      operationId: listK8sObjects
+      responses:
+        '200':
+          description: List of supported Kubernetes object types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: deployment
+
+components:
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable message explaining outcome
+        httpcode:
+          type: integer
+          description: HTTP response status code
+          example: 201
+        documentationLink:
+          type: string
+          description: Link to documentation regarding the status
+        status:
+          type: string
+          enum: [SUCCESS, ERROR]
+          example: SUCCESS
+
+    CreateExperimentPayload:
+      type: object
+      required:
+        - version
+        - experiment_name
+        - cluster_name
+        - performance_profile
+        - mode
+        - target_cluster
+        - kubernetes_objects
+      properties:
+        version:
+          type: string
+          example: "v2.0"
+        experiment_name:
+          type: string
+          example: "quarkus-resteasy-autotune-min-http-response-time-db"
+        cluster_name:
+          type: string
+          example: "cluster-one-division-bell"
+        performance_profile:
+          type: string
+          example: "resource-optimization-openshift"
+        mode:
+          type: string
+          enum: [monitor, experiment, recreate, auto]
+          example: "monitor"
+        target_cluster:
+          type: string
+          enum: [remote, local]
+          example: "remote"
+        datasource:
+          type: string
+          description: Required when target_cluster is local
+          example: "prometheus-1"
+        experiment_type:
+          type: string
+          enum: [container, namespace]
+          default: container
+          example: "container"
+        kubernetes_objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/KubernetesObject'
+        trial_settings:
+          type: object
+          properties:
+            measurement_duration:
+              type: string
+              example: "15min"
+        recommendation_settings:
+          type: object
+          properties:
+            threshold:
+              type: string
+              example: "0.1"
+
+    KubernetesObject:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [deployment, statefulset, replicaset, daemonset, job, replicationcontroller]
+          example: "deployment"
+        name:
+          type: string
+          example: "tfb-qrh-deployment"
+        namespace:
+          type: string
+          example: "default"
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerObject'
+
+    KubernetesObjectQuery:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "deployment"
+        name:
+          type: string
+          example: "tfb-qrh-deployment"
+        namespace:
+          type: string
+          example: "default"
+        containers:
+          type: array
+          items:
+            type: object
+            properties:
+              container_image_name:
+                type: string
+              container_name:
+                type: string
+
+    ContainerObject:
+      type: object
+      required:
+        - container_name
+      properties:
+        container_name:
+          type: string
+          example: "tfb-server-0"
+        container_image_name:
+          type: string
+          example: "kruize/tfb-db:1.15"
+
+    ExperimentResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "v2.0"
+        experiment_id:
+          type: string
+          example: "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74"
+        experiment_name:
+          type: string
+          example: "quarkus-resteasy-kruize-min-http-response-time-db_0"
+        cluster_name:
+          type: string
+          example: "cluster-one-division-bell"
+        experiment_type:
+          type: string
+          example: "container"
+        mode:
+          type: string
+          example: "monitor"
+        target_cluster:
+          type: string
+          example: "remote"
+        status:
+          type: string
+          example: "IN_PROGRESS"
+        performance_profile:
+          type: string
+          example: "resource-optimization-openshift"
+        trial_settings:
+          type: object
+        recommendation_settings:
+          type: object
+        kubernetes_objects:
+          type: array
+          items:
+            type: object
+
+    UpdateResultsPayload:
+      type: object
+      required:
+        - version
+        - experiment_name
+        - interval_start_time
+        - interval_end_time
+        - kubernetes_objects
+      properties:
+        version:
+          type: string
+          example: "v2.0"
+        experiment_name:
+          type: string
+          example: "quarkus-resteasy-autotune-min-http-response-time-db"
+        interval_start_time:
+          type: string
+          format: date-time
+          example: "2022-01-23T18:25:43.511Z"
+        interval_end_time:
+          type: string
+          format: date-time
+          example: "2022-01-23T18:40:43.602Z"
+        kubernetes_objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/KubernetesObjectResults'
+
+    KubernetesObjectResults:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "deployment"
+        name:
+          type: string
+          example: "tfb-qrh-deployment"
+        namespace:
+          type: string
+          example: "default"
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerResults'
+        namespaces:
+          type: object
+          properties:
+            namespace:
+              type: string
+            metrics:
+              type: array
+              items:
+                $ref: '#/components/schemas/MetricResult'
+
+    ContainerResults:
+      type: object
+      required:
+        - container_name
+        - metrics
+      properties:
+        container_image_name:
+          type: string
+          example: "kruize/tfb-qrh:1.13.2.F_et17"
+        container_name:
+          type: string
+          example: "tfb-server-0"
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricResult'
+
+    MetricResult:
+      type: object
+      required:
+        - name
+        - results
+      properties:
+        name:
+          type: string
+          description: Metric name (e.g. cpuRequest, cpuLimit, cpuUsage, cpuThrottle, memoryRequest, memoryLimit, memoryUsage, memoryRSS, acceleratorCoreUsage, acceleratorMemoryUsage, acceleratorFrameBufferUsage)
+          example: "cpuUsage"
+        results:
+          type: object
+          properties:
+            value:
+              type: number
+            format:
+              type: string
+              example: "cores"
+            metadata:
+              type: object
+              properties:
+                accelerator_model_name:
+                  type: string
+                  example: "NVIDIA-A100-SXM4-40GB"
+            aggregation_info:
+              $ref: '#/components/schemas/AggregationInfo'
+
+    AggregationInfo:
+      type: object
+      properties:
+        min:
+          type: number
+          example: 0.14
+        max:
+          type: number
+          example: 0.84
+        sum:
+          type: number
+          example: 0.84
+        avg:
+          type: number
+          example: 0.12
+        format:
+          type: string
+          description: Accepted units (cores, m, Bytes, KiB, MiB, GiB, TiB, PiB, EiB, etc.)
+          example: "cores"
+
+    UpdateResultsErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Out of a total of 3 records, 2 failed to save"
+        httpcode:
+          type: integer
+          example: 400
+        documentationLink:
+          type: string
+        status:
+          type: string
+          example: "ERROR"
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              interval_start_time:
+                type: string
+              interval_end_time:
+                type: string
+              version:
+                type: string
+              experiment_name:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StandardResponse'
+
+    RecommendationRecord:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "v2.0"
+        experiment_name:
+          type: string
+          example: "quarkus-resteasy-kruize-min-http-response-time-db_0"
+        cluster_name:
+          type: string
+          example: "cluster-one-division-bell"
+        experiment_type:
+          type: string
+          example: "container"
+        kubernetes_objects:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              name:
+                type: string
+              namespace:
+                type: string
+              containers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContainerRecommendation'
+
+    ContainerRecommendation:
+      type: object
+      properties:
+        container_name:
+          type: string
+          example: "tfb-server-1"
+        container_image_name:
+          type: string
+          example: "kruize/tfb-qrh:1.13.2.F_et17"
+        recommendations:
+          type: object
+          properties:
+            version:
+              type: string
+              example: "v2.0"
+            notifications:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/NotificationObject'
+            data:
+              type: object
+              description: Map of timestamp keys to recommendation engines or terms
+              additionalProperties:
+                $ref: '#/components/schemas/TimestampRecommendationData'
+
+    TimestampRecommendationData:
+      type: object
+      properties:
+        monitoring_end_time:
+          type: string
+          format: date-time
+        notifications:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/NotificationObject'
+        current:
+          $ref: '#/components/schemas/ResourceAllocationCurrent'
+        recommendation_terms:
+          type: object
+          properties:
+            short_term:
+              $ref: '#/components/schemas/RecommendationTerm'
+            medium_term:
+              $ref: '#/components/schemas/RecommendationTerm'
+            long_term:
+              $ref: '#/components/schemas/RecommendationTerm'
+        cost:
+          type: object
+          description: Cost engine recommendations (short/medium/long term)
+        performance:
+          type: object
+          description: Performance engine recommendations (short/medium/long term)
+
+    ResourceAllocationCurrent:
+      type: object
+      properties:
+        replicas:
+          type: integer
+          example: 1
+        requests:
+          $ref: '#/components/schemas/ResourceAllocations'
+        limits:
+          $ref: '#/components/schemas/ResourceAllocations'
+
+    RecommendationTerm:
+      type: object
+      properties:
+        monitoring_start_time:
+          type: string
+          format: date-time
+        duration_in_hours:
+          type: number
+          example: 24.0
+        pods_count:
+          type: integer
+          example: 27
+        confidence_level:
+          type: number
+          example: 0.0
+        notifications:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/NotificationObject'
+        metrics_info:
+          type: object
+          properties:
+            pod_count:
+              type: object
+              properties:
+                avg:
+                  type: number
+                min:
+                  type: number
+                max:
+                  type: number
+        recommendation_engines:
+          type: object
+          properties:
+            cost:
+              $ref: '#/components/schemas/RecommendationEngineResult'
+            performance:
+              $ref: '#/components/schemas/RecommendationEngineResult'
+        plots:
+          $ref: '#/components/schemas/BoxPlotData'
+
+    RecommendationEngineResult:
+      type: object
+      properties:
+        pods_count:
+          type: integer
+          example: 27
+        confidence_level:
+          type: number
+          example: 0.0
+        config:
+          type: object
+          properties:
+            requests:
+              $ref: '#/components/schemas/ResourceAllocations'
+            limits:
+              $ref: '#/components/schemas/ResourceAllocations'
+        variation:
+          type: object
+          properties:
+            requests:
+              $ref: '#/components/schemas/ResourceAllocations'
+            limits:
+              $ref: '#/components/schemas/ResourceAllocations'
+        notifications:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/NotificationObject'
+
+    ResourceAllocations:
+      type: object
+      properties:
+        cpu:
+          $ref: '#/components/schemas/ResourceAmount'
+        memory:
+          $ref: '#/components/schemas/ResourceAmount'
+      additionalProperties:
+        $ref: '#/components/schemas/ResourceAmount'
+
+    ResourceAmount:
+      type: object
+      properties:
+        amount:
+          type: number
+          example: 1.46
+        format:
+          type: string
+          example: "cores"
+
+    NotificationObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Standard notification code (e.g. 111000, 112101, 120001, 221001, 323001, 423001, 523001)
+          example: 112101
+        type:
+          type: string
+          enum: [info, notice, warning, error, critical]
+          example: "info"
+        message:
+          type: string
+          example: "Cost Recommendations Available"
+
+    BoxPlotData:
+      type: object
+      properties:
+        datapoints:
+          type: integer
+          example: 4
+        plots_data:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              cpuUsage:
+                $ref: '#/components/schemas/BoxPlotQuartiles'
+              memoryUsage:
+                $ref: '#/components/schemas/BoxPlotQuartiles'
+
+    BoxPlotQuartiles:
+      type: object
+      properties:
+        min:
+          type: number
+        q1:
+          type: number
+        median:
+          type: number
+        q3:
+          type: number
+        max:
+          type: number
+        format:
+          type: string
+
+    PerformanceProfilePayload:
+      type: object
+      required:
+        - name
+        - profile_version
+        - slo
+      properties:
+        name:
+          type: string
+          example: "resource-optimization-openshift"
+        profile_version:
+          type: number
+          example: 1.0
+        k8s_type:
+          type: string
+          example: "openshift"
+        slo:
+          $ref: '#/components/schemas/SLOObject'
+
+    PerformanceProfileResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        profile_version:
+          type: number
+        k8s_type:
+          type: string
+        slo:
+          $ref: '#/components/schemas/SLOObject'
+
+    SLOObject:
+      type: object
+      properties:
+        sloClass:
+          type: string
+          example: "resource_usage"
+        direction:
+          type: string
+          enum: [minimize, maximize]
+          example: "minimize"
+        objective_function:
+          type: object
+          properties:
+            function_type:
+              type: string
+              example: "expression"
+            expression:
+              type: string
+              example: "request_sum/request_count"
+        function_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/FunctionVariable'
+
+    FunctionVariable:
+      type: object
+      required:
+        - name
+        - datasource
+        - value_type
+      properties:
+        name:
+          type: string
+          example: "cpuRequest"
+        datasource:
+          type: string
+          example: "prometheus"
+        value_type:
+          type: string
+          example: "double"
+        kubernetes_object:
+          type: string
+          example: "container"
+        query:
+          type: string
+        aggregation_functions:
+          type: object
+
+    MetricProfilePayload:
+      type: object
+      required:
+        - apiVersion
+        - kind
+        - metadata
+        - profile_version
+        - slo
+      properties:
+        apiVersion:
+          type: string
+          example: "recommender.com/v1"
+        kind:
+          type: string
+          example: "KruizePerformanceProfile"
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "resource-optimization-openshift"
+        profile_version:
+          type: number
+          example: 1.0
+        k8s_type:
+          type: string
+          example: "openshift"
+        slo:
+          $ref: '#/components/schemas/SLOObject'
+
+    MetricProfileResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "resource-optimization-openshift"
+
+    MetadataProfilePayload:
+      type: object
+      required:
+        - apiVersion
+        - kind
+        - metadata
+        - profile_version
+        - datasource
+        - query_variables
+      properties:
+        apiVersion:
+          type: string
+          example: "recommender.com/v1"
+        kind:
+          type: string
+          example: "KruizeMetadataProfile"
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "cluster-metadata-local-monitoring"
+        profile_version:
+          type: number
+          example: 1.0
+        k8s_type:
+          type: string
+          example: "openshift"
+        datasource:
+          type: string
+          example: "prometheus"
+        query_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataQueryVariable'
+
+    MetadataProfileResponse:
+      type: object
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+        profile_version:
+          type: number
+        k8s_type:
+          type: string
+        datasource:
+          type: string
+        query_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataQueryVariable'
+
+    MetadataQueryVariable:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "namespacesAcrossCluster"
+        datasource:
+          type: string
+          example: "prometheus"
+        value_type:
+          type: string
+          example: "double"
+        kubernetes_object:
+          type: string
+          example: "container"
+        aggregation_functions:
+          type: array
+          items:
+            type: object
+            properties:
+              function:
+                type: string
+                example: "sum"
+              query:
+                type: string
+
+    DatasourcesListResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "v1.0"
+        datasources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasourceConfig'
+
+    DatasourceConfig:
+      type: object
+      required:
+        - name
+        - provider
+      properties:
+        name:
+          type: string
+          example: "prometheus-1"
+        provider:
+          type: string
+          enum: [prometheus, thanos]
+          example: "prometheus"
+        url:
+          type: string
+          example: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+        serviceName:
+          type: string
+          example: "prometheus-k8s"
+        namespace:
+          type: string
+          example: "monitoring"
+        authentication:
+          $ref: '#/components/schemas/DatasourceAuth'
+
+    DatasourceAuth:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [none, basic, bearer, mtls]
+          example: "none"
+        credentials:
+          type: object
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+            token:
+              type: string
+            tokenPath:
+              type: string
+            clientCertPath:
+              type: string
+            clientKeyPath:
+              type: string
+            caCertPath:
+              type: string
+            keyPassword:
+              type: string
+
+    ImportMetadataPayload:
+      type: object
+      required:
+        - version
+        - datasource_name
+        - metadata_profile
+      properties:
+        version:
+          type: string
+          example: "v1.0"
+        datasource_name:
+          type: string
+          example: "prometheus-1"
+        metadata_profile:
+          type: string
+          example: "cluster-metadata-local-monitoring"
+        measurement_duration:
+          type: string
+          example: "15min"
+
+    ImportMetadataResponse:
+      type: object
+      properties:
+        datasources:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              datasource_name:
+                type: string
+              clusters:
+                type: object
+
+    BulkRequestPayload:
+      type: object
+      required:
+        - datasource
+        - metadata_profile
+      properties:
+        filter:
+          type: object
+          properties:
+            exclude:
+              $ref: '#/components/schemas/BulkFilterCriteria'
+            include:
+              $ref: '#/components/schemas/BulkFilterCriteria'
+        time_range:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+              example: "2024-11-01T00:00:00.000Z"
+            end:
+              type: string
+              format: date-time
+              example: "2024-11-15T23:59:59.000Z"
+        datasource:
+          type: string
+          example: "Cbank1Xyz"
+        metadata_profile:
+          type: string
+          example: "cluster-metadata-local-monitoring"
+        measurement_duration:
+          type: string
+          default: "15min"
+          example: "15min"
+        experiment_types:
+          type: array
+          items:
+            type: string
+            enum: [container, namespace]
+          example: ["container", "namespace"]
+        webhook:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              example: "http://127.0.0.1:8080/webhook"
+
+    BulkFilterCriteria:
+      type: object
+      properties:
+        namespace:
+          type: array
+          items:
+            type: string
+          example: ["openshift-.*"]
+        workload:
+          type: array
+          items:
+            type: string
+        containers:
+          type: array
+          items:
+            type: string
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+
+    BulkJobAcceptedResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    BulkJobStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        job_status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, FAILED]
+          example: "COMPLETED"
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+        summary:
+          type: object
+        experiments:
+          type: array
+          items:
+            type: object
+
+    CreateLayerPayload:
+      type: object
+      required:
+        - layer_name
+        - layer_level
+      properties:
+        layer_id:
+          type: string
+        layer_name:
+          type: string
+          example: "container"
+        layer_level:
+          type: integer
+          example: 0
+        layer_details:
+          type: string
+          example: "generic container tunables"
+        tunables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TunableObject'
+
+    LayerResponse:
+      type: object
+      properties:
+        layer_id:
+          type: string
+        layer_name:
+          type: string
+        layer_level:
+          type: integer
+        layer_details:
+          type: string
+        tunables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TunableObject'
+
+    TunableObject:
+      type: object
+      required:
+        - name
+        - value_type
+      properties:
+        name:
+          type: string
+          example: "cpuRequest"
+        value_type:
+          type: string
+          example: "double"
+        lower_bound:
+          type: string
+          example: "1.0"
+        upper_bound:
+          type: string
+          example: "3.0"
+        step:
+          type: number
+          example: 0.01
+        query_url:
+          type: string
+
+    CreateExperimentTrialPayload:
+      type: object
+      properties:
+        experiment_name:
+          type: string
+        experiment_id:
+          type: string
+        namespace:
+          type: string
+        settings:
+          type: object
+        deployments:
+          type: object
+        datasource_info:
+          type: object
+          properties:
+            name:
+              type: string
+            url:
+              type: string
+        trial_info:
+          type: object
+          properties:
+            trial_id:
+              type: string
+            trial_num:
+              type: integer
+            trial_result_url:
+              type: string
