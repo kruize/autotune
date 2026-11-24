@@ -16,9 +16,11 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationScope;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -40,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.LOCAL_MONITORING_DATASOURCE_MANDATORY;
 import static com.autotune.utils.Utils.getApproriateK8sObjectType;
@@ -382,6 +385,15 @@ public class ExperimentValidation {
                     }
                 }
 
+                // resource_scope_settings is optional; when absent the model default applies
+                String scopeError = validateResourceScopeSettings(expObj.getRecommendation_settings().getResourceScopeSettings());
+                if (scopeError != null) {
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(scopeError);
+                    return validationOutputData;
+                }
+
                 String depType = "";
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
@@ -459,6 +471,71 @@ public class ExperimentValidation {
             validationOutputData.setMessage(errorMsg);
         }
         return validationOutputData;
+    }
+
+    /**
+     * Validates the optional resource_scope_settings of an experiment.
+     * Rejects an empty object, an empty list for a key, unknown scope strings, and 'idle' for memory.
+     * 'all' combined with other scopes is accepted (the other values are redundant) and a warning is logged.
+     *
+     * @param settings the settings to validate, may be null (absent)
+     * @return an error message if invalid, or null if valid or absent
+     */
+    private String validateResourceScopeSettings(ResourceScopeSettings settings) {
+        if (settings == null) {
+            return null;
+        }
+        List<String> cpuScopes = settings.getCpu();
+        List<String> memoryScopes = settings.getMemory();
+        if (cpuScopes == null && memoryScopes == null) {
+            return AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.RESOURCE_SCOPE_SETTINGS_EMPTY;
+        }
+
+        if (cpuScopes != null) {
+            if (cpuScopes.isEmpty()) {
+                return String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.RESOURCE_SCOPE_EMPTY_LIST,
+                        KruizeConstants.JSONKeys.CPU);
+            }
+            for (String scope : cpuScopes) {
+                if (RecommendationScope.fromString(scope) == null) {
+                    return String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_CPU_SCOPE, scope);
+                }
+            }
+            warnIfAllWithOthers(KruizeConstants.JSONKeys.CPU, cpuScopes);
+        }
+
+        if (memoryScopes != null) {
+            if (memoryScopes.isEmpty()) {
+                return String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.RESOURCE_SCOPE_EMPTY_LIST,
+                        KruizeConstants.JSONKeys.MEMORY);
+            }
+            for (String scope : memoryScopes) {
+                RecommendationScope parsed = RecommendationScope.fromString(scope);
+                if (parsed == null) {
+                    return String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MEMORY_SCOPE, scope);
+                }
+                if (parsed == RecommendationScope.IDLE) {
+                    return AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.IDLE_NOT_VALID_FOR_MEMORY;
+                }
+            }
+            warnIfAllWithOthers(KruizeConstants.JSONKeys.MEMORY, memoryScopes);
+        }
+        return null;
+    }
+
+    /**
+     * Called only after every scope has been validated. The canonical scope values are logged, not the request
+     * strings, because the request strings are accepted with surrounding whitespace or control characters
+     * (e.g. CR/LF) and would otherwise allow log forging.
+     */
+    private void warnIfAllWithOthers(String resource, List<String> scopes) {
+        List<String> canonicalScopes = scopes.stream()
+                .map(s -> RecommendationScope.fromString(s).getValue())
+                .collect(Collectors.toList());
+        if (canonicalScopes.size() > 1 && canonicalScopes.contains(RecommendationScope.ALL.getValue())) {
+            LOGGER.warn("resource_scope_settings.{} contains 'all' together with other scopes {}; 'all' already matches every state",
+                    resource, canonicalScopes);
+        }
     }
 
     @Override
