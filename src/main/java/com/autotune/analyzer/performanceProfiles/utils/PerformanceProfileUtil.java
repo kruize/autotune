@@ -27,6 +27,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,7 @@ public class PerformanceProfileUtil {
                 validationOutputData.setMessage("Validation failed: " + validationOutputData.getMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and add metric profile failed: {}", e.getMessage());
+            LOGGER.error("Validate and add metric profile failed: {}", Utils.sanitizeForLog(e.getMessage()));
             validationOutputData = new ValidationOutputData(false, "Validation failed: " + e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
