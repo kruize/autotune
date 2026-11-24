@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.model;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.kruizeObject.ResourceScopeSettings;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
 import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
@@ -59,6 +60,17 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRecommendationModel.class);
+
+    /**
+     * Default scope for cost, performance and custom models: no filtering on either resource.
+     */
+    @Override
+    public ResourceScopeSettings getDefaultResourceScopeSettings() {
+        String all = RecommendationConstants.RecommendationScope.ALL.getValue();
+        ResourceScopeSettings settings = new ResourceScopeSettings(List.of(all), List.of(all));
+        settings.parse();
+        return settings;
+    }
 
     @Override
     public RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
