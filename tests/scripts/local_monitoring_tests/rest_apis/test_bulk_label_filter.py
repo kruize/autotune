@@ -212,6 +212,7 @@ def _bulk_metadata(payload):
                 time.sleep(RETRY_BACKOFF_SECONDS)
                 continue
             pytest.skip(f"Datasource unavailable after {MAX_JOB_RETRIES} attempts: {summary.get('notifications')}")
+        assert summary.get("status") != "FAILED", f"Bulk metadata job FAILED: {summary}"
         break
     return metadata
 
@@ -517,10 +518,12 @@ def test_namespace_filter_restricts_returned_metadata(bulk_label_filter_setup, c
     ns = namespaces[0]
     with caplog.at_level(logging.INFO):
         metadata = _bulk_metadata(label_filter_payload(include={"namespace": [ns]}))
+    returned = []
     for ds_data in metadata.get("datasources", {}).values():
         for cluster_data in ds_data.get("clusters", {}).values():
-            returned = list(cluster_data.get("namespaces", {}).keys())
-            assert returned == [ns], f"Namespace filter not honoured: expected only [{ns}], got {returned}"
+            returned.extend(cluster_data.get("namespaces", {}).keys())
+    assert returned and set(returned) == {ns}, \
+        f"Namespace filter not honoured: expected only [{ns}], got {returned}"
 
 
 # =================================================================================================
