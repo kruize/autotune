@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
 public class ExperimentDAOImplRecommendationUpsertTest {
 
     @Test
-    @DisplayName("upserts extended_data and accepts a null cluster name")
+    @DisplayName("upserts extended_data as the entry's JSON and accepts a null cluster name")
     public void upsertsOnPrimaryKey() {
         SessionFactory sessionFactory = mock(SessionFactory.class);
         Session session = mock(Session.class);
@@ -82,6 +82,12 @@ public class ExperimentDAOImplRecommendationUpsertTest {
         assertTrue(sql.getValue().contains("ON CONFLICT (experiment_name, interval_end_time)"));
         assertTrue(sql.getValue().contains("DO UPDATE SET extended_data = EXCLUDED.extended_data"));
         verify(query).setParameter(eq("clusterName"), isNull(), eq(String.class));
+        verify(query).setParameter(eq("version"), eq("1.0"), eq(String.class));
+        verify(query).setParameter(eq("experimentName"), eq("demo-exp"), eq(String.class));
+        verify(query).setParameter(eq("intervalEndTime"), eq(entry.getInterval_end_time()), eq(Timestamp.class));
+        ArgumentCaptor<String> extendedData = ArgumentCaptor.forClass(String.class);
+        verify(query).setParameter(eq("extendedData"), extendedData.capture(), eq(String.class));
+        assertEquals("{\"kubernetes_objects\":\"[]\"}", extendedData.getValue());
         verify(query, times(1)).executeUpdate();
         verify(tx, times(1)).commit();
         verify(session, never()).persist(any());
