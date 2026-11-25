@@ -64,6 +64,11 @@ public class UpdateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
     private static int requestCount = 0;
+    /**
+     * Leaves out the raw metrics (ContainerData results and ContainerAPIObject metrics) from the
+     * updateRecommendations response, so only the recommendations are sent back. Same rule the old
+     * code built inside sendSuccessResponse on every call; it is now created once and reused.
+     */
     private static final ExclusionStrategy RECOMMENDATION_RESPONSE_EXCLUSION = new ExclusionStrategy() {
         @Override
         public boolean shouldSkipField(FieldAttributes field) {
@@ -76,6 +81,12 @@ public class UpdateRecommendations extends HttpServlet {
             return false;
         }
     };
+    /**
+     * JSON writer for the updateRecommendations response. It has the same adapters and the same
+     * exclusion rule as the writer the old code created on every request, but it is created once
+     * (Gson is thread-safe once built) and it does not pretty-print, so the response is smaller
+     * and quicker to write. The fields and values in the response are unchanged.
+     */
     private static final Gson RECOMMENDATION_RESPONSE_GSON = new GsonBuilder()
             .disableHtmlEscaping()
             .enableComplexMapKeySerialization()
@@ -133,7 +144,7 @@ public class UpdateRecommendations extends HttpServlet {
                 try {
                     kruizeObject = recommendationEngine.prepareRecommendations(calCount, REMOTE, null, true);
                 } finally {
-                    LOGGER.info("updateRecommendations server prepare ms={} experiment={}",
+                    LOGGER.debug("updateRecommendations server prepare ms={} experiment={}",
                             (System.nanoTime() - prepareStartNanos) / 1_000_000L, experiment_name);
                 }
                 if (kruizeObject.getValidation_data().isSuccess()) {
