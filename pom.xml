@@ -236,6 +236,10 @@
                 <version>${appassembler-maven-plugin-version}</version>
                 <configuration>
                     <assembleDirectory>target</assembleDirectory>
+                    <!-- Interim workaround for CVE-2026-114938 (RHSB-2026-018 / Java4Shell).
+                         Applies to Autotune, CreatePartition and RetentionPartition.
+                         Remove once the image JRE is built from a patched OpenJDK (25.0.5.1 or later). -->
+                    <extraJvmArguments>-XX:-UseBASE64Intrinsics</extraJvmArguments>
                     <programs>
                         <program>
                             <mainClass>com.autotune.Autotune</mainClass>

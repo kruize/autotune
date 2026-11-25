@@ -377,8 +377,9 @@ spec:
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
               value: "/etc/config/kruizeconfigjson"
+            # Interim CVE-2026-114938 (RHSB-2026-018) mitigation. This value replaces the image ENV.
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:MaxRAMPercentage=80"
+              value: "-XX:MaxRAMPercentage=80 -XX:-UseBASE64Intrinsics"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
             - name: KAFKA_TOPICS
@@ -455,6 +456,9 @@ spec:
                   /home/autotune/app/target/bin/CreatePartition
               args: [ "" ]
               env:
+                # Interim CVE-2026-114938 (RHSB-2026-018) mitigation. Applies even before the image is rebuilt.
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-XX:-UseBASE64Intrinsics"
                 - name: START_AUTOTUNE
                   value: "false"
                 - name: LOGGING_LEVEL
@@ -496,6 +500,9 @@ spec:
                   /home/autotune/app/target/bin/RetentionPartition
               args: [ "" ]
               env:
+                # Interim CVE-2026-114938 (RHSB-2026-018) mitigation. Applies even before the image is rebuilt.
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-XX:-UseBASE64Intrinsics"
                 - name: START_AUTOTUNE
                   value: "false"
                 - name: LOGGING_LEVEL
