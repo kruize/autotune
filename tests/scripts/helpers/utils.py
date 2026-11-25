@@ -67,6 +67,12 @@ CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is 
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
 CREATE_EXP_INVALID_DATASOURCE = "Given datasource name - %s either does not exist or is not valid"
+CREATE_EXP_INVALID_MODEL = "Model name is not supported. Use cost or performance."
+CREATE_EXP_RESOURCE_SCOPE_EMPTY = "resource_scope_settings must not be empty if provided. Specify cpu, memory or both."
+CREATE_EXP_RESOURCE_SCOPE_EMPTY_LIST = "resource_scope_settings.%s must not be an empty list."
+CREATE_EXP_INVALID_CPU_SCOPE = "Unknown cpu scope: '%s'. Valid: under_provisioned, over_provisioned, optimised, idle, all"
+CREATE_EXP_INVALID_MEMORY_SCOPE = "Unknown memory scope: '%s'. Valid: under_provisioned, over_provisioned, optimised, all"
+CREATE_EXP_IDLE_NOT_VALID_FOR_MEMORY = "'idle' is not a valid memory scope, memory has no idle state."
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -185,6 +191,7 @@ NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "111101"
 NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "111102"
 NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE = "111103"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
+NOTIFICATION_CODE_FOR_CPU_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
@@ -2427,3 +2434,152 @@ def validate_current(current_config, experiment_type):
         assert "replicas" in current_config, MISSING_REPLICA_OBJECT
         assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
         assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+
+
+# ---------------------------------------------------------------------------
+# Resource scope settings (recommendation_settings.resource_scope_settings)
+# ---------------------------------------------------------------------------
+
+UNDER_PROVISIONED = "under_provisioned"
+OVER_PROVISIONED = "over_provisioned"
+OPTIMISED = "optimised"
+IDLE = "idle"
+SCOPE_ALL = "all"
+
+
+def add_recommendation_settings(json_content, models=None, resource_scope_settings=None):
+    """
+    Adds model_settings and/or resource_scope_settings to the first experiment of a rendered create experiment json.
+    The shared create_exp_template.json is not changed, so other tests are not affected.
+
+    models: list of model names, e.g. ["cost", "performance"]. None leaves model_settings out.
+    resource_scope_settings: dict such as {"cpu": ["idle"], "memory": ["over_provisioned"]}. None leaves it out,
+                             an empty dict is sent as an empty object.
+    """
+    settings = json_content[0]["recommendation_settings"]
+    if models is not None:
+        settings["model_settings"] = {"models": models}
+    if resource_scope_settings is not None:
+        settings["resource_scope_settings"] = resource_scope_settings
+    return json_content
+
+
+def classify_state(variation_config, resource):
+    """
+    Classifies a resource ("cpu" or "memory") from the requests variation of a recommendation,
+    the same way as Kruize does: > 0 under_provisioned, < 0 over_provisioned, 0 or missing optimised.
+    Limits are not used. The idle state is not derived here, it comes from a notification.
+    """
+    try:
+        # The new recommendations API nests requests and limits under "resources"
+        requests_config = variation_config.get("resources", variation_config)["requests"]
+        amount = requests_config[resource]["amount"]
+    except (KeyError, TypeError, AttributeError):
+        return OPTIMISED
+    if amount is None:
+        return OPTIMISED
+    if amount > 0:
+        return UNDER_PROVISIONED
+    if amount < 0:
+        return OVER_PROVISIONED
+    return OPTIMISED
+
+
+def get_model_recommendations(list_reco_json):
+    """
+    Returns {(term, model): engine_object} for the first container (or the namespace) of a listRecommendations
+    response, using the latest monitoring end time. Terms and models without recommendations are not included.
+    """
+    kubernetes_obj = list_reco_json[0]["kubernetes_objects"][0]
+    if list_reco_json[0].get("experiment_type") == NAMESPACE_EXPERIMENT_TYPE:
+        recommendations = kubernetes_obj["namespaces"]["recommendations"]
+    else:
+        recommendations = kubernetes_obj["containers"][0]["recommendations"]
+
+    data = recommendations.get("data") or {}
+    if not data:
+        return {}
+
+    latest = sorted(data.keys())[-1]
+    result = {}
+    for term, term_obj in data[latest]["recommendation_terms"].items():
+        for model, engine_obj in (term_obj.get("recommendation_engines") or {}).items():
+            result[(term, model)] = engine_obj
+    return result
+
+
+def _scope_matches(scopes, state):
+    # An absent resource key (None) is unconstrained, "all" matches any state.
+    if scopes is None:
+        return True
+    lowered = [scope.lower().replace("-", "_").replace("optimized", OPTIMISED) for scope in scopes]
+    return SCOPE_ALL in lowered or state in lowered
+
+
+def expected_models_for_scope(unscoped_recommendations, resource_scope_settings):
+    """
+    Given the (term, model) -> engine object map of an unscoped (all/all) experiment, returns the set of
+    (term, model) pairs that must remain when resource_scope_settings is applied. Both specified resources must
+    match (AND), an absent key is unconstrained. Idle is derived from the idle notification (code 323001)
+    of the model's own notifications.
+    """
+    cpu_scopes = resource_scope_settings.get("cpu")
+    memory_scopes = resource_scope_settings.get("memory")
+
+    expected = set()
+    for key, engine_obj in unscoped_recommendations.items():
+        notifications = engine_obj.get("notifications") or {}
+        if NOTIFICATION_CODE_FOR_CPU_IDLE in notifications:
+            cpu_state = IDLE
+        else:
+            cpu_state = classify_state(engine_obj.get("variation"), "cpu")
+        memory_state = classify_state(engine_obj.get("variation"), "memory")
+
+        if _scope_matches(cpu_scopes, cpu_state) and _scope_matches(memory_scopes, memory_state):
+            expected.add(key)
+    return expected
+
+
+def build_create_exp_json(experiment_name, experiment_type="container", models=None, resource_scope_settings=None,
+                          mode="monitor", measurement_duration="2min"):
+    """
+    Renders create_exp_template.json for the sysbench container workload or the default namespace, optionally adds
+    model_settings and resource_scope_settings, and returns the experiment as a list ready to be written as json.
+    """
+    from jinja2 import Environment, FileSystemLoader
+
+    template_dir = Path(__file__).resolve().parent.parent / "local_monitoring_tests" / "json_files"
+    template = Environment(loader=FileSystemLoader(str(template_dir))).get_template("create_exp_template.json")
+
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        content = template.render(
+            version="v2.0", experiment_name=experiment_name, cluster_name="default",
+            performance_profile="resource-optimization-local-monitoring",
+            metadata_profile="cluster-metadata-local-monitoring", mode=mode, target_cluster="local",
+            datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
+            namespace=None, namespace_name="default", container_image_name=None, container_name=None,
+            measurement_duration=measurement_duration, threshold="0.1")
+        json_content = json.loads(content)
+        for key in ("type", "name", "namespace", "containers"):
+            json_content[0]["kubernetes_objects"][0].pop(key)
+    else:
+        content = template.render(
+            version="v2.0", experiment_name=experiment_name, cluster_name="default",
+            performance_profile="resource-optimization-local-monitoring",
+            metadata_profile="cluster-metadata-local-monitoring", mode=mode, target_cluster="local",
+            datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment",
+            name="sysbench", namespace="default", namespace_name=None,
+            container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench",
+            measurement_duration=measurement_duration, threshold="0.1")
+        json_content = json.loads(content)
+        json_content[0]["kubernetes_objects"][0].pop("namespaces")
+
+    return add_recommendation_settings(json_content, models, resource_scope_settings)
+
+
+def write_create_exp_json(experiment_name, **kwargs):
+    """Builds the experiment json (see build_create_exp_json) and writes it to /tmp. Returns the file path."""
+    json_file = "/tmp/create_exp_" + experiment_name + ".json"
+    with open(json_file, mode="w", encoding="utf-8") as message:
+        json.dump(build_create_exp_json(experiment_name, **kwargs), message, indent=4)
+    return json_file
