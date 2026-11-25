@@ -18,6 +18,7 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -29,7 +30,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -39,7 +42,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 /**
- * Recommendation response conversion clones only when it will filter the maps.
+ * Recommendation response conversion clones only when it will filter the maps,
+ * and then filters the clone, not the stored data.
  */
 public class ConvertersRecommendationCloneTest {
 
@@ -62,12 +66,16 @@ public class ConvertersRecommendationCloneTest {
         KruizeObject kruizeObject = containerExperiment();
         try (var utils = mockStatic(Utils.class)) {
             utils.when(() -> Utils.getClone(any(ContainerData.class), eq(ContainerData.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+                    .thenAnswer(invocation -> copyOf(invocation.getArgument(0, ContainerData.class)));
 
-            Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
+            ListRecommendationsAPIObject converted = Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
                     kruizeObject, true, false, timestamp());
 
             utils.verify(() -> Utils.getClone(any(ContainerData.class), eq(ContainerData.class)), times(1));
+            assertEquals(Set.of(timestamp()), converted.getKubernetesObjects().get(0).getContainerAPIObjects().get(0)
+                    .getContainerRecommendations().getData().keySet());
+            assertEquals(Set.of(olderTimestamp(), timestamp()), kruizeObject.getKubernetes_objects().get(0)
+                    .getContainerDataMap().get("app").getContainerRecommendations().getData().keySet());
         }
     }
 
@@ -77,20 +85,26 @@ public class ConvertersRecommendationCloneTest {
         KruizeObject kruizeObject = namespaceExperiment();
         try (var utils = mockStatic(Utils.class)) {
             utils.when(() -> Utils.getClone(any(NamespaceData.class), eq(NamespaceData.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+                    .thenAnswer(invocation -> copyOf(invocation.getArgument(0, NamespaceData.class)));
 
-            Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
+            ListRecommendationsAPIObject converted = Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
                     kruizeObject, false, true, timestamp());
 
             utils.verify(() -> Utils.getClone(any(NamespaceData.class), eq(NamespaceData.class)), times(1));
             utils.verify(() -> Utils.getClone(any(ContainerData.class), eq(ContainerData.class)), never());
+            assertEquals(Set.of(timestamp()), converted.getKubernetesObjects().get(0).getNamespaceAPIObject()
+                    .getNamespaceRecommendations().getData().keySet());
+            assertEquals(Set.of(olderTimestamp(), timestamp()), kruizeObject.getKubernetes_objects().get(0)
+                    .getNamespaceDataMap().get("payments").getNamespaceRecommendations().getData().keySet());
         }
     }
 
     private static KruizeObject containerExperiment() {
         K8sObject k8sObject = new K8sObject("demo-app", "deployment", "default");
         HashMap<String, ContainerData> containers = new HashMap<>();
-        containers.put("app", new ContainerData("app", "image:latest", new ContainerRecommendations(), null));
+        ContainerRecommendations recommendations = new ContainerRecommendations();
+        recommendations.setData(twoTimestamps());
+        containers.put("app", new ContainerData("app", "image:latest", recommendations, null));
         k8sObject.setContainerDataMap(containers);
 
         KruizeObject kruizeObject = mock(KruizeObject.class);
@@ -105,7 +119,9 @@ public class ConvertersRecommendationCloneTest {
         K8sObject k8sObject = new K8sObject(null, null, "payments");
         k8sObject.setContainerDataMap(new HashMap<>());
         HashMap<String, NamespaceData> namespaces = new HashMap<>();
-        namespaces.put("payments", new NamespaceData("payments", new NamespaceRecommendations(), null));
+        NamespaceRecommendations recommendations = new NamespaceRecommendations();
+        recommendations.setData(twoTimestamps());
+        namespaces.put("payments", new NamespaceData("payments", recommendations, null));
         k8sObject.setNamespaceDataMap(namespaces);
 
         KruizeObject kruizeObject = mock(KruizeObject.class);
@@ -118,5 +134,29 @@ public class ConvertersRecommendationCloneTest {
 
     private static Timestamp timestamp() {
         return Timestamp.from(Instant.parse("2024-01-01T00:15:00Z"));
+    }
+
+    private static Timestamp olderTimestamp() {
+        return Timestamp.from(Instant.parse("2024-01-01T00:00:00Z"));
+    }
+
+    private static HashMap<Timestamp, MappedRecommendationForTimestamp> twoTimestamps() {
+        HashMap<Timestamp, MappedRecommendationForTimestamp> data = new HashMap<>();
+        data.put(olderTimestamp(), new MappedRecommendationForTimestamp());
+        data.put(timestamp(), new MappedRecommendationForTimestamp());
+        return data;
+    }
+
+    // Stand-in for Utils.getClone: a separate object with its own recommendation map.
+    private static ContainerData copyOf(ContainerData source) {
+        ContainerRecommendations recommendations = new ContainerRecommendations();
+        recommendations.setData(new HashMap<>(source.getContainerRecommendations().getData()));
+        return new ContainerData(source.getContainer_name(), source.getContainer_image_name(), recommendations, null);
+    }
+
+    private static NamespaceData copyOf(NamespaceData source) {
+        NamespaceRecommendations recommendations = new NamespaceRecommendations();
+        recommendations.setData(new HashMap<>(source.getNamespaceRecommendations().getData()));
+        return new NamespaceData(source.getNamespace_name(), recommendations, null);
     }
 }

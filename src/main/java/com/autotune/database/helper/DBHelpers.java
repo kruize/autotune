@@ -733,8 +733,9 @@ public class DBHelpers {
             }
 
             /**
-             * New recommendation objects and data maps containing only {@code monitoringEndTime}
-             * (or that object's latest timestamp when the requested key is absent).
+             * New recommendation objects and data maps containing only {@code monitoringEndTime}.
+             * Namespace recommendations need an exact match and are left out when that key is absent.
+             * Containers fall back to their latest timestamp, the same as getListRecommendationAPIObjectForDB.
              */
             static ListRecommendationsAPIObject recommendationListForDb(ListRecommendationsAPIObject source, Timestamp monitoringEndTime) {
                 if (source == null || source.getKubernetesObjects() == null || source.getKubernetesObjects().isEmpty()) {
@@ -753,7 +754,9 @@ public class DBHelpers {
                             && sourceObject.getNamespaceAPIObject().getNamespaceRecommendations().getData() != null
                             && !sourceObject.getNamespaceAPIObject().getNamespaceRecommendations().getData().isEmpty()) {
                         NamespaceRecommendations sourceRecommendations = sourceObject.getNamespaceAPIObject().getNamespaceRecommendations();
-                        Timestamp selected = selectRecommendationTimestamp(sourceRecommendations.getData(), monitoringEndTime);
+                        Timestamp selected = (monitoringEndTime != null && sourceRecommendations.getData().containsKey(monitoringEndTime))
+                                ? monitoringEndTime
+                                : null;
                         if (selected != null) {
                             matchFound = true;
                             copy.setNamespaceAPIObject(new NamespaceAPIObject(
