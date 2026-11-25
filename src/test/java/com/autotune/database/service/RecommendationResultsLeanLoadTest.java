@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecommendationResultsLeanLoadTest {
@@ -140,6 +141,30 @@ class RecommendationResultsLeanLoadTest {
     }
 
     @Test
+    @DisplayName("a metric with no results fails the row with a clear message")
+    void metricWithoutResultsFailsRow() {
+        KruizeResultsEntry stored = storedEntry(List.of(containerObject(containerWithMetricWithoutResults())));
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> DBHelpers.Converters.KruizeObjectConverters.experimentResultFromResultEntry(stored, CLUSTER));
+        assertTrue(e.getMessage().contains("cpuUsage"), e.getMessage());
+    }
+
+    @Test
+    @DisplayName("rows that all fail to convert report nothing attached")
+    void allRowsUnreadableReturnsFalse() {
+        KruizeResultsEntry stored = storedEntry(List.of(containerObject(containerWithMetricWithoutResults())));
+        ContainerData experimentContainer = new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, new HashMap<>());
+        KruizeObject kruizeObject = experimentWith(containerObject(experimentContainer));
+
+        boolean attached = new ExperimentDBService().attachRecommendationResultEntries(
+                Map.of(EXPERIMENT, kruizeObject), CLUSTER, List.of(stored));
+
+        assertFalse(attached);
+        assertNull(experimentContainer.getResults());
+    }
+
+    @Test
     @DisplayName("empty result list does not attach")
     void emptyEntryListReturnsFalse() {
         ContainerData containerData = new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, new HashMap<>());
@@ -210,6 +235,12 @@ class RecommendationResultsLeanLoadTest {
         assertNotNull(stored);
         assertNotNull(stored.getExtended_data());
         return stored;
+    }
+
+    private static ContainerData containerWithMetricWithoutResults() {
+        HashMap<AnalyzerConstants.MetricName, Metric> metrics = new HashMap<>();
+        metrics.put(AnalyzerConstants.MetricName.cpuUsage, metric("{\"name\":\"cpuUsage\"}"));
+        return new ContainerData(CONTAINER, "kruize/tfb-db:1.15", null, metrics);
     }
 
     private static Metric metric(String json) {

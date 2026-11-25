@@ -259,7 +259,8 @@ public class ExperimentDBService {
      * {@link #loadResultsFromDBByName}, then rebuilds result maps from extended_data.
      * The DAO session is closed before JSON is parsed.
      *
-     * @return false when the window has no rows
+     * @return false when the window has no rows. When rows exist but none could be read, this still
+     * returns true (same as {@link #loadResultsFromDBByName}, so the API response is unchanged) and logs a warning.
      */
     public boolean loadRecommendationResultsOnto(Map<String, KruizeObject> mainKruizeExperimentMap,
                                                  KruizeObject kruizeObject,
@@ -270,7 +271,11 @@ public class ExperimentDBService {
         if (kruizeResultsEntries == null || kruizeResultsEntries.isEmpty()) {
             return false;
         }
-        attachRecommendationResultEntries(mainKruizeExperimentMap, kruizeObject.getClusterName(), kruizeResultsEntries);
+        boolean anyRowRead = attachRecommendationResultEntries(mainKruizeExperimentMap, kruizeObject.getClusterName(), kruizeResultsEntries);
+        if (!anyRowRead) {
+            LOGGER.warn("None of the {} kruize_results rows for experiment {} between {} and {} could be read; continuing with no results for this window",
+                    kruizeResultsEntries.size(), kruizeObject.getExperimentName(), calculated_start_time, interval_end_time);
+        }
         return true;
     }
 
@@ -278,7 +283,8 @@ public class ExperimentDBService {
      * Parses already-loaded result rows onto the experiment. An empty list does not call
      * {@code addResultsToLocalStorage}.
      *
-     * @return false when {@code kruizeResultsEntries} is null or empty
+     * @return true only when at least one row was read and added to the experiment; false when
+     * {@code kruizeResultsEntries} is null or empty, or when every row failed to convert
      */
     public boolean attachRecommendationResultEntries(Map<String, KruizeObject> mainKruizeExperimentMap,
                                                      String clusterName,
@@ -305,7 +311,7 @@ public class ExperimentDBService {
         if (!resultDataList.isEmpty()) {
             new ExperimentInterfaceImpl().addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
         }
-        return true;
+        return !resultDataList.isEmpty();
     }
 
     public void loadRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {

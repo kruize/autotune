@@ -155,6 +155,16 @@ public class Converters {
         }
 
 
+        /**
+         * Builds the list-recommendations API object for one experiment.
+         * <p>
+         * When {@code getLatest} or {@code checkForTimestamp} is true, the container and namespace data are copied
+         * first, because timestamps are removed from the copy. When both are false nothing is removed, so the
+         * returned object uses the experiment's own recommendation maps instead of a copy. Today every caller that
+         * passes (false, false) (updateRecommendations, generateRecommendations) works on an experiment loaded for
+         * that one request and only turns the result into JSON. Do not change the recommendation data of the
+         * returned object; if a new caller needs to, pass {@code getLatest} or {@code checkForTimestamp} or copy it.
+         */
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,

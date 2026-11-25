@@ -535,7 +535,7 @@ public class DBHelpers {
 
             private static void attachContainerInterval(ContainerData containerData, Timestamp start, Timestamp end) {
                 if (containerData.getMetrics() == null) {
-                    throw new NullPointerException("metrics");
+                    throw new IllegalArgumentException("kruize_results row has no metrics for container " + containerData.getContainer_name());
                 }
                 HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                 HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
@@ -544,6 +544,9 @@ public class DBHelpers {
                             || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
                             || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
                     MetricResults metricResults = metric.getMetricResult();
+                    if (metricResults == null) {
+                        throw new IllegalArgumentException("kruize_results row has no results for metric " + metric.getName());
+                    }
                     metricResults.setName(metric.getName());
                     if (isAcceleratorMetric) {
                         if (null != metricResults.getMetadata()
@@ -580,11 +583,14 @@ public class DBHelpers {
 
             private static void attachNamespaceInterval(NamespaceData namespaceData, Timestamp start, Timestamp end) {
                 if (namespaceData.getMetrics() == null) {
-                    throw new NullPointerException("metrics");
+                    throw new IllegalArgumentException("kruize_results row has no metrics for namespace " + namespaceData.getNamespace_name());
                 }
                 HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                 for (Metric metric : namespaceData.getMetrics().values()) {
                     MetricResults metricResults = metric.getMetricResult();
+                    if (metricResults == null) {
+                        throw new IllegalArgumentException("kruize_results row has no results for metric " + metric.getName());
+                    }
                     metricResults.setName(metric.getName());
                     metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
                 }
