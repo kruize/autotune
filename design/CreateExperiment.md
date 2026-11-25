@@ -38,20 +38,13 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 
 ### Supported terms
 
-| Term value | Description                              | Default |
-|------------|------------------------------------------|---------|
-| `short`    | 1-day window, 30-min minimum threshold   | Yes     |
-| `medium`   | 7-day window, 2-day minimum threshold    | Yes     |
-| `long`     | 15-day window, 8-day minimum threshold   | Yes     |
-| `flex`     | Up to 15-day window, 30-min minimum threshold | No |
+Supported term values are `short`, `medium`, `long` (default) and `flex` (opt-in). For the duration and minimum data
+threshold of each term, see [Terms, Duration & Threshold Table](MonitoringModeAPI.md#terms-duration--threshold-table).
 
 ### Supported models
 
-| Model value   | Description                                                  | Default |
-|---------------|--------------------------------------------------------------|---------|
-| `cost`        | 60th CPU percentile — minimise resource spend                | Yes     |
-| `performance` | 98th CPU percentile — maximise reliability                   | Yes     |
-| `stability`   | 98th CPU percentile (static)                                 | No      |
+Supported model values are `cost`, `performance` (default) and `stability` (opt-in). For the CPU and memory percentile
+used by each model, see [Profiles](MonitoringModeAPI.md#profiles).
 
 ### Requesting flex and stability
 

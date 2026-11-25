@@ -63,11 +63,15 @@ Below are the default terms used in resource analysis, along with their respecti
 
 ### Terms, Duration & Threshold Table
 
-| Term   | Minimum Data Threshold | Duration | 
-|--------|------------------------|----------|
-| Short  | 30 mins                | 1 day    | 
-| Medium | 2 Days                 | 7 days   | 
-| Long   | 8 Days                 | 15 days  | 
+| Term   | Minimum Data Threshold | Duration      |
+|--------|------------------------|---------------|
+| Short  | 30 mins                | 1 day         |
+| Medium | 2 Days                 | 7 days        |
+| Long   | 8 Days                 | 15 days       |
+| Flex   | 30 mins                | Up to 15 days |
+
+**Note**: `Flex` is opt-in and not part of the default terms. It must be requested explicitly through
+`recommendation_settings` in the [Create Experiment API](CreateExperiment.md#recommendation_settings).
 
 **Minimum Data Threshold**: The "minimum data threshold" represents the minimum amount of data needed for generating a
 recommendation associated with a given duration term.
@@ -105,10 +109,17 @@ In the "Performance" profile, the algorithm takes into account the 98th percenti
 percentile for memory usage. Consequently, recommendations related to performance will be generated when CPU usage is at
 or above the 98th percentile, and memory usage is at the 100th percentile.
 
+**Stability Profile:**
+In the "Stability" profile, the algorithm takes into account the 98th percentile for CPU usage and the 100th
+percentile for memory usage. This profile is opt-in and is not part of the default models. It must be requested
+explicitly through `recommendation_settings` in the
+[Create Experiment API](CreateExperiment.md#recommendation_settings).
+
 | Profile     | CPU (Percentile) | Memory (percentile) |
 |-------------|------------------|---------------------|
 | Cost        | 60 th            | 100 th              |
 | Performance | 98 th            | 100 th              |
+| Stability   | 98 th            | 100 th              |
 
 <a name="apis"></a>
 
