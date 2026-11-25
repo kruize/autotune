@@ -5,37 +5,6 @@ tuned.
 
 ---
 
-## Recommendation Profiles (Models)
-
-Kruize supports the following recommendation profiles. Each profile determines the CPU and memory percentiles used when computing resource recommendations.
-
-| Profile       | CPU Percentile | Memory Percentile | Accelerator Percentile | Opt-in |
-|---------------|----------------|-------------------|------------------------|--------|
-| `cost`        | 60th           | 100th             | 60th                   | No     |
-| `performance` | 98th           | 100th             | 98th                   | No     |
-| `stability`   | 98th           | 100th             | 98th                   | Yes    |
-
-### stability Profile
-
-The `stability` profile is an opt-in profile designed for workloads with sparse or short historical data. It is intended to be used with the `flex` term, which generates recommendations from as little as 30 minutes of data. The pairing is not enforced: `stability` can be requested with any term, and `flex` with any model.
-
-**Behaviour (static percentile):**
-- CPU percentile: **98th** — maximally conservative, safe even with as few as 2 datapoints.
-- Memory percentile: **100th** — always, since OOM is a harder failure than CPU throttling.
-- Accelerator percentile: **98th**.
-
-**Intended use cases:**
-- Day-0 deployments — workload has been running for hours, not days.
-- Bursty / scheduled batch jobs — sparse data spread across several days.
-- Incident response — immediate right-sizing recommendation with limited history.
-- Always-available baseline — a single recommendation regardless of how long the workload has been observed.
-
-**What is NOT changing:**
-- `cost` and `performance` profiles are unchanged.
-- `stability` does not appear in the default experiment configuration.
-
----
-
 # Attributes
 
 - **name** \

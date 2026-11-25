@@ -22,6 +22,7 @@ Thresholds:
   - **Short Term:** Fixed at 24 hours.
   - **Medium Term:** Fixed at 7 days.
   - **Long Term:** Fixed at 15 days.
+  - **Flex Term:** Up to 15 days, using all available data in that window (no sub-window restrictions).
 
 - The current buffer periods of 6 hours above the given duration is eliminated now. The system will no longer traverse further back in time beyond the prescribed term durations.
 
@@ -32,8 +33,13 @@ To ensure data adequacy for generating recommendations, we introduce minimum dat
 - **Short Term:** 30 minutes.
 - **Medium Term:** 2 days.
 - **Long Term:** 8 days.
+- **Flex Term:** 30 minutes (2 datapoints).
 
 When the available data is less than the above threshold for each term, Kruize response will indicate "_not enough data available to generate a recommendation_."
+
+The `flex` term is opt-in and is generated independently of the other terms. It is intended for workloads that cannot
+satisfy their minimum data thresholds. See [recommendation_settings](CreateExperiment.md#recommendation_settings) for
+how to request it.
 
 ### Changes Overview:
 
@@ -44,67 +50,6 @@ When the available data is less than the above threshold for each term, Kruize r
 | **Minimum Data Thresholds**         | We had a requirement of at least: <br/>**1 Day** for **Short term**. <br/>**7 days** for **Medium term**. <br/>**15 days** for **Long term**. | Introduced minimum data thresholds: <br/>**Short Term** (**30 mins**), <br/>**Medium Term** (**2 days**), <br/>**Long** (**8 days**). |
 | **Impact on Short-lived Workloads** | Unable to generate recommendations for short-lived workloads.                                                                                                       | Minimum data thresholds allow meaningful recommendations for shorter durations.                                           |
 | **User Clarity**                    | Users may not be aware of the actual duration considered.                                                                                                           | Strict enforcement provides clear insights into the duration for each recommendation.                                     |
-
-### C. Flex Term
-
-The `flex` term is an opt-in, data-range-agnostic term introduced to serve workloads that cannot satisfy the minimum data thresholds of the existing three terms.
-
-#### Term Reference Table
-
-| Term   | Duration              | Min Data Threshold | Min Datapoints | Opt-in |
-|--------|-----------------------|--------------------|----------------|--------|
-| Short  | 1 day                 | 30 mins            | 2              | No     |
-| Medium | 7 days                | 2 days             | 192            | No     |
-| Long   | 15 days               | 8 days             | 768            | No     |
-| **Flex**   | **15 days (or max available)** | **30 mins** | **2**      | **Yes** |
-
-#### Key differences from existing terms
-
-- Uses **all available data** from the current time back up to **15 days** — no sub-window restrictions.
-- Minimum threshold is just **2 datapoints (30 minutes)**; the engine uses however much data is available up to the cap.
-- Does **not replace** `short`, `medium`, or `long`. Those remain unchanged.
-- `flex` is intended to be used with the `stability` recommendation profile, but this is not enforced; it can be used with any model.
-- `flex` is **not part of the default term set** — it must be explicitly requested.
-- `flex` can be combined with other terms in the same request. It is generated independently of them and appears as `flex_term` in the recommendations.
-
-#### Scenarios for Flex Term
-
-##### Case: Less than 30 minutes of data (below minimum threshold)
-
-  **Response**
-  ```
-  "120001": {
-              "type": "info",
-              "message": "There is not enough data available to generate a recommendation.",
-              "code": 120001
-            }
-  ```
-
-##### Case: 30 minutes to 15 days of data available
-
-  The engine uses all available data up to the 15-day cap regardless of whether it is contiguous or sparse.
-
-  **Response**
-  ```
-  "111104": {
-              "type": "info",
-              "message": "Flex Term Recommendations Available",
-              "code": 111104
-            }
-  ```
-
-##### Case: More than 15 days of data available
-
-  The engine caps the lookback window at 15 days. Data older than 15 days is not considered.
-
-  **Response**
-  ```
-  "111104": {
-              "type": "info",
-              "message": "Flex Term Recommendations Available",
-              "code": 111104
-            }
-  ```
 
 ### Scenarios
 #### Case: Contiguous Order
@@ -162,7 +107,20 @@ The `flex` term is an opt-in, data-range-agnostic term introduced to serve workl
               "type": "info",
               "message": "Long Term Recommendations Available",
               "code": 111103
-              }  
+              }
+      ```
+  - #### 30 mins or more of data, with `flex` term requested
+
+    The `flex` term uses all available data up to the 15-day cap, whether contiguous or sparse. It is reported
+    alongside any other terms that meet their own thresholds.
+
+    **Response**
+      ```
+      "111104": {
+              "type": "info",
+              "message": "Flex Term Recommendations Available",
+              "code": 111104
+              }
       ```
 
 #### Case: Non - Contiguous Order

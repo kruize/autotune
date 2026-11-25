@@ -43,7 +43,7 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 | `short`    | 1-day window, 30-min minimum threshold   | Yes     |
 | `medium`   | 7-day window, 2-day minimum threshold    | Yes     |
 | `long`     | 15-day window, 8-day minimum threshold   | Yes     |
-| `flex`     | Up to 15-day window, 30-min minimum threshold, opt-in only | No |
+| `flex`     | Up to 15-day window, 30-min minimum threshold | No |
 
 ### Supported models
 
@@ -51,12 +51,12 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 |---------------|--------------------------------------------------------------|---------|
 | `cost`        | 60th CPU percentile — minimise resource spend                | Yes     |
 | `performance` | 98th CPU percentile — maximise reliability                   | Yes     |
-| `stability`   | 98th CPU percentile (static), opt-in only                    | No      |
+| `stability`   | 98th CPU percentile (static)                                 | No      |
 
 ### Requesting flex and stability
 
-`flex` and `stability` are opt-in. Neither is part of the default configuration, so they must be listed explicitly in
-`recommendation_settings`. They are intended to be used together, but this is not enforced.
+`flex` and `stability` are opt-in and must be listed explicitly. They are intended to be used together, but this is not
+enforced.
 
 ```json
 "recommendation_settings": {
@@ -70,37 +70,6 @@ If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms wit
 ```
 
 In the recommendations response, the term is keyed as `flex_term` and the model as `stability`.
-
-### Validation
-
-Kruize validates each value independently:
-
-| Field      | Accepted values                          | Error for any other value                                          |
-|------------|------------------------------------------|--------------------------------------------------------------------|
-| `terms`    | `short`, `medium`, `long`, `flex`        | `Term name is not supported. Use short, medium, long or flex term.` (400) |
-| `models`   | `cost`, `performance`, `stability`       | `Model name is not supported. Use cost, performance or stability.` (400) |
-
-Empty or whitespace-only term or model values are rejected with `Empty term or model value.` (400).
-
-There is **no cross-validation** between terms and models. `flex` and `stability` are not required to be paired, and
-`flex` may be combined with other terms. Every requested model is evaluated for every requested term. For example:
-
-| Request                                   | Result                                                          |
-|-------------------------------------------|-----------------------------------------------------------------|
-| terms `["flex"]`, models `["stability"]`  | `stability` recommendations for `flex_term`                     |
-| terms `["flex"]`, no models               | default models (`cost`, `performance`) for `flex_term`          |
-| terms `["short"]`, models `["stability"]` | `stability` recommendations for `short_term`                    |
-| terms `["short", "flex"]`, models `["cost", "stability"]` | `cost` and `stability` recommendations for both `short_term` and `flex_term` |
-
-### Defaults and mode restrictions
-
-| Mode                 | No `term_settings`           | No `model_settings`   | Multiple terms / models |
-|----------------------|------------------------------|-----------------------|-------------------------|
-| `monitor`            | `short`, `medium`, `long`    | `cost`, `performance` | Allowed                 |
-| `auto` / `recreate`  | `short`                      | `performance`         | Not allowed (400)       |
-
-In `auto` and `recreate` mode, exactly one term and one model can be given, so `flex` and `stability` can each be
-selected as that single term or model. Omitting a setting never defaults to `flex` or `stability`.
 
 ---
 
