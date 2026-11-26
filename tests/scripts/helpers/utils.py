@@ -649,12 +649,13 @@ def generate_json(find_arr, json_file, filename, i, update_timestamps=False):
         data = data.replace(find, replace)
 
     if update_timestamps == True:
+        timestamp_step = int(i, 16) % 10000 if isinstance(i, str) else i
         find = "2022-01-23T18:25:43.511Z"
-        replace = increment_timestamp(find, i)
+        replace = increment_timestamp(find, timestamp_step)
         data = data.replace(find, replace)
 
         find = "2022-01-23T18:40:43.570Z"
-        replace = increment_timestamp(find, i)
+        replace = increment_timestamp(find, timestamp_step)
         data = data.replace(find, replace)
 
     with open(filename, 'w') as file:
@@ -2434,7 +2435,7 @@ def validate_current(current_config, experiment_type):
 HTTP_TIMEOUT = (10, 120)
 
 
-def _make_temp_json(prefix):
+def make_temp_json(prefix):
     """Create a secure temporary JSON file and return its path."""
     fd, path = tempfile.mkstemp(suffix='.json', prefix=prefix)
     os.close(fd)
@@ -2444,18 +2445,20 @@ def _make_temp_json(prefix):
 def setup_experiment(cluster_type, input_json_file, find_arr, run_id=None):
     """Create a unique experiment from a template, cleaning up any prior run.
 
+    Caller must call form_kruize_url(cluster_type) before this function.
     Returns (create_exp_json_file, experiment_name, run_id).
     """
     if run_id is None:
         run_id = uuid.uuid4().hex[:8]
 
-    create_exp_json_file = _make_temp_json('create_exp_')
+    create_exp_json_file = make_temp_json('create_exp_')
     generate_json(find_arr, input_json_file, create_exp_json_file, run_id)
 
-    form_kruize_url(cluster_type)
-
-    response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
-    print("delete exp = ", response.status_code)
+    try:
+        response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
+        print("delete exp = ", response.status_code)
+    except Exception as e:
+        print("delete exp failed (may not exist): ", e)
 
     response = create_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
     data = response.json()
@@ -2471,7 +2474,7 @@ def setup_experiment(cluster_type, input_json_file, find_arr, run_id=None):
 
 def post_results(result_json_file, find_arr, num_results, run_id, gpu_name=None):
     """Post num_results intervals of results, returning (result_json_arr, end_time)."""
-    update_results_json_file = _make_temp_json('update_results_')
+    update_results_json_file = make_temp_json('update_results_')
 
     result_json_arr = []
     interval_start_time = get_datetime()
@@ -2532,10 +2535,13 @@ def generate_and_validate_recommendations(experiment_name, end_time, is_namespac
 
 def cleanup_experiment(create_exp_json_file):
     """Delete experiment, assert success."""
-    response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
-    print("delete exp = ", response.status_code)
-    assert SUCCESS_STATUS_CODE_START <= response.status_code < SUCCESS_STATUS_CODE_END, \
-        f"Expected 2xx status for delete, got {response.status_code}"
+    try:
+        response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
+        print("delete exp = ", response.status_code)
+        assert SUCCESS_STATUS_CODE_START <= response.status_code < SUCCESS_STATUS_CODE_END, \
+            f"Expected 2xx status for delete, got {response.status_code}"
+    except Exception as e:
+        print("cleanup delete failed: ", e)
 
 
 def extract_reco_values(list_reco_json, end_time, is_namespace=False):

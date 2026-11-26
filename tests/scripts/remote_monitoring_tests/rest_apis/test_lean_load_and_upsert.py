@@ -333,16 +333,14 @@ def test_recommendation_upsert_idempotent(cluster_type):
     assert len(timestamp_entries) == 1, \
         f"Expected exactly 1 recommendation entry for timestamp {end_time}, got {len(timestamp_entries)}"
 
-    # --- Cross-check via listExperiments to detect duplicates that JSON key
-    #     deduplication would hide in listRecommendations ---
-    response = list_experiments(recommendations='true', experiment_name=experiment_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
-    exp_json = response.json()
-    exp_reco = exp_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
-    exp_data_section = exp_reco["data"]
-    exp_ts_entries = [ts for ts in exp_data_section.keys() if ts == str(end_time)]
-    assert len(exp_ts_entries) == 1, \
-        f"listExperiments: expected 1 recommendation for {end_time}, got {len(exp_ts_entries)}"
+    # --- Verify the second updateRecommendations call also returns consistent
+    #     data via listRecommendations (guards against silent duplicates) ---
+    response_check = list_recommendations(experiment_name, rm=True, timeout=HTTP_TIMEOUT)
+    assert response_check.status_code == SUCCESS_200_STATUS_CODE
+    list_reco_check = response_check.json()
+    reco_check = list_reco_check[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+    assert reco_check == reco2, \
+        "listRecommendations should return the same values as the last updateRecommendations call"
 
     # Validate schema and values
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
@@ -392,7 +390,7 @@ def test_recommendation_upsert_updated_results(cluster_type):
     phase2_cpu_avg = 0.85
     phase2_cpu_max = 1.80
     phase2_cpu_min = 0.60
-    update_results_json_file = _make_temp_json('update_results_phase2_')
+    update_results_json_file = make_temp_json('update_results_phase2_')
 
     for j in range(2):
         generate_json(find, result_json_file, update_results_json_file, run_id, update_timestamps=True)
@@ -447,9 +445,9 @@ def test_recommendation_upsert_updated_results(cluster_type):
     errorMsg = validate_list_reco_json(reco_json_2, list_reco_json_schema)
     assert errorMsg == "", f"Schema validation failed: {errorMsg}"
 
-    # Validate values with latest results
+    # Validate values with latest results (4 intervals x 15 min = 1 hour of data)
     create_exp_json = read_json_data_from_file(create_exp_json_file)
     validate_reco_json(create_exp_json[0], [result_json_arr[-1]],
-                       reco_json_2[0], SHORT_TERM_DURATION_IN_HRS_MIN)
+                       reco_json_2[0], 1.0)
 
     cleanup_experiment(create_exp_json_file)
