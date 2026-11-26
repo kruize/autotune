@@ -22,7 +22,6 @@ Thresholds:
   - **Short Term:** Fixed at 24 hours.
   - **Medium Term:** Fixed at 7 days.
   - **Long Term:** Fixed at 15 days.
-  - **Flex Term:** Up to 15 days, using all available data in that window.
 
 - The current buffer periods of 6 hours above the given duration is eliminated now. The system will no longer traverse further back in time beyond the prescribed term durations.
 
@@ -33,12 +32,9 @@ To ensure data adequacy for generating recommendations, we introduce minimum dat
 - **Short Term:** 30 minutes.
 - **Medium Term:** 2 days.
 - **Long Term:** 8 days.
-- **Flex Term:** 30 minutes.
 
 When the available data is less than the above threshold for each term, Kruize response will indicate "_not enough data available to generate a recommendation_."
 
-The `flex` term is opt-in and is generated independently of the other terms. See
-[recommendation_settings](CreateExperiment.md#recommendation_settings) for how to request it.
 
 ### Changes Overview:
 
@@ -106,16 +102,6 @@ The `flex` term is opt-in and is generated independently of the other terms. See
               "type": "info",
               "message": "Long Term Recommendations Available",
               "code": 111103
-              }
-      ```
-  - #### 30 mins or more of data, with `flex` term requested
-
-    **Response**
-      ```
-      "111104": {
-              "type": "info",
-              "message": "Flex Term Recommendations Available",
-              "code": 111104
               }
       ```
 
