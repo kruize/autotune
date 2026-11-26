@@ -706,17 +706,12 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
                     //kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
 
-                    Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
-                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
-                        if (listRecommendationsAPIObject.isNamespaceExperiment()) {
-                            endInterval = k8sObject.getNamespaceAPIObject().getNamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
-                        } else {
-                            for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
-                                endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
-                                break;
-                            }
-                        }
+                    Timestamp endInterval = recommendationEndInterval(listRecommendationsAPIObject);
+                    if (null == endInterval) {
+                        LOGGER.error("No recommendation timestamp to save for experiment {}; skipping the kruize_recommendations row",
+                                listRecommendationsAPIObject.getExperimentName());
+                        return null;
                     }
                     kruizeRecommendationEntry.setInterval_end_time(endInterval);
                     Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
@@ -736,6 +731,54 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeRecommendationEntry;
+            }
+
+            /**
+             * interval_end_time for the kruize_recommendations row: the latest timestamp of the namespace
+             * recommendations (namespace experiments) or of the first container that has recommendations
+             * (container experiments); with several kubernetes objects the last usable one wins, as before.
+             * Objects or containers with no namespace object, no recommendations or an empty map are skipped
+             * instead of failing. Returns null when nothing usable is found.
+             */
+            static Timestamp recommendationEndInterval(ListRecommendationsAPIObject list) {
+                if (list == null || list.getKubernetesObjects() == null) {
+                    return null;
+                }
+                Timestamp endInterval = null;
+                for (KubernetesAPIObject k8sObject : list.getKubernetesObjects()) {
+                    if (k8sObject == null) {
+                        continue;
+                    }
+                    if (list.isNamespaceExperiment()) {
+                        NamespaceAPIObject namespaceAPIObject = k8sObject.getNamespaceAPIObject();
+                        if (namespaceAPIObject == null || namespaceAPIObject.getNamespaceRecommendations() == null) {
+                            continue;
+                        }
+                        Timestamp latest = latestTimestamp(namespaceAPIObject.getNamespaceRecommendations().getData());
+                        if (latest != null) {
+                            endInterval = latest;
+                        }
+                    } else if (k8sObject.getContainerAPIObjects() != null) {
+                        for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
+                            if (containerAPIObject == null || containerAPIObject.getContainerRecommendations() == null) {
+                                continue;
+                            }
+                            Timestamp latest = latestTimestamp(containerAPIObject.getContainerRecommendations().getData());
+                            if (latest != null) {
+                                endInterval = latest;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return endInterval;
+            }
+
+            private static Timestamp latestTimestamp(Map<Timestamp, MappedRecommendationForTimestamp> data) {
+                if (data == null || data.isEmpty()) {
+                    return null;
+                }
+                return data.keySet().stream().max(Timestamp::compareTo).orElse(null);
             }
 
             /**

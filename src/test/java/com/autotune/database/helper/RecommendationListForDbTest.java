@@ -82,6 +82,42 @@ public class RecommendationListForDbTest {
         assertEquals(Set.of(OLDER), stored.getData().keySet());
     }
 
+    @Test
+    @DisplayName("interval end time uses the latest timestamp of the first container with recommendations")
+    public void endIntervalSkipsEmptyContainer() {
+        ContainerRecommendations empty = new ContainerRecommendations();
+        empty.setData(new HashMap<>());
+        ContainerRecommendations filled = new ContainerRecommendations();
+        filled.setData(data(OLDER, CURRENT));
+        KubernetesAPIObject k8sObject = new KubernetesAPIObject("demo-app", "deployment", "default");
+        k8sObject.setContainerAPIObjects(List.of(
+                new ContainerAPIObject("sidecar", "image:latest", empty, null),
+                new ContainerAPIObject("app", "image:latest", filled, null)));
+
+        assertEquals(CURRENT, DBHelpers.Converters.KruizeObjectConverters
+                .recommendationEndInterval(list(AnalyzerConstants.ExperimentType.CONTAINER, k8sObject)));
+    }
+
+    @Test
+    @DisplayName("namespace experiment with containers but no namespace recommendation saves nothing and does not throw")
+    public void namespaceWithoutNamespaceObjectIsNotSaved() {
+        ContainerRecommendations recommendations = new ContainerRecommendations();
+        recommendations.setData(data(CURRENT));
+        KubernetesAPIObject k8sObject = new KubernetesAPIObject(null, null, "payments");
+        k8sObject.setContainerAPIObjects(List.of(new ContainerAPIObject("app", "image:latest", recommendations, null)));
+        ListRecommendationsAPIObject source = list(AnalyzerConstants.ExperimentType.NAMESPACE, k8sObject);
+
+        assertNull(DBHelpers.Converters.KruizeObjectConverters.recommendationEndInterval(source));
+        assertNull(DBHelpers.Converters.KruizeObjectConverters.convertKruizeObjectTORecommendation(null, CURRENT, source));
+    }
+
+    @Test
+    @DisplayName("namespace interval end time is the latest namespace timestamp")
+    public void endIntervalForNamespace() {
+        assertEquals(CURRENT, DBHelpers.Converters.KruizeObjectConverters
+                .recommendationEndInterval(namespaceList(OLDER, CURRENT)));
+    }
+
     private static ListRecommendationsAPIObject namespaceList(Timestamp... timestamps) {
         NamespaceRecommendations recommendations = new NamespaceRecommendations();
         recommendations.setData(data(timestamps));
