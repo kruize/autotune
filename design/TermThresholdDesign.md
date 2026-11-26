@@ -37,9 +37,8 @@ To ensure data adequacy for generating recommendations, we introduce minimum dat
 
 When the available data is less than the above threshold for each term, Kruize response will indicate "_not enough data available to generate a recommendation_."
 
-The `flex` term is opt-in and is generated independently of the other terms. It is intended for workloads that cannot
-satisfy their minimum data thresholds. See [recommendation_settings](CreateExperiment.md#recommendation_settings) for
-how to request it.
+The `flex` term is opt-in and is generated independently of the other terms. See
+[recommendation_settings](CreateExperiment.md#recommendation_settings) for how to request it.
 
 ### Changes Overview:
 
