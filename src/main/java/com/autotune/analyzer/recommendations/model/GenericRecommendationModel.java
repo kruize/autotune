@@ -63,13 +63,20 @@ public class GenericRecommendationModel implements RecommendationModel{
 
     /**
      * Default scope for cost, performance and custom models: no filtering on either resource.
+     * It is a constant, built and parsed once and shared by all callers, which must treat it as read-only.
      */
-    @Override
-    public ResourceScopeSettings getDefaultResourceScopeSettings() {
+    private static final ResourceScopeSettings DEFAULT_RESOURCE_SCOPE_SETTINGS = buildDefaultResourceScopeSettings();
+
+    private static ResourceScopeSettings buildDefaultResourceScopeSettings() {
         String all = RecommendationConstants.RecommendationScope.ALL.getValue();
         ResourceScopeSettings settings = new ResourceScopeSettings(List.of(all), List.of(all));
         settings.parse();
         return settings;
+    }
+
+    @Override
+    public ResourceScopeSettings getDefaultResourceScopeSettings() {
+        return DEFAULT_RESOURCE_SCOPE_SETTINGS;
     }
 
     @Override
