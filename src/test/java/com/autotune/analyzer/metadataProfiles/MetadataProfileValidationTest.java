@@ -118,7 +118,12 @@ class MetadataProfileValidationTest {
         }
         String line = block.substring(queryAt + "query:".length());
         int eol = line.indexOf('\n');
-        return (eol >= 0 ? line.substring(0, eol) : line).trim();
+        String query = (eol >= 0 ? line.substring(0, eol) : line).trim();
+        // Strip YAML single-quote wrapping so the result matches the unquoted JSON value.
+        if (query.length() >= 2 && query.startsWith("'") && query.endsWith("'")) {
+            query = query.substring(1, query.length() - 1);
+        }
+        return query;
     }
 
     // ---- Update-payload queries (valid for updateMetadata) ----

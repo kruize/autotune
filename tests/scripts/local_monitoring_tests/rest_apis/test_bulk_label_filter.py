@@ -132,9 +132,9 @@ def label_filter_payload(include=None, exclude=None):
         "measurement_duration": "15mins",
         "time_range": {},
     }
-    if include:
+    if include is not None:
         payload["filter"]["include"].update(include)
-    if exclude:
+    if exclude is not None:
         for key, value in exclude.items():
             if key == "namespace":
                 payload["filter"]["exclude"]["namespace"].extend(value)
@@ -184,7 +184,6 @@ def experiment_count(payload):
             pytest.skip(f"Datasource unavailable after {MAX_JOB_RETRIES} attempts: {summary.get('notifications')}")
         assert summary.get("status") != "FAILED", f"Bulk job FAILED: {summary}"
         raise AssertionError(f"Bulk job did not reach a counted state in time (summary={summary})")
-    pytest.skip(f"Datasource unavailable after {MAX_JOB_RETRIES} attempts (summary={summary})")
 
 
 def _bulk_metadata(payload):
