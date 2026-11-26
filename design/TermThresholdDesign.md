@@ -33,7 +33,7 @@ To ensure data adequacy for generating recommendations, we introduce minimum dat
 - **Short Term:** 30 minutes.
 - **Medium Term:** 2 days.
 - **Long Term:** 8 days.
-- **Flex Term:** 30 minutes (2 datapoints).
+- **Flex Term:** 30 minutes.
 
 When the available data is less than the above threshold for each term, Kruize response will indicate "_not enough data available to generate a recommendation_."
 
