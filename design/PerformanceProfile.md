@@ -3,8 +3,6 @@
 Client will invoke the Kruize createPerformanceProfile API for each deployment. Documentation still in progress stay
 tuned.
 
----
-
 # Attributes
 
 - **name** \

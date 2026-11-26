@@ -63,12 +63,12 @@ Below are the default terms used in resource analysis, along with their respecti
 
 ### Terms, Duration & Threshold Table
 
-| Term   | Minimum Data Threshold | Duration      |
-|--------|------------------------|---------------|
-| Short  | 30 mins                | 1 day         |
-| Medium | 2 Days                 | 7 days        |
-| Long   | 8 Days                 | 15 days       |
-| Flex   | 30 mins                | Up to 15 days |
+| Term   | Minimum Data Threshold | Duration |
+|--------|------------------------|----------|
+| Short  | 30 mins                | 1 day    |
+| Medium | 2 Days                 | 7 days   |
+| Long   | 8 Days                 | 15 days  |
+| Flex   | 30 mins                | 15 days  |
 
 **Note**: `Flex` is opt-in and not part of the default terms. It must be requested explicitly through
 `recommendation_settings` in the [Create Experiment API](CreateExperiment.md#recommendation_settings).

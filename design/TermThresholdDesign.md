@@ -22,7 +22,7 @@ Thresholds:
   - **Short Term:** Fixed at 24 hours.
   - **Medium Term:** Fixed at 7 days.
   - **Long Term:** Fixed at 15 days.
-  - **Flex Term:** Up to 15 days, using all available data in that window (no sub-window restrictions).
+  - **Flex Term:** Up to 15 days, using all available data in that window.
 
 - The current buffer periods of 6 hours above the given duration is eliminated now. The system will no longer traverse further back in time beyond the prescribed term durations.
 
