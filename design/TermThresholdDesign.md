@@ -1,5 +1,5 @@
 # Term Threshold
-Presently, recommendations are categorized into Short, Medium, Long, and Flex terms based on the duration of historical data considered.
+Presently, recommendations are categorized into Short, Medium, and Long terms based on the duration of historical data considered.
 
 ### Earlier Design Issues
 The earlier design (v0.0.20.1) related to term durations has identified shortcomings:
@@ -34,7 +34,6 @@ To ensure data adequacy for generating recommendations, we introduce minimum dat
 - **Long Term:** 8 days.
 
 When the available data is less than the above threshold for each term, Kruize response will indicate "_not enough data available to generate a recommendation_."
-
 
 ### Changes Overview:
 
@@ -102,7 +101,7 @@ When the available data is less than the above threshold for each term, Kruize r
               "type": "info",
               "message": "Long Term Recommendations Available",
               "code": 111103
-              }
+              }  
       ```
 
 #### Case: Non - Contiguous Order
