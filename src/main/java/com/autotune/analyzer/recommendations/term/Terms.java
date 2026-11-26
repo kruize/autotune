@@ -85,17 +85,22 @@ public class Terms {
         LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
 
         double durationInSeconds = measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        long[] epochs = sortedEpochMillis(containerData.getResults().keySet());
             try {
                 for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds((long) durationInSeconds)) {
                     Timestamp currentTimestamp = Timestamp.valueOf(current);
+                    // Slots only move backward while the step is positive. Once the slot is
+                    // before every stored timestamp by more than the tolerance, later slots
+                    // cannot match either.
+                    if (slotIsBeforeEveryTimestamp(currentTimestamp.getTime(), epochs, thresholdInMillis, durationInSeconds)) {
+                        break;
+                    }
 
-                    // Check if the current timestamp exists in the resultsMap or within the tolerance range
-                    Double diffInSec = getTimestampWithinTolerance(currentTimestamp, containerData.getResults().keySet(), thresholdInMillis);
-                    if (containerData.getResults().containsKey(currentTimestamp) || diffInSec != null) {
+                    // An exact key has diff 0, which is inside tolerance, so containsKey is redundant.
+                    Double diffInSec = diffForSlot(currentTimestamp, epochs, containerData.getResults().keySet(), thresholdInMillis);
+                    if (diffInSec != null) {
                         // If there's a change in the timestamp within the threshold value, add the difference in the duration
-                        if (diffInSec != null) {
-                            durationInSeconds += diffInSec;
-                        }
+                        durationInSeconds += diffInSec;
                         sum += measurementDuration;
                     }
                 }
@@ -133,17 +138,18 @@ public class Terms {
         LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
 
         double durationInSeconds = measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        long[] epochs = sortedEpochMillis(namespaceData.getResults().keySet());
         try {
             for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds((long) durationInSeconds)) {
                 Timestamp currentTimestamp = Timestamp.valueOf(current);
+                if (slotIsBeforeEveryTimestamp(currentTimestamp.getTime(), epochs, thresholdInMillis, durationInSeconds)) {
+                    break;
+                }
 
-                // Check if the current timestamp exists in the resultsMap or within the tolerance range
-                Double diffInSec = getTimestampWithinTolerance(currentTimestamp, namespaceData.getResults().keySet(), thresholdInMillis);
-                if (namespaceData.getResults().containsKey(currentTimestamp) || diffInSec != null) {
+                Double diffInSec = diffForSlot(currentTimestamp, epochs, namespaceData.getResults().keySet(), thresholdInMillis);
+                if (diffInSec != null) {
                     // If there's a change in the timestamp within the threshold value, add the difference in the duration
-                    if (diffInSec != null) {
-                        durationInSeconds += diffInSec;
-                    }
+                    durationInSeconds += diffInSec;
                     sum += measurementDuration;
                 }
             }
@@ -197,6 +203,55 @@ public class Terms {
             }
         }
         return null;
+    }
+
+    private static long[] sortedEpochMillis(Set<Timestamp> timestamps) {
+        long[] epochs = new long[timestamps.size()];
+        int index = 0;
+        for (Timestamp timestamp : timestamps) {
+            epochs[index++] = timestamp.getTime();
+        }
+        Arrays.sort(epochs);
+        return epochs;
+    }
+
+    /**
+     * Same diff as {@link #getTimestampWithinTolerance}. One timestamp in range is enough,
+     * because the diff is then unique. More than one keeps the Set iteration order.
+     */
+    private static Double diffForSlot(Timestamp currentTimestamp, long[] epochs, Set<Timestamp> timestamps, long toleranceInMillis) {
+        long currentMillis = currentTimestamp.getTime();
+        int from = lowerBound(epochs, currentMillis - toleranceInMillis);
+        int to = lowerBound(epochs, currentMillis + toleranceInMillis + 1L);
+        int matches = to - from;
+        if (matches <= 0) {
+            return null;
+        }
+        if (matches > 1) {
+            return getTimestampWithinTolerance(currentTimestamp, timestamps, toleranceInMillis);
+        }
+        long timeDiff = currentMillis - epochs[from];
+        return (double) (timeDiff / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+    }
+
+    private static int lowerBound(long[] epochs, long target) {
+        int low = 0;
+        int high = epochs.length;
+        while (low < high) {
+            int mid = (low + high) >>> 1;
+            if (epochs[mid] < target) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
+    }
+
+    private static boolean slotIsBeforeEveryTimestamp(long currentMillis, long[] epochs, long toleranceInMillis, double durationInSeconds) {
+        return (long) durationInSeconds > 0
+                && epochs.length > 0
+                && currentMillis + toleranceInMillis < epochs[0];
     }
 
     public static double getDurationSummation(ContainerData containerData) {
