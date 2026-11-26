@@ -62,8 +62,6 @@ enforced.
 }
 ```
 
-In the recommendations response, the term is keyed as `flex_term` and the model as `stability`.
-
 ---
 
 # Response
