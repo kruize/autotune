@@ -480,10 +480,6 @@ public class DBHelpers {
                 return mapper;
             }
 
-            public static String compactRecommendationJson(Object value) {
-                return RECOMMENDATION_GSON.toJson(value);
-            }
-
             /**
              * Rebuilds one stored results row from {@code extended_data} with {@link #RESULTS_JSONB_GSON}.
              * Interval maps match {@code convertUpdateResultsAPIObjToExperimentResultData}: container metrics
@@ -699,7 +695,9 @@ public class DBHelpers {
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
-                    LOGGER.debug(RECOMMENDATION_GSON.toJson(listRecommendationsAPIObject));
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(RECOMMENDATION_GSON.toJson(listRecommendationsAPIObject));
+                    }
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());

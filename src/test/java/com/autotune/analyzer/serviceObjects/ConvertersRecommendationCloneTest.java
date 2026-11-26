@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -42,21 +43,59 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 /**
- * Recommendation response conversion clones only when it will filter the maps,
- * and then filters the clone, not the stored data.
+ * Recommendation response conversion clones by default. Only a caller that opts out
+ * (updateRecommendations) skips the copy, and only when nothing is filtered. Filtering
+ * always works on a clone, not the stored data.
  */
 public class ConvertersRecommendationCloneTest {
 
     @Test
-    @DisplayName("does not clone when neither timestamp nor latest is requested")
+    @DisplayName("does not clone when the caller opts out and nothing is filtered (updateRecommendations)")
     public void skipsCloneWhenNotFiltering() {
         KruizeObject kruizeObject = containerExperiment();
         try (var utils = mockStatic(Utils.class)) {
             Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
-                    kruizeObject, false, false, timestamp());
+                    kruizeObject, false, false, timestamp(), false);
 
             utils.verify(() -> Utils.getClone(any(), eq(ContainerData.class)), never());
             utils.verify(() -> Utils.getClone(any(), eq(NamespaceData.class)), never());
+        }
+    }
+
+    @Test
+    @DisplayName("the default conversion still clones container data even when nothing is filtered")
+    public void defaultConversionClonesContainer() {
+        KruizeObject kruizeObject = containerExperiment();
+        try (var utils = mockStatic(Utils.class)) {
+            utils.when(() -> Utils.getClone(any(ContainerData.class), eq(ContainerData.class)))
+                    .thenAnswer(invocation -> copyOf(invocation.getArgument(0, ContainerData.class)));
+
+            ListRecommendationsAPIObject converted = Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
+                    kruizeObject, false, false, null);
+
+            utils.verify(() -> Utils.getClone(any(ContainerData.class), eq(ContainerData.class)), times(1));
+            ContainerRecommendations stored = kruizeObject.getKubernetes_objects().get(0).getContainerDataMap().get("app")
+                    .getContainerRecommendations();
+            assertNotSame(stored, converted.getKubernetesObjects().get(0).getContainerAPIObjects().get(0)
+                    .getContainerRecommendations());
+        }
+    }
+
+    @Test
+    @DisplayName("the default conversion still clones namespace data even when nothing is filtered")
+    public void defaultConversionClonesNamespace() {
+        KruizeObject kruizeObject = namespaceExperiment();
+        try (var utils = mockStatic(Utils.class)) {
+            utils.when(() -> Utils.getClone(any(NamespaceData.class), eq(NamespaceData.class)))
+                    .thenAnswer(invocation -> copyOf(invocation.getArgument(0, NamespaceData.class)));
+
+            ListRecommendationsAPIObject converted = Converters.KruizeObjectConverters.convertKruizeObjectToListRecommendationSO(
+                    kruizeObject, false, false, null);
+
+            utils.verify(() -> Utils.getClone(any(NamespaceData.class), eq(NamespaceData.class)), times(1));
+            NamespaceRecommendations stored = kruizeObject.getKubernetes_objects().get(0).getNamespaceDataMap().get("payments")
+                    .getNamespaceRecommendations();
+            assertNotSame(stored, converted.getKubernetesObjects().get(0).getNamespaceAPIObject().getNamespaceRecommendations());
         }
     }
 

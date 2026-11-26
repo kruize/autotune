@@ -204,6 +204,35 @@ class KubernetesElementsValidatorTest {
     }
 
     @Test
+    @DisplayName("a repeated blank container name is reported once, as with the old name-keyed map")
+    void repeatedBlankContainerNameReportedOnce() {
+        KruizeObject kruizeObject = kruizeObject(AnalyzerConstants.ExperimentType.CONTAINER, "demo-app", "deployment", "default");
+        KubernetesAPIObject kube = new KubernetesAPIObject("demo-app", "deployment", "default");
+        kube.setContainerAPIObjects(List.of(
+                new ContainerAPIObject(null, null, null, null),
+                new ContainerAPIObject(null, null, null, null)));
+
+        assertFalse(validator.isValid(updateResults(kruizeObject, kube), context));
+        assertViolation("[" + AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME + "]",
+                "kubernetes_objects ");
+    }
+
+    @Test
+    @DisplayName("different blank container names are each reported")
+    void differentBlankContainerNamesEachReported() {
+        KruizeObject kruizeObject = kruizeObject(AnalyzerConstants.ExperimentType.CONTAINER, "demo-app", "deployment", "default");
+        KubernetesAPIObject kube = new KubernetesAPIObject("demo-app", "deployment", "default");
+        kube.setContainerAPIObjects(List.of(
+                new ContainerAPIObject(null, null, null, null),
+                new ContainerAPIObject("", null, null, null),
+                new ContainerAPIObject("app", null, null, null)));
+
+        assertFalse(validator.isValid(updateResults(kruizeObject, kube), context));
+        String error = AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME;
+        assertViolation("[" + error + ", " + error + "]", "kubernetes_objects ");
+    }
+
+    @Test
     @DisplayName("matching namespace experiment passes")
     void matchingNamespaceExperimentPasses() {
         UpdateResultsAPIObject api = namespaceUpdate(

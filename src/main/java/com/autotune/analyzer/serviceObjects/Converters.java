@@ -156,20 +156,31 @@ public class Converters {
 
 
         /**
-         * Builds the list-recommendations API object for one experiment.
-         * <p>
-         * When {@code getLatest} or {@code checkForTimestamp} is true, the container and namespace data are copied
-         * first, because timestamps are removed from the copy. When both are false nothing is removed, so the
-         * returned object uses the experiment's own recommendation maps instead of a copy. Today every caller that
-         * passes (false, false) (updateRecommendations, generateRecommendations) works on an experiment loaded for
-         * that one request and only turns the result into JSON. Do not change the recommendation data of the
-         * returned object; if a new caller needs to, pass {@code getLatest} or {@code checkForTimestamp} or copy it.
+         * Builds the list-recommendations API object for one experiment. The container and namespace data are
+         * always copied first, so the caller can change the result without touching the experiment. This is the
+         * behaviour every caller had before the updateRecommendations changes.
          */
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,
                 boolean checkForTimestamp,
                 Timestamp monitoringEndTime) {
+            return convertKruizeObjectToListRecommendationSO(kruizeObject, getLatest, checkForTimestamp, monitoringEndTime, true);
+        }
+
+        /**
+         * Same as {@link #convertKruizeObjectToListRecommendationSO(KruizeObject, boolean, boolean, Timestamp)}, but
+         * with {@code copyData} false and nothing to filter ({@code getLatest} and {@code checkForTimestamp} both
+         * false) the result uses the experiment's own recommendation maps instead of a copy. Only the
+         * updateRecommendations path uses this: its experiment is loaded for that one request and the result is only
+         * turned into JSON and saved. Do not change the recommendation data of a result built with copyData false.
+         */
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
+                KruizeObject kruizeObject,
+                boolean getLatest,
+                boolean checkForTimestamp,
+                Timestamp monitoringEndTime,
+                boolean copyData) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
                 listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
@@ -183,9 +194,9 @@ public class Converters {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     // namespace recommendations experiment type
                     if (kruizeObject.isNamespaceExperiment()) {
-                        processNamespaceRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
+                        processNamespaceRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime, copyData);
                     }
-                    processContainerRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
+                    processContainerRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime, copyData);
                     kubernetesAPIObjects.add(kubernetesAPIObject);
                 }
                 listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
@@ -196,11 +207,12 @@ public class Converters {
         }
 
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
-                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime,
+                                                            boolean copyData) {
             NamespaceData clonedNamespaceData = null;
             if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
                 NamespaceData storedNamespaceData = k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace());
-                if (checkForTimestamp || getLatest) {
+                if (copyData || checkForTimestamp || getLatest) {
                     clonedNamespaceData = Utils.getClone(storedNamespaceData, NamespaceData.class);
                 } else {
                     clonedNamespaceData = storedNamespaceData;
@@ -225,12 +237,13 @@ public class Converters {
         }
 
         private static void processContainerRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
-                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime,
+                                                            boolean copyData) {
             List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
 
             for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
                 ContainerData clonedContainerData;
-                if (checkForTimestamp || getLatest) {
+                if (copyData || checkForTimestamp || getLatest) {
                     clonedContainerData = Utils.getClone(containerData, ContainerData.class);
                 } else {
                     clonedContainerData = containerData;

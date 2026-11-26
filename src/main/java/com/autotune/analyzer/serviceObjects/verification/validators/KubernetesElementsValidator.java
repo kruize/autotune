@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
@@ -129,8 +131,14 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             // Assuming that there is only one Kubernetes object
             List<String> validationErrors = new ArrayList<>();
             if (containerAPIObjects != null && !containerAPIObjects.isEmpty()) {
+                // One check per distinct container name, as before: the old code read the containers from a map
+                // keyed by name, so a repeated name was reported once.
+                Set<String> containerNames = new LinkedHashSet<>();
                 for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
-                    validationErrors.addAll(validateContainerName(containerAPIObject.getContainer_name()));
+                    containerNames.add(containerAPIObject.getContainer_name());
+                }
+                for (String containerName : containerNames) {
+                    validationErrors.addAll(validateContainerName(containerName));
                 }
             }
 

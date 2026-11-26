@@ -403,16 +403,8 @@ public class RecommendationEngine implements RecommendationEngineService {
             try {
                 String errorMsg;
                 if (remoteLeanLoad) {
-                    boolean resultsAvailable = new ExperimentDBService().loadRecommendationResultsOnto(
-                            mainKruizeExperimentMAP, kruizeObject, interval_start_time, interval_end_time);
-                    if (!resultsAvailable) {
-                        SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
-                        errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
-                                dateFormat.format(interval_start_time), dateFormat.format(interval_end_time));
-                        LOGGER.error(errorMsg);
-                    } else {
-                        errorMsg = "";
-                    }
+                    errorMsg = loadRemoteResults(new ExperimentDBService(), mainKruizeExperimentMAP, kruizeObject,
+                            interval_start_time, interval_end_time);
                 } else {
                     errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
                 }
@@ -433,7 +425,7 @@ public class RecommendationEngine implements RecommendationEngineService {
                 generateRecommendations(kruizeObject);
                 if (remoteLeanLoad) {
                     preparedRecommendationList = com.autotune.analyzer.serviceObjects.Converters.KruizeObjectConverters
-                            .convertKruizeObjectToListRecommendationSO(kruizeObject, false, false, interval_end_time);
+                            .convertKruizeObjectToListRecommendationSO(kruizeObject, false, false, interval_end_time, false);
                 }
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
@@ -1215,6 +1207,31 @@ public class RecommendationEngine implements RecommendationEngineService {
             validationOutputData = new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
+    }
+
+    /**
+     * Loads the remote-monitoring results window for updateRecommendations. Handles errors the same way as the
+     * remote branch of {@link #getResults}: no rows gives the "no metrics available" message, and a failure while
+     * reading the DB is logged and the request carries on, so the API answer is the same as before.
+     *
+     * @return an empty string when the request should carry on, otherwise the error message
+     */
+    static String loadRemoteResults(ExperimentDBService experimentDBService, Map<String, KruizeObject> mainKruizeExperimentMAP,
+                                    KruizeObject kruizeObject, Timestamp intervalStartTime, Timestamp intervalEndTime) {
+        try {
+            boolean resultsAvailable = experimentDBService.loadRecommendationResultsOnto(
+                    mainKruizeExperimentMAP, kruizeObject, intervalStartTime, intervalEndTime);
+            if (!resultsAvailable) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                String errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
+                        dateFormat.format(intervalStartTime), dateFormat.format(intervalEndTime));
+                LOGGER.error(errorMsg);
+                return errorMsg;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.FETCHING_RESULTS_FAILED, e.getMessage()));
+        }
+        return "";
     }
 
     /**

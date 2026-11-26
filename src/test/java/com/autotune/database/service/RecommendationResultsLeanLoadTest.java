@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -175,18 +174,6 @@ class RecommendationResultsLeanLoadTest {
 
         assertFalse(attached);
         assertNull(containerData.getResults());
-    }
-
-    @Test
-    @DisplayName("recommendation JSON is compact and dates stay UTC")
-    void compactRecommendationJsonDropsPrettyPrint() {
-        Map<String, Date> payload = new HashMap<>();
-        payload.put("monitoring_end_time", new Date(0L));
-
-        String json = DBHelpers.Converters.KruizeObjectConverters.compactRecommendationJson(payload);
-
-        assertFalse(json.contains("\n"));
-        assertTrue(json.contains("1970-01-01T00:00:00.000Z"));
     }
 
     private static ExperimentResultData oldConverter(KruizeResultsEntry stored) {
