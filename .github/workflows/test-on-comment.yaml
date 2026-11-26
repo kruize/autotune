@@ -58,8 +58,13 @@ jobs:
       - name: Build crc
         run: |
           echo Build crc
+          if command -v podman >/dev/null 2>&1; then
+            BUILDER=podman
+          else
+            BUILDER=docker
+          fi
           ./build.sh -i autotune_operator:test_build
-          docker images | grep autotune
+          ${BUILDER} images | grep autotune
 
       - name: Install Prometheus on minikube
         run: |

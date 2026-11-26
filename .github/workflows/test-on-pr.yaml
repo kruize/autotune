@@ -34,8 +34,13 @@ jobs:
           echo Build crc
           pr_number=${{ github.event.pull_request.number }}
           echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
+          if command -v podman >/dev/null 2>&1; then
+            BUILDER=podman
+          else
+            BUILDER=docker
+          fi
           ./build.sh -i autotune_operator:pr_${pr_number}
-          docker images | grep autotune
+          ${BUILDER} images | grep autotune
       - name: Check cluster info on minikube
         run: |
           kubectl cluster-info

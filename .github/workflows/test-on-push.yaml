@@ -34,8 +34,13 @@ jobs:
       - name: Build monitoring
         run: |
           echo Build monitoring
+          if command -v podman >/dev/null 2>&1; then
+            BUILDER=podman
+          else
+            BUILDER=docker
+          fi
           ./build.sh -i autotune_operator:pr_${{ env.PR_NUMBER }} -o autotune_optuna:pr_${{ env.PR_NUMBER }}
-          docker images | grep autotune
+          ${BUILDER} images | grep autotune
       - name: docker login
         uses: docker/login-action@v4
         with:
@@ -44,8 +49,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruizehub/autotune-test-image:pr_${{ env.PR_NUMBER }}
-          docker push quay.io/kruizehub/autotune-test-image:pr_${{ env.PR_NUMBER }}
+          if command -v podman >/dev/null 2>&1; then
+            BUILDER=podman
+          else
+            BUILDER=docker
+          fi
+          ${BUILDER} tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruizehub/autotune-test-image:pr_${{ env.PR_NUMBER }}
+          ${BUILDER} push quay.io/kruizehub/autotune-test-image:pr_${{ env.PR_NUMBER }}
 
   deploy_crc:
     # The type of runner that the job will run on

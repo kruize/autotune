@@ -44,10 +44,10 @@ function check_err() {
 # Remove any previous images of autotune
 function cleanup() {
 	echo -n "Cleanup any previous kruize images..."
-	docker stop autotune >/dev/null 2>/dev/null
+	${BUILDER} stop autotune >/dev/null 2>/dev/null
 	sleep 5
-	docker rmi $(docker images | grep autotune | awk '{ print $3 }') >/dev/null 2>/dev/null
-	docker rmi $(docker images | grep autotune | awk '{ printf "%s:%s\n", $1, $2 }') >/dev/null 2>/dev/null
+	${BUILDER} rmi $(${BUILDER} images | grep autotune | awk '{ print $3 }') >/dev/null 2>/dev/null
+	${BUILDER} rmi $(${BUILDER} images | grep autotune | awk '{ printf "%s:%s\n", $1, $2 }') >/dev/null 2>/dev/null
 	echo "done"
 }
 
@@ -79,6 +79,11 @@ done
 
 git pull
 set_tags
+if command -v podman >/dev/null 2>&1; then
+	BUILDER="podman"
+else
+	BUILDER="docker"
+fi
 # Build the docker image with the given version string
 if [ ${DEV_MODE} -eq 0 ]; then
 	cleanup
@@ -88,7 +93,6 @@ fi
 echo ${BUILD_PARAMS}
 
 BUILDTMPFILE=/tmp/docker_build_log.$$
-BUILDER="docker"
 
 ${BUILDER} build ${BUILD_PARAMS} --format=docker --build-arg AUTOTUNE_VERSION=${DOCKER_TAG} -t ${AUTOTUNE_DOCKER_IMAGE} -f ${AUTOTUNE_DOCKERFILE} . 2>${BUILDTMPFILE}
 build_error=$(grep 'Error:\|unknown flag:' ${BUILDTMPFILE})
