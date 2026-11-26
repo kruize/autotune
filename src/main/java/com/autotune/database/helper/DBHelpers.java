@@ -535,8 +535,9 @@ public class DBHelpers {
             }
 
             /**
-             * Same rebuild as {@link #experimentResultFromResultEntry}, parsing {@code extended_data}
-             * text once with {@link #RESULTS_JSONB_GSON}. Returns null when the JSON is missing or
+             * Same rebuild as {@link #experimentResultFromResultEntry}. Parses {@code extended_data}
+             * with {@link ResultsExtendedDataStreamParser} and falls back to {@link #RESULTS_JSONB_GSON}
+             * for that row when the JSON shape is unexpected. Returns null when the JSON is missing or
              * no kubernetes object is included.
              */
             public static ExperimentResultData experimentResultFromExtendedDataJson(String experimentName,
@@ -548,12 +549,43 @@ public class DBHelpers {
                 if (extendedDataJson == null || extendedDataJson.isEmpty()) {
                     return null;
                 }
+                final List<K8sObject> kubernetesObjects;
+                try {
+                    kubernetesObjects = ResultsExtendedDataStreamParser.parseKubernetesObjects(extendedDataJson);
+                } catch (RuntimeException exception) {
+                    ResultsExtendedDataStreamParser.logFallbackOnce(exception);
+                    return experimentResultFromExtendedDataJsonWithGson(experimentName, clusterName, version,
+                            intervalStartTime, intervalEndTime, extendedDataJson);
+                }
+                if (kubernetesObjects == null) {
+                    return null;
+                }
+                return assembleExperimentResult(experimentName, clusterName, version, intervalStartTime, intervalEndTime,
+                        kubernetesObjects);
+            }
+
+            private static ExperimentResultData experimentResultFromExtendedDataJsonWithGson(String experimentName,
+                                                                                             String clusterName,
+                                                                                             String version,
+                                                                                             Timestamp intervalStartTime,
+                                                                                             Timestamp intervalEndTime,
+                                                                                             String extendedDataJson) {
                 ResultsExtendedData extendedData = RESULTS_JSONB_GSON.fromJson(extendedDataJson, ResultsExtendedData.class);
                 if (extendedData == null || extendedData.kubernetesObjects == null) {
                     return null;
                 }
+                return assembleExperimentResult(experimentName, clusterName, version, intervalStartTime, intervalEndTime,
+                        extendedData.kubernetesObjects);
+            }
+
+            private static ExperimentResultData assembleExperimentResult(String experimentName,
+                                                                         String clusterName,
+                                                                         String version,
+                                                                         Timestamp intervalStartTime,
+                                                                         Timestamp intervalEndTime,
+                                                                         List<K8sObject> kubernetesObjects) {
                 List<K8sObject> parsedObjects = new ArrayList<>();
-                for (K8sObject k8sObject : extendedData.kubernetesObjects) {
+                for (K8sObject k8sObject : kubernetesObjects) {
                     if (k8sObject == null) {
                         continue;
                     }
