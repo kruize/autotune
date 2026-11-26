@@ -110,9 +110,6 @@ The `flex` term is opt-in and is generated independently of the other terms. See
       ```
   - #### 30 mins or more of data, with `flex` term requested
 
-    The `flex` term uses all available data up to the 15-day cap, whether contiguous or sparse. It is reported
-    alongside any other terms that meet their own thresholds.
-
     **Response**
       ```
       "111104": {
