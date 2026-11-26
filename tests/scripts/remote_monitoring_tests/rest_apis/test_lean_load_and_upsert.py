@@ -57,13 +57,13 @@ def test_lean_load_parity_container(cluster_type):
     ]
 
     form_kruize_url(cluster_type)
-    create_exp_json_file, experiment_name = setup_experiment(
-        cluster_type, input_json_file, find, index=100
+    create_exp_json_file, experiment_name, run_id = setup_experiment(
+        cluster_type, input_json_file, find
     )
 
     num_results = 2
     result_json_arr, end_time = post_results(
-        result_json_file, find, num_results, index=100
+        result_json_file, find, num_results, run_id=run_id
     )
 
     list_reco_json = generate_and_validate_recommendations(
@@ -106,13 +106,13 @@ def test_lean_load_parity_namespace(cluster_type):
     ]
 
     form_kruize_url(cluster_type)
-    create_exp_json_file, experiment_name = setup_experiment(
-        cluster_type, input_json_file, find, index=101
+    create_exp_json_file, experiment_name, run_id = setup_experiment(
+        cluster_type, input_json_file, find
     )
 
     num_results = 2
     result_json_arr, end_time = post_results(
-        result_json_file, find, num_results, index=101
+        result_json_file, find, num_results, run_id=run_id
     )
 
     list_reco_json = generate_and_validate_recommendations(
@@ -156,14 +156,14 @@ def test_lean_load_parity_accelerator(cluster_type):
     ]
 
     form_kruize_url(cluster_type)
-    create_exp_json_file, experiment_name = setup_experiment(
-        cluster_type, input_json_file, find, index=102
+    create_exp_json_file, experiment_name, run_id = setup_experiment(
+        cluster_type, input_json_file, find
     )
 
     gpu_name = "NVIDIA-A100-SXM4-40GB"
     num_results = 2
     result_json_arr, end_time = post_results(
-        result_json_file, find, num_results, index=102, gpu_name=gpu_name
+        result_json_file, find, num_results, run_id=run_id, gpu_name=gpu_name
     )
 
     list_reco_json = generate_and_validate_recommendations(
@@ -213,11 +213,11 @@ def test_lean_load_parity_mixed(cluster_type):
 
     form_kruize_url(cluster_type)
 
-    container_exp_file, container_exp_name = setup_experiment(
-        cluster_type, container_input, container_find, index=103
+    container_exp_file, container_exp_name, container_run_id = setup_experiment(
+        cluster_type, container_input, container_find
     )
     container_results, container_end_time = post_results(
-        container_result, container_find, 2, index=103
+        container_result, container_find, 2, run_id=container_run_id
     )
 
     # --- Namespace experiment ---
@@ -230,11 +230,11 @@ def test_lean_load_parity_mixed(cluster_type):
         json_data[0]['kubernetes_objects'][0]['namespaces']['namespace'],
     ]
 
-    namespace_exp_file, namespace_exp_name = setup_experiment(
-        cluster_type, namespace_input, namespace_find, index=104
+    namespace_exp_file, namespace_exp_name, namespace_run_id = setup_experiment(
+        cluster_type, namespace_input, namespace_find
     )
     namespace_results, namespace_end_time = post_results(
-        namespace_result, namespace_find, 2, index=104
+        namespace_result, namespace_find, 2, run_id=namespace_run_id
     )
 
     # --- Validate container recommendations ---
@@ -291,29 +291,35 @@ def test_recommendation_upsert_idempotent(cluster_type):
     ]
 
     form_kruize_url(cluster_type)
-    create_exp_json_file, experiment_name = setup_experiment(
-        cluster_type, input_json_file, find, index=105
+    create_exp_json_file, experiment_name, run_id = setup_experiment(
+        cluster_type, input_json_file, find
     )
 
     num_results = 2
     result_json_arr, end_time = post_results(
-        result_json_file, find, num_results, index=105
+        result_json_file, find, num_results, run_id=run_id
     )
 
     # --- First updateRecommendations call ---
-    response1 = update_recommendations(experiment_name, None, end_time)
+    response1 = update_recommendations(experiment_name, None, end_time, timeout=HTTP_TIMEOUT)
     data1 = response1.json()
     assert response1.status_code == SUCCESS_STATUS_CODE
     assert data1[0]['experiment_name'] == experiment_name
 
     # --- Second updateRecommendations call (same experiment, same end_time) ---
-    response2 = update_recommendations(experiment_name, None, end_time)
+    response2 = update_recommendations(experiment_name, None, end_time, timeout=HTTP_TIMEOUT)
     data2 = response2.json()
     assert response2.status_code == SUCCESS_STATUS_CODE
     assert data2[0]['experiment_name'] == experiment_name
 
-    # --- Verify no duplicates ---
-    response = list_recommendations(experiment_name, rm=True)
+    # --- Verify both calls produce identical recommendation values ---
+    reco1 = data1[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+    reco2 = data2[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+    assert reco1 == reco2, \
+        "Duplicate updateRecommendations calls should return identical values"
+
+    # --- Verify no duplicates via listRecommendations ---
+    response = list_recommendations(experiment_name, rm=True, timeout=HTTP_TIMEOUT)
     assert response.status_code == SUCCESS_200_STATUS_CODE
     list_reco_json = response.json()
 
@@ -326,6 +332,17 @@ def test_recommendation_upsert_idempotent(cluster_type):
     timestamp_entries = [ts for ts in data_section.keys() if ts == str(end_time)]
     assert len(timestamp_entries) == 1, \
         f"Expected exactly 1 recommendation entry for timestamp {end_time}, got {len(timestamp_entries)}"
+
+    # --- Cross-check via listExperiments to detect duplicates that JSON key
+    #     deduplication would hide in listRecommendations ---
+    response = list_experiments(recommendations='true', experiment_name=experiment_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    exp_json = response.json()
+    exp_reco = exp_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+    exp_data_section = exp_reco["data"]
+    exp_ts_entries = [ts for ts in exp_data_section.keys() if ts == str(end_time)]
+    assert len(exp_ts_entries) == 1, \
+        f"listExperiments: expected 1 recommendation for {end_time}, got {len(exp_ts_entries)}"
 
     # Validate schema and values
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
@@ -356,13 +373,13 @@ def test_recommendation_upsert_updated_results(cluster_type):
     ]
 
     form_kruize_url(cluster_type)
-    create_exp_json_file, experiment_name = setup_experiment(
-        cluster_type, input_json_file, find, index=106
+    create_exp_json_file, experiment_name, run_id = setup_experiment(
+        cluster_type, input_json_file, find
     )
 
     # --- Phase 1: Post 2 results, get initial recommendations ---
     result_json_arr, end_time_1 = post_results(
-        result_json_file, find, 2, index=106
+        result_json_file, find, 2, run_id=run_id
     )
 
     reco_json_1 = generate_and_validate_recommendations(
@@ -371,11 +388,14 @@ def test_recommendation_upsert_updated_results(cluster_type):
 
     short_term_1 = extract_reco_values(reco_json_1, end_time_1, is_namespace=False)
 
-    # --- Phase 2: Post 2 more results with different metric values ---
-    update_results_json_file = f"/tmp/update_results_lean_106.json"
+    # --- Phase 2: Post 2 more results with higher CPU usage values ---
+    phase2_cpu_avg = 0.85
+    phase2_cpu_max = 1.80
+    phase2_cpu_min = 0.60
+    update_results_json_file = _make_temp_json('update_results_phase2_')
 
     for j in range(2):
-        generate_json(find, result_json_file, update_results_json_file, 106, update_timestamps=True)
+        generate_json(find, result_json_file, update_results_json_file, run_id, update_timestamps=True)
         result_json = read_json_data_from_file(update_results_json_file)
 
         start_time = end_time_1 if j == 0 else end_time_2
@@ -383,18 +403,17 @@ def test_recommendation_upsert_updated_results(cluster_type):
         end_time_2 = increment_timestamp_by_given_mins(start_time, 15)
         result_json[0]['interval_end_time'] = end_time_2
 
-        # Modify CPU usage values to be different from initial results
         for kub_obj in result_json[0]["kubernetes_objects"]:
             for container in kub_obj.get("containers", []):
                 for metric in container.get("metrics", []):
                     if metric["name"] == "cpuUsage":
-                        metric["results"]["aggregation_info"]["avg"] = 0.85
-                        metric["results"]["aggregation_info"]["max"] = 1.80
-                        metric["results"]["aggregation_info"]["min"] = 0.60
+                        metric["results"]["aggregation_info"]["avg"] = phase2_cpu_avg
+                        metric["results"]["aggregation_info"]["max"] = phase2_cpu_max
+                        metric["results"]["aggregation_info"]["min"] = phase2_cpu_min
 
         write_json_data_to_file(update_results_json_file, result_json)
         result_json_arr.append(result_json[0])
-        response = update_results(update_results_json_file, False)
+        response = update_results(update_results_json_file, False, timeout=HTTP_TIMEOUT)
 
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
@@ -406,16 +425,23 @@ def test_recommendation_upsert_updated_results(cluster_type):
         experiment_name, end_time_2, is_namespace=False
     )
 
-    # Verify that the new recommendation timestamp is different from the old one
+    # Verify that the new recommendation timestamp exists
     reco_section = reco_json_2[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
     data_section = reco_section["data"]
 
     assert str(end_time_2) in data_section, \
         f"Recommendations should have entry for the latest end_time {end_time_2}"
 
-    # Validate the recommendations reflect the updated data
     short_term_2 = extract_reco_values(reco_json_2, end_time_2, is_namespace=False)
-    assert short_term_2 is not None, "Short-term recommendations should be present for the latest timestamp"
+
+    # --- Verify recommendations changed: the higher CPU usage in phase 2
+    #     should produce different CPU request/limit recommendations ---
+    cost_config_1 = short_term_1["recommendation_engines"]["cost"]["config"]
+    cost_config_2 = short_term_2["recommendation_engines"]["cost"]["config"]
+    assert cost_config_1 != cost_config_2, \
+        "Recommendations should differ after posting results with different CPU usage " \
+        f"(phase1 avg={result_json_arr[1]['kubernetes_objects'][0]['containers'][0]['metrics'][2]['results']['aggregation_info']['avg']}, " \
+        f"phase2 avg={phase2_cpu_avg})"
 
     # Validate schema
     errorMsg = validate_list_reco_json(reco_json_2, list_reco_json_schema)

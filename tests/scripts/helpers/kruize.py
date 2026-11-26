@@ -76,7 +76,7 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
 
 # Description: This function validates the input json and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
-def create_experiment(input_json_file, invalid_header=False):
+def create_experiment(input_json_file, invalid_header=False, timeout=None):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
     print("\n************************************************************")
@@ -93,9 +93,9 @@ def create_experiment(input_json_file, invalid_header=False):
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.post(url, json=input_json, headers=headers)
+        response = requests.post(url, json=input_json, headers=headers, timeout=timeout)
     else:
-        response = requests.post(url, json=input_json)
+        response = requests.post(url, json=input_json, timeout=timeout)
 
     print("Response status code = ", response.status_code)
     try:
@@ -120,7 +120,7 @@ def create_experiment(input_json_file, invalid_header=False):
 
 # Description: This function validates the result json and posts the experiment results using updateResults API to Kruize Autotune
 # Input Parameters: experiment input json
-def update_results(result_json_file, logging=True):
+def update_results(result_json_file, logging=True, timeout=None):
     # read the json
     json_file = open(result_json_file, "r")
     result_json = json.loads(json_file.read())
@@ -133,14 +133,14 @@ def update_results(result_json_file, logging=True):
     url = URL + "/updateResults"
     print("URL = ", url)
 
-    response = requests.post(url, json=result_json)
+    response = requests.post(url, json=result_json, timeout=timeout)
     print("Response status code = ", response.status_code)
     print(response.text)
     return response
 
 
 # Description: This function generates recommendation for the given experiment_name , start time and end time .
-def update_recommendations(experiment_name, startTime, endTime):
+def update_recommendations(experiment_name, startTime, endTime, timeout=None):
     print("\n************************************************************")
     print("\nUpdating the recommendation \n for %s for dates Start-time: %s and End-time: %s..." % (
         experiment_name, startTime, endTime))
@@ -157,7 +157,7 @@ def update_recommendations(experiment_name, startTime, endTime):
     else:
         url = URL + "/updateRecommendations?%s" % (queryString)
     print("URL = ", url)
-    response = requests.post(url, )
+    response = requests.post(url, timeout=timeout)
     print("Response status code = ", response.status_code)
     print(response.text)
     print("\n************************************************************")
@@ -166,7 +166,7 @@ def update_recommendations(experiment_name, startTime, endTime):
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment name, flag indicating latest result and monitoring end time
-def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, rm=False):
+def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, rm=False, timeout=None):
     PARAMS = ""
     print("\nListing the recommendations...")
 
@@ -181,7 +181,7 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
 
     if experiment_name == None:
         if latest == None and monitoring_end_time == None:
-            response = requests.get(url)
+            response = requests.get(url, timeout=timeout)
         elif latest != None:
             PARAMS = {'latest': latest}
         elif monitoring_end_time != None:
@@ -195,7 +195,7 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
             PARAMS = {'experiment_name': experiment_name, 'monitoring_end_time': monitoring_end_time}
 
     print("PARAMS = ", PARAMS)
-    response = requests.get(url=url, params=PARAMS)
+    response = requests.get(url=url, params=PARAMS, timeout=timeout)
 
     print("Response status code = ", response.status_code)
     print("\n************************************************************")
@@ -206,7 +206,7 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
 
 # Description: This function deletes the experiment and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
-def delete_experiment(input_json_file, invalid_header=False, rm=True):
+def delete_experiment(input_json_file, invalid_header=False, rm=True, timeout=None):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
 
@@ -226,9 +226,9 @@ def delete_experiment(input_json_file, invalid_header=False, rm=True):
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=delete_json, headers=headers, params=params)
+        response = requests.delete(url, json=delete_json, headers=headers, params=params, timeout=timeout)
     else:
-        response = requests.delete(url, json=delete_json, params=params)
+        response = requests.delete(url, json=delete_json, params=params, timeout=timeout)
 
     print(response)
     print("Response status code = ", response.status_code)
