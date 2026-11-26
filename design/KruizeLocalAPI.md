@@ -115,6 +115,11 @@ Below are the default terms used in resource analysis, along with their respecti
 | Medium | 2 Days                 | 7 days   | 
 | Long   | 8 Days                 | 15 days  | 
 
+**Note**: An opt-in `Flex` term is also available. It is not part of the default terms and must be requested through
+`recommendation_settings`. See the
+[Terms, Duration & Threshold Table](MonitoringModeAPI.md#terms-duration--threshold-table) in the Monitoring Mode API
+guide.
+
 **Minimum Data Threshold**: The "minimum data threshold" represents the minimum amount of data needed for generating a
 recommendation associated with a given duration term.
 
@@ -155,6 +160,9 @@ or above the 98th percentile, and memory usage is at the 100th percentile.
 |-------------|------------------|---------------------|
 | Cost        | 60 th            | 100 th              |
 | Performance | 98 th            | 100 th              |
+
+**Note**: An opt-in `Stability` profile is also available. It must be requested through `recommendation_settings`. See
+[Profiles](MonitoringModeAPI.md#profiles) in the Monitoring Mode API guide.
 
 
 <a name="datasource-guide"></a>

@@ -65,7 +65,6 @@ progress of the job.
   "experiment_types": [
     "container"
   ],
-  "cluster_name": "prod-cluster",
   "model_settings": {
     "models": ["performance", "cost"]
   },
@@ -99,6 +98,10 @@ progress of the job.
 - **experiment_types:** Specifies the type of experiment to create for this bulk job. Currently, only a single value is
   supported per request — either `"container"` (default) or `"namespace"`. Support for specifying multiple experiment
   types in one request will be added in a future release.
+
+- **model_settings / term_settings:** (Optional) The `models` and `terms` to use for every experiment created in this
+  bulk job. They are passed through as-is to the created experiments. See
+  [recommendation_settings](CreateExperiment.md#recommendation_settings) for supported values and defaults.
 
 - **webhook:** The `webhook` parameter allows the system to notify an external service or consumer about the completion
   status of

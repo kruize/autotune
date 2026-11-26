@@ -31,6 +31,39 @@ Currently we have the following pre-defined profiles
 | default                                | NA (User defined SLO)                       | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/DefaultImpl.java)            | This is applicable to all to Autotune Usecases |
 
 
+## recommendation_settings
+
+An optional object that controls which terms and models are used to generate recommendations.
+If omitted, Kruize uses the default set: `short`, `medium`, and `long` terms with `cost` and `performance` models.
+
+### Supported terms
+
+Supported term values are `short`, `medium`, `long` (default) and `flex` (opt-in). For the duration and minimum data
+threshold of each term, see [Terms, Duration & Threshold Table](MonitoringModeAPI.md#terms-duration--threshold-table).
+
+### Supported models
+
+Supported model values are `cost`, `performance` (default) and `stability` (opt-in). For the CPU and memory percentile
+used by each model, see [Profiles](MonitoringModeAPI.md#profiles).
+
+### Requesting flex and stability
+
+`flex` and `stability` are opt-in and must be listed explicitly. They are intended to be used together, but this is not
+enforced.
+
+```json
+"recommendation_settings": {
+  "term_settings": {
+    "terms": ["flex"]
+  },
+  "model_settings": {
+    "models": ["stability"]
+  }
+}
+```
+
+---
+
 # Response
 
 * Success
