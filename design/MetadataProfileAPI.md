@@ -314,7 +314,7 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       },
@@ -385,7 +385,7 @@ The following table lists every placeholder Kruize recognises. Adding any other 
 |---------------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `$NAMESPACE_FILTERS$`           | Bulk profiles only                    | `namespacesForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel` | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested namespaces (include/exclude lists from the import request).          |
 | `$WORKLOAD_FILTERS$`            | Bulk profiles only                    | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested workloads.                                                           |
-| `$CONTAINER_FILTERS$`           | Bulk profiles only                    | `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested containers.                                                          |
+| `$CONTAINER_FILTERS$`           | Bulk profiles only                    | `containersForAdditionalLabel`                                                                | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector that filters by the requested containers.                                                          |
 | `$LABELS$`                      | Bulk profiles only                    | `workloadsWithPodLabelFilter`                                                                 | `DataSourceMetadataOperator` at import time                                                         | Expands to a PromQL label selector derived from the pod label filter in the import request.                                           |
 | `$MEASUREMENT_DURATION_IN_MIN$` | Bulk profiles **and** update payloads | All query templates                                                                           | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Replaced with the measurement duration in minutes (e.g. `15`). Used inside range-vector brackets: `[$MEASUREMENT_DURATION_IN_MIN$m]`. |
 | `$UNSUPPORTED_WORKLOAD_TYPES$`  | Bulk profiles **and** update payloads | `workloadsForAdditionalLabel`, `workloadsWithPodLabelFilter`, `containersForAdditionalLabel`  | `DataSourceMetadataOperator` (bulk) / `queryValidator` (update, for validation only — stored as-is) | Expands to a `workload_type!~"..."` filter that excludes unsupported workload types (DeploymentConfig, ConfigMap, CatalogSource).     |
@@ -472,7 +472,7 @@ The queries below use the same template variables (`$MEASUREMENT_DURATION_IN_MIN
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $CONTAINER_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (max_over_time(kube_pod_labels{$NAMESPACE_FILTERS$ $LABELS$}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (namespace, pod) group_left(workload, workload_type) max_over_time(namespace_workload_pod:kube_pod_owner:relabel{$UNSUPPORTED_WORKLOAD_TYPES$ $WORKLOAD_FILTERS$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
