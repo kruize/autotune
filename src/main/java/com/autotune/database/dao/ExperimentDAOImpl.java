@@ -853,6 +853,22 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * Checks whether the exception is caused by a unique or primary key constraint violation
+     * (SQLState 23505), directly or through one of its causes.
+     */
+    static boolean isUniqueViolation(Throwable throwable) {
+        for (Throwable t = throwable; null != t; t = (t.getCause() == t ? null : t.getCause())) {
+            if (t instanceof ConstraintViolationException) {
+                return true;
+            }
+            if (t instanceof java.sql.SQLException && "23505".equals(((java.sql.SQLException) t).getSQLState())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Adds MetricProfile to database
      *
      * @param kruizeMetricProfileEntry Metric Profile Database object to be added
@@ -876,11 +892,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                // a unique/primary key violation means the profile already exists (conflict), anything else is a server error
+                validationOutputData.setErrorCode(isUniqueViolation(e)
+                        ? HttpServletResponse.SC_CONFLICT : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save metric profile due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }
@@ -1312,6 +1332,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("No performance profile found with the name: " + perfProfileName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1322,6 +1343,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1385,6 +1407,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     // Remove the experiment from the Results table
                     Query kruizeResultsEntryquery = session.createQuery(DELETE_FROM_RESULTS_BY_EXP_NAME, null);
@@ -1404,6 +1427,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1434,6 +1458,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeLMExperimentEntry not found with experiment name: " + experimentName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     // Remove the experiment from the Recommendations table
                     Query kruizeLMRecommendationEntryquery = session.createQuery(DELETE_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME, null);
@@ -1448,6 +1473,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
@@ -1477,6 +1503,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage("KruizeDSMetadataEntry not found with datasource name: " + dataSourceName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1487,10 +1514,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
             LOGGER.error("Not able to delete metadata for datasource {} due to {}", dataSourceName, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }
@@ -1516,6 +1546,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + metricProfileName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1526,11 +1557,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
             validationOutputData.setMessage(e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }
@@ -1556,6 +1589,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + metadataProfileName);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
@@ -1566,10 +1600,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG, metadataProfileName, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }

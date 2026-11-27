@@ -55,6 +55,25 @@ public class Utils {
     private Utils() {
     }
 
+    /**
+     * Neutralises control characters (CR, LF, tab, other ISO control characters) in a value that may be
+     * attacker controlled before it is written to the logs, so that it cannot be used to forge log entries (CWE-117).
+     *
+     * @param value the value to be logged, may be null
+     * @return the value with every control character replaced by '_', or null if the value is null
+     */
+    public static String sanitizeForLog(String value) {
+        if (null == value) {
+            return null;
+        }
+        StringBuilder sanitized = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            sanitized.append(Character.isISOControl(c) ? '_' : c);
+        }
+        return sanitized.toString();
+    }
+
     public static String generateID(Object object) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

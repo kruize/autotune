@@ -35,9 +35,12 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,15 +104,40 @@ public class MetricProfileService extends HttpServlet {
                     metricProfileCollection.addMetricProfile(metricProfile);
 
                     sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_SUCCESS_MSG, metricProfile.getMetadata().get("name").asText()));
+                } else if (null != addedToDB.getErrorCode() && HttpServletResponse.SC_CONFLICT == addedToDB.getErrorCode()) {
+                    // a unique/primary key violation on insert means the profile already exists (e.g. concurrent create)
+                    sendErrorResponse(response, null, HttpServletResponse.SC_CONFLICT,
+                            "Validation failed: " + AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE
+                                    + metricProfile.getMetadata().get("name").asText());
                 } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                    // a failed DB insert is a server side failure, the cause is logged but not disclosed to the client
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                            Utils.sanitizeForLog(addedToDB.getMessage()));
+                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
                 }
-            } else
-                sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
+            } else {
+                int errorCode = null != validationOutputData.getErrorCode()
+                        ? validationOutputData.getErrorCode() : HttpServletResponse.SC_BAD_REQUEST;
+                if (errorCode >= HttpServletResponse.SC_INTERNAL_SERVER_ERROR) {
+                    // server side failure, the cause is logged but not disclosed to the client
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                            Utils.sanitizeForLog(validationOutputData.getMessage()));
+                    sendErrorResponse(response, null, errorCode, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
+                } else {
+                    sendErrorResponse(response, null, errorCode, validationOutputData.getMessage());
+                }
+            }
+        } catch (JSONException | JsonParseException | JsonProcessingException | InvalidValueException e) {
+            // malformed or invalid input is a client error
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_INVALID_INPUT,
+                    Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Validation failed: " + e.getMessage());
-        } catch (InvalidValueException e) {
-            throw new RuntimeException(e);
+            // unexpected errors are server errors, the details are logged but not disclosed to the client
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_UNEXPECTED_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 
@@ -269,12 +297,22 @@ public class MetricProfileService extends HttpServlet {
                     // Deletes database and in-memory metric profile object stored
                     deleteMetricProfile(metricProfileName);
                     metricProfilesMap.remove(metricProfileName);
-                } catch (Exception e) {
+                } catch (NoSuchElementException e) {
+                    // the profile is not present in the DB, this is a client error
                     sendErrorResponse(
                             response,
-                            e,
+                            null,
                             HttpServletResponse.SC_BAD_REQUEST,
-                            e.getMessage());
+                            String.format(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_MSG, metricProfileName));
+                    return;
+                } catch (Exception e) {
+                    LOGGER.error(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_ERROR,
+                            Utils.sanitizeForLog(e.getMessage()));
+                    sendErrorResponse(
+                            response,
+                            null,
+                            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
                     return;
                 }
             } else {
@@ -290,8 +328,10 @@ public class MetricProfileService extends HttpServlet {
             sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_SUCCESS_MSG, metricProfileName));
 
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_ERROR,
+                    Utils.sanitizeForLog(e.getMessage()));
+            sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    AnalyzerErrorConstants.INTERNAL_SERVER_ERROR_MSG);
         }
     }
 
@@ -329,7 +369,7 @@ public class MetricProfileService extends HttpServlet {
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
-            LOGGER.error(e.toString());
+            LOGGER.error(Utils.sanitizeForLog(e.toString()));
             if (null == errorMsg)
                 errorMsg = e.getMessage();
         }
@@ -357,21 +397,25 @@ public class MetricProfileService extends HttpServlet {
         }
     }
 
+    /**
+     * Deletes the metric profile from the database and, only after a successful delete, from the in-memory collection.
+     *
+     * @param metricProfileName Name of the metric profile to be deleted
+     * @throws NoSuchElementException if the profile is not found in the database
+     * @throws IllegalStateException  if the delete from the database fails
+     */
     private void deleteMetricProfile(String metricProfileName) {
-        ValidationOutputData deletedMetricProfileFromDB = null;
-        try {
-            // delete the metric profile from DB
-            deletedMetricProfileFromDB = new ExperimentDAOImpl().deleteKruizeMetricProfileEntryByName(metricProfileName);
-            if (deletedMetricProfileFromDB.isSuccess()) {
-                // remove in-memory metric profile
-                MetricProfileCollection.getInstance().getMetricProfileCollection().remove(metricProfileName);
-                LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG);
-            } else {
-                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG, deletedMetricProfileFromDB.getMessage());
-            }
-
-        }  catch (Exception e) {
-            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FAILURE_MSG, e.getMessage());
+        // delete the metric profile from DB
+        ValidationOutputData deletedMetricProfileFromDB = new ExperimentDAOImpl().deleteKruizeMetricProfileEntryByName(metricProfileName);
+        if (deletedMetricProfileFromDB.isSuccess()) {
+            // remove in-memory metric profile
+            MetricProfileCollection.getInstance().getMetricProfileCollection().remove(metricProfileName);
+            LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG);
+        } else if (null != deletedMetricProfileFromDB.getErrorCode()
+                && HttpServletResponse.SC_NOT_FOUND == deletedMetricProfileFromDB.getErrorCode()) {
+            throw new NoSuchElementException(deletedMetricProfileFromDB.getMessage());
+        } else {
+            throw new IllegalStateException(deletedMetricProfileFromDB.getMessage());
         }
     }
 
