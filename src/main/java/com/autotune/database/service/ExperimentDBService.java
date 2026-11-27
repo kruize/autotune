@@ -36,6 +36,7 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
+import com.autotune.database.helper.RecommendationResultRow;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMLayerEntry;
@@ -254,6 +255,99 @@ public class ExperimentDBService {
         return resultsAvailable;
     }
 
+    /**
+     * Loads the term window with the same cluster and interval_end_time predicate as
+     * {@link #loadResultsFromDBByName}, then rebuilds result maps from extended_data.
+     * The DAO session is closed before JSON is parsed.
+     *
+     * @return false when the window has no rows. When rows exist but none could be read, this still
+     * returns true (same as {@link #loadResultsFromDBByName}, so the API response is unchanged) and logs a warning.
+     */
+    public boolean loadRecommendationResultsOnto(Map<String, KruizeObject> mainKruizeExperimentMap,
+                                                 KruizeObject kruizeObject,
+                                                 Timestamp calculated_start_time,
+                                                 Timestamp interval_end_time) throws Exception {
+        long startedNs = System.nanoTime();
+        List<RecommendationResultRow> rows = experimentDAO.loadRecommendationResultRows(
+                kruizeObject.getExperimentName(), kruizeObject.getClusterName(), calculated_start_time, interval_end_time);
+        long afterJdbcNs = System.nanoTime();
+        boolean found = rows != null && !rows.isEmpty();
+        if (found) {
+            String clusterName = kruizeObject.getClusterName();
+            List<ExperimentResultData> resultDataList = new ArrayList<>();
+            for (RecommendationResultRow row : rows) {
+                try {
+                    ExperimentResultData experimentResultData = DBHelpers.Converters.KruizeObjectConverters
+                            .experimentResultFromExtendedDataJson(
+                                    row.getExperimentName(),
+                                    clusterName,
+                                    row.getVersion(),
+                                    row.getIntervalStartTime(),
+                                    row.getIntervalEndTime(),
+                                    row.getExtendedDataJson());
+                    if (experimentResultData != null
+                            && experimentResultData.getKubernetes_objects() != null
+                            && !experimentResultData.getKubernetes_objects().isEmpty()) {
+                        resultDataList.add(experimentResultData);
+                    }
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+                } catch (Exception e) {
+                    LOGGER.error("Unexpected error: {}", e.getMessage());
+                }
+            }
+            if (!resultDataList.isEmpty()) {
+                new ExperimentInterfaceImpl().addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
+            } else {
+                LOGGER.warn("None of the {} kruize_results rows for experiment {} between {} and {} could be read; continuing with no results for this window",
+                        rows.size(), kruizeObject.getExperimentName(), calculated_start_time, interval_end_time);
+            }
+        }
+        long doneNs = System.nanoTime();
+        LOGGER.debug("RECO_LOAD experiment={} rows={} jdbcMs={} parseMs={} totalMs={}",
+                kruizeObject.getExperimentName(),
+                rows == null ? 0 : rows.size(),
+                (afterJdbcNs - startedNs) / 1_000_000,
+                (doneNs - afterJdbcNs) / 1_000_000,
+                (doneNs - startedNs) / 1_000_000);
+        return found;
+    }
+
+    /**
+     * Parses already-loaded result rows onto the experiment. An empty list does not call
+     * {@code addResultsToLocalStorage}.
+     *
+     * @return true only when at least one row was read and added to the experiment; false when
+     * {@code kruizeResultsEntries} is null or empty, or when every row failed to convert
+     */
+    public boolean attachRecommendationResultEntries(Map<String, KruizeObject> mainKruizeExperimentMap,
+                                                     String clusterName,
+                                                     List<KruizeResultsEntry> kruizeResultsEntries) {
+        if (kruizeResultsEntries == null || kruizeResultsEntries.isEmpty()) {
+            return false;
+        }
+        List<ExperimentResultData> resultDataList = new ArrayList<>();
+        for (KruizeResultsEntry entry : kruizeResultsEntries) {
+            try {
+                ExperimentResultData experimentResultData = DBHelpers.Converters.KruizeObjectConverters
+                        .experimentResultFromResultEntry(entry, clusterName);
+                if (experimentResultData != null
+                        && experimentResultData.getKubernetes_objects() != null
+                        && !experimentResultData.getKubernetes_objects().isEmpty()) {
+                    resultDataList.add(experimentResultData);
+                }
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
+            } catch (Exception e) {
+                LOGGER.error("Unexpected error: {}", e.getMessage());
+            }
+        }
+        if (!resultDataList.isEmpty()) {
+            new ExperimentInterfaceImpl().addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
+        }
+        return !resultDataList.isEmpty();
+    }
+
     public void loadRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load Recommendations from DB and save to local
@@ -332,6 +426,11 @@ public class ExperimentDBService {
 
     public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, KruizeObject kruizeObject,
                                                       Timestamp interval_end_time) {
+        return addRecommendationToDB(experimentsMap, kruizeObject, interval_end_time, null);
+    }
+
+    public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, KruizeObject kruizeObject,
+                                                      Timestamp interval_end_time, ListRecommendationsAPIObject preparedList) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
         if (null == kruizeObject) {
             return validationOutputData;
@@ -347,7 +446,7 @@ public class ExperimentDBService {
 
         if (KruizeDeploymentInfo.is_ros_enabled && kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
             KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
-                    convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
+                    convertKruizeObjectTORecommendation(kruizeObject, interval_end_time, preparedList);
             if (null != kr) {
                 ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
                 if (!tempValObj.isSuccess()) {

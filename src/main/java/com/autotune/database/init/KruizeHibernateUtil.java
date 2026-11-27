@@ -53,6 +53,7 @@ public class KruizeHibernateUtil {
                     KruizeDeploymentInfo.database_hostname +
                     ":" + Integer.parseInt(KruizeDeploymentInfo.database_port) +
                     "/" + KruizeDeploymentInfo.database_dbname;
+            connectionURL = connectionURL + (connectionURL.contains("?") ? "&" : "?") + "prepareThreshold=1";
             configuration.setProperty("hibernate.connection.url", connectionURL);
             configuration.setProperty("hibernate.connection.username", KruizeDeploymentInfo.database_username);
             configuration.setProperty("hibernate.connection.password", KruizeDeploymentInfo.database_password);
