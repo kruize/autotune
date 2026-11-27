@@ -155,11 +155,32 @@ public class Converters {
         }
 
 
+        /**
+         * Builds the list-recommendations API object for one experiment. The container and namespace data are
+         * always copied first, so the caller can change the result without touching the experiment. This is the
+         * behaviour every caller had before the updateRecommendations changes.
+         */
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,
                 boolean checkForTimestamp,
                 Timestamp monitoringEndTime) {
+            return convertKruizeObjectToListRecommendationSO(kruizeObject, getLatest, checkForTimestamp, monitoringEndTime, true);
+        }
+
+        /**
+         * Same as {@link #convertKruizeObjectToListRecommendationSO(KruizeObject, boolean, boolean, Timestamp)}, but
+         * with {@code copyData} false and nothing to filter ({@code getLatest} and {@code checkForTimestamp} both
+         * false) the result uses the experiment's own recommendation maps instead of a copy. Only the
+         * updateRecommendations path uses this: its experiment is loaded for that one request and the result is only
+         * turned into JSON and saved. Do not change the recommendation data of a result built with copyData false.
+         */
+        public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
+                KruizeObject kruizeObject,
+                boolean getLatest,
+                boolean checkForTimestamp,
+                Timestamp monitoringEndTime,
+                boolean copyData) {
             ListRecommendationsAPIObject listRecommendationsAPIObject = new ListRecommendationsAPIObject();
             try {
                 listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
@@ -173,9 +194,9 @@ public class Converters {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     // namespace recommendations experiment type
                     if (kruizeObject.isNamespaceExperiment()) {
-                        processNamespaceRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
+                        processNamespaceRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime, copyData);
                     }
-                    processContainerRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
+                    processContainerRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime, copyData);
                     kubernetesAPIObjects.add(kubernetesAPIObject);
                 }
                 listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
@@ -186,10 +207,16 @@ public class Converters {
         }
 
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
-                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime,
+                                                            boolean copyData) {
             NamespaceData clonedNamespaceData = null;
             if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
-                clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace()), NamespaceData.class);
+                NamespaceData storedNamespaceData = k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace());
+                if (copyData || checkForTimestamp || getLatest) {
+                    clonedNamespaceData = Utils.getClone(storedNamespaceData, NamespaceData.class);
+                } else {
+                    clonedNamespaceData = storedNamespaceData;
+                }
             }
             if (clonedNamespaceData != null && clonedNamespaceData.getNamespaceRecommendations() != null
             && clonedNamespaceData.getNamespaceRecommendations().getData() != null) {
@@ -210,11 +237,17 @@ public class Converters {
         }
 
         private static void processContainerRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
-                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime,
+                                                            boolean copyData) {
             List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
 
             for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+                ContainerData clonedContainerData;
+                if (copyData || checkForTimestamp || getLatest) {
+                    clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+                } else {
+                    clonedContainerData = containerData;
+                }
 
                 if (clonedContainerData != null) {
                     HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();

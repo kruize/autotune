@@ -77,6 +77,11 @@ public class DBConstants {
                         "k.interval_end_time= :%s ",
                 KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RECOMMENDATIONS = "from KruizeRecommendationEntry";
+        public static final String UPSERT_KRUIZE_RECOMMENDATION = "INSERT INTO kruize_recommendations " +
+                "(version, experiment_name, cluster_name, interval_end_time, extended_data) " +
+                "VALUES (:version, :experimentName, :clusterName, :intervalEndTime, CAST(:extendedData AS jsonb)) " +
+                "ON CONFLICT (experiment_name, interval_end_time) " +
+                "DO UPDATE SET extended_data = EXCLUDED.extended_data";
         public static final String SELECT_FROM_LM_RECOMMENDATIONS = "from KruizeLMRecommendationEntry";
         public static final String SELECT_FROM_LM_RECOMMENDATIONS_BY_JOB_ID = "from KruizeLMRecommendationEntry where function('jsonb_extract_path_text', extended_data, 'job_id') = :job_id";
         public static final String SELECT_FROM_PERFORMANCE_PROFILE = "from KruizePerformanceProfileEntry";
