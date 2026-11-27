@@ -593,12 +593,16 @@ public class BulkJobManager implements Runnable {
     private Map<String, String> buildResourceFilters(BulkInput.Filter filter, boolean exclude) {
         Map<String, String> resourceFilters = new HashMap<>();
         if (filter != null) {
+            // Escape each value individually so the "|" alternation separator stays a regex operator.
             resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
-                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+                    filter.getNamespace().stream().map(String::trim).map(BulkJobManager::escapePromQLRegexValue)
+                            .collect(Collectors.joining("|")) : "");
             resourceFilters.put("workloadRegex", filter.getWorkload() != null ?
-                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+                    filter.getWorkload().stream().map(String::trim).map(BulkJobManager::escapePromQLRegexValue)
+                            .collect(Collectors.joining("|")) : "");
             resourceFilters.put("containerRegex", filter.getContainers() != null ?
-                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+                    filter.getContainers().stream().map(String::trim).map(BulkJobManager::escapePromQLRegexValue)
+                            .collect(Collectors.joining("|")) : "");
             if (filter.getLabels() != null && !filter.getLabels().isEmpty()) {
                 String labelFilter = buildLabelFilters(filter.getLabels(), exclude);
                 if (labelFilter.isEmpty()) {
