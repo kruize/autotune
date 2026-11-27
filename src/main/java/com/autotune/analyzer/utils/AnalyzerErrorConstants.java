@@ -214,6 +214,11 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
+            public static final String RESOURCE_SCOPE_SETTINGS_EMPTY = "resource_scope_settings must not be empty if provided. Specify cpu, memory or both.";
+            public static final String RESOURCE_SCOPE_EMPTY_LIST = "resource_scope_settings.%s must not be an empty list.";
+            public static final String INVALID_CPU_SCOPE = "Unknown cpu scope: '%s'. Valid: under_provisioned, over_provisioned, optimised, idle, all";
+            public static final String INVALID_MEMORY_SCOPE = "Unknown memory scope: '%s'. Valid: under_provisioned, over_provisioned, optimised, all";
+            public static final String IDLE_NOT_VALID_FOR_MEMORY = "'idle' is not a valid memory scope, memory has no idle state.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
