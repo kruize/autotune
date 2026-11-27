@@ -174,6 +174,22 @@ if max_val is not None:
 else:
     print(f"No valid values found in the specified column - {column_name_to_parse}")
 
+column_name_to_parse = 'kruizedb_memory'
+max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)
+if max_val is not None:
+    max_val = round(max_val/1024/1024/1024, 2)
+    print(f"Kruize DB memory Max value: {max_val} GB")
+else:
+    print(f"No valid values found in the specified column - {column_name_to_parse}")
+
+column_name_to_parse = 'kruizedb_cpu_max'
+max_val, avg_val = compute_max_avg(csv_file_path, column_name_to_parse)
+if max_val is not None:
+    max_val = round(max_val, 2)
+    print(f"Kruize DB cpu Max value: {max_val}")
+else:
+    print(f"No valid values found in the specified column - {column_name_to_parse}")
+
 exec_time_log = directory_path + "/../exec_time.log"
 find_max_exec_time(exec_time_log)
 
