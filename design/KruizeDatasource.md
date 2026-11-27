@@ -118,7 +118,7 @@ Token-based authentication using OAuth2 or similar mechanisms.
   "authentication": {
     "type": "bearer",
     "credentials": {
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "token": "<BEARER_TOKEN>"
     }
   }
 }

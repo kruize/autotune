@@ -51,6 +51,10 @@ public class KruizeDeploymentInfo {
     public static String settings_hibernate_hbm2ddl_auto;
     public static String settings_hibernate_show_sql;
     public static String settings_hibernate_time_zone;
+    // JDBC batching for bulk updateResults inserts; defaults apply when the config omits them.
+    public static String settings_hibernate_jdbc_batch_size = "25";
+    public static String settings_hibernate_order_inserts = "true";
+    public static String settings_hibernate_order_updates = "true";
     public static String autotune_mode;
     public static String monitoring_agent;
     public static String monitoring_service;

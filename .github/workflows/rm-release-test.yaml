@@ -17,6 +17,7 @@ jobs:
         with:
           minikube version: 'v1.38.0'
           kubernetes version: 'v1.34.4'
+          github token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v7
         with:
           repository: kruize/autotune
