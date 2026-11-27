@@ -7,6 +7,7 @@ import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.*;
@@ -135,6 +136,38 @@ public class RecommendationEngine implements RecommendationEngineService {
                 GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
                 registerModel(genericRecommendationModel);
             }
+        }
+    }
+
+    /**
+     * Pairs the flex term with the stability model when the user specified only one of them:
+     * - only the flex term given (no models)      -> only the stability model is generated
+     * - only the stability model given (no terms) -> only the flex term is generated
+     * If the user specified both terms and models, their input is used as is.
+     */
+    private void pairFlexTermWithStabilityModel(KruizeObject kruizeObject) {
+        RecommendationSettings settings = kruizeObject.getRecommendation_settings();
+        if (null == settings) {
+            return;
+        }
+        List<String> userTerms = null != settings.getTermSettings() ? settings.getTermSettings().getTerms() : null;
+        List<String> userModels = null != settings.getModelSettings() ? settings.getModelSettings().getModels() : null;
+
+        boolean onlyFlexTerm = null != userTerms && userTerms.size() == 1
+                && KruizeConstants.JSONKeys.FLEX.equalsIgnoreCase(userTerms.get(0));
+        boolean onlyStabilityModel = null != userModels && userModels.size() == 1
+                && KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(userModels.get(0));
+
+        if (onlyFlexTerm && null == userModels) {
+            if (null == settings.getModelSettings()) {
+                settings.setModelSettings(new ModelSettings());
+            }
+            settings.getModelSettings().setModels(new ArrayList<>(List.of(KruizeConstants.JSONKeys.STABILITY)));
+        } else if (onlyStabilityModel && null == userTerms) {
+            if (null == settings.getTermSettings()) {
+                settings.setTermSettings(new TermSettings());
+            }
+            settings.getTermSettings().setTerms(new ArrayList<>(List.of(KruizeConstants.JSONKeys.FLEX)));
         }
     }
 
@@ -301,6 +334,8 @@ public class RecommendationEngine implements RecommendationEngineService {
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
+            pairFlexTermWithStabilityModel(kruizeObject);
+
             // term settings for different use cases
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 // monitoring mode
