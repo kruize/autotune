@@ -163,6 +163,8 @@ public class AnalyzerErrorConstants {
 
         public static final class updateResultsAPI {
             public static final String RESULTS_ALREADY_EXISTS = "An entry for this record already exists!";
+            /** Client-facing reason when an exception has no message; the class and stack trace go to the server log. */
+            public static final String GENERIC_STORE_FAILURE = "Failed to store result";
 
             public static final HashMap<String, Integer> ERROR_CODE_MAP = new HashMap<String, Integer>() {{
                 put(RESULTS_ALREADY_EXISTS, HttpServletResponse.SC_CONFLICT);
