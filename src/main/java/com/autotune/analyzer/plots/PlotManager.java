@@ -6,10 +6,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.utils.KruizeConstants;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,26 +71,21 @@ public class PlotManager {
         // stream through the results value and extract the CPU values
         try {
             if (metricName == AnalyzerConstants.MetricName.cpuUsage || metricName == AnalyzerConstants.MetricName.namespaceCpuUsage) {
-                JSONArray cpuValues;
-                if (metricName == (AnalyzerConstants.MetricName.namespaceCpuUsage)) {
-                    cpuValues = CostBasedRecommendationModel.getNamespaceCPUUsageList(resultInRange);
-                } else {
-                    cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
+                List<Double> cpuMaxValues = new ArrayList<>();
+                List<Double> cpuMinValues = new ArrayList<>();
+                boolean namespaceCpu = metricName == AnalyzerConstants.MetricName.namespaceCpuUsage;
+                for (IntervalResults intervalResults : resultInRange.values()) {
+                    GenericRecommendationModel.IntervalBound bound = namespaceCpu
+                            ? GenericRecommendationModel.namespaceCpuUsageBound(intervalResults)
+                            : GenericRecommendationModel.cpuUsageBound(intervalResults);
+                    cpuMaxValues.add(bound.max);
+                    cpuMinValues.add(bound.min);
                 }
-                LOGGER.debug("cpuValues : {}", cpuValues);
-                if (!cpuValues.isEmpty()) {
-                    // Extract "max" values from cpuUsageList
-                    List<Double> cpuMaxValues = new ArrayList<>();
-                    List<Double> cpuMinValues = new ArrayList<>();
-                    for (int i = 0; i < cpuValues.length(); i++) {
-                        JSONObject jsonObject = cpuValues.getJSONObject(i);
-                        double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        double minValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
-                        cpuMaxValues.add(maxValue);
-                        cpuMinValues.add(minValue);
-                    }
+                if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("cpuMaxValues : {}", cpuMaxValues);
                     LOGGER.debug("cpuMinValues : {}", cpuMinValues);
+                }
+                if (!cpuMaxValues.isEmpty()) {
                     return getPercentileData(cpuMaxValues, cpuMinValues, resultInRange, metricName);
                 }
 
@@ -102,22 +94,19 @@ public class PlotManager {
                 List<Double> memUsageMinList = new ArrayList<>();
                 List<Double> memUsageMaxList = new ArrayList<>();
                 boolean memDataAvailable = false;
-                JSONObject jsonObject;
+                boolean namespaceMemory = metricName == namespaceMemoryUsage;
                 for (IntervalResults intervalResults: resultInRange.values()) {
-                    if (metricName == (namespaceMemoryUsage)) {
-                        jsonObject = GenericRecommendationModel.calculateNamespaceMemoryUsage(intervalResults);
-                    } else {
-                        jsonObject = GenericRecommendationModel.calculateMemoryUsage(intervalResults);
-                    }
-                    if (!jsonObject.isEmpty()) {
-                        memDataAvailable = true;
-                        Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        Double memUsageMin = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
-                        memUsageMaxList.add(memUsageMax);
-                        memUsageMinList.add(memUsageMin);
-                    }
+                    GenericRecommendationModel.IntervalBound bound = namespaceMemory
+                            ? GenericRecommendationModel.namespaceMemoryUsageBound(intervalResults)
+                            : GenericRecommendationModel.memoryUsageBound(intervalResults);
+                    // calculateMemoryUsage always returns min and max, so the JSON object was never empty
+                    memDataAvailable = true;
+                    memUsageMaxList.add(bound.max);
+                    memUsageMinList.add(bound.min);
                 }
-                LOGGER.debug("memValues Max : {}, Min : {}", memUsageMaxList, memUsageMinList);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("memValues Max : {}, Min : {}", memUsageMaxList, memUsageMinList);
+                }
                 if (memDataAvailable)
                     return getPercentileData(memUsageMaxList, memUsageMinList, resultInRange, metricName);
             }
@@ -130,9 +119,10 @@ public class PlotManager {
     private PlotData.UsageData getPercentileData(List<Double> metricValuesMax, List<Double> metricValuesMin, Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
         try {
             if (!metricValuesMax.isEmpty()) {
-                double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValuesMax);
-                double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValuesMax);
-                double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValuesMax);
+                Collections.sort(metricValuesMax);
+                double q1 = CommonUtils.percentileOfSorted(TWENTYFIVE_PERCENTILE, metricValuesMax);
+                double q3 = CommonUtils.percentileOfSorted(SEVENTYFIVE_PERCENTILE, metricValuesMax);
+                double median = CommonUtils.percentileOfSorted(FIFTY_PERCENTILE, metricValuesMax);
                 // Find max and min
                 double max = Collections.max(metricValuesMax);
                 double min;

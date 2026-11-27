@@ -294,6 +294,14 @@ public class CommonUtils {
         return items.get((int) Math.round(percentile / 100.0 * (items.size() - 1)));
     }
 
+    /**
+     * Nearest-rank percentile for a list that is already sorted ascending.
+     * Same index as {@link #percentile(double, List)}.
+     */
+    public static Double percentileOfSorted(double percentile, List<Double> sorted) {
+        return sorted.get((int) Math.round(percentile / 100.0 * (sorted.size() - 1)));
+    }
+
     public static double getPercentage(double newer, double older) {
         if (older == 0)
             return 0.0;
