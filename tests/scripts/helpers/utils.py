@@ -18,8 +18,10 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import time
 import math
+import uuid
 import docker
 from helpers.kruize import *
 from datetime import datetime, timedelta
@@ -647,12 +649,13 @@ def generate_json(find_arr, json_file, filename, i, update_timestamps=False):
         data = data.replace(find, replace)
 
     if update_timestamps == True:
+        timestamp_step = int(i, 16) % 10000 if isinstance(i, str) else i
         find = "2022-01-23T18:25:43.511Z"
-        replace = increment_timestamp(find, i)
+        replace = increment_timestamp(find, timestamp_step)
         data = data.replace(find, replace)
 
         find = "2022-01-23T18:40:43.570Z"
-        replace = increment_timestamp(find, i)
+        replace = increment_timestamp(find, timestamp_step)
         data = data.replace(find, replace)
 
     with open(filename, 'w') as file:
@@ -2427,3 +2430,127 @@ def validate_current(current_config, experiment_type):
         assert "replicas" in current_config, MISSING_REPLICA_OBJECT
         assert isinstance(current_config["replicas"], int), INCORRECT_REPLICA_DATATYPE % type(current_config['replicas'])
         assert current_config["replicas"] > 0, REPLICAS_CANNOT_BE_ZERO % current_config['replicas']
+
+
+HTTP_TIMEOUT = (10, 120)
+
+
+def make_temp_json(prefix):
+    """Create a secure temporary JSON file and return its path."""
+    fd, path = tempfile.mkstemp(suffix='.json', prefix=prefix)
+    os.close(fd)
+    return path
+
+
+def setup_experiment(cluster_type, input_json_file, find_arr, run_id=None):
+    """Create a unique experiment from a template, cleaning up any prior run.
+
+    Caller must call form_kruize_url(cluster_type) before this function.
+    Returns (create_exp_json_file, experiment_name, run_id).
+    """
+    if run_id is None:
+        run_id = uuid.uuid4().hex[:8]
+
+    create_exp_json_file = make_temp_json('create_exp_')
+    generate_json(find_arr, input_json_file, create_exp_json_file, run_id)
+
+    try:
+        response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
+        print("delete exp = ", response.status_code)
+    except Exception as e:
+        print("delete exp failed (may not exist): ", e)
+
+    response = create_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
+    data = response.json()
+    print("message = ", data['message'])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    json_data = json.load(open(create_exp_json_file))
+    experiment_name = json_data[0]['experiment_name']
+    return create_exp_json_file, experiment_name, run_id
+
+
+def post_results(result_json_file, find_arr, num_results, run_id, gpu_name=None):
+    """Post num_results intervals of results, returning (result_json_arr, end_time)."""
+    update_results_json_file = make_temp_json('update_results_')
+
+    result_json_arr = []
+    interval_start_time = get_datetime()
+    end_time = None
+
+    for j in range(num_results):
+        generate_json(find_arr, result_json_file, update_results_json_file, run_id, update_timestamps=True)
+        result_json = read_json_data_from_file(update_results_json_file)
+
+        if gpu_name is not None:
+            for kub_obj in result_json[0]["kubernetes_objects"]:
+                for container in kub_obj.get("containers", []):
+                    for metric in container.get("metrics", []):
+                        if metric["name"].startswith("accelerator") and "metadata" in metric["results"]:
+                            metric["results"]["metadata"]["accelerator_model_name"] = gpu_name
+
+        if j == 0:
+            start_time = interval_start_time
+        else:
+            start_time = end_time
+
+        result_json[0]['interval_start_time'] = start_time
+        end_time = increment_timestamp_by_given_mins(start_time, 15)
+        result_json[0]['interval_end_time'] = end_time
+
+        write_json_data_to_file(update_results_json_file, result_json)
+        result_json_arr.append(result_json[0])
+        response = update_results(update_results_json_file, False, timeout=HTTP_TIMEOUT)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    return result_json_arr, end_time
+
+
+def generate_and_validate_recommendations(experiment_name, end_time, is_namespace=False):
+    """Call updateRecommendations, assert success, and return the reco JSON."""
+    response = update_recommendations(experiment_name, None, end_time, timeout=HTTP_TIMEOUT)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+
+    if is_namespace:
+        reco_path = data[0]['kubernetes_objects'][0]['namespaces']['recommendations']
+    else:
+        reco_path = data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+
+    assert reco_path['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
+
+    response = list_recommendations(experiment_name, rm=True, timeout=HTTP_TIMEOUT)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    return response.json()
+
+
+def cleanup_experiment(create_exp_json_file):
+    """Delete experiment, assert success."""
+    try:
+        response = delete_experiment(create_exp_json_file, timeout=HTTP_TIMEOUT)
+        print("delete exp = ", response.status_code)
+        assert SUCCESS_STATUS_CODE_START <= response.status_code < SUCCESS_STATUS_CODE_END, \
+            f"Expected 2xx status for delete, got {response.status_code}"
+    except Exception as e:
+        print("cleanup delete failed: ", e)
+
+
+def extract_reco_values(list_reco_json, end_time, is_namespace=False):
+    """Extract the short_term recommendation_engines section for comparison."""
+    if is_namespace:
+        reco_section = list_reco_json[0]["kubernetes_objects"][0]["namespaces"]["recommendations"]
+    else:
+        reco_section = list_reco_json[0]["kubernetes_objects"][0]["containers"][0]["recommendations"]
+
+    data_section = reco_section["data"]
+    short_term = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+    return short_term
