@@ -47,6 +47,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -113,39 +114,51 @@ public class RecommendationEngine implements RecommendationEngineService {
 
     }
 
+    /**
+     * Registry of built-in models: model name (case-insensitive) -> factory creating the model.
+     * To add a new built-in model, add one entry here; loadCustomRecommendationModels needs no change.
+     */
+    private static final Map<String, Supplier<RecommendationModel>> BUILT_IN_MODELS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+    static {
+        // Todo: add custom cost / performance parameters from the user inputs
+        BUILT_IN_MODELS.put(KruizeConstants.JSONKeys.COST, () -> new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES));
+        BUILT_IN_MODELS.put(KruizeConstants.JSONKeys.PERFORMANCE, () -> new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES));
+        BUILT_IN_MODELS.put(KruizeConstants.JSONKeys.STABILITY, () -> new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES));
+    }
+
     private void loadCustomRecommendationModels(List<String> modelName,  Map<String, RecommendationTunables> settings) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
         for (String model : modelName) {
-            if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(model)) {
-                // Create Cost based model
-                // Todo: add custom cost parameters over here
-                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES);
-                registerModel(costBasedRecommendationModel);
-            } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(model)) {
-                // Create Performance based model
-                // Todo: add custom performance parameters over here from the user inputs
-                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
-                registerModel(performanceBasedRecommendationModel);
-            } else if (KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(model)) {
-                StabilityBasedRecommendationModel stabilityBasedRecommendationModel = new StabilityBasedRecommendationModel(STABILITY_RECOMMENDATION_TUNABLES);
-                registerModel(stabilityBasedRecommendationModel);
+            Supplier<RecommendationModel> builtInModel = BUILT_IN_MODELS.get(model);
+            if (null != builtInModel) {
+                registerModel(builtInModel.get());
             } else {
                 // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
-                GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
-                registerModel(genericRecommendationModel);
+                registerModel(new GenericRecommendationModel(model, genericTunables));
             }
         }
     }
 
     /**
-     * Pairs the flex term with the stability model when the user specified only one of them:
-     * - only the flex term given (no models)      -> only the stability model is generated
-     * - only the stability model given (no terms) -> only the flex term is generated
+     * Term -> model pairings (term name is case-insensitive). If the user specifies only one side of a pair,
+     * the other side is generated automatically. To add a new pairing, add one entry here.
+     */
+    private static final Map<String, String> TERM_TO_PAIRED_MODEL = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+    static {
+        TERM_TO_PAIRED_MODEL.put(KruizeConstants.JSONKeys.FLEX, KruizeConstants.JSONKeys.STABILITY);
+    }
+
+    /**
+     * Pairs a term with its model (see {@link #TERM_TO_PAIRED_MODEL}) when the user specified only one of them:
+     * - only a paired term given (no models)  -> only its paired model is generated
+     * - only a paired model given (no terms)  -> only its paired term is generated
      * If the user specified both terms and models, their input is used as is.
      */
-    private void pairFlexTermWithStabilityModel(KruizeObject kruizeObject) {
+    private void pairTermWithModel(KruizeObject kruizeObject) {
         RecommendationSettings settings = kruizeObject.getRecommendation_settings();
         if (null == settings) {
             return;
@@ -153,21 +166,24 @@ public class RecommendationEngine implements RecommendationEngineService {
         List<String> userTerms = null != settings.getTermSettings() ? settings.getTermSettings().getTerms() : null;
         List<String> userModels = null != settings.getModelSettings() ? settings.getModelSettings().getModels() : null;
 
-        boolean onlyFlexTerm = null != userTerms && userTerms.size() == 1
-                && KruizeConstants.JSONKeys.FLEX.equalsIgnoreCase(userTerms.get(0));
-        boolean onlyStabilityModel = null != userModels && userModels.size() == 1
-                && KruizeConstants.JSONKeys.STABILITY.equalsIgnoreCase(userModels.get(0));
-
-        if (onlyFlexTerm && null == userModels) {
-            if (null == settings.getModelSettings()) {
-                settings.setModelSettings(new ModelSettings());
+        if (null == userModels && null != userTerms && userTerms.size() == 1) {
+            String pairedModel = TERM_TO_PAIRED_MODEL.get(userTerms.get(0));
+            if (null != pairedModel) {
+                if (null == settings.getModelSettings()) {
+                    settings.setModelSettings(new ModelSettings());
+                }
+                settings.getModelSettings().setModels(new ArrayList<>(List.of(pairedModel)));
             }
-            settings.getModelSettings().setModels(new ArrayList<>(List.of(KruizeConstants.JSONKeys.STABILITY)));
-        } else if (onlyStabilityModel && null == userTerms) {
-            if (null == settings.getTermSettings()) {
-                settings.setTermSettings(new TermSettings());
+        } else if (null == userTerms && null != userModels && userModels.size() == 1) {
+            for (Map.Entry<String, String> pair : TERM_TO_PAIRED_MODEL.entrySet()) {
+                if (pair.getValue().equalsIgnoreCase(userModels.get(0))) {
+                    if (null == settings.getTermSettings()) {
+                        settings.setTermSettings(new TermSettings());
+                    }
+                    settings.getTermSettings().setTerms(new ArrayList<>(List.of(pair.getKey())));
+                    break;
+                }
             }
-            settings.getTermSettings().setTerms(new ArrayList<>(List.of(KruizeConstants.JSONKeys.FLEX)));
         }
     }
 
@@ -334,7 +350,7 @@ public class RecommendationEngine implements RecommendationEngineService {
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
-            pairFlexTermWithStabilityModel(kruizeObject);
+            pairTermWithModel(kruizeObject);
 
             // term settings for different use cases
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
