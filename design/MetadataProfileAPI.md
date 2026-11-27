@@ -25,6 +25,8 @@ The following workload types are **not supported** by Kruize:
 - **DeploymentConfig**: Excluded because it is an OpenShift-specific deployment configuration that has been deprecated from [Red Hat OpenShift v4.14](https://access.redhat.com/articles/7041372) onwards. OpenShift users are encouraged to migrate to standard Kubernetes Deployments.
 
 - **ConfigMap and CatalogSource**: Excluded because they are configuration and catalog resources, rather than actual executing containers that can be monitored to generate recommendations.
+
+These types are excluded from metadata discovery through the `$UNSUPPORTED_WORKLOAD_TYPES$` placeholder.
 ---
 
 ## CreateMetadataProfile
@@ -70,7 +72,7 @@ and the list of metadata queries supported by Kruize refer [Metadata Profile](/d
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     },
@@ -82,7 +84,7 @@ and the list of metadata queries supported by Kruize refer [Metadata Profile](/d
       "aggregation_functions": [
         {
           "function": "sum",
-          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
         }
       ]
     }
@@ -185,7 +187,7 @@ Returns metadata profile of the name specified
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       },
@@ -197,7 +199,7 @@ Returns metadata profile of the name specified
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       }
@@ -254,7 +256,7 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       },
@@ -266,7 +268,7 @@ Returns list of all the metadata profile created with all the metadata queries
         "aggregation_functions": [
           {
             "function": "sum",
-            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+            "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\"}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" $UNSUPPORTED_WORKLOAD_TYPES$}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       }
